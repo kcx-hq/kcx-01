@@ -7,10 +7,13 @@ import  { useDashboardStore } from "../../store/Dashboard.store";
 const MAX_MB = 50;
 
 const CsvUploadInput = ({
-  uploadUrl = "http://localhost:5000/api/etl",
+  uploadUrl,
   withCredentials = true,
 }) => {
   const navigate = useNavigate();
+  
+  // Use VITE_API_URL if uploadUrl is not provided
+  const finalUploadUrl = uploadUrl || `${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/etl`;
 
   const [status, setStatus] = useState("idle"); // idle | uploading | error
   const [errorMessage, setErrorMessage] = useState("");
@@ -44,7 +47,7 @@ const dashboardPath = useDashboardStore((s) => s.dashboardPath);
     formData.append("file", file);
 
     try {
-      const res = await axios.post(uploadUrl, formData, {
+      const res = await axios.post(finalUploadUrl, formData, {
         headers: { "Content-Type": "multipart/form-data" },
         withCredentials,
       });

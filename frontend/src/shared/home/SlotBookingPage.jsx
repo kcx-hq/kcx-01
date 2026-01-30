@@ -82,7 +82,7 @@ export default function SlotBookingPage() {
           DateTime.fromJSDate(selectedDate).toFormat("yyyy-MM-dd");
 
         const res = await axios.get(
-          `${API_URL}/inquiry/slots/by-date?date=${formattedDate}&timezone=${userTimezone}`
+          `${API_URL}/api/inquiry/slots/by-date?date=${formattedDate}&timezone=${userTimezone}`
         );
 
         // Convert returned slots from business timezone → user local timezone
@@ -142,7 +142,7 @@ export default function SlotBookingPage() {
         timezone: userTimezone,
       };
 
-      await axios.post(`${API_URL}/inquiry/submit`, payload);
+      await axios.post(`${API_URL}/api/inquiry/submit`, payload);
 
       toast("Inquiry submitted successfully");
       navigate("/");
