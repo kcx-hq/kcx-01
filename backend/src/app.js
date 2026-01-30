@@ -28,13 +28,15 @@ app.use(
     origin: [
       "http://localhost:5173",
       "http://localhost:5174",
-      process.env.FRONTEND_URL || "https://master-001-frontend.onrender.com"
+      process.env.FRONTEND_URL || "https://master-01-2k6ztl9vg-kcx.vercel.app"
     ].filter(Boolean), // frontend (supports both ports and production)
     credentials: true,               // allow cookies
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"]
   })
 );
+
+app.options("*", cors());
 app.use(express.json({ limit: '10mb' })); // Limit JSON payload size
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(cookieParser());
@@ -60,7 +62,7 @@ app.get('/api/health', (req, res) => {
 app.use('/api/auth' , authRoutes);
 app.use('/api/inquiry', inquiryRoutes);
 app.use('/api/etl' , etlRoutes )
-app.use('/api/capabililites' , capabililitesRoutes )
+app.use('/api/capabililites', capabililitesRoutes )
 app.use('/api/dashboard', coreDashboardRoutes);
 app.use('/api/chatbot' , chatbotRoutes)
 
