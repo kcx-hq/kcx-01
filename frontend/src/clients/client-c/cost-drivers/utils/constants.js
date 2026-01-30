@@ -1,0 +1,1 @@
+export const PERIOD_OPTIONS = [7, 30, 60, 90];

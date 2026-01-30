@@ -1,0 +1,4 @@
+node_modules
+.env.*
+service-account.json
+kandco-482118-9b56a0f07340.json

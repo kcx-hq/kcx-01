@@ -1,0 +1,17 @@
+# Files to ignore during Render deployment
+*.md
+!DEPLOYMENT.md
+.git/
+.gitignore
+.env.*
+node_modules/
+*.log
+
+# Backend specific
+backend/.env.*
+backend/service-account.json
+backend/kandco-*.json
+
+# Frontend specific  
+frontend/.env.*
+frontend/node_modules/
