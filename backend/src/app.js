@@ -25,11 +25,23 @@ app.use(compression({ level: 6, threshold: 1024 })); // Compress responses > 1KB
 
 app.use(
   cors({
-    origin: [
-      "http://localhost:5173",
-      "http://localhost:5174",
-      process.env.FRONTEND_URL || "https://master-01-2k6ztl9vg-kcx.vercel.app"
-    ].filter(Boolean), // frontend (supports both ports and production)
+    origin: function (origin, callback) {
+      const allowedOrigins = [
+        "http://localhost:5173",
+        "http://localhost:5174",
+        "https://master-01-cbh20rvjb-kcx.vercel.app",
+        process.env.FRONTEND_URL
+      ].filter(Boolean);
+      
+      // Allow Vercel preview deployments (*.vercel.app)
+      const isVercelPreview = origin && origin.match(/https:\/\/.*\.vercel\.app$/);
+      
+      if (!origin || allowedOrigins.includes(origin) || isVercelPreview) {
+        callback(null, true);
+      } else {
+        callback(new Error('Not allowed by CORS'));
+      }
+    },
     credentials: true,               // allow cookies
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"]
