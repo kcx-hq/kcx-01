@@ -227,7 +227,6 @@ const DashboardPage = () => {
               isModuleEnabled(caps, "overview") && (
                 <KeepAlive isActive={route.isOverview}>
                   <Overview
-                    filters={memoizedFilters}
                     onFilterChange={handleFilterChange}
                     api={api}
                     caps={caps}
