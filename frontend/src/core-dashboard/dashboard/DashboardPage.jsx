@@ -67,8 +67,10 @@ const DashboardPage = () => {
 
   useEffect(() => {
     const init = async () => {
-      await fetchUser();
-      setIsLocked(!user?.is_premium);
+      const result = await fetchUser();
+      // Use the user returned from fetchUser (or store after fetch) so premium status is correct on reload
+      const currentUser = result?.user ?? useAuthStore.getState()?.user;
+      setIsLocked(!currentUser?.is_premium);
       setLoading(false);
     };
     init();

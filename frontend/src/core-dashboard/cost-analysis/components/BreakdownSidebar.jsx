@@ -9,6 +9,7 @@ const BreakdownSidebar = ({
   hiddenSeries,
   toggleSeries,
   totalSpend,
+  onReset,
 }) => {
   const getShare = useCallback(
     (val) => (totalSpend ? ((val / totalSpend) * 100).toFixed(1) : 0),
@@ -68,8 +69,14 @@ const BreakdownSidebar = ({
           Breakdown
         </span>
         <button
-          disabled
-          className="text-[#a02ff1] text-[10px] font-bold hover:underline opacity-50 pointer-events-none"
+          type="button"
+          onClick={(e) => {
+            e?.preventDefault?.();
+            e?.stopPropagation?.();
+            onReset?.();
+          }}
+          disabled={isLocked}
+          className="text-[#a02ff1] text-[10px] font-bold hover:underline disabled:opacity-50 disabled:pointer-events-none cursor-pointer"
         >
           RESET
         </button>

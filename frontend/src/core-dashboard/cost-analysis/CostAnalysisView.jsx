@@ -20,6 +20,7 @@ const CostAnalysisView = ({
   setChartType,
   hiddenSeries,
   toggleSeries,
+  onBreakdownReset,
 
   apiData,
   kpis,
@@ -153,6 +154,7 @@ const CostAnalysisView = ({
               hiddenSeries={hiddenSeries}
               toggleSeries={toggleSeries}
               totalSpend={kpis.totalSpend}
+              onReset={onBreakdownReset}
             />
           </div>
         </div>

@@ -1,11 +1,9 @@
 import React from "react";
 import { Users, Loader2 } from "lucide-react";
-import { LoadingState } from "./components/LoadingState";
 import { ErrorState } from "./components/ErrorState";
 import { InsightsGrid } from "./components/InsightsGrid";
 import { Toolbar } from "./components/Toolbar";
 import { AccountsTable } from "./components/AccountsTable";
-import { TablePremiumOverlay } from "./components/TablePremiumOverlay";
 import PremiumGate from "../common/PremiumGate";
 
 export function AccountsOwnershipView({
@@ -32,22 +30,14 @@ export function AccountsOwnershipView({
   onSortChange,
 
   // actions
+  onReset,
   onExport,
   hasData,
 }) {
   if (error && !hasData) return <ErrorState error={error} />;
-  if (!hasData && loading) return <LoadingState />;
 
   return (
     <div className="p-6 space-y-6 min-h-screen bg-[#0f0f11] text-white font-sans animate-in fade-in duration-500 relative">
-      {/* subtle filtering indicator */}
-      {isFiltering && hasData && (
-        <div className="absolute top-4 right-4 z-50 flex items-center gap-2 bg-[#1a1b20] border border-[#a02ff1]/30 rounded-lg px-3 py-2 shadow-lg">
-          <Loader2 size={16} className="text-[#a02ff1] animate-spin" />
-          <p className="text-gray-400 text-xs">Updating...</p>
-        </div>
-      )}
-
       {/* Header */}
       <div className="flex flex-col gap-4">
         <div>
@@ -76,26 +66,47 @@ export function AccountsOwnershipView({
           filterProvider={filterProvider}
           onFilterProviderChange={onFilterProviderChange}
           providers={providers}
+          onReset={onReset}
           onExport={onExport}
         />
 
-        <div className="overflow-x-auto relative">
-          {isPremiumMasked ? (
-            <PremiumGate variant="wrap">
+        {/* Table section: loading overlay (same as Overview/Cost-Analysis) below toolbar */}
+        <div className="overflow-x-auto relative min-h-[50vh]">
+          {(loading || isFiltering) && (
+            <div
+              className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-[#0f0f11]/95 backdrop-blur-sm rounded-b-xl border-t border-white/5"
+              aria-busy="true"
+              aria-live="polite"
+            >
+              <Loader2 className="animate-spin text-[#a02ff1]" size={40} strokeWidth={2} />
+              <p className="mt-3 text-sm font-medium text-gray-400">
+                {loading && !hasData ? "Loading accounts…" : "Updating…"}
+              </p>
+            </div>
+          )}
+
+          {!hasData && !loading ? (
+            <div className="p-10 text-center text-gray-500">
+              <p>No account data available. Upload billing data to view ownership.</p>
+            </div>
+          ) : (
+            isPremiumMasked ? (
+              <PremiumGate variant="wrap">
+                <AccountsTable
+                  accounts={filteredAccounts}
+                  sortBy={sortBy}
+                  sortOrder={sortOrder}
+                  onSortChange={onSortChange}
+                />
+              </PremiumGate>
+            ) : (
               <AccountsTable
                 accounts={filteredAccounts}
                 sortBy={sortBy}
                 sortOrder={sortOrder}
                 onSortChange={onSortChange}
               />
-            </PremiumGate>
-          ) : (
-            <AccountsTable
-              accounts={filteredAccounts}
-              sortBy={sortBy}
-              sortOrder={sortOrder}
-              onSortChange={onSortChange}
-            />
+            )
           )}
         </div>
       </div>

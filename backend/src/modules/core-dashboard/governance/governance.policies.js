@@ -530,9 +530,11 @@ export async function getAccountsWithOwnership(params = {}) {
       });
     }
 
-    // Ownership status filter
+    // Ownership status filter (Assigned vs Unassigned; "Unassigned" contains "assign" so check explicitly)
     if (filters.ownershipStatus && filters.ownershipStatus !== 'All') {
-      if (filters.ownershipStatus.toLowerCase().includes('assign')) {
+      const status = (filters.ownershipStatus || '').toLowerCase();
+      const wantAssigned = status === 'assigned' || (status.includes('assign') && !status.includes('unassign'));
+      if (wantAssigned) {
         accounts = accounts.filter((a) => !!a.owner);
       } else {
         accounts = accounts.filter((a) => !a.owner);

@@ -37,34 +37,39 @@ function extractUploadIds(req) {
   return [source];
 }
 
+
 export const getCostAnalysis = async (req, res) => {
   try {
-    // 1. UploadIds (BODY first, QUERY fallback)
     const uploadIds = extractUploadIds(req);
 
-    // 2. Filters
+    if (!uploadIds.length) {
+      return res.status(400).json({ error: "uploadIds is required" });
+    }
+
+    const source =
+      Object.keys(req.body || {}).length > 0 ? req.body : req.query;
+
     const filters = {
-      provider: req.body?.provider || req.query?.provider || "All",
-      service: req.body?.service || req.query?.service || "All",
-      region: req.body?.region || req.query?.region || "All",
+      provider: source.provider || "All",
+      service: source.service || "All",
+      region: source.region || "All",
     };
 
-    // 3. GroupBy (secured)
-    let groupBy = req.body?.groupBy || req.query?.groupBy || "ServiceName";
+    let groupBy = source.groupBy || "ServiceName";
     if (!ALLOWED_GROUPS.includes(groupBy)) {
       groupBy = "ServiceName";
     }
 
-    // 4. Call Service
     const data = await generateCostAnalysis(
       {
-        filters,
-        uploadIds,
+        ...filters,
+        uploadIds
       },
-      groupBy,
+      groupBy
     );
 
     res.json(data);
+
   } catch (error) {
     console.error("Cost Analysis Error:", error);
     res.status(500).json({
@@ -75,138 +80,16 @@ export const getCostAnalysis = async (req, res) => {
   }
 };
 
+
+
+
 export const getFilterOptions = async (req, res) => {
   try {
-    const options = await getFilterDropdowns();
+    const uploadIds = extractUploadIds(req);
+    const options = await getFilterDropdowns(uploadIds);
     res.json(options);
   } catch (error) {
     console.error("Filter Error:", error);
     res.status(500).json({ error: "Failed to load filters" });
   }
 };
-
-// export const getCostDataWithResources = async (options = {}) => {
-//   const {
-//     filters = {},
-//     startDate = null,
-//     endDate = null,
-//     uploadIds = [],
-//   } = options;
-
-//   // Build where clause
-//   const whereClause = {};
-
-//   // UploadId filter (from request)
-//   if (uploadIds.length > 0) {
-//     whereClause.uploadid = { [Op.in]: uploadIds };
-//   }
-
-//   // Date range filter
-//   if (startDate || endDate) {
-//     whereClause.chargeperiodstart = {};
-//     if (startDate) whereClause.chargeperiodstart[Op.gte] = startDate;
-//     if (endDate) whereClause.chargeperiodstart[Op.lte] = endDate;
-//   }
-
-//   const include = [];
-
-//   // Resource
-//   include.push({
-//     model: Resource,
-//     as: "resource",
-//     required: false,
-//     attributes: ["resourcename", "resourcetype"],
-//   });
-
-//   // Service
-//   include.push({
-//     model: Service,
-//     as: "service",
-//     required: filters.service && filters.service !== "All",
-//     where:
-//       filters.service && filters.service !== "All"
-//         ? { servicename: filters.service }
-//         : undefined,
-//     attributes: ["servicename"],
-//   });
-
-//   // Region
-//   include.push({
-//     model: Region,
-//     as: "region",
-//     required: filters.region && filters.region !== "All",
-//     where:
-//       filters.region && filters.region !== "All"
-//         ? { regionname: filters.region }
-//         : undefined,
-//     attributes: ["regionname"],
-//   });
-
-//   // CloudAccount (case-insensitive provider filter)
-//   include.push({
-//     model: CloudAccount,
-//     as: "cloudAccount",
-//     required: filters.provider && filters.provider !== "All",
-//     where:
-//       filters.provider && filters.provider !== "All"
-//         ? Sequelize.where(
-//             Sequelize.fn("LOWER", Sequelize.col("cloudAccount.providername")),
-//             filters.provider.toLowerCase(),
-//           )
-//         : undefined,
-//     attributes: [
-//       "id",
-//       "providername",
-//       "billingaccountid",
-//       "billingaccountname",
-//     ],
-//   });
-
-//   const facts = await BillingUsageFact.findAll({
-//     where: whereClause,
-//     include,
-//     attributes: [
-//       "id",
-//       "resourceid",
-//       "billedcost",
-//       "chargeperiodstart",
-//       "tags",
-//       "chargedescription",
-//       "consumedquantity",
-//       "chargecategory",
-//       "chargeclass",
-//     ],
-//     raw: false,
-//   });
-
-//   return facts.map((fact) => {
-//     const row = fact.toJSON();
-//     return {
-//       id: row.id,
-//       resourceid: row.resourceid,
-//       billedcost: row.billedcost,
-//       chargeperiodstart: row.chargeperiodstart,
-//       tags: row.tags || {},
-//       usagetype: row.chargecategory || null,
-//       operation: row.chargeclass || row.chargedescription || null,
-//       chargedescription: row.chargedescription || null,
-//       consumedquantity: row.consumedquantity || null,
-//       resource: row.resource
-//         ? {
-//             resourcename: row.resource.resourcename,
-//             resourcetype: row.resource.resourcetype,
-//           }
-//         : null,
-//       service: row.service ? { servicename: row.service.servicename } : null,
-//       region: row.region ? { regionname: row.region.regionname } : null,
-//       cloudAccount: row.cloudAccount
-//         ? {
-//             id: row.cloudAccount.id,
-//             providername: row.cloudAccount.providername,
-//             billingaccountid: row.cloudAccount.billingaccountid,
-//             billingaccountname: row.cloudAccount.billingaccountname,
-//           }
-//         : null,
-//     };
-//   });
-// };

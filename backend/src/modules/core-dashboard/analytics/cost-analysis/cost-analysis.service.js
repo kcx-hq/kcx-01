@@ -1,7 +1,7 @@
 import { costAnalysisRepository } from './cost-analysis.repository.js';
 import { calculateCostDrivers } from '../cost-drivers/cost-drivers.service.js';
 import { BillingUsageFact, Resource, Service, Region, CloudAccount } from '../../../../models/index.js';
-import { Op } from 'sequelize';
+import Sequelize, { Op } from 'sequelize';
 
 /* ===================== CONSTANTS ===================== */
 const CHART_MAX_SERIES = 7;
@@ -234,8 +234,12 @@ export const generateCostAnalysis = async (filters = {}, groupBy) => {
 
 /* ===================== FILTER OPTIONS ===================== */
 
-export const getFilterDropdowns = async () => {
-  return costAnalysisRepository.getFilterOptions();
+/**
+ * Get filter options from billing data for the given uploadIds (CSV/uploads).
+ * No predefined list – only providers/services/regions present in that data.
+ */
+export const getFilterDropdowns = async (uploadIds = []) => {
+  return costAnalysisRepository.getFilterOptionsForUploads(uploadIds);
 };
 
 

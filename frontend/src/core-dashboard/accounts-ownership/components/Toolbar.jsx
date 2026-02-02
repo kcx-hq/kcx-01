@@ -1,5 +1,5 @@
 import React from "react";
-import { Search, Download } from "lucide-react";
+import { Search, Download, RefreshCw } from "lucide-react";
 
 export function Toolbar({
   searchTerm,
@@ -9,6 +9,7 @@ export function Toolbar({
   filterProvider,
   onFilterProviderChange,
   providers,
+  onReset,
   onExport,
 }) {
   return (
@@ -56,6 +57,16 @@ export function Toolbar({
           ))}
         </select>
 
+        {onReset && (
+          <button
+            type="button"
+            onClick={onReset}
+            className="p-2 bg-white/5 hover:bg-white/10 rounded-lg text-gray-400 hover:text-white transition-colors border border-white/5"
+            title="Reset filters and search"
+          >
+            <RefreshCw size={16} />
+          </button>
+        )}
         <button
           onClick={onExport}
           className="flex items-center gap-2 px-4 py-2 bg-[#a02ff1]/10 hover:bg-[#a02ff1]/20 border border-[#a02ff1]/30 rounded-lg text-xs font-bold text-[#a02ff1] transition-all whitespace-nowrap"
