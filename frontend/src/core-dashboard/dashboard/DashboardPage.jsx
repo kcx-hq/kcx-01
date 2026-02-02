@@ -53,13 +53,13 @@ const DashboardPage = () => {
     region: "All",
   });
 
-  const handleFilterChange = useCallback((newFilters) => {
-    setFilters((prev) => ({ ...prev, ...newFilters }));
+  const handleFilterChange = useCallback((partial) => {
+    setFilters((prev) => ({ ...prev, ...partial }));
   }, []);
 
   const memoizedFilters = useMemo(
     () => filters,
-    [filters.provider, filters.service, filters.region, filters.uploadId],
+    [filters.provider, filters.service, filters.region],
   );
 
   const anomaliesData = useHeaderAnomalies({ api, caps, filters, route });
@@ -152,6 +152,7 @@ const DashboardPage = () => {
               isModuleEnabled(caps, "costAnalysis") && (
                 <KeepAlive isActive={route.isCostAnalysis}>
                   <CostAnalysis
+                    filters={memoizedFilters}
                     onFilterChange={handleFilterChange}
                     api={api}
                     caps={caps}
