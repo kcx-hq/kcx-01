@@ -37,8 +37,8 @@ const CsvUploadGatePage = () => {
         }
 
         // fallback
-        const API_URL = import.meta.env.VITE_API_URL;
-        const res = await axios.get(`${API_URL}/auth/me`, {
+        const API_URL = import.meta.env.VITE_API_URL || "https://master-01-backend.onrender.com";
+        const res = await axios.get(`${API_URL}/api/auth/me`, {
           withCredentials: true,
         });
 
