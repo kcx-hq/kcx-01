@@ -158,10 +158,12 @@ export const signIn = async (req, res) => {
     const token = generateJWT(payload);
 
     /* 6. Set cookie */
+    // For cross-site deployments (frontend on Vercel, backend on Render) we need SameSite=None and Secure=true in production
     res.cookie("kandco_token", token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
-      sameSite: "strict",
+      sameSite: "none",
+      path: "/",
       maxAge: 1 * 24 * 60 * 60 * 1000,
     });
     
@@ -253,10 +255,12 @@ export const updateProfile = async (req, res) => {
 };
 
 export const logout = (req, res) => {
+  // Ensure we clear the same cookie attributes when logging out
   res.clearCookie("kandco_token", {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
-    sameSite: "strict",
+    sameSite: "none",
+    path: "/",
   });
   return res.status(200).json({ message: "Logged out successfully" });
 };
