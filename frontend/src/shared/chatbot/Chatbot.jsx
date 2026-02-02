@@ -1,9 +1,7 @@
 import React, { useEffect, useRef, useState, useCallback } from "react";
 
-const API_BASE = import.meta.env.VITE_API_URL
-  ? `${import.meta.env.VITE_API_URL}/api/chatbot`
-  : "https://master-01-backend.onrender.com/api/chatbot";
-
+const API_BASE =`${import.meta.env.VITE_API_URL}/api/chatbot`
+  
 export default function Chatbot() {
   const [sessionId, setSessionId] = useState(null);
   const [messages, setMessages] = useState([]);

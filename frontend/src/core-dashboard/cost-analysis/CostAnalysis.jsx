@@ -29,7 +29,7 @@ const CostAnalysis = ({ filters, onFilterChange, api, caps }) => {
       (async () => {
         try {
           setCheckingUpload(true);
-          const API_URL = import.meta.env.VITE_API_URL || "https://master-01-backend.onrender.com";
+          const API_URL = import.meta.env.VITE_API_URL ;
           const res = await axios.get(`${API_URL}/api/etl/get-billing-uploads`, {
             withCredentials: true,
           });

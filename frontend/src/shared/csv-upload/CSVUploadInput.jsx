@@ -13,7 +13,7 @@ const CsvUploadInput = ({
   const navigate = useNavigate();
   
   // Use VITE_API_URL if uploadUrl is not provided
-  const finalUploadUrl = uploadUrl || `${import.meta.env.VITE_API_URL || "https://master-01-backend.onrender.com"}/api/etl`;
+  const finalUploadUrl = `${import.meta.env.VITE_API_URL}/api/etl`;
 
   const [status, setStatus] = useState("idle"); // idle | uploading | error
   const [errorMessage, setErrorMessage] = useState("");
@@ -49,7 +49,7 @@ const dashboardPath = useDashboardStore((s) => s.dashboardPath);
     try {
       const res = await axios.post(finalUploadUrl, formData, {
         headers: { "Content-Type": "multipart/form-data" },
-        withCredentials,
+        withCredentials : true,
       });
 
       setUploadIds([res.data.uploadId] || []);

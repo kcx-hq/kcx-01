@@ -3,9 +3,11 @@ import axios from "axios";
 
 axios.defaults.withCredentials = true;
 
-const API_URL = import.meta.env.VITE_API_URL || "https://master-01-backend.onrender.com";
+const API_URL = import.meta.env.VITE_API_URL 
 const CAPS_VERSION = "v1"; // bump when structure changes
 const CAPS_TTL_MS = 15 * 60 * 1000; // 15 minutes
+
+console.log(API_URL)
 
 export const useAuthStore = create((set) => ({
   user: null,

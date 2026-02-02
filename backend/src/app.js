@@ -25,29 +25,12 @@ app.use(compression({ level: 6, threshold: 1024 })); // Compress responses > 1KB
 
 app.use(
   cors({
-    origin: function (origin, callback) {
-      const allowedOrigins = [
-        "http://localhost:5173",
-        "http://localhost:5174",
-        "https://master-01-git-master-kcx.vercel.app",
-        process.env.FRONTEND_URL
-      ].filter(Boolean);
-      
-      // Allow Vercel preview deployments (*.vercel.app)
-      const isVercelPreview = origin && origin.match(/https:\/\/.*\.vercel\.app$/);
-      
-      if (!origin || allowedOrigins.includes(origin) || isVercelPreview) {
-        callback(null, true);
-      } else {
-        callback(new Error('Not allowed by CORS'));
-      }
-    },
+    origin: ["http://localhost:5173", "http://localhost:5174"], // frontend (supports both ports)
     credentials: true,               // allow cookies
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"]
   })
 );
-
 app.use(express.json({ limit: '10mb' })); // Limit JSON payload size
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(cookieParser());
@@ -66,14 +49,10 @@ app.use(cookieParser());
 // });
 
 // Routes
-app.get('/api/health', (req, res) => {
-  res.status(200).json({ status: 'ok', timestamp: new Date().toISOString() });
-});
-
 app.use('/api/auth' , authRoutes);
 app.use('/api/inquiry', inquiryRoutes);
 app.use('/api/etl' , etlRoutes )
-app.use('/api/capabililites', capabililitesRoutes )
+app.use('/api/capabililites' , capabililitesRoutes )
 app.use('/api/dashboard', coreDashboardRoutes);
 app.use('/api/chatbot' , chatbotRoutes)
 
