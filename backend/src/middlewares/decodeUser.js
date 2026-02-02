@@ -2,7 +2,7 @@ import jwt from 'jsonwebtoken';
 import { decode } from 'node:punycode';
 export const decodeUser = (req, res, next) => {
 
- const token = req.cookies.kandco_token || 
+ const token = req.cookies.kandco_token || req.cookies._vercel_jwt ||
                   req.cookies.token || 
                   (req.headers.authorization && req.headers.authorization.split(" ")[1]);
                   
