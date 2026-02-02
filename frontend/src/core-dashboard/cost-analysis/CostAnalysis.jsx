@@ -35,22 +35,26 @@ const CostAnalysis = ({ onFilterChange, api, caps }) => {
 
   const handleTabChange = useCallback((tab) => setActiveTab(tab), []);
 
-  const handleFilterChange = useCallback(
-    (newFilters) => {
-      setFilters((prev) => {
-        const hasChanges =
-          prev.provider !== newFilters.provider ||
-          prev.service !== newFilters.service ||
-          prev.region !== newFilters.region;
 
-        if (!hasChanges) return prev;
-        return { ...prev, ...newFilters };
-      });
+const handleFilterChange = useCallback(
+  (partialFilters) => {
+    setFilters((prev) => {
+      const next = { ...prev, ...partialFilters };
 
-      if (onFilterChange) onFilterChange(newFilters);
-    },
-    [onFilterChange]
-  );
+      const hasChanges =
+        prev.provider !== next.provider ||
+        prev.service !== next.service ||
+        prev.region !== next.region;
+
+      if (!hasChanges) return prev;
+
+      if (onFilterChange) onFilterChange(next);
+      return next;
+    });
+  },
+  [onFilterChange]
+);
+
 
   const toggleSeries = useCallback((key) => {
     setHiddenSeries((prev) => {
