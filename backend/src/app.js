@@ -29,7 +29,7 @@ app.use(
       const allowedOrigins = [
         "http://localhost:5173",
         "http://localhost:5174",
-        "https://master-01-cbh20rvjb-kcx.vercel.app",
+        "https://master-01-git-master-kcx.vercel.app",
         process.env.FRONTEND_URL
       ].filter(Boolean);
       
