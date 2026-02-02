@@ -77,7 +77,7 @@ const VerticalSidebar = ({ onCsvSelected, caps = {} }) => {
 
     try {
       // API CALL: Sends file to backend
-      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+      const API_URL = import.meta.env.VITE_API_URL || 'https://master-01-backend.onrender.com';
       const response = await axios.post(`${API_URL}/api/etl`, formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
         withCredentials: true 

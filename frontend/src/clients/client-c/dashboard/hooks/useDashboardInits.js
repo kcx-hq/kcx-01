@@ -16,7 +16,7 @@ const useDashboardInit = () => {
       // If no uploadIds are set, fetch the latest uploadId
       if (uploadIds.length === 0) {
         try {
-          const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
+          const API_URL = import.meta.env.VITE_API_URL || "https://master-01-backend.onrender.com";
           const res = await axios.get(`${API_URL}/api/etl/get-billing-uploads`, {
             withCredentials: true,
           });

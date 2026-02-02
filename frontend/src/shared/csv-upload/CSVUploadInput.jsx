@@ -13,7 +13,7 @@ const CsvUploadInput = ({
   const navigate = useNavigate();
   
   // Use VITE_API_URL if uploadUrl is not provided
-  const finalUploadUrl = uploadUrl || `${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/etl`;
+  const finalUploadUrl = uploadUrl || `${import.meta.env.VITE_API_URL || "https://master-01-backend.onrender.com"}/api/etl`;
 
   const [status, setStatus] = useState("idle"); // idle | uploading | error
   const [errorMessage, setErrorMessage] = useState("");
