@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { useDashboardStore } from "../../../store/Dashboard.store";
 
 export function useCostAnalysis({ api, caps, filters, groupBy }) {
   const [loading, setLoading] = useState(true);
@@ -8,8 +9,13 @@ export function useCostAnalysis({ api, caps, filters, groupBy }) {
 
   const prevFiltersRef = useRef(filters);
   const prevGroupByRef = useRef(groupBy);
+  const prevUploadIdsRef = useRef((useDashboardStore.getState().uploadIds || []).join(","));
   const abortControllerRef = useRef(null);
   const isInitialLoadRef = useRef(true);
+
+  // Subscribe to uploads selection so we re-run queries when selection changes
+  const uploadIds = useDashboardStore((s) => s.uploadIds);
+  const uploadIdsKey = (Array.isArray(uploadIds) ? uploadIds.join(",") : "") || ""; 
 
   useEffect(() => {
     const filtersChanged =
@@ -17,9 +23,12 @@ export function useCostAnalysis({ api, caps, filters, groupBy }) {
       prevFiltersRef.current.service !== filters.service ||
       prevFiltersRef.current.region !== filters.region;
 
+    const uploadChanged = prevUploadIdsRef.current !== uploadIdsKey;
+
     const groupByChanged = prevGroupByRef.current !== groupBy;
 
-    if (!isInitialLoadRef.current && !filtersChanged && !groupByChanged) return;
+    // Re-run when filters, groupBy or upload selection changes (or on initial load)
+    if (!isInitialLoadRef.current && !filtersChanged && !groupByChanged && !uploadChanged) return; 
 
     if (abortControllerRef.current) abortControllerRef.current.abort();
 
@@ -49,6 +58,7 @@ export function useCostAnalysis({ api, caps, filters, groupBy }) {
 
         prevFiltersRef.current = { ...filters };
         prevGroupByRef.current = groupBy;
+        prevUploadIdsRef.current = uploadIdsKey;
         isInitialLoadRef.current = false;
       } catch (e) {
         if (e?.code === "NOT_SUPPORTED") return;

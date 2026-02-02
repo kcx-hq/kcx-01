@@ -1,6 +1,9 @@
-import React, { useState, useMemo, useCallback } from "react";
+import React, { useState, useMemo, useCallback, useEffect } from "react";
+import axios from "axios";
 import { Target, AlertCircle, Loader2 } from "lucide-react";
 import { useAuthStore } from "../../store/Authstore";
+import { useDashboardStore } from "../../store/Dashboard.store";
+import { useNavigate } from "react-router-dom";
 
 import FilterBar from "../common/widgets/FilterBar.jsx";
 import CostPredictability from "../common/widgets/CostPredictability.jsx";
@@ -13,6 +16,38 @@ import { useCostAnalysis } from "./hooks/useCostAnalysis.js";
 const CostAnalysis = ({ onFilterChange, api, caps }) => {
   const { user } = useAuthStore();
   const isLocked = !user?.is_premium; // mask if NOT premium
+
+  // Dashboard upload selection
+  const uploadIds = useDashboardStore((s) => s.uploadIds);
+  const setUploadIds = useDashboardStore((s) => s.setUploadIds);
+  const [checkingUpload, setCheckingUpload] = useState(false);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    // Auto-select latest upload for core dashboard when none selected
+    if (!uploadIds || uploadIds.length === 0) {
+      (async () => {
+        try {
+          setCheckingUpload(true);
+          const API_URL = import.meta.env.VITE_API_URL || "https://master-01-backend.onrender.com";
+          const res = await axios.get(`${API_URL}/api/etl/get-billing-uploads`, {
+            withCredentials: true,
+          });
+
+          const data = Array.isArray(res.data) ? res.data : [];
+          if (data.length > 0) {
+            data.sort((a, b) => new Date(b.uploadedat) - new Date(a.uploadedat));
+            const latestUploadId = data[0].uploadid;
+            setUploadIds([latestUploadId]);
+          }
+        } catch (err) {
+          console.error("Failed to fetch latest uploadId:", err);
+        } finally {
+          setCheckingUpload(false);
+        }
+      })();
+    }
+  }, [uploadIds.length, setUploadIds]);
 
   // Don't render if module not enabled or API not available
   if (!api || !caps || !caps.modules?.costAnalysis?.enabled) return null;
@@ -95,6 +130,21 @@ const handleFilterChange = useCallback(
         </div>
 
         <div className="relative">
+          {(!uploadIds || uploadIds.length === 0) && (
+            <div className="mb-3 px-4 py-2 rounded-md bg-yellow-500/10 border border-yellow-400 text-yellow-300 text-sm flex items-center justify-between">
+              <div>
+                No billing upload selected. Filters need a billing upload to work.
+              </div>
+              <div className="flex gap-2">
+                {checkingUpload ? (
+                  <span className="text-xs text-gray-300">Checking for recent uploads…</span>
+                ) : (
+                  <button onClick={() => navigate("/billing-uploads")} className="text-xs underline">Select or Upload</button>
+                )}
+              </div>
+            </div>
+          )}
+
           <FilterBar
             filters={filters}
             onChange={handleFilterChange}
