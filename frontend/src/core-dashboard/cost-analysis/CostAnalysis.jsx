@@ -13,7 +13,7 @@ import CostAnalysisView from "./CostAnalysisView.jsx";
 import { useCostFilters } from "./hooks/useCostFilters.js";
 import { useCostAnalysis } from "./hooks/useCostAnalysis.js";
 
-const CostAnalysis = ({ onFilterChange, api, caps }) => {
+const CostAnalysis = ({ filters, onFilterChange, api, caps }) => {
   const { user } = useAuthStore();
   const isLocked = !user?.is_premium; // mask if NOT premium
 
@@ -54,7 +54,6 @@ const CostAnalysis = ({ onFilterChange, api, caps }) => {
 
   const [activeModal, setActiveModal] = useState(null);
   const [activeTab, setActiveTab] = useState("overview");
-  const [filters, setFilters] = useState({ provider: "All", service: "All", region: "All" });
   const [groupBy, setGroupBy] = useState("ServiceName");
   const [chartType, setChartType] = useState("area");
   const [hiddenSeries, setHiddenSeries] = useState(new Set());
@@ -69,26 +68,6 @@ const CostAnalysis = ({ onFilterChange, api, caps }) => {
   });
 
   const handleTabChange = useCallback((tab) => setActiveTab(tab), []);
-
-
-const handleFilterChange = useCallback(
-  (partialFilters) => {
-    setFilters((prev) => {
-      const next = { ...prev, ...partialFilters };
-
-      const hasChanges =
-        prev.provider !== next.provider ||
-        prev.service !== next.service ||
-        prev.region !== next.region;
-
-      if (!hasChanges) return prev;
-
-      if (onFilterChange) onFilterChange(next);
-      return next;
-    });
-  },
-  [onFilterChange]
-);
 
 
   const toggleSeries = useCallback((key) => {
@@ -147,9 +126,7 @@ const handleFilterChange = useCallback(
 
           <FilterBar
             filters={filters}
-            onChange={handleFilterChange}
-            groupBy={groupBy}
-            onGroupChange={setGroupBy}
+            onChange={onFilterChange}
             providerOptions={filterOptions?.providers || []}
             serviceOptions={filterOptions?.services || []}
             regionOptions={filterOptions?.regions || []}
