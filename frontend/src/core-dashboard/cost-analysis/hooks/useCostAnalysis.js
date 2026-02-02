@@ -81,7 +81,7 @@ export function useCostAnalysis({ api, caps, filters, groupBy }) {
     prevGroupByRef.current = groupBy;
 
     return () => abortController.abort();
-  }, [api, caps, filters, groupBy]);
+  }, [api, caps, filters, groupBy, uploadIdsKey]);
 
   return { loading, isRefreshing, apiData, error };
 }
