@@ -12,46 +12,54 @@ export function getCurrentStep(stepIndex) {
  * Maps field paths to human-readable labels and filters empty values
  */
 export function formatSummary(requirements) {
-  const fieldLabels = {
-    'client.identity': 'Client Information',
-    'project.type': 'Project Type',
-    'project.problem': 'Problem Statement',
-    'project.users': 'Target Users',
-    'project.features': 'Features',
-    'project.integrations': 'Integrations',
-    'constraints.timeline': 'Timeline',
-    'constraints.budget': 'Budget'
+  // ✅ Labels updated for your NEW flow.js
+  const LABELS = [
+    { path: "client.identity", label: "Name" },
+    { path: "client.company", label: "Company" },
+    { path: "project.service", label: "Service Needed" },
+    { path: "finops.provider", label: "Cloud Provider" },
+    { path: "finops.spend", label: "Monthly Cloud Spend" },
+    { path: "client.role", label: "Role" },
+    { path: "project.message", label: "Message / Need" },
+    { path: "meeting.want", label: "Schedule Meeting" },
+    { path: "meeting.email", label: "Meeting Email" },
+    { path: "meeting.message", label: "Meeting Note" },
+  ];
+
+  const req =
+    requirements && typeof requirements === "object" ? requirements : {};
+
+  const getByPath = (obj, path) => {
+    return path.split(".").reduce((acc, key) => {
+      if (acc && typeof acc === "object" && key in acc) return acc[key];
+      return undefined;
+    }, obj);
   };
 
-  const summary = {};
+  const hasValue = (v) => {
+    if (v === undefined || v === null) return false;
+    if (typeof v === "string") return v.trim().length > 0;
+    if (Array.isArray(v)) return v.length > 0;
+    return true; // numbers/booleans/objects
+  };
 
-  // Ensure requirements is an object
-  const req = (typeof requirements === 'object' && requirements !== null) ? requirements : {};
+  const normalize = (v) => {
+    if (Array.isArray(v)) return v.join(", ");
+    if (typeof v === "string") return v.trim();
+    if (v === undefined || v === null) return "";
+    return String(v);
+  };
 
-  for (const [field, label] of Object.entries(fieldLabels)) {
-    const parts = field.split('.');
-    let value = req;
+  // ✅ Build a clean summary object, keeping keys readable and values consistent
+  return LABELS.reduce((acc, { path, label }) => {
+    const value = getByPath(req, path);
 
-    // Navigate through nested properties
-    for (const part of parts) {
-      if (value && typeof value === 'object' && part in value) {
-        value = value[part];
-      } else {
-        value = undefined;
-        break;
-      }
-    }
-
-    // Include all fields - show value or empty string if not filled
-    if (value !== undefined && value !== null && value !== '' && (!Array.isArray(value) || value.length > 0)) {
-      summary[label] = value;
-    } else {
-      summary[label] = ''; // Show empty field for unfilled questions
-    }
-  }
-
-  return summary;
+    // keep fields visible even if empty (like your old behavior)
+    acc[label] = hasValue(value) ? normalize(value) : "";
+    return acc;
+  }, {});
 }
+
 
 /**
  * Build a standard session response
