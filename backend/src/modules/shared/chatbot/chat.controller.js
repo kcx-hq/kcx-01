@@ -1,6 +1,6 @@
 // src/controllers/chat.controller.js
 import chatService from "./chat.service.js";
-import { buildSessionResponse } from "./flowHelpers.js";
+import { buildSessionResponse, getCurrentStep } from "./flowHelpers.js";
 import { FLOW } from "./flow.js";
 
 const chatController = {
@@ -53,8 +53,17 @@ const chatController = {
       if (cmd === "back") return res.json(await chatService.handleBack(sessionId, session));
       if (cmd === "skip") return res.json(await chatService.handleSkip(sessionId, session));
       if (cmd === "summary") return res.json(await chatService.handleSummary(sessionId, session));
-      if (cmd === "confirm") return res.json(await chatService.handleConfirm(sessionId, session));
       if (cmd === "restart") return res.json(await chatService.handleRestart(sessionId));
+
+      // ✅ confirm should finalize ONLY at done step
+      if (cmd === "confirm") {
+        const current = getCurrentStep(session.step_index);
+        if (current?.id === "done" || current?.type === "done") {
+          return res.json(await chatService.handleConfirm(sessionId, session));
+        }
+        // otherwise treat confirm as a normal message
+        return res.json(await chatService.handleMessage(sessionId, session, raw));
+      }
 
       return res.json(await chatService.handleMessage(sessionId, session, raw));
     } catch (err) {

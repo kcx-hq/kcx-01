@@ -37,10 +37,8 @@ import { useDashboardStore } from "./store/Dashboard.store.jsx";
 
 import ClientC from "./clients/client-c/client-c";
 
-
-
 // ✅ Import your chatbot widget component (adjust path)
-import Chatbot from "./shared/chatbot/Chatbot.jsx"; 
+import Chatbot from "./shared/chatbot/Chatbot.jsx";
 const Home = () => {
   const [showJourneySection, setShowJourneySection] = useState(false);
   const [isCTAActivated, setIsCTAActivated] = useState(false);
@@ -83,14 +81,17 @@ const Home = () => {
         <Pricing />
 
         <AnimatePresence>
-          {showJourneySection && (
+          {isChatOpen && (
             <motion.div
-              initial={{ opacity: 0, y: 50 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 50 }}
-              transition={{ duration: 0.6, ease: "easeOut" }}
+              className="fixed bottom-6 right-6 z-[999]"
+              initial={{ opacity: 0, y: 20, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 20, scale: 0.95 }}
+              transition={{ duration: 0.2, ease: "easeOut" }}
             >
-              <HowItWorks activateCTA={activateCTA} />
+              <div className="relative w-[320px] sm:w-[360px] h-[480px] overflow-hidden rounded-2xl">
+                <Chatbot onClose={() => setIsChatOpen(false)} />
+              </div>
             </motion.div>
           )}
         </AnimatePresence>
@@ -99,49 +100,35 @@ const Home = () => {
       </main>
 
       <Footer />
-
-      {/* ✅ Floating Chat Button */}
       <button
-        onClick={() => setIsChatOpen(true)}
-        className="fixed bottom-6 right-6 z-50 rounded-full bg-indigo-600 hover:bg-indigo-500 text-white px-5 py-3 shadow-lg transition"
-        aria-label="Open chatbot"
+        onClick={() => setIsChatOpen((prev) => !prev)}
+        className="
+    fixed bottom-6 right-6 z-50 rounded-full
+    px-5 py-3 text-white font-semibold
+    bg-gradient-to-r from-purple-700 via-fuchsia-600 to-purple-700
+    shadow-[0_10px_30px_rgba(168,85,247,0.45)]
+    hover:shadow-[0_12px_40px_rgba(168,85,247,0.7)]
+    transition-all duration-300
+     overflow-hidden
+  "
       >
-        Chat with us
+        {/* glow pulse layer */}
+        <span
+          className="
+      absolute inset-0 rounded-full
+      bg-purple-500/30 blur-xl
+      animate-pulse
+      pointer-events-none
+    "
+        />
+        {/* content */}
+        <span className="relative z-10">
+          {isChatOpen ? "Close chat" : "Chat with us"}
+        </span>
       </button>
-
-      {/* ✅ Chatbot Modal */}
-      <AnimatePresence>
-        {isChatOpen && (
-          <motion.div
-            className="fixed inset-0 z-[999] flex items-end sm:items-center justify-center bg-black/60 p-4"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onClick={() => setIsChatOpen(false)} // close when clicking backdrop
-          >
-            <motion.div
-              className="w-full max-w-lg bg-gray-900 rounded-2xl overflow-hidden shadow-2xl border border-white/10"
-              initial={{ y: 40, opacity: 0, scale: 0.98 }}
-              animate={{ y: 0, opacity: 1, scale: 1 }}
-              exit={{ y: 40, opacity: 0, scale: 0.98 }}
-              transition={{ duration: 0.2 }}
-              onClick={(e) => e.stopPropagation()} // prevent close when clicking inside modal
-            >
-              {/* Header */}
-             
-              {/* Body */}
-              <div className="h-[72vh] sm:h-[520px]">
-                <Chatbot />
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
     </div>
   );
 };
-
-
 
 function App() {
   // ✅ Load capabilities once globally
@@ -177,7 +164,7 @@ function App() {
 
         <Route path="/billing-uploads" element={<BillingUploads />} />
         <Route path="/upload" element={<CSVUpload />} />
-        
+
         {/* Client C Dashboard Route - Use nested routing */}
         <Route path="/client-c/*" element={<ClientC />} />
         <Route path="/upload-csv-file-input" element={<CsvUploadInput />} />

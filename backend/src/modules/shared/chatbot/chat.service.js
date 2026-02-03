@@ -62,32 +62,10 @@ function validateStrict(step, trimmed) {
   const kind = step?.validationPolicy?.kind;
 
   if (kind === "identity") {
-    const hasTwoWords = trimmed.split(/\s+/).filter(Boolean).length >= 2;
-    const hasCompanyHint =
-      trimmed.includes("(") ||
-      trimmed.toLowerCase().includes("corp") ||
-      trimmed.toLowerCase().includes("pvt") ||
-      trimmed.toLowerCase().includes("ltd") ||
-      trimmed.toLowerCase().includes("inc") ||
-      trimmed.toLowerCase().includes("company");
-
-    if (looksLikeProjectContent(trimmed)) {
-      return {
-        ok: false,
-        msg: "Quick check — I still need your name and company first.",
-      };
-    }
-    if (!hasTwoWords && !hasCompanyHint) {
-      return {
-        ok: false,
-        msg: "Could you share your name and company? (e.g., Rahul, Acme Corp)",
-      };
-    }
     return { ok: true };
   }
 
   if (kind === "timeline") {
-    // accept short like "1w", "4 weeks", "March 15"
     return { ok: true };
   }
 
@@ -101,6 +79,21 @@ function validateStrict(step, trimmed) {
         msg: "Please share a budget range (e.g., 5–15L) or type 'not sure'.",
       };
     }
+    return { ok: true };
+  }
+
+  // ✅ NEW: yes/no validation
+  if (kind === "yes_no") {
+    const t = trimmed.toLowerCase();
+    const ok = t === "yes" || t === "no";
+    if (!ok) return { ok: false, msg: "Please type 'yes' or 'no'." };
+    return { ok: true };
+  }
+
+  // ✅ NEW: email validation
+  if (kind === "email") {
+    const ok = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed);
+    if (!ok) return { ok: false, msg: "Please enter a valid email address." };
     return { ok: true };
   }
 
@@ -130,7 +123,6 @@ const chatService = {
     }
 
     if (step.type === "list") {
-      // allow list without commas IF AI can normalize; if strict fallback, require at least one token
       const tokens = trimmed
         .split(/,|\s+/)
         .map((s) => s.trim())
@@ -150,7 +142,7 @@ const chatService = {
     return {
       sessionId: session.id,
       reply,
-      question: null, // ✅ don't repeat step question
+      question: null,
       stepId: current?.id || null,
       stepIndex: session.step_index,
       isDone: false,
@@ -169,7 +161,6 @@ const chatService = {
       await sendUser(sessionId, "back", tx);
       await sendBot(sessionId, "Sure — let’s go back one step.", tx);
 
-      // ✅ ask only the step question, but prevent duplicates
       const lastBot = await getLastBotMessage(sessionId);
       if (lastBot !== prevStep.question)
         await sendBot(sessionId, prevStep.question, tx);
@@ -237,24 +228,37 @@ const chatService = {
     }
   },
 
+  // ✅ UPDATED: summary shows recap AND asks schedule_meeting question
   async handleSummary(sessionId, session) {
-    const current = getCurrentStep(session.step_index);
     await sendUser(sessionId, "summary");
     await sendBot(sessionId, "Here’s what I’ve captured so far:");
+
+    const scheduleIndex = FLOW.findIndex((s) => s.id === "schedule_meeting");
+    const scheduleStep = FLOW[scheduleIndex];
+
+    if (scheduleIndex !== -1 && scheduleStep?.question) {
+      await session.update({ step_index: scheduleIndex });
+      await sendBot(sessionId, scheduleStep.question);
+    }
 
     return {
       sessionId: session.id,
       reply: "Here’s what I’ve captured so far:",
       summary: formatSummary(session.requirements),
       rawRequirements: session.requirements,
-      question: null, // ✅ DO NOT resend any step question
-      stepId: current?.id || null,
-      stepIndex: session.step_index,
+      question:  null,
+      stepId:  null,
+      stepIndex: scheduleIndex !== -1 ? scheduleIndex : session.step_index,
       isDone: false,
-      progress: { current: session.step_index + 1, total: FLOW.length },
+      progress: {
+        current:
+          (scheduleIndex !== -1 ? scheduleIndex : session.step_index) + 1,
+        total: FLOW.length,
+      },
     };
   },
 
+  // Still used only at DONE step (controller will enforce)
   async handleConfirm(sessionId, session) {
     const tx = await sequelize.transaction();
     try {
@@ -318,13 +322,12 @@ const chatService = {
     }
   },
 
-  /** MAIN: single state machine. Always emits ONE next question (or none). */
+  /** MAIN: state machine */
   async handleMessage(sessionId, session, message) {
     const current = getCurrentStep(session.step_index);
     const trimmed = (message || "").trim();
 
     if (!current) {
-      // no step: don't spam questions
       await sendUser(sessionId, trimmed);
       return {
         sessionId: session.id,
@@ -342,11 +345,10 @@ const chatService = {
     if (!validation.valid) {
       await sendUser(sessionId, trimmed);
       await sendBot(sessionId, validation.error);
-      // ask the same question once (UI already shows it; but API can include it)
       return {
         sessionId: session.id,
         reply: validation.error,
-        question: null, // ✅ DO NOT re-send current.question (prevents duplicates)
+        question: null,
         stepId: current.id,
         stepIndex: session.step_index,
         isDone: false,
@@ -362,7 +364,6 @@ const chatService = {
         JSON.stringify(session.requirements || {}),
       );
 
-      // AI only for ai_assist
       const isAiStep = current.mode === "ai_assist";
       let extractorResult = null;
 
@@ -376,7 +377,6 @@ const chatService = {
           .catch(() => null);
       }
 
-      // Clarification from AI
       if (extractorResult && extractorResult.needs_clarification) {
         await sendBot(sessionId, extractorResult.clarifying_question, tx);
         await tx.commit();
@@ -389,57 +389,6 @@ const chatService = {
           isDone: false,
           progress: { current: session.step_index + 1, total: FLOW.length },
         };
-      }
-
-      const clarifications = requirements._clarifications || {};
-      const stepKey = current.id;
-
-      if (current.ambiguityPolicy && extractorResult?.value) {
-        const text = extractorResult.value.toLowerCase();
-        const words = text.split(/\s+/).filter(Boolean);
-
-        const isTooShort =
-          current.ambiguityPolicy.minWords &&
-          words.length < current.ambiguityPolicy.minWords;
-
-        const isVagueSingleWord =
-          current.ambiguityPolicy.vagueWords?.includes(words[0]) &&
-          words.length === 1;
-
-        const clarificationAlreadyAsked = clarifications[stepKey];
-
-        // 🚨 Ask clarification ONLY ONCE
-        if ((isTooShort || isVagueSingleWord) && !clarificationAlreadyAsked) {
-          // mark clarification asked
-          clarifications[stepKey] = true;
-          requirements._clarifications = clarifications;
-
-          await session.update({ requirements }, { transaction: tx });
-
-          await sendBot(
-            sessionId,
-            "Could you clarify a bit more? For example, what exactly needs to be monitored and why?",
-            tx,
-          );
-
-          await tx.commit();
-
-          return {
-            sessionId: session.id,
-            reply:
-              "Could you clarify a bit more? For example, what exactly needs to be monitored and why?",
-            question: null,
-            stepId: current.id,
-            stepIndex: session.step_index,
-            isDone: false,
-            progress: {
-              current: session.step_index + 1,
-              total: FLOW.length,
-            },
-          };
-        }
-
-        // ✅ clarification already asked → ACCEPT answer
       }
 
       // Save
@@ -463,23 +412,29 @@ const chatService = {
         }
       }
 
-       if (requirements._clarifications) {
-        delete requirements._clarifications[current.id];
-      }
+      // ✅ Branching next step
+      let nextIndex = Math.min(session.step_index + 1, FLOW.length - 1);
+      let meeting = null ;
 
-      // Advance exactly one step
-      const nextIndex = Math.min(session.step_index + 1, FLOW.length - 1);
+      // If schedule_meeting answered "no" → jump to done
+      if (current.id === "schedule_meeting") {
+        const want = (savedValue || "").toString().trim().toLowerCase();
+        if (want === "no") {
+          const doneIndex = FLOW.findIndex((s) => s.id === "done");
+          if (doneIndex !== -1) nextIndex = doneIndex;
+        }
+      }
+      
+
       const nextStep = FLOW[nextIndex];
       const newStatus = nextStep.type === "done" ? "completed" : session.status;
-
-     
 
       await session.update(
         { step_index: nextIndex, requirements, status: newStatus },
         { transaction: tx },
       );
 
-      // Human reply
+      // Reply
       const ack = pickAck(current);
       const confirm =
         current.confirmationTemplate && savedValue != null
@@ -492,13 +447,21 @@ const chatService = {
 
       await sendBot(sessionId, reply, tx);
 
-      // Ask next question ONCE (avoid duplicates)
+      // Ask next question ONCE
       const lastBot = await getLastBotMessage(sessionId);
       if (nextStep?.question && lastBot !== nextStep.question) {
         await sendBot(sessionId, nextStep.question, tx);
       }
 
       await tx.commit();
+
+      if (current.id === "meeting_message") {
+         meeting = {
+          name:requirements?.client?.identity,
+          email: requirements?.meeting?.email,
+          message: requirements?.meeting?.message,
+        };
+      }
 
       return {
         sessionId: session.id,
@@ -508,6 +471,7 @@ const chatService = {
         stepIndex: nextIndex,
         isDone: newStatus === "completed",
         progress: { current: nextIndex + 1, total: FLOW.length },
+        meeting
       };
     } catch (e) {
       await tx.rollback();

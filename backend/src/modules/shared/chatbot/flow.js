@@ -1,120 +1,149 @@
 // src/flow.js
 export const FLOW = [
+  // 1) Identity
   {
     id: "welcome",
     question:
-      "Hi! I’m here to gather your project requirements. First—what’s your name and company?",
+      "Hi! 👋 I’ll collect a few details so our team can help you faster. How should I call you?",
     field: "client.identity",
     type: "text",
     mode: "strict",
-    help: "Example: Rahul (Acme Corp) / John Smith, Acme Corp",
+    help: "Example: Rahul / John Smith",
     validationPolicy: { kind: "identity" },
-    acknowledgements: [
-      "Nice to meet you!",
-      "Great — thanks!",
-      "Perfect, thank you.",
+    acknowledgements: ["Nice to meet you!", "Great — thanks!", "Perfect, thank you."],
+  },
+  
+  // 2) Work Email
+  {
+    id: "company_name",
+    question: "What’s your company name?",
+    field: "client.company",
+    type: "text",
+    mode: "strict",
+    help: "KCX",
+    validationPolicy: { kind: "identity" },
+    acknowledgements: ["Perfect — saved.", "Got it.", "Thanks!"],
+  },
+
+  // 3) Service selection (buttons)
+  {
+    id: "service",
+    question: "What do you need help with?",
+    field: "project.service",
+    type: "choice",
+    mode: "strict",
+    options: [
+      "Dashboard customization",
+      "Cost optimization",
+      "Cloud billing issues",
+      "Alerts & monitoring",
+      "FinOps consultation",
+      "Other",
     ],
+    help: "Pick one option.",
+    acknowledgements: ["Cool — noted.", "Perfect.", "Got it."],
   },
+
+  // 4) Optional qualifier: Cloud provider (buttons)
   {
-    id: "project_type",
-    question:
-      "What type of project do you need? (dashboard, mobile app, website, automation, API, etc.)",
-    field: "project.type",
+    id: "provider",
+    question: "Which cloud provider are you using?",
+    field: "finops.provider",
+    type: "choice",
+    mode: "strict",
+    options: ["AWS", "GCP", "Azure", "Multi-cloud", "Not sure"],
+    help: "Pick one option.",
+    acknowledgements: ["Got it.", "Nice — noted.", "Perfect."],
+  },
+
+  // 5) Optional qualifier: Spend (buttons)
+  {
+    id: "spend",
+    question: "Approximate monthly cloud spend?",
+    field: "finops.spend",
+    type: "choice",
+    mode: "strict",
+    options: ["< $1k", "$1k–$10k", "$10k–$50k", "$50k+", "Not sure"],
+    help: "Select the closest range.",
+    acknowledgements: ["Thanks — captured.", "Perfect.", "Got it."],
+  },
+
+  // 6) Optional qualifier: Role (buttons)
+  {
+    id: "role",
+    question: "What’s your role?",
+    field: "client.role",
+    type: "choice",
+    mode: "strict",
+    options: ["Finance", "Engineering", "Leadership", "Ops/Cloud", "Other"],
+    help: "Pick one option.",
+    acknowledgements: ["Noted.", "Perfect.", "Got it."],
+  },
+
+  // 7) Message / purpose
+  {
+    id: "message",
+    question: "Tell us a bit more about your need (1–2 lines is enough).",
+    field: "project.message",
+    type: "text",
+    mode: "ai_assist",
+    help: "Example: We want billing anomaly alerts and a dashboard for AWS costs.",
+    acknowledgements: ["Understood.", "Got it — that helps.", "Perfect."],
+  },
+
+  // 8) Meeting ask (buttons)
+  {
+    id: "schedule_meeting",
+    question: "Would you like to schedule a meeting call now?",
+    field: "meeting.want",
+    type: "choice",
+    mode: "strict",
+    options: ["yes", "no"],
+    help: "Tap yes to book a call, or no to finish.",
+    acknowledgements: ["Cool.", "Got it.", "Perfect."],
+    validationPolicy: { kind: "yes_no" },
+  },
+
+  // 9) Meeting email (only if yes)
+  {
+    id: "meeting_email",
+    question: "What email should we send the meeting invite to?",
+    field: "meeting.email",
     type: "text",
     mode: "strict",
-    help: "Common types: dashboard, mobile app, website, web platform, automation tool, API service, desktop app",
-    validationPolicy: { kind: "project_type" },
-    acknowledgements: ["Nice, that makes sense.", "Cool — noted.", "Perfect."],
+    help: "Example: rahul@company.com",
+    acknowledgements: ["Perfect — saved.", "Got it.", "Thanks!"],
+    validationPolicy: { kind: "email" },
+    skipIf: (state) => (state?.meeting?.want || "").toLowerCase() !== "yes",
   },
+
+  // 10) Optional meeting note (only if yes)
   {
-    id: "problem",
-    question: "What problem are you trying to solve? (1–2 lines is enough)",
-    field: "project.problem",
+    id: "meeting_message",
+    question: "Any message for our team before the call? (optional)",
+    field: "meeting.message",
     type: "text",
     mode: "ai_assist",
-    ambiguityPolicy: {
-      minWords: 5,
-      vagueWords: [
-        "monitoring",
-        "tracking",
-        "analytics",
-        "dashboard",
-        "automation",
-      ],
-    },
-    help: "Example: We need to monitor AWS billing anomalies to avoid cost overruns",
-    acknowledgements: ["Understood.", "Got it — that helps."],
+    help: "Example: Please focus on AWS savings + RI/SP strategy.",
+    acknowledgements: ["Nice — added.", "Got it.", "Perfect."],
+    skipIf: (state) => (state?.meeting?.want || "").toLowerCase() !== "yes",
   },
+
+  // 11) Redirect step (only if yes)
   {
-    id: "users",
-    question: "Who will use it? (roles like admin, finance, manager, customer)",
-    field: "project.users",
-    type: "text",
-    mode: "ai_assist",
-    help: "Example: HR Manager, Finance Lead, Employee, Admin",
-    acknowledgements: ["Nice, noted.", "Perfect.", "Got it — thanks."],
-  },
-  {
-    id: "features",
-    question:
-      "List the top features you want. (Comma-separated is fine — e.g., login, reports, alerts.)",
-    field: "project.features",
-    type: "list",
-    mode: "ai_assist",
-    help: "Separate each feature by a comma. Example: user login, dashboard, reports, email notifications, file uploads",
-    acknowledgements: [
-      "Great list — noted.",
-      "Awesome, captured those.",
-      "Perfect — got those down.",
-    ],
-    confirmationTemplate: "I’ve noted these features: {value}",
-  },
-  {
-    id: "integrations",
-    question:
-      "Any integrations needed? (AWS/GCP/Azure, ERP, billing, SSO, etc.) If none, type 'none'.",
-    field: "project.integrations",
-    type: "text",
-    mode: "ai_assist",
-    help: "Example: AWS CUR, Slack alerts, Email reports, Stripe payments",
-    acknowledgements: ["Got it.", "Nice — captured.", "Understood."],
-    confirmationTemplate: "Integrations noted: {value}",
-  },
-  {
-    id: "timeline",
-    question:
-      "What’s your expected timeline/go-live date? (e.g., 4 weeks, March 15)",
-    field: "constraints.timeline",
-    type: "text",
-    mode: "strict",
-    help: "Example: 6 weeks, Q2 2026, March 15, 2026, ASAP, 3 months",
-    validationPolicy: { kind: "timeline" },
-    acknowledgements: ["Great — thanks.", "Understood.", "Perfect."],
-  },
-  {
-    id: "budget",
-    question:
-      "What’s your budget range? (e.g., <5L, 5–15L, 15–30L, 30L+). If unknown, type 'not sure'.",
-    field: "constraints.budget",
-    type: "text",
-    mode: "strict",
-    help: "Estimate: <5L, 5–15L, 15–30L, 30–50L, 50L+, or 'not sure'",
-    validationPolicy: { kind: "budget_or_not_sure" },
-    acknowledgements: ["Perfect, saved.", "Thanks — noted.", "Got it."],
-  },
-  {
-    id: "review",
-    type: "review",
-    mode: "review",
+    id: "redirect",
+    type: "redirect",
+    mode: "redirect",
+    redirect: true,
     field: null,
-    question:
-      "Here’s a quick recap. Type `summary` to review, `confirm` to finalize, or `back` to edit the last answer.",
-    help: "Commands: summary / confirm / back / restart",
+    skipIf: (state) => (state?.meeting?.want || "").toLowerCase() !== "yes",
   },
+
+  // 12) Done
   {
     id: "done",
     question:
-      "✅ Thanks! I’ve captured everything. Type 'confirm' to finalize, 'summary' to review, or 'restart' to start over.",
+      "✅ Thanks! Your details are captured. Click Summary for getting a recap.",
     field: null,
     type: "done",
     mode: "strict",
