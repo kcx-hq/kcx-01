@@ -256,6 +256,7 @@ const CostAnalysisView = ({
                 hiddenSeries={hiddenSeries}
                 toggleSeries={toggleSeries}
                 totalSpend={kpis.totalSpend}
+                activeKeys={activeKeys}
               />
             </div>
 

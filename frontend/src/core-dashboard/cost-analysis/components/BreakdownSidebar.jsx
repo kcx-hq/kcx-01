@@ -10,6 +10,7 @@ const BreakdownSidebar = ({
   toggleSeries,
   totalSpend,
   onReset,
+  activeKeys = [],
 }) => {
   const getShare = useCallback(
     (val) => (totalSpend ? ((val / totalSpend) * 100).toFixed(1) : 0),
@@ -35,7 +36,7 @@ const BreakdownSidebar = ({
               <div
                 className="w-1.5 h-1.5 rounded-full shrink-0"
                 style={{
-                  backgroundColor: COLOR_PALETTE[i % COLOR_PALETTE.length],
+                  backgroundColor: COLOR_PALETTE[activeKeys.indexOf(name) >= 0 ? activeKeys.indexOf(name) % COLOR_PALETTE.length : i % COLOR_PALETTE.length],
                 }}
               />
               <div className="flex flex-col min-w-0">
@@ -52,7 +53,7 @@ const BreakdownSidebar = ({
                 </span>
               </div>
             </div>
-
+          
             <span className="text-xs font-bold text-white font-mono">
               {formatCurrency(b.value)}
             </span>

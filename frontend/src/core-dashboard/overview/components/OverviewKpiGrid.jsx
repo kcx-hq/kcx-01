@@ -79,7 +79,7 @@ const OverviewKpi = ({
         icon: DollarSign,
         color: "text-[#a02ff1]",
         subValue: Math.abs(spendChangePercent) > 0.1 ? formatPercent(spendChangePercent) : null,
-        contextLabel: billingPeriod ? `Billing period: ${billingPeriod}` : null,
+        contextLabel: billingPeriod && billingPeriod.start && billingPeriod.end ? `Billing period: ${new Date(billingPeriod.start).toLocaleDateString()} - ${new Date(billingPeriod.end).toLocaleDateString()}` : null,
         showChangeTooltip: Math.abs(spendChangePercent) > 0.1,
       },
       {
@@ -194,7 +194,7 @@ const OverviewKpi = ({
             metrics: [
               { label: "Total Spend", value: formatCurrency(safeSpend) },
               { label: "Period Change", value: formatPercent(spendChangePercent) },
-              { label: "Billing Period", value: billingPeriod || "N/A" },
+              { label: "Billing Period", value: billingPeriod && billingPeriod.start && billingPeriod.end ? `${new Date(billingPeriod.start).toLocaleDateString()} - ${new Date(billingPeriod.end).toLocaleDateString()}` : "N/A" },
             ],
             breakdown: [],
           };

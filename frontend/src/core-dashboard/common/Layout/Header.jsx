@@ -5,9 +5,11 @@ import { Search, Download, ChevronDown, CheckCircle2, AlertTriangle, X, LogOut, 
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuthStore } from '../../../store/Authstore';
 
+
 const Header = ({ title, anomalies = [], anomaliesCount = 0 }) => {
   const navigate = useNavigate();
   const { logout, user, updateProfile, fetchUser } = useAuthStore();
+  
   const [showDialog, setShowDialog] = useState(false);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [showProfileSettings, setShowProfileSettings] = useState(false);
@@ -82,6 +84,29 @@ const Header = ({ title, anomalies = [], anomaliesCount = 0 }) => {
     setIsUpdating(false);
   };
 
+  // Handle search input change
+  const handleSearchChange = (e) => {
+    const term = e.target.value;
+    updateSearchTerm(term);
+  };
+
+  // Handle search clear
+  const handleSearchClear = () => {
+    clearSearch();
+    if (searchInputRef.current) {
+      searchInputRef.current.focus();
+    }
+  };
+
+  // Handle search navigation with keyboard
+  const handleSearchKeyDown = (e) => {
+    if (e.key === 'Enter' && resultCount > 0) {
+      nextResult();
+    } else if (e.key === 'Escape') {
+      handleSearchClear();
+    }
+  };
+
   // Reset visible count when dialog opens/closes
   const handleDialogToggle = (open) => {
     setShowDialog(open);
@@ -105,17 +130,7 @@ const Header = ({ title, anomalies = [], anomaliesCount = 0 }) => {
         <h1 className="text-lg font-bold text-white tracking-tight">{title}</h1>
       </div>
 
-      {/* Center: Search */}
-      <div className="hidden md:flex flex-1 justify-center px-8">
-        <div className="relative w-full max-w-sm group/search">
-          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 group-focus-within/search:text-[#a02ff1] transition-colors" />
-          <input 
-            type="text" 
-            placeholder="Search..." 
-            className="w-full bg-[#1a1b20]/50 border border-white/10 rounded-lg pl-9 pr-4 py-2 text-xs text-white outline-none focus:bg-[#0f0f11] focus:border-[#a02ff1] transition-all"
-          />
-        </div>
-      </div>
+ 
 
       {/* Right: Actions */}
       <div className="flex items-center gap-3">

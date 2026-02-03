@@ -48,7 +48,9 @@ const MostPopularRegion = ({ data, totalSpend = 0, billingPeriod = null }) => {
             Most Popular Region by Effective Cost
           </h3>
           <div className="text-[10px] text-gray-500">
-            {billingPeriod ? `${billingPeriod.start} - ${billingPeriod.end} • ` : ''}Use drill down → Provider
+            {billingPeriod && billingPeriod.start && billingPeriod.end 
+              ? `${new Date(billingPeriod.start).toLocaleDateString()} - ${new Date(billingPeriod.end).toLocaleDateString()} • ` 
+              : 'Previous month • '}Use drill down → Provider
           </div>
         </div>
         <div className="flex-1 flex items-center justify-center text-gray-500 text-sm min-h-[300px]">
@@ -68,7 +70,9 @@ const MostPopularRegion = ({ data, totalSpend = 0, billingPeriod = null }) => {
           Most Popular Region by Effective Cost
         </h3>
         <div className="text-[10px] text-gray-500">
-          {billingPeriod ? `${billingPeriod} • ` : 'Previous month • '}Use drill down → Provider
+          {billingPeriod && billingPeriod.start && billingPeriod.end 
+            ? `${new Date(billingPeriod.start).toLocaleDateString()} - ${new Date(billingPeriod.end).toLocaleDateString()} • ` 
+            : 'Previous month • '}Use drill down → Provider
         </div>
       </div>
 

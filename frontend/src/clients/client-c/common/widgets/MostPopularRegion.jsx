@@ -68,9 +68,9 @@ const MostPopularRegion = ({ data, totalSpend, billingPeriod }) => {
             <span className="text-gray-500">Total Spend</span>
             <span className="font-bold text-white">{formatCurrency(totalSpend)}</span>
           </div>
-          {billingPeriod && (
+          {billingPeriod && billingPeriod.start && billingPeriod.end && (
             <div className="text-[10px] text-gray-500 mt-1">
-              Billing Period: {billingPeriod.start} to {billingPeriod.end}
+              Billing Period: {new Date(billingPeriod.start).toLocaleDateString()} to {new Date(billingPeriod.end).toLocaleDateString()}
             </div>
           )}
         </div>

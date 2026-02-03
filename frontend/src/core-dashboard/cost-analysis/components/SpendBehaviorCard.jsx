@@ -126,6 +126,18 @@ const SpendBehaviorCard = ({
                       stroke={COLOR_PALETTE[i % COLOR_PALETTE.length]}
                       fill={`url(#color${i})`}
                       strokeWidth={2}
+                      dot={{
+                        r: 4,
+                        fill: COLOR_PALETTE[i % COLOR_PALETTE.length],
+                        strokeWidth: 0,
+                        fillOpacity: 0.8
+                      }}
+                      activeDot={{
+                        r: 6,
+                        fill: COLOR_PALETTE[i % COLOR_PALETTE.length],
+                        stroke: "#ffffff",
+                        strokeWidth: 2
+                      }}
                     />
                   )
               )}
@@ -160,6 +172,7 @@ const SpendBehaviorCard = ({
                       stackId="a"
                       fill={COLOR_PALETTE[i % COLOR_PALETTE.length]}
                       radius={[2, 2, 0, 0]}
+                      minPointSize={2}
                     />
                   )
               )}
@@ -193,8 +206,22 @@ const SpendBehaviorCard = ({
                       type="monotone"
                       dataKey={k}
                       stroke={COLOR_PALETTE[i % COLOR_PALETTE.length]}
-                      strokeWidth={2}
-                      dot={false}
+                      strokeWidth={3}
+                      strokeDasharray="4 2"
+                      connectNulls={true}
+                      dot={{
+                        r: 3,
+                        fill: COLOR_PALETTE[i % COLOR_PALETTE.length],
+                        strokeWidth: 1,
+                        stroke: "#ffffff",
+                        fillOpacity: 0.9
+                      }}
+                      activeDot={{
+                        r: 5,
+                        fill: COLOR_PALETTE[i % COLOR_PALETTE.length],
+                        stroke: "#ffffff",
+                        strokeWidth: 2
+                      }}
                     />
                   )
               )}

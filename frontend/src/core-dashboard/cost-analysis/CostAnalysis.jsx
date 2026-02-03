@@ -47,7 +47,7 @@ const CostAnalysis = ({ api, caps }) => {
   }, []);
 
   /* -----------------------------
-   Data
+    Data Fetching
   ----------------------------- */
   const { loading, isRefreshing, apiData, error } = useCostAnalysis({
     api,
@@ -56,13 +56,9 @@ const CostAnalysis = ({ api, caps }) => {
     groupBy,
   });
 
+  // Keep showing existing data during refresh to prevent "layout jump"
   const kpis = useMemo(() => apiData?.kpis || {}, [apiData]);
-
-  const chartData = useMemo(
-    () => (isRefreshing ? [] : apiData?.chartData || []),
-    [apiData, isRefreshing]
-  );
-
+  const chartData = useMemo(() => apiData?.chartData || [], [apiData]);
   const activeKeys = useMemo(() => apiData?.activeKeys || [], [apiData]);
   const breakdown = useMemo(() => apiData?.breakdown || [], [apiData]);
 
@@ -98,8 +94,9 @@ const CostAnalysis = ({ api, caps }) => {
         />
       </div>
 
-      {/* CONTENT - loading overlay only when no data yet; keep showing current output while refreshing */}
+      {/* CONTENT */}
       <div className="flex-1 overflow-y-auto px-6 pb-6 relative min-h-[50vh]">
+        {/* Full screen loader ONLY on initial mount (no data yet) */}
         {loading && !apiData && (
           <div
             className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-[#0f0f11]/95 backdrop-blur-sm rounded-xl border border-white/5"
@@ -131,6 +128,8 @@ const CostAnalysis = ({ api, caps }) => {
             breakdown={breakdown}
             activeModal={activeModal}
             setActiveModal={setActiveModal}
+            // CONNECTING THE LOADING STATE HERE
+            isLoading={loading || isRefreshing}
           >
             {activeTab === "predictability" && (
               <div className="pt-6">

@@ -206,15 +206,6 @@ export function DriverDetailsDrawer({
           </div>
         </div>
       </div>
-
-      <div className="p-4 border-t border-white/10 bg-[#1a1b20] flex gap-3">
-        <button className="flex-1 py-2 bg-white/5 hover:bg-white/10 rounded-lg text-xs font-bold text-white transition-colors">
-          View Resources
-        </button>
-        <button className="flex-1 py-2 bg-[#a02ff1] hover:bg-[#8b25d1] rounded-lg text-xs font-bold text-white transition-colors">
-          Analyze Root Cause
-        </button>
-      </div>
     </>
   );
 
@@ -229,20 +220,25 @@ export function DriverDetailsDrawer({
       />
 
       <motion.div
-        initial={{ x: "100%" }}
-        animate={{ x: 0 }}
-        exit={{ x: "100%" }}
+        initial={{ scale: 0.9, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        exit={{ scale: 0.9, opacity: 0 }}
         transition={{ type: "spring", stiffness: 300, damping: 30 }}
-        className="fixed right-0 top-0 bottom-0 w-full max-w-lg bg-[#15161a] border-l border-white/10 shadow-2xl z-[70] flex flex-col relative"
+        className="fixed inset-0 flex items-center justify-center p-4 z-[70]"
       >
-        {/* ✅ FULLY gate the drawer content */}
-        {isMasked && isSavingsDriver ? (
-          <PremiumGate variant="full" minHeight="100%">
-            {content}
-          </PremiumGate>
-        ) : (
-          content
-        )}
+        <div 
+          className="w-full max-w-2xl max-h-[90vh] bg-[#15161a] border border-white/10 shadow-2xl rounded-2xl flex flex-col relative overflow-hidden"
+          onClick={(e) => e.stopPropagation()}
+        >
+          {/* ✅ FULLY gate the drawer content */}
+          {isMasked && isSavingsDriver ? (
+            <PremiumGate variant="full" minHeight="100%">
+              {content}
+            </PremiumGate>
+          ) : (
+            content
+          )}
+        </div>
       </motion.div>
     </>
   );

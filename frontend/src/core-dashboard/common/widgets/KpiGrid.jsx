@@ -26,7 +26,7 @@ export const KpiCard = ({
       transition={{ delay: delay * 0.1 }}
       whileHover={{ y: -5 }}
       onClick={onClick}
-      className="bg-[#1a1b20]/60 backdrop-blur-md border border-white/5 p-3 rounded-xl shadow-lg relative overflow-hidden group min-h-[100px] cursor-pointer hover:border-[#a02ff1]/30 transition-all"
+      className="bg-[#1a1b20]/60 backdrop-blur-md border border-white/5 p-3 rounded-xl shadow-lg relative overflow-hidden group min-h-[100px] cursor-pointer hover:border-[#a02ff1]/50 transition-all duration-200 hover:shadow-[0_0_15px_rgba(160,47,241,0.2)]"
     >
       <div
         className={`absolute -top-10 -right-10 p-16 ${color} bg-opacity-5 blur-[40px] rounded-full group-hover:bg-opacity-10 transition-all duration-500`}
@@ -102,12 +102,42 @@ const KpiGrid = ({
 
   const insights = useMemo(() => {
     if (!selectedCardId || typeof getInsights !== "function") return null;
-    return getInsights(selectedCardId, ctx);
+    try {
+      const result = getInsights(selectedCardId, ctx);
+      // Validate the result structure
+      if (result && typeof result === "object") {
+        return {
+          title: result.title || "Details",
+          description: result.description || "",
+          metrics: Array.isArray(result.metrics) ? result.metrics : [],
+          breakdown: Array.isArray(result.breakdown) ? result.breakdown : [],
+          recommendation: result.recommendation || "",
+        };
+      }
+      return null;
+    } catch (error) {
+      console.warn("Error getting insights for card:", selectedCardId, error);
+      return {
+        title: "Details",
+        description: "Unable to load detailed insights at this time.",
+        metrics: [],
+        breakdown: [],
+        recommendation: "",
+      };
+    }
   }, [selectedCardId, getInsights, ctx]);
 
   const handleClick = (card) => {
-    onCardClick?.(card.id, card);
-    if (typeof getInsights === "function") setSelectedCardId(card.id);
+    try {
+      onCardClick?.(card.id, card);
+      if (typeof getInsights === "function") {
+        // Only set selectedCardId if getInsights exists and is a function
+        setSelectedCardId(card.id);
+      }
+    } catch (error) {
+      console.warn("Error handling KPI card click:", error);
+      // Don't set selectedCardId if there's an error
+    }
   };
 
   return (
@@ -173,57 +203,69 @@ const KpiGrid = ({
         )}
       </div>
 
-      {/* Insights Dialog (optional) */}
+      {/* Insights Dropdown (small and contained) */}
       {insights && (
         <div
-          className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+          className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-start justify-center pt-20 p-4"
           onClick={() => setSelectedCardId(null)}
         >
           <div
-            className="bg-[#1a1b20] border border-white/10 rounded-2xl shadow-2xl max-w-2xl w-full max-h-[80vh] overflow-hidden"
+            className="bg-[#1a1b20] border border-white/10 rounded-xl shadow-2xl w-full max-w-md max-h-[70vh] overflow-hidden"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="p-5 border-b border-white/5 flex items-center justify-between">
-              <h2 className="text-lg font-bold text-white">{insights.title}</h2>
+            {/* Header */}
+            <div className="p-4 border-b border-white/5 flex items-center justify-between bg-[#0f0f11]/50">
+              <h3 className="text-sm font-bold text-white truncate">{insights.title}</h3>
               <button
                 onClick={() => setSelectedCardId(null)}
-                className="p-1.5 rounded-lg hover:bg-white/5 text-gray-400 hover:text-white transition-colors"
+                className="p-1 rounded hover:bg-white/10 text-gray-400 hover:text-white transition-colors"
               >
-                <X size={18} />
+                <X size={16} />
               </button>
             </div>
 
-            <div className="p-5 overflow-y-auto max-h-[calc(80vh-100px)]">
-              <p className="text-sm text-gray-300 mb-4">{insights.description}</p>
+            {/* Content */}
+            <div className="p-4 overflow-y-auto max-h-[calc(70vh-60px)]">
+              {insights.description && (
+                <p className="text-xs text-gray-400 mb-4">{insights.description}</p>
+              )}
 
+              {/* Metrics Grid - smaller and responsive */}
               {Array.isArray(insights.metrics) && insights.metrics.length > 0 && (
-                <div className="grid grid-cols-3 gap-3 mb-4">
+                <div className="grid grid-cols-2 gap-2 mb-4">
                   {insights.metrics.map((metric, idx) => (
-                    <div key={idx} className="bg-[#0f0f11]/50 border border-white/5 rounded-lg p-3">
-                      <div className="text-xs text-gray-400 mb-1">{metric.label}</div>
-                      <div className="text-sm font-bold text-white">{metric.value}</div>
+                    <div key={idx} className="bg-[#0f0f11]/30 border border-white/5 rounded-lg p-2.5">
+                      <div className="text-[10px] text-gray-500 mb-1 truncate" title={metric.label}>
+                        {metric.label}
+                      </div>
+                      <div className="text-xs font-bold text-white truncate" title={metric.value}>
+                        {metric.value}
+                      </div>
                     </div>
                   ))}
                 </div>
               )}
 
+              {/* Breakdown List */}
               {Array.isArray(insights.breakdown) && insights.breakdown.length > 0 && (
                 <div className="mb-4">
-                  <h3 className="text-sm font-semibold text-white mb-2">Breakdown</h3>
-                  <div className="space-y-2">
+                  <h4 className="text-xs font-semibold text-gray-300 mb-2">Breakdown</h4>
+                  <div className="space-y-1.5">
                     {insights.breakdown.map((item, idx) => (
                       <div
                         key={idx}
-                        className="bg-[#0f0f11]/50 border border-white/5 rounded-lg p-3 flex items-center justify-between"
+                        className="bg-[#0f0f11]/30 border border-white/5 rounded-lg p-2.5 flex items-center justify-between"
                       >
-                        <div className="flex-1">
-                          <div className="text-sm font-semibold text-white truncate" title={item.label}>
+                        <div className="flex-1 min-w-0">
+                          <div className="text-xs font-medium text-white truncate" title={item.label}>
                             {item.label}
                           </div>
                         </div>
-                        <div className="text-right ml-4">
-                          <div className="text-sm font-bold text-white">{item.value}</div>
-                          <div className="text-xs text-gray-400">{item.percentage}</div>
+                        <div className="text-right ml-2 flex-shrink-0">
+                          <div className="text-xs font-bold text-white">{item.value}</div>
+                          {item.percentage && (
+                            <div className="text-[10px] text-gray-500">{item.percentage}</div>
+                          )}
                         </div>
                       </div>
                     ))}
@@ -231,9 +273,21 @@ const KpiGrid = ({
                 </div>
               )}
 
+              {/* Recommendation */}
               {insights.recommendation && (
-                <div className="bg-amber-400/10 border border-amber-400/30 rounded-lg p-3">
-                  <p className="text-xs text-amber-400">{insights.recommendation}</p>
+                <div className="bg-amber-400/10 border border-amber-400/20 rounded-lg p-3">
+                  <p className="text-[10px] text-amber-400">{insights.recommendation}</p>
+                </div>
+              )}
+
+              {/* Fallback message if no content */}
+              {!insights.description && 
+               !insights.metrics?.length && 
+               !insights.breakdown?.length && 
+               !insights.recommendation && (
+                <div className="text-center py-6">
+                  <div className="text-gray-500 text-xs mb-2">No detailed insights available</div>
+                  <div className="text-[10px] text-gray-600">Click outside to close</div>
                 </div>
               )}
             </div>

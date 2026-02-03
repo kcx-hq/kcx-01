@@ -129,8 +129,8 @@ const KpiGrid = ({
             { label: 'Period Change', value: formatPercent(spendChangePercent) },
             {
               label: 'Billing Period',
-              value: billingPeriod
-                ? `${billingPeriod.start} → ${billingPeriod.end}`
+              value: billingPeriod && billingPeriod.start && billingPeriod.end
+                ? `${new Date(billingPeriod.start).toLocaleDateString()} → ${new Date(billingPeriod.end).toLocaleDateString()}`
                 : 'N/A'
             }
           ]
