@@ -7,31 +7,20 @@ export function useCostAnalysis({ api, caps, filters, groupBy }) {
   const [apiData, setApiData] = useState(null);
   const [error, setError] = useState(null);
 
-  const prevFiltersRef = useRef(filters);
-  const prevGroupByRef = useRef(groupBy);
-  const prevUploadIdsRef = useRef((useDashboardStore.getState().uploadIds || []).join(","));
   const abortControllerRef = useRef(null);
   const isInitialLoadRef = useRef(true);
 
-  // Subscribe to uploads selection so we re-run queries when selection changes
   const uploadIds = useDashboardStore((s) => s.uploadIds);
-  const uploadIdsKey = (Array.isArray(uploadIds) ? uploadIds.join(",") : "") || ""; 
+  const uploadIdsKey = (Array.isArray(uploadIds) ? uploadIds.join(",") : "") || "";
+
+  const provider = filters?.provider ?? "";
+  const service = filters?.service ?? "";
+  const region = filters?.region ?? "";
 
   useEffect(() => {
-    const filtersChanged =
-      prevFiltersRef.current.provider !== filters.provider ||
-      prevFiltersRef.current.service !== filters.service ||
-      prevFiltersRef.current.region !== filters.region;
-
-    const uploadChanged = prevUploadIdsRef.current !== uploadIdsKey;
-
-    const groupByChanged = prevGroupByRef.current !== groupBy;
-
-    // Re-run when filters, groupBy or upload selection changes (or on initial load)
-    if (!isInitialLoadRef.current && !filtersChanged && !groupByChanged && !uploadChanged) return; 
+    if (!api || !caps) return;
 
     if (abortControllerRef.current) abortControllerRef.current.abort();
-
     const abortController = new AbortController();
     abortControllerRef.current = abortController;
 
@@ -40,12 +29,10 @@ export function useCostAnalysis({ api, caps, filters, groupBy }) {
       else setIsRefreshing(true);
 
       try {
-        if (!api || !caps) return;
-
         const params = {
-          provider: filters.provider !== "All" ? filters.provider : undefined,
-          service: filters.service !== "All" ? filters.service : undefined,
-          region: filters.region !== "All" ? filters.region : undefined,
+          provider: provider && provider !== "All" ? provider : undefined,
+          service: service && service !== "All" ? service : undefined,
+          region: region && region !== "All" ? region : undefined,
           groupBy,
         };
 
@@ -55,10 +42,6 @@ export function useCostAnalysis({ api, caps, filters, groupBy }) {
         const payload = res?.data ?? res;
         setApiData(payload);
         setError(null);
-
-        prevFiltersRef.current = { ...filters };
-        prevGroupByRef.current = groupBy;
-        prevUploadIdsRef.current = uploadIdsKey;
         isInitialLoadRef.current = false;
       } catch (e) {
         if (e?.code === "NOT_SUPPORTED") return;
@@ -76,12 +59,8 @@ export function useCostAnalysis({ api, caps, filters, groupBy }) {
     };
 
     run();
-
-    prevFiltersRef.current = { ...filters };
-    prevGroupByRef.current = groupBy;
-
     return () => abortController.abort();
-  }, [api, caps, filters, groupBy, uploadIdsKey]);
+  }, [api, caps, provider, service, region, groupBy, uploadIdsKey]);
 
   return { loading, isRefreshing, apiData, error };
 }

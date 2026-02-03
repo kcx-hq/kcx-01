@@ -19,26 +19,23 @@ export default function AccountsOwnershipContainer({ filters = {}, api, caps }) 
   const [sortBy, setSortBy] = useState("cost");
   const [sortOrder, setSortOrder] = useState("desc");
 
-  // ✅ FIXED: provider precedence bug (was: filters.provider || filterProvider !== 'All' ? ...)
-  const currentFilters = useMemo(() => {
-    const provider = filters.provider && filters.provider !== "All" ? filters.provider : filterProvider;
-
-    return {
-      provider: provider || "All",
+  // API filters: only service, region, sort (no provider/ownership — those are client-side only so no refetch/loading)
+  const apiFilters = useMemo(
+    () => ({
       service: filters.service || "All",
       region: filters.region || "All",
-      ownershipStatus: filterOwner,
       sortBy,
       sortOrder,
-    };
-  }, [filters.provider, filters.service, filters.region, filterProvider, filterOwner, sortBy, sortOrder]);
+    }),
+    [filters.service, filters.region, sortBy, sortOrder]
+  );
 
-  const debouncedFilters = useDebounce(currentFilters, 300);
+  const debouncedApiFilters = useDebounce(apiFilters, 300);
 
   const { accountsData, loading, isFiltering, error } = useAccountsOwnershipData({
     api,
     caps,
-    debouncedFilters,
+    debouncedFilters: debouncedApiFilters,
     uploadId: filters.uploadId,
   });
 
@@ -61,15 +58,33 @@ export default function AccountsOwnershipContainer({ filters = {}, api, caps }) 
 
   const allAccounts = extracted.accounts || [];
 
-  // client-side search
-  const filteredAccounts = useMemo(() => {
-    if (!searchTerm.trim()) return allAccounts;
+  // client-side filter by ownership status and provider (same logic as table badge)
+  const filteredByToolbar = useMemo(() => {
+    return allAccounts.filter((acc) => {
+      const accProvider = (acc.provider || "").trim().toLowerCase();
+      const selProvider = (filterProvider || "").trim().toLowerCase();
+      const providerMatch = filterProvider === "All" || !selProvider || accProvider === selProvider;
+
+      const isAssigned =
+        (acc.owner && String(acc.owner).trim() !== "") || acc.ownershipStatus === "Assigned (inferred)";
+      const ownerMatch =
+        filterOwner === "All" ||
+        (filterOwner === "Assigned" && isAssigned) ||
+        (filterOwner === "Unassigned" && !isAssigned);
+
+      return providerMatch && ownerMatch;
+    });
+  }, [allAccounts, filterProvider, filterOwner]);
+
+  // client-side search on toolbar-filtered list
+  const filteredBySearch = useMemo(() => {
+    if (!searchTerm.trim()) return filteredByToolbar;
 
     const q = searchTerm.toLowerCase().trim();
     const searchNumber = parseFloat(searchTerm.replace(/[$,]/g, ""));
     const isNumeric = !Number.isNaN(searchNumber);
 
-    return allAccounts.filter((acc) => {
+    return filteredByToolbar.filter((acc) => {
       const accountName = (acc.accountName || "").toLowerCase();
       const accountId = (acc.accountId || "").toLowerCase();
       const displayId = (acc.displayAccountId || acc.accountId || "").toLowerCase();
@@ -95,7 +110,32 @@ export default function AccountsOwnershipContainer({ filters = {}, api, caps }) 
 
       return textMatch || numericMatch;
     });
-  }, [allAccounts, searchTerm]);
+  }, [filteredByToolbar, searchTerm]);
+
+  // sort for table (name, cost, owner)
+  const filteredAccounts = useMemo(() => {
+    const list = [...filteredBySearch];
+    const mult = sortOrder === "asc" ? 1 : -1;
+    list.sort((a, b) => {
+      if (sortBy === "name") {
+        const na = (a.accountName || a.accountId || "").toLowerCase();
+        const nb = (b.accountName || b.accountId || "").toLowerCase();
+        return mult * na.localeCompare(nb);
+      }
+      if (sortBy === "cost") {
+        const ca = parseFloat(a.cost || 0);
+        const cb = parseFloat(b.cost || 0);
+        return mult * (ca - cb);
+      }
+      if (sortBy === "owner") {
+        const oa = (a.owner || "").toLowerCase();
+        const ob = (b.owner || "").toLowerCase();
+        return mult * oa.localeCompare(ob);
+      }
+      return 0;
+    });
+    return list;
+  }, [filteredBySearch, sortBy, sortOrder]);
 
   const onSortChange = useCallback(
     (field) => {
@@ -108,8 +148,16 @@ export default function AccountsOwnershipContainer({ filters = {}, api, caps }) 
     [sortBy, sortOrder]
   );
 
+  const onReset = useCallback(() => {
+    setSearchTerm("");
+    setFilterOwner("All");
+    setFilterProvider("All");
+    setSortBy("cost");
+    setSortOrder("desc");
+  }, []);
+
   const onExport = useCallback(() => {
-    const accountsToExport = searchTerm ? filteredAccounts : allAccounts;
+    const accountsToExport = filteredAccounts;
 
     if (!accountsToExport || accountsToExport.length === 0) {
       alert("No data to export");
@@ -149,7 +197,7 @@ export default function AccountsOwnershipContainer({ filters = {}, api, caps }) 
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-  }, [allAccounts, filteredAccounts, searchTerm]);
+  }, [filteredAccounts]);
 
   return (
     <AccountsOwnershipView
@@ -169,6 +217,7 @@ export default function AccountsOwnershipContainer({ filters = {}, api, caps }) 
       sortBy={sortBy}
       sortOrder={sortOrder}
       onSortChange={onSortChange}
+      onReset={onReset}
       onExport={onExport}
       hasData={!!accountsData}
     />

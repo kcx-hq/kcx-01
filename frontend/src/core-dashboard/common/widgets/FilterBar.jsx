@@ -24,22 +24,23 @@ const FilterSelect = ({ field, displayLabel, icon: Icon, iconColor, options, val
     </div>
     <div className="relative group">
       <select
-        value={value || "All"}
+        value={value ?? ""}
         onChange={(e) => !isPremium && onChange(field, e.target.value)}
         disabled={isPremium}
         className={`appearance-none bg-[#0f0f11] border border-white/10 hover:border-[#a02ff1]/50 rounded-lg pl-3 pr-8 py-2 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-[#a02ff1]/50 transition-all min-w-[140px] text-gray-300 z-40 relative ${
           isPremium ? 'opacity-50 cursor-not-allowed pointer-events-none' : 'cursor-pointer'
         }`}
       >
-        {/* Always render one default 'All' option */}
-        <option value="All">All</option>
-        
-        {/* Render backend options, filtering out 'All' to prevent duplicates */}
-        {Array.isArray(options) && options
-          .filter(opt => opt !== "All")
-          .map((opt, idx) => (
-            <option key={`${opt}-${idx}`} value={opt}>{opt}</option>
-        ))}
+        {/* Options from backend only (no manual/hardcoded data) */}
+        {Array.isArray(options) && options.length > 0 ? (
+          options.map((opt, idx) => {
+            const val = typeof opt === "object" && opt !== null && "value" in opt ? opt.value : String(opt);
+            const label = typeof opt === "object" && opt !== null && "label" in opt ? opt.label : val;
+            return <option key={`${val}-${idx}`} value={val}>{label}</option>;
+          })
+        ) : (
+          <option value="">—</option>
+        )}
       </select>
       
       {/* Dropdown Arrow Icon */}
@@ -64,16 +65,22 @@ const FilterBarCost = ({
 }) => {
 
   const handleFilterChange = (field, value) => {
+    // Update only the changed field; keep other filter values so client can change them separately
     onChange({ ...filters, [field]: value });
   };
 
-  const handleResetClick = () => {
+  const handleResetClick = (e) => {
+    e?.preventDefault?.();
+    e?.stopPropagation?.();
     if (onReset) {
-      // Use custom reset handler if provided (optimized instant reset)
       onReset();
     } else {
-      // Fallback to default reset behavior
-      onChange({ provider: 'All', service: 'All', region: 'All' });
+      const first = (arr) => (Array.isArray(arr) && arr[0]) ?? "";
+      onChange({
+        provider: first(providerOptions),
+        service: first(serviceOptions),
+        region: first(regionOptions),
+      });
     }
   };
 
@@ -117,7 +124,8 @@ const FilterBarCost = ({
         isPremiumField={true}
       />
       
-      <button 
+      <button
+        type="button"
         onClick={handleResetClick}
         className="ml-auto p-2 bg-white/5 hover:bg-white/10 rounded-lg text-gray-400 hover:text-white transition-colors border border-white/5"
         title="Reset all filters"

@@ -1,3 +1,4 @@
+import { Loader2 } from "lucide-react";
 import FilterBar from "../common/widgets/FilterBar.jsx";
 import CostTrendChart from "../common/widgets/CostTrendChart.jsx";
 import ServiceSpendChart from "../common/widgets/ServiceSpendChart.jsx";
@@ -38,14 +39,8 @@ const OverviewView = ({
     avgDailySpend,
   } = extractedData;
 
-  // Special empty case (same as your original)
   if (overviewData?.message === "No upload selected. Please select a billing upload.") {
     return <OverviewStates type="noUpload" />;
-  }
-
-  // Initial loading
-  if (loading && !overviewData) {
-    return <OverviewStates type="loading" />;
   }
 
   return (
@@ -56,23 +51,28 @@ const OverviewView = ({
           filters={filters}
           onChange={onFilterChange}
           onReset={onReset}
-          providerOptions={filterOptions.providers}
-          serviceOptions={filterOptions.services}
-          regionOptions={filterOptions.regions}
+          providerOptions={filterOptions?.providers ?? []}
+          serviceOptions={filterOptions?.services ?? []}
+          regionOptions={filterOptions?.regions ?? []}
         />
       </div>
 
-      {/* CONTENT */}
-      <div className="flex-1 overflow-y-auto relative min-h-0">
-        {isFiltering && overviewData && (
-          <div className="absolute top-4 right-4 z-50 flex items-center gap-2 bg-[#1a1b20]/90 backdrop-blur-md border border-[#a02ff1]/30 rounded-lg px-3 py-2 shadow-lg">
-            <span className="text-xs text-gray-300 font-medium">Filtering...</span>
+      {/* CONTENT - loading overlay only when no data yet; keep showing current output while filtering */}
+      <div className="flex-1 overflow-y-auto relative min-h-[50vh]">
+        {loading && !overviewData && (
+          <div
+            className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-[#0f0f11]/95 backdrop-blur-sm rounded-xl border border-white/5"
+            aria-busy="true"
+            aria-live="polite"
+          >
+            <Loader2 className="animate-spin text-[#a02ff1]" size={40} strokeWidth={2} />
+            <p className="mt-3 text-sm font-medium text-gray-400">Loading overview…</p>
           </div>
         )}
 
-        {!overviewData ? (
+        {!overviewData && !loading ? (
           <OverviewStates type="empty" />
-        ) : (
+        ) : overviewData ? (
           <div className="space-y-4">
             <OverviewKpiGrid
               spend={totalSpend}
@@ -140,7 +140,7 @@ const OverviewView = ({
               </span>
             </div>
           </div>
-        )}
+        ) : null}
       </div>
     </div>
   );
