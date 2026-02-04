@@ -24,6 +24,8 @@ const User = sequelize.define(
     is_premium: { type: DataTypes.BOOLEAN, defaultValue: false },
     verification_otp: { type: DataTypes.STRING, allowNull: true },
     verification_otp_expires: { type: DataTypes.DATE, allowNull: true },
+    resetPasswordTokenHash: { type: DataTypes.STRING, allowNull: true, defaultValue: null },
+    resetPasswordExpiresAt: { type: DataTypes.DATE, allowNull: true, defaultValue: null },
     createdAt: { type: DataTypes.DATE, defaultValue: DataTypes.NOW },
   },
   {
