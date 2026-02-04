@@ -4,6 +4,7 @@ import {
   Routes,
   Route,
   Navigate,
+  useNavigate,
 } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -47,6 +48,16 @@ const Home = () => {
   // ✅ Chat widget state
   const [isChatOpen, setIsChatOpen] = useState(false);
 
+  // If the app is opened with a hash (e.g. /#/terms-of-service), navigate to that route
+  const navigate = useNavigate();
+  useEffect(() => {
+    const hash = window.location.hash;
+    if (hash && hash.startsWith('#/')) {
+      const path = hash.slice(1); // "/terms-of-service"
+      navigate(path, { replace: true });
+    }
+  }, [navigate]);
+  
   const showJourney = () => setShowJourneySection(true);
 
   const activateCTA = () => {
@@ -80,7 +91,9 @@ const Home = () => {
         <Features />
         <Pricing />
 
-        <AnimatePresence>
+         <HowItWorks activateCTA={activateCTA} />
+
+        {/* <AnimatePresence>
           {isChatOpen && (
             <motion.div
               className="fixed bottom-6 right-6 z-[999]"
@@ -94,7 +107,7 @@ const Home = () => {
               </div>
             </motion.div>
           )}
-        </AnimatePresence>
+        </AnimatePresence> */}
 
         <InquirySection />
       </main>
