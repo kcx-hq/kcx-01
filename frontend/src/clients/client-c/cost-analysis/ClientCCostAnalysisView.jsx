@@ -421,15 +421,6 @@ const ClientCCostAnalysisView = ({
             <div className="flex items-center gap-2 text-sm text-gray-400 font-bold mr-2 uppercase tracking-wider">
               <Filter size={16} className="text-[#a02ff1]" /> 
             </div>
-            
-            <FilterBar
-              filters={filters}
-              onChange={onFilterChange}
-              onReset={onReset}
-              providerOptions={filterOptions.providers}
-              serviceOptions={filterOptions.services}
-              regionOptions={filterOptions.regions}
-            />
 
             {/* Group By Dropdown */}
             <div className="flex flex-col gap-1.5 relative">
