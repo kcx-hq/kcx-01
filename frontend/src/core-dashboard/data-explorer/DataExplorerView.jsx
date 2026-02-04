@@ -579,10 +579,13 @@ const DataExplorerView = ({
                         onChange={(e) => {
                           const value = e.target.value;
                           setFilterInputs((prev) => {
-                            if (value.trim()) return { ...prev, [col]: value };
-                            const next = { ...prev };
-                            delete next[col];
-                            return next;
+                            // FIX: Do not trim here to allow typing spaces.
+                            if (value === "") {
+                              const next = { ...prev };
+                              delete next[col];
+                              return next;
+                            }
+                            return { ...prev, [col]: value };
                           });
                         }}
                         className="w-full px-2 py-1 bg-black/30 border border-white/5 rounded text-[10px] text-white focus:outline-none focus:border-[#a02ff1]"

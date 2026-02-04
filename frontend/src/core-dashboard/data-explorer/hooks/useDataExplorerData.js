@@ -1,10 +1,7 @@
+// frontend/core/dashboards/overview/data-explorer/hooks/useDataExplorerData.js
+
 import { useEffect, useRef, useState } from "react";
 
-/**
- * Fetches data explorer payload from backend.
- * - Shows full loader only for initial load or page changes
- * - Shows subtle "isFiltering" when backend filters change
- */
 export const useDataExplorerData = ({
   api,
   caps,
@@ -20,7 +17,6 @@ export const useDataExplorerData = ({
 
   const [data, setData] = useState([]);
   const [totalCount, setTotalCount] = useState(0);
-
   const [allColumns, setAllColumns] = useState([]);
   const [quickStats, setQuickStats] = useState(null);
   const [summaryData, setSummaryData] = useState({});
@@ -34,15 +30,12 @@ export const useDataExplorerData = ({
     const abortController = new AbortController();
 
     const fetchData = async () => {
-      // detect filter change
-      const prevKeys = Object.keys(prevColumnFiltersRef.current).sort().join(",");
-      const currKeys = Object.keys(columnFilters || {}).sort().join(",");
-      const prevValues = Object.values(prevColumnFiltersRef.current).sort().join("|");
-      const currValues = Object.values(columnFilters || {}).sort().join("|");
-
-      const filterChanged =
-        (prevKeys !== currKeys || prevValues !== currValues) && !isInitialLoad;
-
+      // FIX: Use JSON.stringify for accurate comparison of filter objects.
+      // The previous logic (sorting values independently) could fail if values were swapped between columns.
+      const prevFiltersStr = JSON.stringify(prevColumnFiltersRef.current || {});
+      const currFiltersStr = JSON.stringify(columnFilters || {});
+      
+      const filterChanged = (prevFiltersStr !== currFiltersStr) && !isInitialLoad;
       const pageChanged = prevPageRef.current !== currentPage && !isInitialLoad;
 
       if (isInitialLoad || pageChanged) setLoading(true);
@@ -66,14 +59,15 @@ export const useDataExplorerData = ({
             limit: rowsPerPage,
             sortBy: sortConfig?.key || undefined,
             sortOrder: sortConfig?.direction || "asc",
-            // NOTE: your backend currently doesn't accept columnFilters in params in your snippet.
-            // If backend supports it, uncomment:
-            // columnFilters,
+            // Pass columnFilters
+            columnFilters: Object.keys(columnFilters || {}).length 
+              ? JSON.stringify(columnFilters) 
+              : undefined,
           },
           signal: abortController.signal,
         });
 
-        const payload = res?.data?.data || res?.data; // tolerate different shapes
+        const payload = res?.data?.data || res?.data;
 
         if (!isMounted) return;
 
@@ -102,6 +96,7 @@ export const useDataExplorerData = ({
         setLoading(false);
         setIsFiltering(false);
         if (isInitialLoad) setIsInitialLoad(false);
+        // Update refs
         prevColumnFiltersRef.current = { ...(columnFilters || {}) };
         prevPageRef.current = currentPage;
       }
