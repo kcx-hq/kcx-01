@@ -395,50 +395,22 @@ const VerticalSidebar = ({ onCsvSelected, caps = {} }) => {
          </div>
 
          {/* Upload / Footer */}
-         <div className="p-3 mt-auto bg-[#0f0f11] border-t border-white/5 space-y-3">
-            <input ref={fileInputRef} type="file" accept=".csv" onChange={handleFileChange} className="hidden" />
-            
-            {/* Upload Box */}
-            <div onClick={openFilePicker} className={`
-                group relative border border-dashed rounded-lg p-3 transition-all cursor-pointer
+         <div className="p-3 mt-auto bg-[#0f0f11] border-t border-white/5">
+            <div className={`
+                group relative border border-dashed rounded-lg p-3 transition-all
                 ${uploadCount >= MAX_UPLOADS ? "border-red-500/50 bg-red-500/5" : "border-gray-700 hover:border-[#a02ff1] bg-[#1a1b20]/50 hover:bg-[#a02ff1]/5"}
             `}>
-               <div className="flex flex-col items-center gap-2">
-                 <div className="flex items-center gap-2">
-                    <Crown size={16} className="text-yellow-500" />
-                    <span className="hidden lg:inline text-xs font-semibold text-white">
-                      Upload More (Pro)
-                    </span>
-                 </div>
-                 <p className="hidden lg:block text-[10px] text-gray-500 text-center">
-                    <span className="flex items-center gap-1 justify-center">
-                      <Crown size={10} className="text-yellow-500" />
-                      <span>Premium Feature</span>
-                    </span>
-                 </p>
+               <div className="flex items-center justify-center">
+                 <button
+                   className="flex items-center gap-2 text-xs font-semibold text-white"
+                   onClick={() => navigate('/upload')}
+                   disabled={uploadCount >= MAX_UPLOADS}
+                 >
+                   <UploadIcon size={16} className="text-yellow-500" />
+                   <span className="hidden lg:inline">Upload More</span>
+                 </button>
                </div>
-               {selectedFileName && <p className="text-[10px] text-white mt-1 truncate text-center">{selectedFileName}</p>}
             </div>
-
-            {/* Error Display */}
-            {uploadError && (
-                 <div className="flex items-center gap-2 p-2 bg-red-500/10 rounded">
-                    <AlertCircle size={12} className="text-red-400" />
-                    <span className="text-[10px] text-red-400 truncate">{uploadError}</span>
-                 </div>
-            )}
-
-            {/* Process Button */}
-            <button
-              onClick={handleProcessUpload}
-              disabled={!selectedFile || uploading || uploadCount >= MAX_UPLOADS}
-              className={`w-full py-2.5 rounded-lg flex items-center justify-center gap-2 text-xs font-bold transition-all
-                ${selectedFile && !uploading && uploadCount < MAX_UPLOADS ? "bg-[#a02ff1] text-white hover:bg-[#8e25d9]" : "bg-gray-800 text-gray-600 cursor-not-allowed"}
-              `}
-            >
-              {uploading ? <Loader2 className="animate-spin" size={14} /> : <Play size={14} />}
-              <span className="hidden lg:inline">{uploading ? "Processing..." : "Process Upload"}</span>
-            </button>
          </div>
       </div>
     </>
