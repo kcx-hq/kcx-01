@@ -4,17 +4,9 @@ import { Eye, EyeOff } from "lucide-react";
 const SignupForm = ({ signupData, setSignupData, handleSignup, isSigningUp, showPassword, setShowPassword, onSwitchToLogin }) => {
   const [acceptedTerms, setAcceptedTerms] = useState(false);
 
-  const handleTermsClick = (e) => {
-    e.preventDefault();
-    setAcceptedTerms(false);
-    window.open("/terms-of-service", "_blank", "noopener,noreferrer");
-  };
+  // Note: Use plain anchor tags with target=_blank in the markup so hosting rewrites are handled consistently
+  // and behavior matches the Footer (which uses target="_blank" and rel="noopener noreferrer").
 
-  const handlePrivacyClick = (e) => {
-    e.preventDefault();
-    setAcceptedTerms(false);
-    window.open("/privacy-policy", "_blank", "noopener,noreferrer");
-  };
 
   return (
     <form onSubmit={handleSignup} className="space-y-5">
@@ -124,16 +116,18 @@ const SignupForm = ({ signupData, setSignupData, handleSignup, isSigningUp, show
             I agree to the{" "}
             <a 
               href="/terms-of-service" 
-              onClick={handleTermsClick}
-              className="text-[#8B2FC9] cursor-pointer hover:text-white underline"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-[#8B2FC9] hover:text-white underline"
             >
               Terms
             </a>
             {" "}and{" "}
             <a 
               href="/privacy-policy" 
-              onClick={handlePrivacyClick}
-              className="text-[#8B2FC9] cursor-pointer hover:text-white underline"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-[#8B2FC9] hover:text-white underline"
             >
               Privacy Policy
             </a>
