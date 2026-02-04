@@ -103,7 +103,7 @@ const Footer = () => {
             <ul className="space-y-4 text-sm text-gray-400 mb-8">
               <li>
                 <a 
-                  href="/privacy-policy" 
+                  href="/#/privacy-policy" 
                   target="_blank" 
                   rel="noopener noreferrer"
                   className="hover:text-white transition-colors"
@@ -113,7 +113,7 @@ const Footer = () => {
               </li>
               <li>
                 <a 
-                  href="/terms-of-service" 
+                  href="/#/terms-of-service" 
                   target="_blank" 
                   rel="noopener noreferrer"
                   className="hover:text-white transition-colors"

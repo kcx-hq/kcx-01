@@ -115,7 +115,7 @@ const SignupForm = ({ signupData, setSignupData, handleSignup, isSigningUp, show
           <span className="ml-2 text-xs text-gray-400">
             I agree to the{" "}
             <a 
-              href="/terms-of-service" 
+              href="/#/terms-of-service" 
               target="_blank"
               rel="noopener noreferrer"
               className="text-[#8B2FC9] hover:text-white underline"
@@ -124,7 +124,7 @@ const SignupForm = ({ signupData, setSignupData, handleSignup, isSigningUp, show
             </a>
             {" "}and{" "}
             <a 
-              href="/privacy-policy" 
+              href="/#/privacy-policy" 
               target="_blank"
               rel="noopener noreferrer"
               className="text-[#8B2FC9] hover:text-white underline"
