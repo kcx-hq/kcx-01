@@ -149,7 +149,7 @@ export const CAPABILITIES_MAP = {
    * CLIENT-D
    * Uses: /api/client-d/dashboard/<path>
    */
-  "81458172-081f-4e87-8f5c-9b15995d8871": {
+  "980e9cf4-64f2-419b-ab01-e184e470aa4b": {
     clientId: "client-d",
     dashboard : "/client-d/dashboard",
     apiBase: "/api/client-d/dashboard",
@@ -285,7 +285,7 @@ export const CAPABILITIES_MAP = {
    * CLIENT-C
    * Uses: /api/client-c/<module>/...
    */
-  "a90902a9-40e2-41aa-bbde-a82f2917125a": {
+  "275070c2-fd16-42fc-b79d-5aaf2d2b83fc": {
     clientId: "client-c",
     dashboard : "/client-c/dashboard",
     apiBase: "/api/client-c",
