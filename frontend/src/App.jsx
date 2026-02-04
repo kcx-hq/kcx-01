@@ -49,24 +49,21 @@ const Home = () => {
   // ✅ Chat widget state
   const [isChatOpen, setIsChatOpen] = useState(false);
 
-  // If the app is opened with a hash (e.g. /#/terms-of-service), navigate to that route
   const navigate = useNavigate();
   useEffect(() => {
     const hash = window.location.hash;
-    if (hash && hash.startsWith('#/')) {
-      const path = hash.slice(1); // "/terms-of-service"
+    if (hash && hash.startsWith("#/")) {
+      const path = hash.slice(1);
       navigate(path, { replace: true });
     }
   }, [navigate]);
-  
+
   const showJourney = () => setShowJourneySection(true);
 
   const activateCTA = () => {
     setIsCTAActivated(true);
     setShowAttentionGrabber(true);
     setTimeout(() => setShowAttentionGrabber(false), 4500);
-
-    // Optional: auto-open chat when CTA is activated
     // setIsChatOpen(true);
   };
 
@@ -76,7 +73,7 @@ const Home = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#0f0f11] font-sans overflow-x-hidden">
+    <div className="min-h-screen bg-[var(--bg-main)] font-sans overflow-x-hidden">
       <Navbar showJourney={showJourney} />
 
       <main>
@@ -92,9 +89,10 @@ const Home = () => {
         <Features />
         <Pricing />
 
-         <HowItWorks activateCTA={activateCTA} />
+        <HowItWorks activateCTA={activateCTA} />
 
-        {/* <AnimatePresence>
+
+        <AnimatePresence>
           {isChatOpen && (
             <motion.div
               className="fixed bottom-6 right-6 z-[999]"
@@ -108,41 +106,32 @@ const Home = () => {
               </div>
             </motion.div>
           )}
-        </AnimatePresence> */}
+        </AnimatePresence>
 
         <InquirySection />
       </main>
 
       <Footer />
+
+      {/* Floating Chat Button (no gradient, no glow) */}
       <button
         onClick={() => setIsChatOpen((prev) => !prev)}
         className="
-    fixed bottom-6 right-6 z-50 rounded-full
-    px-5 py-3 text-white font-semibold
-    bg-gradient-to-r from-purple-700 via-fuchsia-600 to-purple-700
-    shadow-[0_10px_30px_rgba(168,85,247,0.45)]
-    hover:shadow-[0_12px_40px_rgba(168,85,247,0.7)]
-    transition-all duration-300
-     overflow-hidden
-  "
+          fixed bottom-6 right-6 z-50 rounded-full
+          px-5 py-3 font-semibold text-white
+          bg-[var(--brand-secondary)]
+          border border-white/20
+          hover:opacity-95
+          transition-opacity
+        "
+        aria-label={isChatOpen ? "Close chat" : "Chat with us"}
       >
-        {/* glow pulse layer */}
-        <span
-          className="
-      absolute inset-0 rounded-full
-      bg-purple-500/30 blur-xl
-      animate-pulse
-      pointer-events-none
-    "
-        />
-        {/* content */}
-        <span className="relative z-10">
-          {isChatOpen ? "Close chat" : "Chat with us"}
-        </span>
+        {isChatOpen ? "Close chat" : "Chat with us"}
       </button>
     </div>
   );
 };
+
 
 function App() {
   // ✅ Load capabilities once globally

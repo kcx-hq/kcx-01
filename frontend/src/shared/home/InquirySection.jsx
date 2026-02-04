@@ -45,10 +45,7 @@ const InquirySection = () => {
     hidden: { opacity: 0 },
     visible: {
       opacity: 1,
-      transition: {
-        staggerChildren: 0.2,
-        delayChildren: 0.1,
-      },
+      transition: { staggerChildren: 0.2, delayChildren: 0.1 },
     },
   };
 
@@ -81,13 +78,13 @@ const InquirySection = () => {
 
   return (
     <section
-      className="py-24 bg-[#0f0f11] relative overflow-hidden"
+      className="py-24 bg-[var(--bg-main)] relative overflow-hidden"
       id="contact"
     >
       <motion.div
-        animate={{ scale: [1, 1.1, 1], opacity: [0.2, 0.4, 0.2] }}
+        animate={{ scale: [1, 1.1, 1], opacity: [0.18, 0.32, 0.18] }}
         transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
-        className="absolute right-0 bottom-0 w-[600px] h-[600px] bg-[#8B2FC9]/10 rounded-full blur-[120px] pointer-events-none"
+        className="absolute right-0 bottom-0 w-[600px] h-[600px] bg-[var(--highlight-purple)] rounded-full blur-[120px] pointer-events-none"
       />
 
       <motion.div
@@ -99,23 +96,29 @@ const InquirySection = () => {
       >
         {/* LEFT */}
         <motion.div variants={slideLeftVariants}>
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-purple-900/30 border border-purple-500/30 text-purple-300 text-xs font-semibold mb-6">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[var(--highlight-purple)] border border-[var(--border-light)] text-[var(--brand-secondary)] text-xs font-semibold mb-6 shadow-[var(--shadow-sm)]">
             <motion.span
               animate={{ scale: [1, 1.3, 1], opacity: [1, 0.5, 1] }}
               transition={{ duration: 2, repeat: Infinity }}
-              className="w-2 h-2 rounded-full bg-[#8B2FC9]"
+              className="w-2 h-2 rounded-full bg-[var(--brand-primary)]"
             />
             Self-serve FinOps
           </div>
 
-          <h2 className="text-4xl md:text-5xl font-bold text-white mb-6 leading-tight">
+          <h2 className="text-4xl md:text-5xl font-bold text-[var(--text-primary)] mb-6 leading-tight">
             Start analyzing your <br />
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-white to-[#8B2FC9]">
+            <span
+              className="text-transparent bg-clip-text"
+              style={{
+                backgroundImage:
+                  "linear-gradient(90deg, var(--text-primary), var(--brand-secondary))",
+              }}
+            >
               cloud spend today.
             </span>
           </h2>
 
-          <p className="text-gray-400 text-lg mb-8 leading-relaxed">
+          <p className="text-[var(--text-secondary)] text-lg mb-8 leading-relaxed">
             Upload your cloud billing data to get instant visibility into costs,
             unit economics, and inefficiencies — without slowing down engineering
             teams.
@@ -132,8 +135,8 @@ const InquirySection = () => {
                 variants={formItemVariants}
                 className="flex items-center gap-3"
               >
-                <CheckCircle2 className="text-[#8B2FC9]" size={20} />
-                <p className="text-gray-300">{text}</p>
+                <CheckCircle2 className="text-[var(--brand-secondary)]" size={20} />
+                <p className="text-[var(--text-secondary)]">{text}</p>
               </motion.div>
             ))}
           </div>
@@ -142,12 +145,12 @@ const InquirySection = () => {
         {/* RIGHT */}
         <motion.div
           variants={slideRightVariants}
-          className="bg-white/5 backdrop-blur-xl border border-white/10 p-6 md:p-8 rounded-3xl shadow-2xl relative max-w-lg mx-auto w-full"
+          className="bg-[var(--bg-surface)]/85 backdrop-blur-xl border border-[var(--border-light)] p-6 md:p-8 rounded-[var(--radius-lg)] shadow-[var(--shadow-md)] relative max-w-lg mx-auto w-full"
         >
           <motion.form variants={containerVariants} className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <motion.div variants={formItemVariants}>
-                <label className="text-[11px] font-semibold text-gray-500 uppercase tracking-wide">
+                <label className="text-[11px] font-semibold text-[var(--text-disabled)] uppercase tracking-wide">
                   First Name
                 </label>
                 <input
@@ -156,13 +159,13 @@ const InquirySection = () => {
                     setFirstName(e.target.value);
                     setError("");
                   }}
-                  className="w-full bg-[#0f0f11]/50 border border-white/10 rounded-lg p-2.5 text-sm text-white"
+                  className="w-full bg-[var(--bg-main)] border border-[var(--border-light)] rounded-[var(--radius-md)] p-2.5 text-sm text-[var(--text-primary)] placeholder:text-[var(--text-disabled)] focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)]/40"
                   placeholder="Jane"
                 />
               </motion.div>
 
               <motion.div variants={formItemVariants}>
-                <label className="text-[11px] font-semibold text-gray-500 uppercase tracking-wide">
+                <label className="text-[11px] font-semibold text-[var(--text-disabled)] uppercase tracking-wide">
                   Last Name
                 </label>
                 <input
@@ -171,14 +174,14 @@ const InquirySection = () => {
                     setLastName(e.target.value);
                     setError("");
                   }}
-                  className="w-full bg-[#0f0f11]/50 border border-white/10 rounded-lg p-2.5 text-sm text-white"
+                  className="w-full bg-[var(--bg-main)] border border-[var(--border-light)] rounded-[var(--radius-md)] p-2.5 text-sm text-[var(--text-primary)] placeholder:text-[var(--text-disabled)] focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)]/40"
                   placeholder="Doe"
                 />
               </motion.div>
             </div>
 
             <motion.div variants={formItemVariants}>
-              <label className="text-[11px] font-semibold text-gray-500 uppercase tracking-wide">
+              <label className="text-[11px] font-semibold text-[var(--text-disabled)] uppercase tracking-wide">
                 Work Email
               </label>
               <input
@@ -188,13 +191,13 @@ const InquirySection = () => {
                   setEmail(e.target.value);
                   setError("");
                 }}
-                className="w-full bg-[#0f0f11]/50 border border-white/10 rounded-lg p-2.5 text-sm text-white"
+                className="w-full bg-[var(--bg-main)] border border-[var(--border-light)] rounded-[var(--radius-md)] p-2.5 text-sm text-[var(--text-primary)] placeholder:text-[var(--text-disabled)] focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)]/40"
                 placeholder="jane@company.com"
               />
             </motion.div>
 
             <motion.div variants={formItemVariants}>
-              <label className="text-[11px] font-semibold text-gray-500 uppercase tracking-wide">
+              <label className="text-[11px] font-semibold text-[var(--text-disabled)] uppercase tracking-wide">
                 I am interested in
               </label>
               <select
@@ -203,7 +206,7 @@ const InquirySection = () => {
                   setInterest(e.target.value);
                   setError("");
                 }}
-                className="w-full bg-[#0f0f11]/50 border border-white/10 rounded-lg p-2.5 text-sm text-white"
+                className="w-full bg-[var(--bg-main)] border border-[var(--border-light)] rounded-[var(--radius-md)] p-2.5 text-sm text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)]/40"
               >
                 <option value="">Select an option</option>
                 <option value="FinOps Snapshot">FinOps Snapshot</option>
@@ -215,34 +218,36 @@ const InquirySection = () => {
             </motion.div>
 
             <motion.div variants={formItemVariants}>
-              <label className="text-[11px] font-semibold text-gray-500 uppercase tracking-wide">
+              <label className="text-[11px] font-semibold text-[var(--text-disabled)] uppercase tracking-wide">
                 Message
               </label>
               <textarea
                 rows="3"
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
-                className="w-full bg-[#0f0f11]/50 border border-white/10 rounded-lg p-2.5 text-sm text-white resize-none"
+                className="w-full bg-[var(--bg-main)] border border-[var(--border-light)] rounded-[var(--radius-md)] p-2.5 text-sm text-[var(--text-primary)] placeholder:text-[var(--text-disabled)] resize-none focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)]/40"
                 placeholder="Tell us about your team size or cloud spend..."
               />
             </motion.div>
 
-            {error && (
-              <p className="text-center text-[12px] text-red-500">{error}</p>
-            )}
+            {error && <p className="text-center text-[12px] text-red-600">{error}</p>}
 
             <motion.button
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               type="button"
               onClick={handleBookSlot}
-              className="w-full py-3.5 bg-[#8B2FC9] disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold rounded-xl flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(139,47,201,0.3)]"
+              className="w-full py-3.5 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold rounded-[var(--radius-md)] flex items-center justify-center gap-2 shadow-[var(--shadow-md)]"
+              style={{
+                backgroundImage:
+                  "linear-gradient(90deg, var(--brand-secondary), var(--brand-primary))",
+              }}
             >
               Book Your Audit
               <ArrowRight size={18} />
             </motion.button>
 
-            <p className="text-center text-[10px] text-gray-500">
+            <p className="text-center text-[10px] text-[var(--text-disabled)]">
               We respect your inbox. No spam, ever.
             </p>
           </motion.form>

@@ -2,6 +2,60 @@
 @tailwind components;
 @tailwind utilities;
 
+@layer base {
+  :root {
+    /* Brand */
+    --brand-primary: #00c592;
+    --brand-secondary: #007758;
+
+    /* Backgrounds */
+    --bg-main: #ffffff;
+    --bg-surface: #ffffff;
+    --bg-soft: #e5f9f4;
+
+    /* Highlights */
+    --highlight-purple: #f8ebff;
+    --highlight-green: #e5f9f4;
+    --highlight-yellow: #fff8e5;
+
+    /* Text */
+    --text-primary: #0f172a;
+    --text-secondary: #475569;
+    --text-disabled: #94a3b8;
+
+    /* Borders */
+    --border-light: #e2e8f0;
+    --border-muted: #cbd5e1;
+
+    /* Shadows */
+    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.08);
+    --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.12);
+
+    /* Radius */
+    --radius-sm: 6px;
+    --radius-md: 10px;
+    --radius-lg: 16px;
+
+    /* Spacing */
+    --space-xs: 4px;
+    --space-sm: 8px;
+    --space-md: 16px;
+    --space-lg: 24px;
+    --space-xl: 32px;
+
+    /* Transitions */
+    --transition-fast: 150ms ease;
+    --transition-base: 250ms ease;
+  }
+
+  body {
+    background-color: var(--bg-main);
+    color: var(--text-primary);
+  }
+}
+
+
+
 html {
   scroll-behavior: smooth;
 }
