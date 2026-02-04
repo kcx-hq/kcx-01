@@ -80,6 +80,9 @@ const Home = () => {
         <Features />
         <Pricing />
 
+        {/* --- How It Works Section (rendered on Home so Navbar can scroll to it) --- */}
+        <HowItWorks activateCTA={activateCTA} />
+
         <AnimatePresence>
           {isChatOpen && (
             <motion.div
