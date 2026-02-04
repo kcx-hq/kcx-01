@@ -1,5 +1,6 @@
 import React from "react";
 import { Linkedin, Twitter, Github } from "lucide-react";
+import { Link } from "react-router-dom";
 
 const Footer = () => {
   return (
@@ -102,27 +103,28 @@ const Footer = () => {
             <h4 className="text-white font-bold mb-6">Legal</h4>
             <ul className="space-y-4 text-sm text-gray-400 mb-8">
               <li>
-                <a 
-                  href="/#/privacy-policy" 
+                {/* 2. Updated to Link with target="_blank" */}
+                <Link 
+                  to="/privacy-policy" 
                   target="_blank" 
                   rel="noopener noreferrer"
                   className="hover:text-white transition-colors"
                 >
                   Privacy Policy 
-                </a>
+                </Link>
               </li>
               <li>
-                <a 
-                  href="/#/terms-of-service" 
+                <Link 
+                  to="/terms-of-service" 
                   target="_blank" 
                   rel="noopener noreferrer"
                   className="hover:text-white transition-colors"
                 >
                   Terms of Service
-                </a>
+                </Link>
               </li>
             </ul>
-
+            
             <div className="flex gap-4">
               <a
                 href="https://www.linkedin.com/company/kco-finops/"

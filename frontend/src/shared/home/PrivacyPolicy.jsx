@@ -2,6 +2,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import Navbar from './Navbar';
 import Footer from './Footer';
+import { Link } from "react-router-dom";
 
 const PrivacyPolicy = () => {
   const containerVariants = {
@@ -40,7 +41,7 @@ const PrivacyPolicy = () => {
             <h1 className="text-4xl font-bold text-white mb-2">Privacy Policy (Early Access)</h1>
             <p className="text-gray-500 text-sm mb-8">Last Updated: 12 January 2026</p>
           </motion.div>
-          
+
           <div className="text-gray-400 text-base leading-relaxed space-y-6">
             <motion.section variants={itemVariants}>
               <h2 className="text-2xl font-semibold text-white mb-4">Early Access Privacy Notice</h2>
@@ -110,15 +111,15 @@ const PrivacyPolicy = () => {
             <motion.section variants={itemVariants}>
               <h2 className="text-2xl font-semibold text-white mb-4">Contact Us</h2>
               <p>
-                If you have any questions or concerns regarding this Privacy Policy or how your data is handled, please reach out via the Contact Us page on our website:{' '}
-                <a 
-                  href="https://www.kandco.io/" 
-                  target="_blank" 
-                  rel="noopener noreferrer"
+                If you have any questions... please reach out via the Contact Us page on our website:{' '}
+                {/* If this is an external marketing site, keep <a>. 
+      If this is the Home page of THIS app, use <Link> */}
+                <Link
+                  to="/"
                   className="text-[#8B2FC9] hover:text-[#a02ff1] underline"
                 >
-                  https://www.kandco.io/
-                </a>
+                  Return to Home
+                </Link>
               </p>
             </motion.section>
           </div>

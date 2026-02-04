@@ -1,12 +1,10 @@
 import React, { useState } from "react";
 import { Eye, EyeOff } from "lucide-react";
 
+import { Link } from "react-router-dom";
+
 const SignupForm = ({ signupData, setSignupData, handleSignup, isSigningUp, showPassword, setShowPassword, onSwitchToLogin }) => {
   const [acceptedTerms, setAcceptedTerms] = useState(false);
-
-  // Note: Use plain anchor tags with target=_blank in the markup so hosting rewrites are handled consistently
-  // and behavior matches the Footer (which uses target="_blank" and rel="noopener noreferrer").
-
 
   return (
     <form onSubmit={handleSignup} className="space-y-5">
@@ -114,25 +112,27 @@ const SignupForm = ({ signupData, setSignupData, handleSignup, isSigningUp, show
           />
           <span className="ml-2 text-xs text-gray-400">
             I agree to the{" "}
-            <a 
-              href="/#/terms-of-service" 
-              target="_blank"
+            {/* 2. Updated Links to open in new tab */}
+            <Link 
+              to="/terms-of-service" 
+              target="_blank" 
               rel="noopener noreferrer"
-              className="text-[#8B2FC9] hover:text-white underline"
+              className="text-[#8B2FC9] cursor-pointer hover:text-white underline"
             >
               Terms
-            </a>
+            </Link>
             {" "}and{" "}
-            <a 
-              href="/#/privacy-policy" 
-              target="_blank"
+            <Link 
+              to="/privacy-policy" 
+              target="_blank" 
               rel="noopener noreferrer"
-              className="text-[#8B2FC9] hover:text-white underline"
+              className="text-[#8B2FC9] cursor-pointer hover:text-white underline"
             >
               Privacy Policy
-            </a>
+            </Link>
           </span>
         </label>
+        
         <label className="flex items-start mt-2">
           <input type="checkbox" className="mt-1 rounded border-white/10 bg-[#0a0a0c] text-[#8B2FC9] focus:ring-[#8B2FC9]/20" />
           <span className="ml-2 text-xs text-gray-400">Subscribe to newsletter</span>
