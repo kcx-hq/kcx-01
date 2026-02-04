@@ -38,8 +38,9 @@ import { useDashboardStore } from "./store/Dashboard.store.jsx";
 
 import ClientC from "./clients/client-c/client-c";
 
-// ✅ Import your chatbot widget component (adjust path)
 import Chatbot from "./shared/chatbot/Chatbot.jsx";
+import ForgotPassword from "./shared/auth/components/ForgotPassword.jsx";
+import ResetPassword from "./shared/auth/components/ResetPassword.jsx";
 const Home = () => {
   const [showJourneySection, setShowJourneySection] = useState(false);
   const [isCTAActivated, setIsCTAActivated] = useState(false);
@@ -183,6 +184,8 @@ function App() {
         <Route path="/upload-csv-file-input" element={<CsvUploadInput />} />
 
         <Route path="*" element={<Navigate to="/" replace />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
       </Routes>
     </Router>
   );

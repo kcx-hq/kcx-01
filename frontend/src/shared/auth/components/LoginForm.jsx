@@ -1,6 +1,6 @@
-import React from "react";
-
+import { useNavigate } from "react-router-dom";
 const LoginForm = ({ loginData, setLoginData, handleLogin, isSigningIn, onSwitchToSignup }) => {
+  const navigate = useNavigate()
   return (
     <form onSubmit={handleLogin} className="space-y-6">
       <div>
@@ -31,7 +31,9 @@ const LoginForm = ({ loginData, setLoginData, handleLogin, isSigningIn, onSwitch
           <input type="checkbox" className="rounded border-white/10 bg-[#0a0a0c] text-[#8B2FC9] focus:ring-[#8B2FC9]/20" />
           <span className="ml-2 text-sm text-gray-400">Remember me</span>
         </label>
-        <button type="button" className="text-sm text-[#8B2FC9] hover:text-white transition-colors font-medium">
+        <button type="button" 
+        onClick={ () => {navigate('/forgot-password')}}
+        className="text-sm text-[#8B2FC9] hover:text-white transition-colors font-medium">
           Forgot password?
         </button>
       </div>
