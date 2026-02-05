@@ -94,7 +94,7 @@ const Home = () => {
 
          <HowItWorks activateCTA={activateCTA} />
 
-        {/* <AnimatePresence>
+        <AnimatePresence>
           {isChatOpen && (
             <motion.div
               className="fixed bottom-6 right-6 z-[999]"
@@ -108,7 +108,7 @@ const Home = () => {
               </div>
             </motion.div>
           )}
-        </AnimatePresence> */}
+        </AnimatePresence>
 
         <InquirySection />
       </main>
