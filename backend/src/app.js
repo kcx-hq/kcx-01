@@ -25,7 +25,7 @@ app.use(compression({ level: 6, threshold: 1024 })); // Compress responses > 1KB
 
 app.use(
   cors({
-    origin: ["http://localhost:5173", "http://localhost:5174" , "https://master-01-kohl.vercel.app"], // frontend (supports both ports)
+    origin: ["http://localhost:5173", "http://localhost:5174" , "https://kcx-01.vercel.app"], // frontend (supports both ports)
     credentials: true,               // allow cookies
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"]
