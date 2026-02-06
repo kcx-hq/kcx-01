@@ -27,13 +27,14 @@ const FinOpsSection = () => {
 
   return (
     <section className="py-24 bg-[var(--bg-main)] relative overflow-hidden">
-      {/* Animated Vertical Line */}
+      {/* Animated Vertical Line (removed gradient) */}
       <motion.div
         initial={{ height: 0, opacity: 0 }}
         whileInView={{ height: "100%", opacity: 1 }}
         transition={{ duration: 1.5, ease: "easeInOut" }}
         viewport={{ once: true }}
-        className="absolute top-0 left-1/2 -translate-x-1/2 w-px bg-gradient-to-b from-transparent via-[var(--brand-secondary)]/30 to-transparent"
+        className="absolute top-0 left-1/2 -translate-x-1/2 w-px"
+        style={{ backgroundColor: "rgba(25,38,48,0.30)" }} // bg-dark @ 30%
       />
 
       <div className="max-w-7xl mx-auto px-6 relative z-10">
@@ -100,12 +101,12 @@ const FinOpsSection = () => {
 
 // Extracted Component
 const FeatureRow = ({ icon: Icon, title, desc, tone, variants }) => {
-  // map tones to your theme tokens
+  // map tones to new theme tokens (no purple)
   const toneMap = {
     warning: {
       bg: "bg-[var(--highlight-yellow)]",
       border: "border-[var(--border-light)]",
-      icon: "text-[var(--brand-secondary)]",
+      icon: "text-[var(--bg-dark)]",
     },
     success: {
       bg: "bg-[var(--highlight-green)]",
@@ -113,14 +114,14 @@ const FeatureRow = ({ icon: Icon, title, desc, tone, variants }) => {
       icon: "text-[var(--brand-primary)]",
     },
     info: {
-      bg: "bg-[var(--highlight-purple)]",
+      bg: "bg-[var(--bg-soft-2)]",
       border: "border-[var(--border-light)]",
-      icon: "text-[var(--brand-secondary)]",
+      icon: "text-[var(--bg-dark)]",
     },
     brand: {
       bg: "bg-[var(--bg-soft)]",
       border: "border-[var(--border-light)]",
-      icon: "text-[var(--brand-secondary)]",
+      icon: "text-[var(--bg-dark)]",
     },
   };
 

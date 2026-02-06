@@ -37,14 +37,23 @@ const About = () => {
       className="py-24 bg-[var(--bg-main)] text-[var(--text-primary)] relative overflow-hidden"
       id="about"
     >
-      {/* --- DYNAMIC BACKGROUNDS --- */}
+      {/* --- DYNAMIC BACKGROUNDS (theme updated: remove purple, use emerald/soft) --- */}
       <motion.div
-        animate={{ opacity: [0.25, 0.4, 0.25], scale: [1, 1.2, 1], x: [-20, 20, -20] }}
+        animate={{
+          opacity: [0.18, 0.32, 0.18],
+          scale: [1, 1.2, 1],
+          x: [-20, 20, -20],
+        }}
         transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
-        className="absolute top-0 left-1/4 w-[600px] h-[600px] bg-[var(--highlight-purple)] rounded-full blur-[120px] pointer-events-none"
+        className="absolute top-0 left-1/4 w-[600px] h-[600px] rounded-full blur-[120px] pointer-events-none"
+        style={{ backgroundColor: "var(--bg-emerald-soft)" }}
       />
       <motion.div
-        animate={{ opacity: [0.2, 0.35, 0.2], scale: [1.2, 1, 1.2], x: [20, -20, 20] }}
+        animate={{
+          opacity: [0.2, 0.35, 0.2],
+          scale: [1.2, 1, 1.2],
+          x: [20, -20, 20],
+        }}
         transition={{ duration: 12, repeat: Infinity, ease: "easeInOut", delay: 1 }}
         className="absolute bottom-0 right-1/4 w-[500px] h-[500px] bg-[var(--highlight-green)] rounded-full blur-[100px] pointer-events-none"
       />
@@ -60,7 +69,8 @@ const About = () => {
         >
           <motion.span
             variants={fadeInUp}
-            className="text-[var(--brand-secondary)] text-xs font-bold uppercase tracking-[0.2em] mb-4 block"
+            // theme updated: primary accent
+            className="text-[var(--brand-primary)] text-xs font-bold uppercase tracking-[0.2em] mb-4 block"
           >
             WHO WE ARE
           </motion.span>
@@ -116,28 +126,29 @@ const About = () => {
             icon={TrendingUp}
             value="10-30%"
             label="Avg. Cost Reduction"
-            iconColor="text-[var(--brand-secondary)]"
+            // theme updated
+            iconColor="text-[var(--brand-primary)]"
             delay={0}
           />
           <StatItem
             icon={Earth}
             value="50+"
             label="Enterprise Clients"
-            iconColor="text-[var(--brand-secondary)]"
+            iconColor="text-[var(--brand-primary)]"
             delay={0.1}
           />
           <StatItem
             icon={BarChart3}
             value="$500M+"
             label="Spend Analyzed"
-            iconColor="text-[var(--brand-secondary)]"
+            iconColor="text-[var(--brand-primary)]"
             delay={0.2}
           />
           <StatItem
             icon={ShieldCheck}
             value="98%"
             label="Client Retention"
-            iconColor="text-[var(--brand-secondary)]"
+            iconColor="text-[var(--brand-primary)]"
             delay={0.3}
           />
         </motion.div>
@@ -168,9 +179,9 @@ const About = () => {
             icon={DollarSign}
             title="ROI-Obsessed"
             desc="We look beyond simple savings. We optimize your unit economics to ensure every cloud dollar spent drives actual revenue."
+            // theme updated
             badgeBg="bg-[var(--highlight-yellow)]"
-            iconColor="text-[var(--brand-secondary)]"
-            accent="brand"
+            iconColor="text-[var(--bg-dark)]"
             details={[
               "Unit Cost Analysis (Cost per Transaction)",
               "Strategic RIs & Savings Plans",
@@ -183,9 +194,9 @@ const About = () => {
             icon={Code2}
             title="Engineering DNA"
             desc="We speak your team's language. Our recommendations are technical, practical, and ready to deploy—no 'fluff' reports."
+            // theme updated
             badgeBg="bg-[var(--highlight-green)]"
-            iconColor="text-[var(--brand-secondary)]"
-            accent="brand"
+            iconColor="text-[var(--bg-dark)]"
             details={[
               "Infrastructure-as-Code Audits",
               "Non-Disruptive Architecture Tuning",
@@ -198,9 +209,9 @@ const About = () => {
             icon={Lock}
             title="Risk-Free Execution"
             desc="We prioritize uptime above all else. Our 'Safe-Saving' protocols ensure cost cuts never compromise reliability."
-            badgeBg="bg-[var(--highlight-purple)]"
-            iconColor="text-[var(--brand-secondary)]"
-            accent="brand"
+            // theme updated (remove purple)
+            badgeBg="bg-[var(--bg-emerald-soft)]"
+            iconColor="text-[var(--bg-dark)]"
             details={[
               "Stability-First Audits",
               "Pre-Deployment Validation",
@@ -249,9 +260,11 @@ const ValueCard = ({ icon: Icon, title, desc, badgeBg, iconColor, details }) => 
         relative h-[380px] flex flex-col p-8 rounded-[var(--radius-lg)]
         border transition-all duration-500 overflow-hidden
         shadow-[var(--shadow-md)] backdrop-blur-md group
-        ${isOpen
-          ? "border-[var(--brand-secondary)] bg-[var(--bg-surface)]"
-          : "border-[var(--border-light)] bg-[var(--bg-surface)] hover:bg-[var(--bg-soft)] hover:border-[var(--brand-primary)]"}
+        ${
+          isOpen
+            ? "border-[var(--bg-dark)] bg-[var(--bg-surface)]"
+            : "border-[var(--border-light)] bg-[var(--bg-surface)] hover:bg-[var(--bg-soft)] hover:border-[var(--brand-primary)]"
+        }
       `}
     >
       {/* Background soft overlay */}
@@ -270,7 +283,8 @@ const ValueCard = ({ icon: Icon, title, desc, badgeBg, iconColor, details }) => 
 
         <motion.h4
           layout
-          className="text-2xl font-bold mb-4 group-hover:text-[var(--brand-secondary)] transition-colors"
+          // theme updated
+          className="text-2xl font-bold mb-4 group-hover:text-[var(--bg-dark)] transition-colors"
         >
           {title}
         </motion.h4>
@@ -287,11 +301,15 @@ const ValueCard = ({ icon: Icon, title, desc, badgeBg, iconColor, details }) => 
       <motion.button
         layout
         onClick={() => setIsOpen(true)}
-        className="relative z-20 flex items-center gap-3 text-[var(--brand-secondary)] text-sm font-bold cursor-pointer group/btn mt-auto w-fit px-4 py-2 rounded-[var(--radius-md)] hover:bg-[var(--highlight-green)] transition-colors"
+        // theme updated: primary accent
+        className="relative z-20 flex items-center gap-3 text-[var(--brand-primary)] text-sm font-bold cursor-pointer group/btn mt-auto w-fit px-4 py-2 rounded-[var(--radius-md)] hover:bg-[var(--bg-emerald-soft)] transition-colors"
       >
-        <span className="w-2 h-2 rounded-full bg-[var(--brand-secondary)] group-hover/btn:scale-125 transition-transform"></span>
+        <span className="w-2 h-2 rounded-full bg-[var(--brand-primary)] group-hover/btn:scale-125 transition-transform"></span>
         See Our Approach
-        <ArrowRight size={16} className="group-hover/btn:translate-x-1 transition-transform" />
+        <ArrowRight
+          size={16}
+          className="group-hover/btn:translate-x-1 transition-transform"
+        />
       </motion.button>
 
       {/* --- SLIDE UP DETAILS OVERLAY --- */}
@@ -302,11 +320,13 @@ const ValueCard = ({ icon: Icon, title, desc, badgeBg, iconColor, details }) => 
             animate={{ y: 0 }}
             exit={{ y: "100%" }}
             transition={{ type: "spring", damping: 25, stiffness: 200 }}
-            className="absolute inset-0 bg-[var(--bg-surface)] z-30 p-8 flex flex-col border-t-4 border-[var(--brand-secondary)]"
+            // theme updated
+            className="absolute inset-0 bg-[var(--bg-surface)] z-30 p-8 flex flex-col border-t-4 border-[var(--brand-primary)]"
           >
             <div className="flex justify-between items-start mb-6">
               <h5 className="text-[var(--text-primary)] font-bold text-lg flex items-center gap-2">
-                <Zap size={18} className="text-[var(--brand-secondary)]" /> How We Do It
+                {/* theme updated */}
+                <Zap size={18} className="text-[var(--brand-primary)]" /> How We Do It
               </h5>
 
               <button
@@ -329,7 +349,8 @@ const ValueCard = ({ icon: Icon, title, desc, badgeBg, iconColor, details }) => 
                   transition={{ delay: index * 0.1 + 0.2 }}
                   className="flex items-start gap-3 text-sm text-[var(--text-secondary)]"
                 >
-                  <div className="mt-1.5 w-1.5 h-1.5 rounded-full bg-[var(--brand-secondary)] flex-shrink-0 shadow-[0_0_8px_rgba(0,119,88,0.35)]" />
+                  {/* theme updated */}
+                  <div className="mt-1.5 w-1.5 h-1.5 rounded-full bg-[var(--brand-primary)] flex-shrink-0 shadow-[0_0_8px_rgba(0,198,147,0.35)]" />
                   {item}
                 </motion.li>
               ))}

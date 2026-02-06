@@ -54,7 +54,7 @@ const Navbar = ({ showJourney = () => {} }) => {
   };
 
   const underline = (active) =>
-    `absolute -bottom-1 left-0 h-0.5 bg-white transition-all ${
+    `absolute -bottom-1 left-0 h-0.5 transition-all ${
       active ? "w-full" : "w-0 group-hover:w-full"
     }`;
 
@@ -66,18 +66,22 @@ const Navbar = ({ showJourney = () => {} }) => {
           isScrolled ? "py-4" : "py-6"
         }`}
         style={{
-          backgroundColor: "var(--brand-secondary)",
-          borderBottom: "1px solid rgba(255,255,255,0.15)",
+          backgroundColor: "var(--bg-dark)",
+          borderBottom: "1px solid var(--border-dark)",
+          boxShadow: isScrolled ? "var(--shadow-sm)" : "none",
         }}
       >
         <div className="max-w-7xl mx-auto px-6 flex items-center justify-between">
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2">
-            <span className="text-2xl font-bold text-white">KCX</span>
+            <span className="text-2xl font-bold text-[var(--text-on-dark)]">
+              KCX
+              <span style={{ color: "var(--brand-primary)" }}>.</span>
+            </span>
           </Link>
 
           {/* Desktop Nav */}
-          <div className="hidden md:flex items-center gap-8 text-sm font-medium text-white/90">
+          <div className="hidden md:flex items-center gap-8 text-sm font-medium text-[var(--text-on-dark-muted)]">
             {[
               ["About", "about"],
               ["Services", "services"],
@@ -87,19 +91,34 @@ const Navbar = ({ showJourney = () => {} }) => {
               <button
                 key={id}
                 onClick={() => handleNavClick(`#${id}`)}
-                className={`relative group hover:text-white ${
-                  activeSection === id ? "text-white" : ""
+                className={`relative group transition-colors ${
+                  activeSection === id
+                    ? "text-[var(--text-on-dark)]"
+                    : "hover:text-[var(--text-on-dark)]"
                 }`}
               >
                 {label}
-                <span className={underline(activeSection === id)} />
+                <span
+                  className={underline(activeSection === id)}
+                  style={{ backgroundColor: "var(--brand-primary)" }}
+                />
               </button>
             ))}
 
             {/* CTA */}
             <button
               onClick={() => handleNavClick("#how-it-works")}
-              className="ml-2 px-5 py-2.5 rounded-full border border-white/40 text-white hover:bg-white/10 transition-colors"
+              className="ml-2 px-5 py-2.5 rounded-full font-semibold transition-colors"
+              style={{
+                backgroundColor: "var(--brand-primary)",
+                color: "#ffffff",
+              }}
+              onMouseEnter={(e) =>
+                (e.currentTarget.style.backgroundColor = "var(--brand-primary-hover)")
+              }
+              onMouseLeave={(e) =>
+                (e.currentTarget.style.backgroundColor = "var(--brand-primary)")
+              }
             >
               How it Works
             </button>
@@ -107,7 +126,7 @@ const Navbar = ({ showJourney = () => {} }) => {
 
           {/* Mobile Toggle */}
           <button
-            className="md:hidden text-white"
+            className="md:hidden text-[var(--text-on-dark)]"
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
             aria-label="Toggle mobile menu"
           >
@@ -121,10 +140,10 @@ const Navbar = ({ showJourney = () => {} }) => {
         <div
           className="fixed inset-0 z-40 pt-24 px-6 md:hidden"
           style={{
-            backgroundColor: "var(--brand-secondary)",
+            backgroundColor: "var(--bg-dark)",
           }}
         >
-          <div className="flex flex-col gap-6 text-xl font-bold text-white">
+          <div className="flex flex-col gap-6 text-xl font-bold text-[var(--text-on-dark)]">
             {[
               ["Services", "services"],
               ["About", "about"],
@@ -142,7 +161,17 @@ const Navbar = ({ showJourney = () => {} }) => {
 
             <button
               onClick={() => handleNavClick("#how-it-works")}
-              className="mt-4 w-full py-4 rounded-xl border border-white/40 bg-white/10"
+              className="mt-4 w-full py-4 rounded-xl font-bold transition-colors"
+              style={{
+                backgroundColor: "var(--brand-primary)",
+                color: "#ffffff",
+              }}
+              onMouseEnter={(e) =>
+                (e.currentTarget.style.backgroundColor = "var(--brand-primary-hover)")
+              }
+              onMouseLeave={(e) =>
+                (e.currentTarget.style.backgroundColor = "var(--brand-primary)")
+              }
             >
               How it Works
             </button>

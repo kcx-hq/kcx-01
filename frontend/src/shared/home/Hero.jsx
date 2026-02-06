@@ -132,16 +132,18 @@ const Hero = ({
         {/* Background grid */}
         <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(0,0,0,0.06)_1px,transparent_1px),linear-gradient(to_bottom,rgba(0,0,0,0.06)_1px,transparent_1px)] bg-[size:40px_40px] [mask-image:radial-gradient(ellipse_80%_55%_at_50%_0%,#000_70%,transparent_100%)] pointer-events-none" />
 
-        {/* Soft blobs */}
+        {/* Soft blobs (theme updated: no purple) */}
         <motion.div
-          animate={{ scale: [1, 1.2, 1], opacity: [0.25, 0.45, 0.25] }}
+          animate={{ scale: [1, 1.2, 1], opacity: [0.22, 0.4, 0.22] }}
           transition={{ duration: 8, repeat: Infinity }}
-          className="absolute top-0 left-0 w-[520px] h-[520px] bg-[var(--highlight-green)] rounded-full blur-[120px] pointer-events-none"
+          className="absolute top-0 left-0 w-[520px] h-[520px] rounded-full blur-[120px] pointer-events-none"
+          style={{ backgroundColor: "var(--highlight-green)" }}
         />
         <motion.div
-          animate={{ scale: [1, 1.1, 1], opacity: [0.2, 0.4, 0.2] }}
+          animate={{ scale: [1, 1.1, 1], opacity: [0.16, 0.32, 0.16] }}
           transition={{ duration: 10, repeat: Infinity, delay: 1 }}
-          className="absolute bottom-0 right-0 w-[620px] h-[620px] bg-[var(--highlight-purple)] rounded-full blur-[120px] pointer-events-none"
+          className="absolute bottom-0 right-0 w-[620px] h-[620px] rounded-full blur-[120px] pointer-events-none"
+          style={{ backgroundColor: "var(--bg-emerald-soft)" }}
         />
 
         <div className="relative z-10 w-full max-w-7xl mx-auto px-6 grid lg:grid-cols-2 gap-16 items-center">
@@ -156,7 +158,8 @@ const Hero = ({
               variants={itemVariants}
               className="inline-flex items-center gap-2 bg-[var(--bg-surface)]/70 border border-[var(--border-light)] rounded-full px-3 py-1 mb-6 backdrop-blur-md shadow-[var(--shadow-sm)]"
             >
-              <Sparkles className="h-3.5 w-3.5 text-[var(--brand-secondary)]" />
+              {/* theme updated */}
+              <Sparkles className="h-3.5 w-3.5 text-[var(--brand-primary)]" />
               <span className="text-[11px] font-bold tracking-widest text-[var(--text-secondary)] uppercase">
                 Instant Cloud FinOps
               </span>
@@ -171,11 +174,12 @@ const Hero = ({
               </motion.h1>
 
               <motion.div variants={itemVariants} className="relative inline-block">
+                {/* theme updated: brand-primary focused gradient */}
                 <span
                   className="text-4xl md:text-6xl font-bold text-transparent bg-clip-text"
                   style={{
                     backgroundImage:
-                      "linear-gradient(90deg, var(--brand-secondary), var(--brand-primary), var(--text-primary))",
+                      "linear-gradient(90deg, var(--brand-primary), var(--brand-primary-hover), var(--text-primary))",
                   }}
                 >
                   INTO PURE SAVING
@@ -198,12 +202,14 @@ const Hero = ({
             {/* Mini badges */}
             <motion.div variants={itemVariants} className="flex flex-wrap gap-3 mb-10">
               <div className="flex items-center gap-2 px-4 py-2 rounded-[var(--radius-md)] bg-[var(--bg-surface)] border border-[var(--border-light)] text-[var(--text-primary)] text-sm font-medium shadow-[var(--shadow-sm)]">
-                <Clock size={16} className="text-[var(--brand-secondary)]" />
+                {/* theme updated */}
+                <Clock size={16} className="text-[var(--brand-primary)]" />
                 <span>Instant Audit</span>
               </div>
 
-              <div className="flex items-center gap-2 px-4 py-2 rounded-[var(--radius-md)] bg-[var(--highlight-purple)] border border-[var(--border-light)] text-[var(--text-primary)] text-sm font-medium shadow-[var(--shadow-sm)]">
-                <FileSpreadsheet size={16} className="text-[var(--brand-secondary)]" />
+              <div className="flex items-center gap-2 px-4 py-2 rounded-[var(--radius-md)] bg-[var(--bg-soft)] border border-[var(--border-light)] text-[var(--text-primary)] text-sm font-medium shadow-[var(--shadow-sm)]">
+                {/* theme updated */}
+                <FileSpreadsheet size={16} className="text-[var(--brand-primary)]" />
                 <span>CSV Upload</span>
               </div>
 
@@ -222,7 +228,8 @@ const Hero = ({
                       {[0, 1, 2].map((cycle) => (
                         <motion.div
                           key={cycle}
-                          className="absolute -inset-4 rounded-3xl border-2 border-[var(--brand-secondary)] pointer-events-none"
+                          // theme updated (ring uses brand-primary)
+                          className="absolute -inset-4 rounded-3xl border-2 border-[var(--brand-primary)] pointer-events-none"
                           initial={{ opacity: 0, scale: 0.9 }}
                           animate={{
                             opacity: [0, 0.6, 0],
@@ -245,16 +252,16 @@ const Hero = ({
                     whileHover={{
                       scale: 1.05,
                       y: -2,
-                      boxShadow: "0 0 40px rgba(0,197,146,0.35)",
+                      boxShadow: "0 0 40px rgba(0,198,147,0.35)",
                     }}
                     whileTap={{ scale: 0.98 }}
                     animate={
                       isCTAActivated
                         ? {
                             boxShadow: [
-                              "0 0 18px rgba(0,197,146,0.22), inset 0 0 18px rgba(0,197,146,0.10)",
-                              "0 0 44px rgba(0,197,146,0.40), inset 0 0 34px rgba(0,197,146,0.16)",
-                              "0 0 18px rgba(0,197,146,0.22), inset 0 0 18px rgba(0,197,146,0.10)",
+                              "0 0 18px rgba(0,198,147,0.22), inset 0 0 18px rgba(0,198,147,0.10)",
+                              "0 0 44px rgba(0,198,147,0.40), inset 0 0 34px rgba(0,198,147,0.16)",
+                              "0 0 18px rgba(0,198,147,0.22), inset 0 0 18px rgba(0,198,147,0.10)",
                             ],
                           }
                         : {}
@@ -265,11 +272,17 @@ const Hero = ({
                         : {}
                     }
                     className="relative px-10 py-5 text-xl rounded-2xl font-bold text-white overflow-hidden transition-all shadow-[var(--shadow-md)] tracking-tight"
+                    // theme updated (button uses brand-primary + hover var)
                     style={{
-                      backgroundImage:
-                        "linear-gradient(90deg, var(--brand-secondary), var(--brand-primary), var(--brand-secondary))",
-                      backgroundSize: isCTAActivated ? "200% 100%" : "100% 100%",
-                      backgroundPosition: isCTAActivated ? "0% 50%" : "50% 50%",
+                      backgroundColor: "var(--brand-primary)",
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.backgroundColor =
+                        "var(--brand-primary-hover)";
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.backgroundColor =
+                        "var(--brand-primary)";
                     }}
                   >
                     <div
@@ -300,9 +313,11 @@ const Hero = ({
                     <p className="text-sm text-[var(--text-secondary)] flex items-center gap-2 group">
                       <span className="relative">
                         New here?
-                        <span className="absolute -bottom-0.5 left-0 w-0 h-px bg-[var(--brand-secondary)] group-hover:w-full transition-all duration-300" />
+                        {/* theme updated */}
+                        <span className="absolute -bottom-0.5 left-0 w-0 h-px bg-[var(--brand-primary)] group-hover:w-full transition-all duration-300" />
                       </span>
-                      <span className="text-[var(--brand-secondary)] font-medium flex items-center gap-1.5">
+                      {/* theme updated */}
+                      <span className="text-[var(--brand-primary)] font-medium flex items-center gap-1.5">
                         See how K&amp;Co works
                       </span>
                     </p>
@@ -332,13 +347,12 @@ const Hero = ({
                   "0 30px 60px -18px rgba(0,0,0,0.18), 0 0 0 1px rgba(15,23,42,0.04)",
               }}
             >
-              {/* Dynamic Spotlight */}
+              {/* Dynamic Spotlight (theme updated: #00c693) */}
               <motion.div
                 className="absolute inset-0 pointer-events-none opacity-40 z-0"
                 style={{
                   background: useTransform([spotX, spotY], ([sx, sy]) => {
-                    // Green spotlight for light theme
-                    return `radial-gradient(600px circle at ${sx} ${sy}, rgba(0,197,146,0.12), transparent 45%)`;
+                    return `radial-gradient(600px circle at ${sx} ${sy}, rgba(0,198,147,0.12), transparent 45%)`;
                   }),
                 }}
               />
@@ -357,13 +371,13 @@ const Hero = ({
 
               {/* Main Card Content */}
               <div className="flex-1 relative overflow-hidden z-10">
-                {/* Futuristic Background */}
+                {/* Futuristic Background (theme updated: brand-primary + bg-dark) */}
                 <motion.div
                   animate={{
                     background: [
-                      "linear-gradient(135deg, rgba(0,197,146,0.08) 0%, rgba(0,119,88,0.06) 100%)",
-                      "linear-gradient(135deg, rgba(0,119,88,0.09) 0%, rgba(0,197,146,0.09) 100%)",
-                      "linear-gradient(135deg, rgba(0,197,146,0.08) 0%, rgba(0,119,88,0.06) 100%)",
+                      "linear-gradient(135deg, rgba(0,198,147,0.08) 0%, rgba(25,38,48,0.06) 100%)",
+                      "linear-gradient(135deg, rgba(25,38,48,0.07) 0%, rgba(0,198,147,0.09) 100%)",
+                      "linear-gradient(135deg, rgba(0,198,147,0.08) 0%, rgba(25,38,48,0.06) 100%)",
                     ],
                   }}
                   transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
@@ -374,7 +388,7 @@ const Hero = ({
                   className="absolute inset-0 opacity-20"
                   style={{
                     backgroundImage:
-                      "linear-gradient(rgba(0,119,88,0.25) 1px, transparent 1px), linear-gradient(90deg, rgba(0,119,88,0.25) 1px, transparent 1px)",
+                      "linear-gradient(rgba(0,198,147,0.22) 1px, transparent 1px), linear-gradient(90deg, rgba(0,198,147,0.22) 1px, transparent 1px)",
                     backgroundSize: "30px 30px",
                     animation: "gridPulse 4s ease-in-out infinite",
                   }}
@@ -402,7 +416,7 @@ const Hero = ({
                   {[...Array(4)].map((_, i) => (
                     <motion.div
                       key={`analytics-${i}`}
-                      className="absolute w-px bg-gradient-to-b from-transparent via-[var(--brand-secondary)] to-transparent opacity-20"
+                      className="absolute w-px bg-gradient-to-b from-transparent via-[var(--bg-dark)] to-transparent opacity-20"
                       style={{
                         left: `${20 + i * 20}%`,
                         top: "15%",
@@ -419,7 +433,10 @@ const Hero = ({
                   ))}
 
                   {/* Line graph */}
-                  <svg className="absolute inset-0 w-full h-full opacity-10" viewBox="0 0 400 300">
+                  <svg
+                    className="absolute inset-0 w-full h-full opacity-10"
+                    viewBox="0 0 400 300"
+                  >
                     <motion.path
                       d="M50,200 Q100,180 150,160 T250,120 T350,80"
                       stroke="var(--brand-primary)"
@@ -462,7 +479,8 @@ const Hero = ({
                     top="38%"
                     right="18%"
                     value="$1.2M Processed"
-                    colorVar="--brand-secondary"
+                    // theme updated (use dark text color)
+                    colorVar="--bg-dark"
                     delay={1.5}
                     icon={DollarSign}
                   />
@@ -470,7 +488,8 @@ const Hero = ({
                     bottom="28%"
                     left="25%"
                     value="99.9% Uptime"
-                    colorVar="--brand-secondary"
+                    // theme updated (use dark text color)
+                    colorVar="--bg-dark"
                     delay={3}
                   />
                 </div>
@@ -489,7 +508,7 @@ const Hero = ({
                     transition={{ duration: 1.2, ease: "easeOut" }}
                     className="relative"
                   >
-                    {/* Outer rings */}
+                    {/* Outer rings (theme updated) */}
                     <motion.div
                       animate={{ scale: [1, 1.15, 1], opacity: [0.16, 0.32, 0.16], rotate: [0, 360] }}
                       transition={{
@@ -497,7 +516,7 @@ const Hero = ({
                         opacity: { duration: 3, repeat: Infinity },
                         rotate: { duration: 20, repeat: Infinity, ease: "linear" },
                       }}
-                      className="absolute inset-0 rounded-full border-2 border-dashed border-[var(--brand-secondary)] opacity-30"
+                      className="absolute inset-0 rounded-full border-2 border-dashed border-[var(--bg-dark)] opacity-30"
                       style={{ width: "200px", height: "200px", left: "-84px", top: "-84px" }}
                     />
                     <motion.div
@@ -515,8 +534,8 @@ const Hero = ({
                     <motion.div
                       animate={{ rotateY: [0, 5, 0, -5, 0] }}
                       transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
-                      className="relative w-32 h-32 flex items-center justify-center rounded-full bg-[var(--bg-surface)] border border-[var(--brand-secondary)]/30 overflow-hidden"
-                      style={{ boxShadow: "0 0 30px rgba(0,197,146,0.18)" }}
+                      className="relative w-32 h-32 flex items-center justify-center rounded-full bg-[var(--bg-surface)] border border-[var(--bg-dark)]/30 overflow-hidden"
+                      style={{ boxShadow: "0 0 30px rgba(0,198,147,0.18)" }}
                     >
                       {/* Scanning line */}
                       <motion.div
@@ -531,9 +550,9 @@ const Hero = ({
                         className="w-16 h-16 object-contain relative z-20"
                         animate={{
                           filter: [
-                            "drop-shadow(0 0 12px rgba(0,197,146,0.25)) brightness(1.05)",
-                            "drop-shadow(0 0 18px rgba(0,197,146,0.40)) brightness(1.08)",
-                            "drop-shadow(0 0 12px rgba(0,197,146,0.25)) brightness(1.05)",
+                            "drop-shadow(0 0 12px rgba(0,198,147,0.25)) brightness(1.05)",
+                            "drop-shadow(0 0 18px rgba(0,198,147,0.40)) brightness(1.08)",
+                            "drop-shadow(0 0 12px rgba(0,198,147,0.25)) brightness(1.05)",
                           ],
                         }}
                         transition={{ duration: 3, repeat: Infinity }}
@@ -552,7 +571,7 @@ const Hero = ({
                       />
                     </motion.div>
 
-                    {/* Orbiting nodes */}
+                    {/* Orbiting nodes (theme updated) */}
                     {[0, 1, 2, 3].map((index) => (
                       <motion.div
                         key={index}
@@ -564,12 +583,12 @@ const Hero = ({
                         <motion.div
                           animate={{ scale: [1, 1.3, 1], opacity: [0.5, 0.9, 0.5] }}
                           transition={{ duration: 2, repeat: Infinity, delay: index * 0.5 }}
-                          className="absolute w-2 h-2 bg-[var(--brand-secondary)] rounded-full"
+                          className="absolute w-2 h-2 bg-[var(--bg-dark)] rounded-full"
                           style={{
                             top: `${10 + index * 20}px`,
                             left: "50%",
                             transform: "translateX(-50%)",
-                            boxShadow: "0 0 14px rgba(0,119,88,0.35)",
+                            boxShadow: "0 0 14px rgba(25,38,48,0.35)",
                           }}
                         />
                       </motion.div>
@@ -584,9 +603,9 @@ const Hero = ({
                     animate={{
                       opacity: [0.75, 1, 0.75],
                       textShadow: [
-                        "0 0 8px rgba(0,197,146,0.18)",
-                        "0 0 16px rgba(0,197,146,0.28)",
-                        "0 0 8px rgba(0,197,146,0.18)",
+                        "0 0 8px rgba(0,198,147,0.18)",
+                        "0 0 16px rgba(0,198,147,0.28)",
+                        "0 0 8px rgba(0,198,147,0.18)",
                       ],
                     }}
                     transition={{ duration: 3, repeat: Infinity }}
@@ -605,18 +624,19 @@ const Hero = ({
                     transition={{ duration: 2, repeat: Infinity }}
                     className="text-xs text-[var(--text-disabled)] font-mono flex items-center justify-center gap-2"
                   >
-                    <Activity size={10} className="text-[var(--brand-secondary)] animate-pulse" />
+                    {/* theme updated */}
+                    <Activity size={10} className="text-[var(--brand-primary)] animate-pulse" />
                     SYSTEM.ACTIVE
-                    <Activity size={10} className="text-[var(--brand-secondary)] animate-pulse" />
+                    <Activity size={10} className="text-[var(--brand-primary)] animate-pulse" />
                   </motion.div>
                 </div>
 
-                {/* Corner accents */}
+                {/* Corner accents (theme updated: no purple) */}
                 <div className="absolute top-0 right-0 w-16 h-16 pointer-events-none">
                   <div className="w-full h-full bg-gradient-to-bl from-[var(--highlight-green)] to-transparent rounded-bl-full border-l border-b border-[var(--border-light)]" />
                 </div>
                 <div className="absolute bottom-0 left-0 w-12 h-12 pointer-events-none">
-                  <div className="w-full h-full bg-gradient-to-tr from-[var(--highlight-purple)] to-transparent rounded-tr-full border-r border-t border-[var(--border-light)]" />
+                  <div className="w-full h-full bg-gradient-to-tr from-[var(--bg-emerald-soft)] to-transparent rounded-tr-full border-r border-t border-[var(--border-light)]" />
                 </div>
               </div>
             </motion.div>
@@ -663,7 +683,6 @@ const ProviderIcon = ({ top, bottom, left, right, icon, color, delay }) => {
             alt="Cloud Provider"
             className="w-full h-full object-contain"
             style={{
-              // On light mode, keep logos crisp
               filter: isAws
                 ? "brightness(0.1) opacity(0.95)"
                 : "brightness(1.02) contrast(1.05) drop-shadow(0 2px 4px rgba(0,0,0,0.12))",
@@ -719,12 +738,14 @@ const PillarIcon = ({ icon: Icon, tone = "brand", delay }) => {
     },
     yellow: {
       bg: "var(--highlight-yellow)",
-      fg: "var(--brand-secondary)",
+      // theme updated
+      fg: "var(--brand-primary)",
       border: "var(--border-light)",
     },
     brand: {
       bg: "var(--bg-soft)",
-      fg: "var(--brand-secondary)",
+      // theme updated
+      fg: "var(--brand-primary)",
       border: "var(--border-light)",
     },
   };
@@ -743,10 +764,7 @@ const PillarIcon = ({ icon: Icon, tone = "brand", delay }) => {
       >
         <Icon size={18} style={{ color: t.fg }} />
       </div>
-      <div
-        className="w-1 h-1 rounded-full animate-pulse"
-        style={{ backgroundColor: t.fg }}
-      />
+      <div className="w-1 h-1 rounded-full animate-pulse" style={{ backgroundColor: t.fg }} />
     </motion.div>
   );
 };

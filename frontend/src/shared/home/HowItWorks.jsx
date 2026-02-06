@@ -28,7 +28,8 @@ const HowItWorks = ({ activateCTA = () => {} }) => {
     e.preventDefault();
     if (activateCTA) activateCTA();
     const heroSection = document.getElementById("hero");
-    if (heroSection) heroSection.scrollIntoView({ behavior: "smooth", block: "start" });
+    if (heroSection)
+      heroSection.scrollIntoView({ behavior: "smooth", block: "start" });
   };
 
   // --- ANIMATION VARIANTS ---
@@ -50,14 +51,16 @@ const HowItWorks = ({ activateCTA = () => {} }) => {
       {/* Background Ambience */}
       <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
         <motion.div
-          animate={{ scale: [1, 1.2, 1], opacity: [0.12, 0.22, 0.12] }}
+          animate={{ scale: [1, 1.2, 1], opacity: [0.10, 0.20, 0.10] }}
           transition={{ duration: 8, repeat: Infinity }}
-          className="absolute top-1/4 left-1/4 w-[500px] h-[500px] bg-[var(--highlight-purple)] rounded-full blur-[100px]"
+          className="absolute top-1/4 left-1/4 w-[500px] h-[500px] rounded-full blur-[100px]"
+          style={{ backgroundColor: "var(--bg-emerald-soft)" }}
         />
         <motion.div
-          animate={{ scale: [1, 1.1, 1], opacity: [0.12, 0.22, 0.12] }}
+          animate={{ scale: [1, 1.1, 1], opacity: [0.10, 0.20, 0.10] }}
           transition={{ duration: 10, repeat: Infinity, delay: 1 }}
-          className="absolute bottom-1/4 right-1/4 w-[600px] h-[600px] bg-[var(--highlight-green)] rounded-full blur-[120px]"
+          className="absolute bottom-1/4 right-1/4 w-[600px] h-[600px] rounded-full blur-[120px]"
+          style={{ backgroundColor: "var(--bg-soft-2)" }}
         />
       </div>
 
@@ -74,7 +77,7 @@ const HowItWorks = ({ activateCTA = () => {} }) => {
             variants={itemVariants}
             className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[var(--bg-surface)] border border-[var(--border-light)] text-[var(--text-primary)] text-xs font-bold uppercase tracking-wider mb-4 shadow-[var(--shadow-sm)]"
           >
-            <Zap size={14} className="text-[var(--brand-secondary)]" />
+            <Zap size={14} className="text-[var(--brand-primary)]" />
             Simple Workflow
           </motion.div>
 
@@ -83,15 +86,7 @@ const HowItWorks = ({ activateCTA = () => {} }) => {
             className="text-3xl md:text-5xl font-bold text-[var(--text-primary)] mb-4 tracking-tight"
           >
             From Data to Dashboard in{" "}
-            <span
-              className="text-transparent bg-clip-text"
-              style={{
-                backgroundImage:
-                  "linear-gradient(90deg, var(--brand-secondary), var(--brand-primary))",
-              }}
-            >
-              Minutes
-            </span>
+            <span className="text-[var(--brand-primary)]">Minutes</span>
           </motion.h2>
 
           <motion.p
@@ -147,13 +142,10 @@ const HowItWorks = ({ activateCTA = () => {} }) => {
             className="lg:col-span-7 perspective-1000"
           >
             <div className="h-[420px] bg-[var(--bg-surface)] border border-[var(--border-light)] rounded-[var(--radius-lg)] p-6 relative overflow-hidden backdrop-blur-md shadow-[var(--shadow-md)] group flex flex-col justify-center">
-              {/* Internal Glow */}
+              {/* Internal Glow (NO gradient) */}
               <div
                 className="absolute inset-0 opacity-60 group-hover:opacity-100 transition-opacity duration-1000"
-                style={{
-                  background:
-                    "linear-gradient(135deg, rgba(0,197,146,0.08) 0%, rgba(0,119,88,0.06) 100%)",
-                }}
+                style={{ backgroundColor: "rgba(0,198,147,0.08)" }}
               />
 
               <AnimatePresence mode="wait">
@@ -168,7 +160,13 @@ const HowItWorks = ({ activateCTA = () => {} }) => {
                     className="flex flex-col items-center w-full relative z-10"
                   >
                     <div className="relative mb-6 animate-float">
-                      <div className="w-20 h-20 bg-[var(--highlight-purple)] rounded-full flex items-center justify-center text-[var(--brand-secondary)] shadow-[0_0_28px_rgba(0,119,88,0.18)] border border-[var(--border-light)]">
+                      <div
+                        className="w-20 h-20 rounded-full flex items-center justify-center shadow-[0_0_28px_rgba(0,198,147,0.18)] border border-[var(--border-light)]"
+                        style={{
+                          backgroundColor: "var(--bg-emerald-soft)",
+                          color: "var(--bg-dark)",
+                        }}
+                      >
                         <UserPlus size={40} />
                       </div>
                       <div className="absolute -top-1 -right-1 bg-[var(--brand-primary)] text-white text-[9px] font-bold px-2 py-0.5 rounded-full shadow-[var(--shadow-sm)]">
@@ -183,13 +181,8 @@ const HowItWorks = ({ activateCTA = () => {} }) => {
                       <div className="h-10 bg-[var(--bg-main)] border border-[var(--border-light)] rounded-[var(--radius-md)] w-full flex items-center px-4 text-xs text-[var(--text-disabled)]">
                         ••••••••••••
                       </div>
-                      <div
-                        className="h-10 rounded-[var(--radius-md)] w-full flex items-center justify-center text-xs font-bold text-white shadow-[var(--shadow-sm)] animate-pulse"
-                        style={{
-                          backgroundImage:
-                            "linear-gradient(90deg, var(--brand-secondary), var(--brand-primary))",
-                        }}
-                      >
+                      {/* Button (NO gradient) */}
+                      <div className="h-10 rounded-[var(--radius-md)] w-full flex items-center justify-center text-xs font-bold text-white shadow-[var(--shadow-sm)] animate-pulse bg-[var(--brand-primary)]">
                         Create Free Account
                       </div>
                     </div>
@@ -214,13 +207,13 @@ const HowItWorks = ({ activateCTA = () => {} }) => {
                       >
                         <FileSpreadsheet
                           size={48}
-                          className="text-[var(--text-disabled)] group-hover:text-[var(--brand-secondary)] transition-colors"
+                          className="text-[var(--text-disabled)] group-hover:text-[var(--bg-dark)] transition-colors"
                         />
                       </motion.div>
                       <div className="text-[var(--text-primary)] font-bold text-sm">
                         Drop Billing CSV
                       </div>
-                      <div className="absolute top-0 left-0 w-full h-1 bg-[var(--brand-primary)] shadow-[0_0_18px_rgba(0,197,146,0.35)] animate-scan" />
+                      <div className="absolute top-0 left-0 w-full h-1 bg-[var(--brand-primary)] shadow-[0_0_18px_rgba(0,198,147,0.35)] animate-scan" />
                     </div>
 
                     {/* Status Badges */}
@@ -229,7 +222,7 @@ const HowItWorks = ({ activateCTA = () => {} }) => {
                         initial={{ scale: 0 }}
                         animate={{ scale: 1 }}
                         transition={{ delay: 0.2 }}
-                        className="px-3 py-1 rounded-full bg-[var(--highlight-green)] text-[var(--brand-secondary)] text-[10px] font-mono flex items-center gap-2 border border-[var(--border-light)]"
+                        className="px-3 py-1 rounded-full bg-[var(--bg-emerald-soft)] text-[var(--bg-dark)] text-[10px] font-mono flex items-center gap-2 border border-[var(--border-light)]"
                       >
                         <CheckCircle2 size={10} /> AWS Detected
                       </motion.div>
@@ -238,7 +231,7 @@ const HowItWorks = ({ activateCTA = () => {} }) => {
                         initial={{ scale: 0 }}
                         animate={{ scale: 1 }}
                         transition={{ delay: 0.4 }}
-                        className="px-3 py-1 rounded-full bg-[var(--highlight-purple)] text-[var(--brand-secondary)] text-[10px] font-mono flex items-center gap-2 border border-[var(--border-light)]"
+                        className="px-3 py-1 rounded-full bg-[var(--bg-soft-2)] text-[var(--bg-dark)] text-[10px] font-mono flex items-center gap-2 border border-[var(--border-light)]"
                       >
                         <CheckCircle2 size={10} /> Format Valid
                       </motion.div>
@@ -250,7 +243,7 @@ const HowItWorks = ({ activateCTA = () => {} }) => {
                       transition={{ delay: 0.6 }}
                       className="mt-3"
                     >
-                      <div className="px-3 py-1 rounded-full bg-[var(--bg-soft)] border border-[var(--border-light)] text-[var(--brand-secondary)] text-[9px] font-bold font-mono tracking-widest uppercase shadow-[var(--shadow-sm)]">
+                      <div className="px-3 py-1 rounded-full bg-[var(--bg-soft)] border border-[var(--border-light)] text-[var(--bg-dark)] text-[9px] font-bold font-mono tracking-widest uppercase shadow-[var(--shadow-sm)]">
                         Focus Framework 1.0
                       </div>
                     </motion.div>
@@ -279,10 +272,10 @@ const HowItWorks = ({ activateCTA = () => {} }) => {
                           </div>
                         </div>
                         <div className="text-right">
-                          <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-[var(--highlight-green)] border border-[var(--border-light)] text-[var(--brand-secondary)] text-[9px] font-bold mb-0.5">
+                          <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-[var(--bg-emerald-soft)] border border-[var(--border-light)] text-[var(--bg-dark)] text-[9px] font-bold mb-0.5">
                             <Zap size={8} fill="currentColor" /> Potential Savings
                           </div>
-                          <div className="text-lg font-bold text-[var(--brand-secondary)]">
+                          <div className="text-lg font-bold text-[var(--bg-dark)]">
                             $3,200
                           </div>
                         </div>
@@ -292,7 +285,10 @@ const HowItWorks = ({ activateCTA = () => {} }) => {
                       <div className="bg-[var(--bg-main)] border border-[var(--border-light)] rounded-xl p-3 relative shadow-[inset_0_0_0_1px_rgba(15,23,42,0.03)]">
                         <div className="flex justify-between items-center mb-2">
                           <div className="flex gap-2 items-center">
-                            <BarChart3 size={12} className="text-[var(--brand-secondary)]" />
+                            <BarChart3
+                              size={12}
+                              className="text-[var(--bg-dark)]"
+                            />
                             <span className="text-[10px] text-[var(--text-disabled)] font-bold">
                               Daily Cost Trend
                             </span>
@@ -313,10 +309,8 @@ const HowItWorks = ({ activateCTA = () => {} }) => {
                             >
                               <motion.div
                                 className="absolute bottom-0 w-full rounded-t-sm"
-                                style={{
-                                  backgroundImage:
-                                    "linear-gradient(180deg, var(--brand-primary), var(--brand-secondary))",
-                                }}
+                                // NO gradient: solid bar color
+                                style={{ backgroundColor: "var(--brand-primary)" }}
                                 initial={{ height: 0 }}
                                 animate={{ height: `${h}%` }}
                                 transition={{ duration: 1, delay: i * 0.1 }}
@@ -335,7 +329,7 @@ const HowItWorks = ({ activateCTA = () => {} }) => {
                           <div
                             className="w-8 h-8 rounded-full relative flex items-center justify-center"
                             style={{
-                              background: `conic-gradient(var(--brand-secondary) 55%, rgba(15,23,42,0.08) 0)`,
+                              background: `conic-gradient(var(--bg-dark) 55%, rgba(25,38,48,0.10) 0)`,
                             }}
                           >
                             <div className="absolute w-5 h-5 bg-[var(--bg-main)] rounded-full" />
@@ -354,7 +348,7 @@ const HowItWorks = ({ activateCTA = () => {} }) => {
                           <div
                             className="w-8 h-8 rounded-full relative flex items-center justify-center"
                             style={{
-                              background: `conic-gradient(var(--brand-primary) 30%, rgba(15,23,42,0.08) 0)`,
+                              background: `conic-gradient(var(--brand-primary) 30%, rgba(25,38,48,0.10) 0)`,
                             }}
                           >
                             <div className="absolute w-5 h-5 bg-[var(--bg-main)] rounded-full" />
@@ -387,13 +381,12 @@ const HowItWorks = ({ activateCTA = () => {} }) => {
         >
           <motion.button
             onClick={handleTryItForFree}
-            whileHover={{ scale: 1.05, boxShadow: "0 0 26px rgba(0,197,146,0.35)" }}
-            whileTap={{ scale: 0.95 }}
-            className="px-10 py-4 text-white font-bold rounded-[var(--radius-md)] transition-all shadow-[var(--shadow-md)] flex items-center gap-2 mx-auto"
-            style={{
-              backgroundImage:
-                "linear-gradient(90deg, var(--brand-secondary), var(--brand-primary))",
+            whileHover={{
+              scale: 1.05,
+              boxShadow: "0 0 26px rgba(0,198,147,0.35)",
             }}
+            whileTap={{ scale: 0.95 }}
+            className="px-10 py-4 text-white font-bold rounded-[var(--radius-md)] transition-all shadow-[var(--shadow-md)] flex items-center gap-2 mx-auto bg-[var(--brand-primary)]"
           >
             <span>Try it for free</span>
             <ArrowRight size={20} />
@@ -441,15 +434,16 @@ const StepButton = ({ step, title, desc, icon: Icon, isActive, onClick }) => (
       w-full text-left p-5 rounded-2xl border transition-all duration-300 group relative overflow-hidden
       ${
         isActive
-          ? "bg-[var(--bg-surface)] border-[var(--brand-secondary)] shadow-[0_0_22px_rgba(0,197,146,0.18)] scale-105 z-10"
+          ? "bg-[var(--bg-surface)] border-[var(--brand-primary)] shadow-[0_0_22px_rgba(0,198,147,0.18)] scale-105 z-10"
           : "bg-transparent border-[var(--border-light)] hover:bg-[var(--bg-soft)] hover:border-[var(--border-muted)]"
       }
     `}
   >
     <div
-      className={`absolute left-0 top-0 bottom-0 w-1 bg-[var(--brand-secondary)] transition-all duration-300 ${
+      className={`absolute left-0 top-0 bottom-0 w-1 transition-all duration-300 ${
         isActive ? "h-full" : "h-0"
       }`}
+      style={{ backgroundColor: "var(--brand-primary)" }}
     />
 
     <div className="flex items-center gap-4 relative z-10">
@@ -458,10 +452,11 @@ const StepButton = ({ step, title, desc, icon: Icon, isActive, onClick }) => (
           w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-300 flex-shrink-0
           ${
             isActive
-              ? "bg-[var(--brand-secondary)] text-white rotate-3"
+              ? "text-white rotate-3"
               : "bg-[var(--bg-surface)] border border-[var(--border-light)] text-[var(--text-disabled)] group-hover:text-[var(--text-primary)]"
           }
         `}
+        style={isActive ? { backgroundColor: "var(--brand-primary)" } : undefined}
       >
         <Icon size={20} />
       </div>

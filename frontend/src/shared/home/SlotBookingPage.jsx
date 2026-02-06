@@ -67,7 +67,9 @@ export default function SlotBookingPage() {
       setSelectedSlot(null);
 
       try {
-        const formattedDate = DateTime.fromJSDate(selectedDate).toFormat("yyyy-MM-dd");
+        const formattedDate = DateTime.fromJSDate(selectedDate).toFormat(
+          "yyyy-MM-dd"
+        );
 
         const res = await axios.get(
           `${API_URL}/api/inquiry/slots/by-date?date=${formattedDate}&timezone=${userTimezone}`
@@ -138,6 +140,22 @@ export default function SlotBookingPage() {
 
   return (
     <div className="min-h-screen bg-[var(--bg-main)] text-[var(--text-primary)] px-6 py-12 relative overflow-hidden flex flex-col items-center">
+      {/* Soft background ambience (no gradients) */}
+      <motion.div
+        aria-hidden
+        animate={{ opacity: [0.12, 0.22, 0.12], scale: [1, 1.12, 1] }}
+        transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
+        className="absolute -top-24 -right-24 w-[520px] h-[520px] rounded-full blur-[120px] pointer-events-none"
+        style={{ backgroundColor: "var(--bg-emerald-soft)" }}
+      />
+      <motion.div
+        aria-hidden
+        animate={{ opacity: [0.08, 0.18, 0.08], scale: [1.1, 1, 1.1] }}
+        transition={{ duration: 12, repeat: Infinity, ease: "easeInOut", delay: 1 }}
+        className="absolute -bottom-24 -left-24 w-[640px] h-[640px] rounded-full blur-[140px] pointer-events-none"
+        style={{ backgroundColor: "var(--bg-soft-2)" }}
+      />
+
       {/* --- BACK BUTTON --- */}
       <motion.button
         initial={{ opacity: 0, x: -20 }}
@@ -157,17 +175,17 @@ export default function SlotBookingPage() {
       >
         {/* Header */}
         <motion.div variants={slideUpVariants} className="text-center mb-10">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[var(--highlight-green)] border border-[var(--border-light)] text-[var(--brand-secondary)] text-xs font-bold uppercase tracking-widest mb-6">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[var(--bg-soft)] border border-[var(--border-light)] text-[var(--bg-dark)] text-xs font-bold uppercase tracking-widest mb-6">
             <Calendar size={12} /> Book Your Audit
           </div>
 
           <h1 className="text-3xl md:text-5xl font-bold text-[var(--text-primary)] mb-4 leading-tight">
-            Finalize Your{" "}
-            <span className="text-[var(--brand-secondary)]">Slot</span>
+            Finalize Your <span className="text-[var(--bg-dark)]">Slot</span>
           </h1>
 
           <p className="text-[var(--text-secondary)] text-base md:text-lg max-w-lg mx-auto">
-            Choose a time that works best for you. We&apos;ll send a calendar invite shortly.
+            Choose a time that works best for you. We&apos;ll send a calendar
+            invite shortly.
           </p>
         </motion.div>
 
@@ -180,7 +198,8 @@ export default function SlotBookingPage() {
           {inquiry && (
             <div className="bg-[var(--bg-main)] border-b border-[var(--border-light)] p-6">
               <div className="flex items-center gap-2 text-sm font-bold text-[var(--text-disabled)] uppercase tracking-wide mb-4">
-                <CheckCircle2 size={14} className="text-[var(--brand-secondary)]" /> Inquiry Details
+                <CheckCircle2 size={14} className="text-[var(--brand-primary)]" />{" "}
+                Inquiry Details
               </div>
 
               <div className="flex flex-col sm:flex-row gap-4 sm:gap-8">
@@ -192,7 +211,9 @@ export default function SlotBookingPage() {
                     <p className="text-[10px] text-[var(--text-disabled)] font-bold uppercase">
                       Name
                     </p>
-                    <p className="text-[var(--text-primary)] font-medium">{inquiry.name}</p>
+                    <p className="text-[var(--text-primary)] font-medium">
+                      {inquiry.name}
+                    </p>
                   </div>
                 </div>
 
@@ -204,7 +225,9 @@ export default function SlotBookingPage() {
                     <p className="text-[10px] text-[var(--text-disabled)] font-bold uppercase">
                       Email
                     </p>
-                    <p className="text-[var(--text-primary)] font-medium">{inquiry.email}</p>
+                    <p className="text-[var(--text-primary)] font-medium">
+                      {inquiry.email}
+                    </p>
                   </div>
                 </div>
               </div>
@@ -265,7 +288,7 @@ export default function SlotBookingPage() {
                 </label>
 
                 {selectedDate && (
-                  <span className="text-xs font-medium text-[var(--brand-secondary)]">
+                  <span className="text-xs font-medium text-[var(--bg-dark)]">
                     {selectedDate.toLocaleDateString("en-US", {
                       weekday: "long",
                       month: "long",
@@ -278,22 +301,28 @@ export default function SlotBookingPage() {
               <div className="min-h-[120px]">
                 {loadingSlots && (
                   <div className="flex items-center justify-center h-32 border border-[var(--border-light)] rounded-[var(--radius-md)] bg-[var(--bg-main)]">
-                    <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-[var(--brand-secondary)]" />
+                    <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-[var(--brand-primary)]" />
                   </div>
                 )}
 
                 {!loadingSlots && slots.length === 0 && selectedDate && (
                   <div className="flex flex-col items-center justify-center h-32 border border-dashed border-[var(--border-light)] rounded-[var(--radius-md)] bg-[var(--bg-main)] text-center">
                     <Clock className="mb-2 text-[var(--text-disabled)]" size={24} />
-                    <p className="text-[var(--text-secondary)] text-sm">No slots available.</p>
-                    <p className="text-[var(--text-disabled)] text-xs">Try selecting another date.</p>
+                    <p className="text-[var(--text-secondary)] text-sm">
+                      No slots available.
+                    </p>
+                    <p className="text-[var(--text-disabled)] text-xs">
+                      Try selecting another date.
+                    </p>
                   </div>
                 )}
 
                 {!loadingSlots && !selectedDate && (
                   <div className="flex flex-col items-center justify-center h-32 border border-dashed border-[var(--border-light)] rounded-[var(--radius-md)] bg-[var(--bg-main)] text-center">
                     <Calendar className="mb-2 text-[var(--text-disabled)]" size={24} />
-                    <p className="text-[var(--text-secondary)] text-sm">Please select a date above</p>
+                    <p className="text-[var(--text-secondary)] text-sm">
+                      Please select a date above
+                    </p>
                   </div>
                 )}
 
@@ -308,11 +337,13 @@ export default function SlotBookingPage() {
                           onClick={() => setSelectedSlot(slot)}
                           className={`px-4 py-3 rounded-[var(--radius-md)] border text-sm font-medium transition-colors flex flex-col items-center gap-1 ${
                             isActive
-                              ? "bg-[var(--brand-secondary)] border-[var(--brand-secondary)] text-white"
-                              : "bg-[var(--bg-main)] border-[var(--border-light)] text-[var(--text-secondary)] hover:border-[var(--brand-secondary)] hover:text-[var(--text-primary)]"
+                              ? "bg-[var(--brand-primary)] border-[var(--brand-primary)] text-white"
+                              : "bg-[var(--bg-main)] border-[var(--border-light)] text-[var(--text-secondary)] hover:border-[var(--brand-primary)] hover:text-[var(--text-primary)]"
                           }`}
                         >
-                          <span className="font-bold tracking-wide">{slot.start}</span>
+                          <span className="font-bold tracking-wide">
+                            {slot.start}
+                          </span>
                           <span
                             className={`text-[10px] ${
                               isActive ? "text-white/80" : "text-[var(--text-disabled)]"
@@ -329,19 +360,25 @@ export default function SlotBookingPage() {
             </motion.div>
 
             {/* 3. Action Button */}
-            <motion.div variants={formItemVariants} className="pt-4 border-t border-[var(--border-light)]">
+            <motion.div
+              variants={formItemVariants}
+              className="pt-4 border-t border-[var(--border-light)]"
+            >
               <button
                 onClick={handleSubmit}
                 disabled={!selectedSlot || submitting}
                 className={`w-full py-4 rounded-[var(--radius-md)] font-bold flex items-center justify-center gap-3 transition-colors ${
                   !selectedSlot || submitting
                     ? "bg-[var(--bg-main)] text-[var(--text-disabled)] cursor-not-allowed border border-[var(--border-light)]"
-                    : "bg-[var(--brand-secondary)] hover:bg-[var(--brand-primary)] text-white"
+                    : "bg-[var(--brand-primary)] hover:opacity-95 text-white"
                 }`}
               >
                 {submitting ? (
                   <>
-                    <svg className="animate-spin h-5 w-5 text-white/80" viewBox="0 0 24 24">
+                    <svg
+                      className="animate-spin h-5 w-5 text-white/80"
+                      viewBox="0 0 24 24"
+                    >
                       <circle
                         className="opacity-25"
                         cx="12"
@@ -370,7 +407,7 @@ export default function SlotBookingPage() {
         </motion.div>
       </motion.div>
 
-      {/* --- CUSTOM CSS FOR DATEPICKER (LIGHT MODE USING VARIABLES) --- */}
+      {/* --- CUSTOM CSS FOR DATEPICKER (NO GRADIENTS, USING VARIABLES) --- */}
       <style>{`
         .react-datepicker {
           background-color: var(--bg-surface) !important;
@@ -397,7 +434,7 @@ export default function SlotBookingPage() {
         }
 
         .react-datepicker__day-name {
-          color: var(--brand-secondary) !important;
+          color: var(--bg-dark) !important;
           font-weight: 700 !important;
         }
 
@@ -414,10 +451,15 @@ export default function SlotBookingPage() {
 
         .react-datepicker__day--selected,
         .react-datepicker__day--keyboard-selected {
-          background-color: var(--brand-secondary) !important;
+          background-color: var(--brand-primary) !important;
           color: white !important;
           font-weight: 700 !important;
-          box-shadow: none !important; /* no glow */
+          box-shadow: none !important;
+        }
+
+        .react-datepicker__day--today {
+          border: 1px solid var(--brand-primary) !important;
+          border-radius: 8px !important;
         }
 
         .react-datepicker__day--disabled {

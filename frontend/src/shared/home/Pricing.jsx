@@ -45,16 +45,23 @@ const Pricing = () => {
       className="py-24 bg-[var(--bg-main)] relative overflow-hidden"
       id="pricing"
     >
-      {/* Background Decor */}
+      {/* Background Decor (keep layout, remove purple/gradients) */}
       <motion.div
-        animate={{ scale: [1, 1.1, 1], opacity: [0.18, 0.28, 0.18] }}
+        animate={{ scale: [1, 1.1, 1], opacity: [0.14, 0.22, 0.14] }}
         transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
-        className="absolute bottom-0 right-0 w-[600px] h-[600px] bg-[var(--highlight-green)] rounded-full blur-[120px] pointer-events-none"
+        className="absolute bottom-0 right-0 w-[600px] h-[600px] rounded-full blur-[120px] pointer-events-none"
+        style={{ backgroundColor: "var(--bg-emerald-soft)" }}
       />
       <motion.div
-        animate={{ scale: [1, 1.2, 1], opacity: [0.14, 0.24, 0.14] }}
-        transition={{ duration: 10, repeat: Infinity, ease: "easeInOut", delay: 1 }}
-        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[900px] h-[500px] bg-[var(--highlight-purple)] rounded-full blur-[120px] pointer-events-none"
+        animate={{ scale: [1, 1.15, 1], opacity: [0.10, 0.18, 0.10] }}
+        transition={{
+          duration: 10,
+          repeat: Infinity,
+          ease: "easeInOut",
+          delay: 1,
+        }}
+        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[900px] h-[500px] rounded-full blur-[120px] pointer-events-none"
+        style={{ backgroundColor: "var(--bg-soft-2)" }}
       />
 
       <div className="max-w-7xl mx-auto px-6 relative z-10">
@@ -65,26 +72,19 @@ const Pricing = () => {
           viewport={{ once: true }}
           className="text-center max-w-3xl mx-auto mb-16"
         >
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[var(--bg-soft)] text-[var(--brand-secondary)] text-xs font-bold uppercase mb-4 border border-[var(--border-light)]">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[var(--bg-soft)] text-[var(--bg-dark)] text-xs font-bold uppercase mb-4 border border-[var(--border-light)]">
             <Zap size={12} fill="currentColor" /> Start Risk-Free
           </div>
 
           <h2 className="text-3xl md:text-5xl font-bold text-[var(--text-primary)] mb-6 tracking-tight">
             Start{" "}
-            <span
-              className="text-transparent bg-clip-text"
-              style={{
-                backgroundImage:
-                  "linear-gradient(90deg, var(--brand-secondary), var(--brand-primary))",
-              }}
-            >
-              Free
-            </span>
-            , Scale Smart.
+            <span className="text-[var(--brand-primary)]">Free</span>, Scale
+            Smart.
           </h2>
 
           <p className="text-[var(--text-secondary)] text-lg leading-relaxed">
-            Begin with a free audit. Upgrade to continuous optimization when ready.
+            Begin with a free audit. Upgrade to continuous optimization when
+            ready.
           </p>
         </motion.div>
 
@@ -104,10 +104,10 @@ const Pricing = () => {
           >
             {/* Header */}
             <div className="flex justify-between items-start mb-6">
-              <div className="w-12 h-12 rounded-xl bg-[var(--highlight-green)] flex items-center justify-center border border-[var(--border-light)] group-hover:scale-110 transition-transform">
-                <Gift className="text-[var(--brand-secondary)]" size={24} />
+              <div className="w-12 h-12 rounded-xl bg-[var(--bg-emerald-soft)] flex items-center justify-center border border-[var(--border-light)] group-hover:scale-110 transition-transform">
+                <Gift className="text-[var(--bg-dark)]" size={24} />
               </div>
-              <div className="px-3 py-1 rounded-full bg-[var(--highlight-green)] text-[var(--brand-secondary)] text-[10px] font-bold uppercase border border-[var(--border-light)]">
+              <div className="px-3 py-1 rounded-full bg-[var(--bg-emerald-soft)] text-[var(--bg-dark)] text-[10px] font-bold uppercase border border-[var(--border-light)]">
                 Free Tier
               </div>
             </div>
@@ -126,14 +126,14 @@ const Pricing = () => {
                   $0
                 </span>
               </div>
-              <p className="text-xs text-[var(--brand-secondary)] mt-1 font-medium">
+              <p className="text-xs text-[var(--bg-dark)] mt-1 font-medium">
                 No credit card required
               </p>
             </div>
 
             {/* Features List */}
             <div className="space-y-4 mb-8 flex-1">
-              <p className="text-xs font-bold text-[var(--brand-secondary)] uppercase tracking-widest mb-2">
+              <p className="text-xs font-bold text-[var(--bg-dark)] uppercase tracking-widest mb-2">
                 What's Included
               </p>
               <ListItem text="30 days of cloud data analysis" theme="free" />
@@ -164,27 +164,25 @@ const Pricing = () => {
           <motion.div
             variants={cardVariants}
             whileHover={{ y: -10 }}
-            className="bg-[var(--bg-surface)] border-2 border-[var(--brand-secondary)]/40 rounded-[var(--radius-lg)] p-8 relative flex flex-col h-full shadow-[0_0_40px_rgba(0,119,88,0.10)]"
+            className="bg-[var(--bg-surface)] border-2 rounded-[var(--radius-lg)] p-8 relative flex flex-col h-full shadow-[0_0_40px_rgba(0,198,147,0.10)]"
+            style={{ borderColor: "rgba(0,198,147,0.40)" }}
           >
-            {/* Highlight Badge */}
+            {/* Highlight Badge (NO gradient) */}
             <motion.div
               animate={{ y: [0, -5, 0] }}
               transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
               className="absolute -top-4 left-1/2 -translate-x-1/2 px-4 py-1.5 rounded-full text-white text-[10px] font-bold uppercase tracking-wider shadow-[var(--shadow-md)]"
-              style={{
-                backgroundImage:
-                  "linear-gradient(90deg, var(--brand-secondary), var(--brand-primary))",
-              }}
+              style={{ backgroundColor: "var(--brand-primary)" }}
             >
               Most Popular
             </motion.div>
 
             {/* Header */}
             <div className="flex justify-between items-start mb-6 mt-2">
-              <div className="w-12 h-12 rounded-xl bg-[var(--highlight-purple)] flex items-center justify-center border border-[var(--border-light)] transition-transform">
-                <Activity className="text-[var(--brand-secondary)]" size={24} />
+              <div className="w-12 h-12 rounded-xl bg-[var(--bg-soft-2)] flex items-center justify-center border border-[var(--border-light)] transition-transform">
+                <Activity className="text-[var(--bg-dark)]" size={24} />
               </div>
-              <div className="px-3 py-1 rounded-full bg-[var(--highlight-purple)] text-[var(--brand-secondary)] text-[10px] font-bold uppercase border border-[var(--border-light)]">
+              <div className="px-3 py-1 rounded-full bg-[var(--bg-soft-2)] text-[var(--bg-dark)] text-[10px] font-bold uppercase border border-[var(--border-light)]">
                 Enterprise
               </div>
             </div>
@@ -202,16 +200,18 @@ const Pricing = () => {
                 <span className="text-4xl font-bold text-[var(--text-primary)]">
                   Custom
                 </span>
-                <span className="text-[var(--text-secondary)] text-sm">/ month</span>
+                <span className="text-[var(--text-secondary)] text-sm">
+                  / month
+                </span>
               </div>
-              <p className="text-xs text-[var(--brand-secondary)] mt-1 font-medium">
+              <p className="text-xs text-[var(--bg-dark)] mt-1 font-medium">
                 Pricing based on cloud spend
               </p>
             </div>
 
             {/* Features List */}
             <div className="space-y-4 mb-8 flex-1">
-              <p className="text-xs font-bold text-[var(--brand-secondary)] uppercase tracking-widest mb-2">
+              <p className="text-xs font-bold text-[var(--bg-dark)] uppercase tracking-widest mb-2">
                 Everything in Free +
               </p>
               <ListItem text="Real-time billing data ingestion" theme="pro" />
@@ -222,14 +222,10 @@ const Pricing = () => {
               <ListItem text="Engineer Slack alerts" theme="pro" />
             </div>
 
-            {/* CTA Button (TRIGGER MODAL) */}
+            {/* CTA Button (NO gradient) */}
             <button
               onClick={handleScheduleDemo}
-              className="w-full py-4 rounded-[var(--radius-md)] text-white text-sm font-bold transition-all shadow-[var(--shadow-md)] flex items-center justify-center gap-2 group"
-              style={{
-                backgroundImage:
-                  "linear-gradient(90deg, var(--brand-secondary), var(--brand-primary))",
-              }}
+              className="w-full py-4 rounded-[var(--radius-md)] text-white text-sm font-bold transition-all shadow-[var(--shadow-md)] flex items-center justify-center gap-2 group bg-[var(--brand-primary)]"
             >
               Schedule Demo
               <ArrowRight
@@ -261,13 +257,10 @@ const Pricing = () => {
               exit={{ scale: 0.95, opacity: 0, y: 20 }}
               className="relative w-full max-w-md bg-[var(--bg-surface)] border border-[var(--border-light)] rounded-[var(--radius-lg)] p-8 shadow-[var(--shadow-md)] overflow-hidden"
             >
-              {/* Top Line */}
+              {/* Top Line (NO gradient) */}
               <div
                 className="absolute top-0 left-0 w-full h-1"
-                style={{
-                  backgroundImage:
-                    "linear-gradient(90deg, var(--brand-secondary), var(--brand-primary))",
-                }}
+                style={{ backgroundColor: "var(--brand-primary)" }}
               />
 
               <button
@@ -279,15 +272,15 @@ const Pricing = () => {
               </button>
 
               <div className="mb-6">
-                <div className="w-12 h-12 bg-[var(--highlight-green)] rounded-xl flex items-center justify-center mb-4 text-[var(--brand-secondary)] border border-[var(--border-light)]">
+                <div className="w-12 h-12 bg-[var(--bg-emerald-soft)] rounded-xl flex items-center justify-center mb-4 text-[var(--bg-dark)] border border-[var(--border-light)]">
                   <Activity size={24} />
                 </div>
                 <h3 className="text-2xl font-bold text-[var(--text-primary)] mb-2">
                   Book a Demo
                 </h3>
                 <p className="text-[var(--text-secondary)] text-sm">
-                  Tell us about your infrastructure, and we&apos;ll show you how we can
-                  optimize it.
+                  Tell us about your infrastructure, and we&apos;ll show you how
+                  we can optimize it.
                 </p>
               </div>
 
@@ -316,13 +309,8 @@ const Pricing = () => {
                   </select>
                 </div>
 
-                <button
-                  className="w-full py-3 text-white font-bold rounded-[var(--radius-md)] transition-all shadow-[var(--shadow-md)] mt-2 hover:-translate-y-0.5"
-                  style={{
-                    backgroundImage:
-                      "linear-gradient(90deg, var(--brand-secondary), var(--brand-primary))",
-                  }}
-                >
+                {/* Submit (NO gradient) */}
+                <button className="w-full py-3 text-white font-bold rounded-[var(--radius-md)] transition-all shadow-[var(--shadow-md)] mt-2 hover:-translate-y-0.5 bg-[var(--brand-primary)]">
                   Submit Request
                 </button>
               </form>
@@ -343,7 +331,7 @@ const ListItem = ({ text, theme }) => {
 
   if (theme === "free") {
     Icon = Check;
-    iconColor = "text-[var(--brand-secondary)]";
+    iconColor = "text-[var(--bg-dark)]";
     textColor = "text-[var(--text-secondary)]";
   } else if (theme === "pro") {
     Icon = Check;
@@ -355,7 +343,9 @@ const ListItem = ({ text, theme }) => {
     <div className="flex items-start gap-3">
       <div
         className={`mt-0.5 ${
-          theme === "pro" ? "bg-[var(--highlight-green)] rounded-full p-[1px]" : ""
+          theme === "pro"
+            ? "bg-[var(--bg-emerald-soft)] rounded-full p-[1px]"
+            : ""
         }`}
       >
         <Icon size={16} className={iconColor} />

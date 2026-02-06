@@ -67,11 +67,12 @@ const Features = () => {
       className="py-24 bg-[var(--bg-main)] text-[var(--text-primary)] relative overflow-hidden"
       id="services"
     >
-      {/* Background Decor */}
+      {/* Background Decor (theme: emerald soft, no purple) */}
       <motion.div
-        animate={{ scale: [1, 1.1, 1], opacity: [0.25, 0.4, 0.25] }}
+        animate={{ scale: [1, 1.1, 1], opacity: [0.18, 0.32, 0.18] }}
         transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
-        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[900px] h-[500px] bg-[var(--highlight-green)] rounded-full blur-[120px] pointer-events-none"
+        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[900px] h-[500px] rounded-full blur-[120px] pointer-events-none"
+        style={{ backgroundColor: "var(--bg-emerald-soft)" }}
       />
 
       <motion.div
@@ -84,7 +85,13 @@ const Features = () => {
         {/* --- HEADER --- */}
         <div className="mb-16 text-center max-w-3xl mx-auto">
           <motion.div variants={itemVariants}>
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[var(--highlight-purple)] text-[var(--brand-secondary)] text-xs font-bold uppercase mb-3 border border-[var(--border-light)]">
+            <div
+              className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold uppercase mb-3 border border-[var(--border-light)]"
+              style={{
+                backgroundColor: "var(--bg-emerald-soft)",
+                color: "var(--bg-dark)",
+              }}
+            >
               <Layers size={14} /> Service Models
             </div>
           </motion.div>
@@ -158,22 +165,27 @@ const ServiceCard = ({
   const [isOpen, setIsOpen] = useState(false);
 
   /**
-   * Tones:
-   * - snapshot: yellow highlight
-   * - continuous: green/purple highlight
+   * Theme rules:
+   * - primary: var(--brand-primary) (#00c693)
+   * - dark: var(--bg-dark) (#192630)
+   * - remove purple highlight usage
    */
   const isContinuous = tone === "continuous";
 
-  const accentText = "text-[var(--brand-secondary)]";
+  // icon/text accents should be dark for chips (better contrast)
+  const accentText = "text-[var(--bg-dark)]";
+
+  // chips: keep yellow for snapshot, use emerald-soft for continuous
   const chipBg = isContinuous
-    ? "bg-[var(--highlight-green)]"
+    ? "bg-[var(--bg-emerald-soft)]"
     : "bg-[var(--highlight-yellow)]";
+
   const chipBorder = "border-[var(--border-light)]";
 
   const hoverBorder = "group-hover:border-[var(--brand-primary)]";
-  const btnHover = isContinuous
-    ? "hover:bg-[var(--brand-primary)]"
-    : "hover:bg-[var(--brand-secondary)]";
+
+  // button hover: use primary for both (consistent)
+  const btnHover = "hover:bg-[var(--brand-primary)]";
 
   return (
     <motion.div
@@ -219,7 +231,7 @@ const ServiceCard = ({
         <div className="space-y-3 mb-8 flex-1">
           {features.map((f, i) => (
             <div key={i} className="flex items-center gap-3">
-              <CheckCircle2 size={16} className={accentText} />
+              <CheckCircle2 size={16} className="text-[var(--brand-primary)]" />
               <span className="text-[var(--text-secondary)] text-sm">{f}</span>
             </div>
           ))}
@@ -250,12 +262,13 @@ const ServiceCard = ({
             animate={{ y: 0 }}
             exit={{ y: "100%" }}
             transition={{ type: "spring", damping: 25, stiffness: 200 }}
-            className="absolute inset-0 bg-[var(--bg-surface)] z-20 p-8 flex flex-col border-t-4 border-[var(--brand-secondary)]"
+            className="absolute inset-0 bg-[var(--bg-surface)] z-20 p-8 flex flex-col border-t-4 border-[var(--brand-primary)]"
           >
             {/* Detail Header */}
             <div className="flex justify-between items-center mb-6">
               <h4 className="text-[var(--text-primary)] font-bold text-lg flex items-center gap-2">
-                <FileText size={18} className={accentText} /> Engagement Details
+                <FileText size={18} className="text-[var(--brand-primary)]" />{" "}
+                Engagement Details
               </h4>
 
               <button
@@ -282,7 +295,7 @@ const ServiceCard = ({
                       key={i}
                       className="text-sm text-[var(--text-secondary)] flex items-start gap-2"
                     >
-                      <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-[var(--brand-secondary)] flex-shrink-0 shadow-[0_0_8px_rgba(0,119,88,0.25)]" />
+                      <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-[var(--brand-primary)] flex-shrink-0 shadow-[0_0_8px_rgba(0,198,147,0.25)]" />
                       {step}
                     </li>
                   ))}
@@ -300,7 +313,7 @@ const ServiceCard = ({
                       key={i}
                       className="text-sm text-[var(--text-secondary)] flex items-start gap-2"
                     >
-                      <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-[var(--brand-secondary)] flex-shrink-0 shadow-[0_0_8px_rgba(0,119,88,0.25)]" />
+                      <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-[var(--brand-primary)] flex-shrink-0 shadow-[0_0_8px_rgba(0,198,147,0.25)]" />
                       {item}
                     </li>
                   ))}
@@ -308,8 +321,12 @@ const ServiceCard = ({
               </div>
 
               {/* Ideal For Section */}
-              <div className={`p-4 rounded-[var(--radius-md)] border ${chipBorder} ${chipBg}`}>
-                <h5 className={`text-xs font-bold ${accentText} uppercase tracking-wider mb-1 flex items-center gap-2`}>
+              <div
+                className={`p-4 rounded-[var(--radius-md)] border ${chipBorder} ${chipBg}`}
+              >
+                <h5
+                  className={`text-xs font-bold ${accentText} uppercase tracking-wider mb-1 flex items-center gap-2`}
+                >
                   <Target size={12} /> Ideal For
                 </h5>
                 <p className="text-xs text-[var(--text-secondary)] leading-relaxed">

@@ -91,7 +91,6 @@ const Home = () => {
 
         <HowItWorks activateCTA={activateCTA} />
 
-
         <AnimatePresence>
           {isChatOpen && (
             <motion.div
@@ -101,7 +100,7 @@ const Home = () => {
               exit={{ opacity: 0, y: 20, scale: 0.95 }}
               transition={{ duration: 0.2, ease: "easeOut" }}
             >
-              <div className="relative w-[320px] sm:w-[360px] h-[480px] overflow-hidden rounded-2xl">
+              <div className="relative w-[320px] sm:w-[360px] h-[480px] overflow-hidden rounded-2xl border border-[var(--border-light)] bg-[var(--bg-surface)] shadow-[var(--shadow-md)]">
                 <Chatbot onClose={() => setIsChatOpen(false)} />
               </div>
             </motion.div>
@@ -118,9 +117,9 @@ const Home = () => {
         onClick={() => setIsChatOpen((prev) => !prev)}
         className="
           fixed bottom-6 right-6 z-50 rounded-full
-          px-5 py-3 font-semibold text-white
-          bg-[var(--brand-secondary)]
-          border border-white/20
+          px-5 py-3 font-semibold
+          bg-[var(--brand-primary)] text-white
+          border border-[var(--border-light)]
           hover:opacity-95
           transition-opacity
         "
@@ -131,6 +130,7 @@ const Home = () => {
     </div>
   );
 };
+
 
 
 function App() {

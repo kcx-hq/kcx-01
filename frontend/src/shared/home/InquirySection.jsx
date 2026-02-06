@@ -81,10 +81,12 @@ const InquirySection = () => {
       className="py-24 bg-[var(--bg-main)] relative overflow-hidden"
       id="contact"
     >
+      {/* Background blob (remove purple, use emerald soft) */}
       <motion.div
-        animate={{ scale: [1, 1.1, 1], opacity: [0.18, 0.32, 0.18] }}
+        animate={{ scale: [1, 1.1, 1], opacity: [0.14, 0.24, 0.14] }}
         transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
-        className="absolute right-0 bottom-0 w-[600px] h-[600px] bg-[var(--highlight-purple)] rounded-full blur-[120px] pointer-events-none"
+        className="absolute right-0 bottom-0 w-[600px] h-[600px] rounded-full blur-[120px] pointer-events-none"
+        style={{ backgroundColor: "var(--bg-emerald-soft)" }}
       />
 
       <motion.div
@@ -96,7 +98,8 @@ const InquirySection = () => {
       >
         {/* LEFT */}
         <motion.div variants={slideLeftVariants}>
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[var(--highlight-purple)] border border-[var(--border-light)] text-[var(--brand-secondary)] text-xs font-semibold mb-6 shadow-[var(--shadow-sm)]">
+          {/* Badge (remove purple) */}
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[var(--bg-soft)] border border-[var(--border-light)] text-[var(--bg-dark)] text-xs font-semibold mb-6 shadow-[var(--shadow-sm)]">
             <motion.span
               animate={{ scale: [1, 1.3, 1], opacity: [1, 0.5, 1] }}
               transition={{ duration: 2, repeat: Infinity }}
@@ -107,15 +110,8 @@ const InquirySection = () => {
 
           <h2 className="text-4xl md:text-5xl font-bold text-[var(--text-primary)] mb-6 leading-tight">
             Start analyzing your <br />
-            <span
-              className="text-transparent bg-clip-text"
-              style={{
-                backgroundImage:
-                  "linear-gradient(90deg, var(--text-primary), var(--brand-secondary))",
-              }}
-            >
-              cloud spend today.
-            </span>
+            {/* remove gradient */}
+            <span className="text-[var(--bg-dark)]">cloud spend today.</span>
           </h2>
 
           <p className="text-[var(--text-secondary)] text-lg mb-8 leading-relaxed">
@@ -135,7 +131,10 @@ const InquirySection = () => {
                 variants={formItemVariants}
                 className="flex items-center gap-3"
               >
-                <CheckCircle2 className="text-[var(--brand-secondary)]" size={20} />
+                <CheckCircle2
+                  className="text-[var(--bg-dark)]"
+                  size={20}
+                />
                 <p className="text-[var(--text-secondary)]">{text}</p>
               </motion.div>
             ))}
@@ -230,18 +229,17 @@ const InquirySection = () => {
               />
             </motion.div>
 
-            {error && <p className="text-center text-[12px] text-red-600">{error}</p>}
+            {error && (
+              <p className="text-center text-[12px] text-red-600">{error}</p>
+            )}
 
+            {/* CTA (remove gradient) */}
             <motion.button
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               type="button"
               onClick={handleBookSlot}
-              className="w-full py-3.5 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold rounded-[var(--radius-md)] flex items-center justify-center gap-2 shadow-[var(--shadow-md)]"
-              style={{
-                backgroundImage:
-                  "linear-gradient(90deg, var(--brand-secondary), var(--brand-primary))",
-              }}
+              className="w-full py-3.5 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold rounded-[var(--radius-md)] flex items-center justify-center gap-2 shadow-[var(--shadow-md)] bg-[var(--brand-primary)]"
             >
               Book Your Audit
               <ArrowRight size={18} />
