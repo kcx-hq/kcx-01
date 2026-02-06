@@ -16,7 +16,6 @@ const HowItWorks = ({ activateCTA = () => {} }) => {
   const [activeTab, setActiveTab] = useState(1);
   const navigate = useNavigate();
 
-  // --- AUTOMATIC ROTATION (4s) ---
   useEffect(() => {
     const interval = setInterval(() => {
       setActiveTab((prev) => (prev === 3 ? 1 : prev + 1));
@@ -32,7 +31,6 @@ const HowItWorks = ({ activateCTA = () => {} }) => {
       heroSection.scrollIntoView({ behavior: "smooth", block: "start" });
   };
 
-  // --- ANIMATION VARIANTS ---
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: { opacity: 1, transition: { staggerChildren: 0.1 } },
@@ -142,6 +140,19 @@ const HowItWorks = ({ activateCTA = () => {} }) => {
             className="lg:col-span-7 perspective-1000"
           >
             <div className="h-[420px] bg-[var(--bg-surface)] border border-[var(--border-light)] rounded-[var(--radius-lg)] p-6 relative overflow-hidden backdrop-blur-md shadow-[var(--shadow-md)] group flex flex-col justify-center">
+              {/* ✅ Card Background Grid */}
+              <div
+                className="absolute inset-0 pointer-events-none"
+                style={{
+                  backgroundImage: `
+                    linear-gradient(to right, rgba(28,35,33,0.03) 1px, transparent 1px),
+                    linear-gradient(to bottom, rgba(28,35,33,0.03) 1px, transparent 1px)
+                  `,
+                  backgroundSize: "32px 32px",
+                  opacity: 0.16,
+                }}
+              />
+
               {/* Internal Glow (NO gradient) */}
               <div
                 className="absolute inset-0 opacity-60 group-hover:opacity-100 transition-opacity duration-1000"
@@ -181,7 +192,6 @@ const HowItWorks = ({ activateCTA = () => {} }) => {
                       <div className="h-10 bg-[var(--bg-main)] border border-[var(--border-light)] rounded-[var(--radius-md)] w-full flex items-center px-4 text-xs text-[var(--text-disabled)]">
                         ••••••••••••
                       </div>
-                      {/* Button (NO gradient) */}
                       <div className="h-10 rounded-[var(--radius-md)] w-full flex items-center justify-center text-xs font-bold text-white shadow-[var(--shadow-sm)] animate-pulse bg-[var(--brand-primary)]">
                         Create Free Account
                       </div>
@@ -216,7 +226,6 @@ const HowItWorks = ({ activateCTA = () => {} }) => {
                       <div className="absolute top-0 left-0 w-full h-1 bg-[var(--brand-primary)] shadow-[0_0_18px_rgba(0,198,147,0.35)] animate-scan" />
                     </div>
 
-                    {/* Status Badges */}
                     <div className="mt-5 flex gap-3">
                       <motion.div
                         initial={{ scale: 0 }}
@@ -261,7 +270,6 @@ const HowItWorks = ({ activateCTA = () => {} }) => {
                     className="flex flex-col justify-center w-full relative z-10"
                   >
                     <div className="relative space-y-3">
-                      {/* Top Stats */}
                       <div className="flex justify-between items-end px-1">
                         <div>
                           <div className="text-[var(--text-disabled)] text-[9px] uppercase font-bold tracking-wider mb-0.5">
@@ -281,7 +289,6 @@ const HowItWorks = ({ activateCTA = () => {} }) => {
                         </div>
                       </div>
 
-                      {/* MAIN GRAPH CARD */}
                       <div className="bg-[var(--bg-main)] border border-[var(--border-light)] rounded-xl p-3 relative shadow-[inset_0_0_0_1px_rgba(15,23,42,0.03)]">
                         <div className="flex justify-between items-center mb-2">
                           <div className="flex gap-2 items-center">
@@ -298,7 +305,6 @@ const HowItWorks = ({ activateCTA = () => {} }) => {
                           </div>
                         </div>
 
-                        {/* COMPACT GRAPH */}
                         <div className="relative h-12 w-full flex items-end justify-between gap-1.5">
                           {[35, 60, 45, 80, 55, 90, 40].map((h, i) => (
                             <motion.div
@@ -309,7 +315,6 @@ const HowItWorks = ({ activateCTA = () => {} }) => {
                             >
                               <motion.div
                                 className="absolute bottom-0 w-full rounded-t-sm"
-                                // NO gradient: solid bar color
                                 style={{ backgroundColor: "var(--brand-primary)" }}
                                 initial={{ height: 0 }}
                                 animate={{ height: `${h}%` }}
@@ -323,7 +328,6 @@ const HowItWorks = ({ activateCTA = () => {} }) => {
                         </div>
                       </div>
 
-                      {/* DONUT CHARTS */}
                       <div className="grid grid-cols-2 gap-3">
                         <div className="bg-[var(--bg-main)] border border-[var(--border-light)] p-2.5 rounded-xl flex items-center gap-2">
                           <div
@@ -439,6 +443,19 @@ const StepButton = ({ step, title, desc, icon: Icon, isActive, onClick }) => (
       }
     `}
   >
+    {/* ✅ Background grid inside each StepButton card */}
+    <div
+      className="absolute inset-0 pointer-events-none"
+      style={{
+        backgroundImage: `
+          linear-gradient(to right, rgba(28,35,33,0.03) 1px, transparent 1px),
+          linear-gradient(to bottom, rgba(28,35,33,0.03) 1px, transparent 1px)
+        `,
+        backgroundSize: "28px 28px",
+        opacity: isActive ? 0.18 : 0.12,
+      }}
+    />
+
     <div
       className={`absolute left-0 top-0 bottom-0 w-1 transition-all duration-300 ${
         isActive ? "h-full" : "h-0"

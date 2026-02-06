@@ -2,48 +2,6 @@
 @tailwind components;
 @tailwind utilities;
 
-/* @layer base {
-  :root {
-    --brand-primary: #00c592;
-    --brand-secondary: #007758;
-
-    --bg-main: #ffffff;
-    --bg-surface: #ffffff;
-    --bg-soft: #e5f9f4;
-
-    --highlight-purple: #f8ebff;
-    --highlight-green: #e5f9f4;
-    --highlight-yellow: #fff8e5;
-
-    --text-primary: #0f172a;
-    --text-secondary: #475569;
-    --text-disabled: #94a3b8;
-
-    --border-light: #e2e8f0;
-    --border-muted: #cbd5e1;
-
-    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.08);
-    --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.12);
-
-    --radius-sm: 6px;
-    --radius-md: 10px;
-    --radius-lg: 16px;
-
-    --space-xs: 4px;
-    --space-sm: 8px;
-    --space-md: 16px;
-    --space-lg: 24px;
-    --space-xl: 32px;
-
-    --transition-fast: 150ms ease;
-    --transition-base: 250ms ease;
-  }
-
-  body {
-    background-color: var(--bg-main);
-    color: var(--text-primary);
-  }
-} */
 
 
 @layer base {
@@ -51,52 +9,52 @@
     /* =====================
        Brand
     ===================== */
-    --brand-primary: #007758;          /* primary buttons, CTAs */
-    --brand-primary-hover: #00b889;    /* hover state */
-    --brand-primary-soft: #e5f9f4;     /* soft mint backgrounds */
+    --brand-primary: #007758;
+    --brand-primary-hover: #00b889;
+    --brand-primary-soft: #e2f3ee;
 
-    --brand-secondary: #192630;        /* navbar, footer, dark surfaces */
+    --brand-secondary: #192630;
 
     /* =====================
        Backgrounds
     ===================== */
-    --bg-main: #ffffff;                /* main page bg */
-    --bg-surface: #ffffff;             /* cards, panels */
-    --bg-soft: #f8fafc;                /* subtle sections */
-    --bg-soft-2: #f1f5f9;              /* table headers, dividers */
-    --bg-dark: #192630;                /* navbar, footer */
+    --bg-main: #f2f3f2;
+    --bg-surface: #f7f8f7;
+    --bg-soft: #ecefed;
+    --bg-soft-2: #e4e8e6;
+    --bg-dark: #192630;
 
     /* =====================
        Highlights
     ===================== */
-    --highlight-green: #e5f9f4;         /* mint highlight */
-    --highlight-blue: #dbeafe;          /* optional info states */
-    --highlight-purple: #f8ebff;        /* optional accents */
-    --highlight-yellow: #fff8e5;        /* warnings, tips */
+    --highlight-green: #e2f3ee;
+    --highlight-blue: #e9f1fb;
+    --highlight-purple: #f2ebf8;
+    --highlight-yellow: #fbf6e8;
 
     /* =====================
        Text
     ===================== */
-    --text-primary: #0f172a;            /* main text */
-    --text-secondary: #475569;          /* secondary text */
-    --text-muted: #94a3b8;              /* labels, hints */
-    --text-disabled: #cbd5e1;           /* disabled */
+    --text-primary: #1c2321;
+    --text-secondary: #4b5a55;
+    --text-muted: #8a9a94;
+    --text-disabled: #c7cfcb;
 
-    --text-on-dark: #ffffff;            /* navbar/footer text */
-    --text-on-dark-muted: #9ca3af;      /* muted text on dark bg */
+    --text-on-dark: #ffffff;
+    --text-on-dark-muted: #9ca3af;
 
     /* =====================
        Borders
     ===================== */
-    --border-light: #e2e8f0;
-    --border-muted: #f1f5f9;
+    --border-light: #dde3e0;
+    --border-muted: #eef1ef;
     --border-dark: rgba(255, 255, 255, 0.12);
 
     /* =====================
        Shadows
     ===================== */
-    --shadow-sm: 0 1px 3px rgba(15, 23, 42, 0.08);
-    --shadow-md: 0 10px 30px rgba(15, 23, 42, 0.12);
+    --shadow-sm: 0 1px 3px rgba(15, 23, 42, 0.06);
+    --shadow-md: 0 12px 32px rgba(15, 23, 42, 0.1);
 
     /* =====================
        Radius
@@ -126,7 +84,6 @@
     color: var(--text-primary);
   }
 }
-
 
 
 html {

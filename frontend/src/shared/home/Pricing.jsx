@@ -45,6 +45,18 @@ const Pricing = () => {
       className="py-24 bg-[var(--bg-main)] relative overflow-hidden"
       id="pricing"
     >
+      {/* ===== Subtle Background Grid (only bg, no theme changes) ===== */}
+      <div
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          backgroundImage: `
+            linear-gradient(to right, rgba(28,35,33,0.03) 1px, transparent 1px),
+            linear-gradient(to bottom, rgba(28,35,33,0.03) 1px, transparent 1px)
+          `,
+          backgroundSize: "72px 72px",
+        }}
+      />
+
       {/* Background Decor (keep layout, remove purple/gradients) */}
       <motion.div
         animate={{ scale: [1, 1.1, 1], opacity: [0.14, 0.22, 0.14] }}
@@ -102,62 +114,77 @@ const Pricing = () => {
             whileHover={{ y: -10 }}
             className="bg-[var(--bg-surface)] border border-[var(--border-light)] rounded-[var(--radius-lg)] p-8 transition-all duration-300 group flex flex-col h-full relative shadow-[var(--shadow-sm)] hover:shadow-[var(--shadow-md)]"
           >
-            {/* Header */}
-            <div className="flex justify-between items-start mb-6">
-              <div className="w-12 h-12 rounded-xl bg-[var(--bg-emerald-soft)] flex items-center justify-center border border-[var(--border-light)] group-hover:scale-110 transition-transform">
-                <Gift className="text-[var(--bg-dark)]" size={24} />
-              </div>
-              <div className="px-3 py-1 rounded-full bg-[var(--bg-emerald-soft)] text-[var(--bg-dark)] text-[10px] font-bold uppercase border border-[var(--border-light)]">
-                Free Tier
-              </div>
-            </div>
+            {/* ===== Card Background Grid (only bg) ===== */}
+            <div
+              className="absolute inset-0 pointer-events-none"
+              style={{
+                backgroundImage: `
+                  linear-gradient(to right, rgba(28,35,33,0.03) 1px, transparent 1px),
+                  linear-gradient(to bottom, rgba(28,35,33,0.03) 1px, transparent 1px)
+                `,
+                backgroundSize: "32px 32px",
+                opacity: 0.18,
+              }}
+            />
 
-            <h3 className="text-xl font-bold text-[var(--text-primary)] mb-2">
-              FinOps Snapshot™
-            </h3>
-            <p className="text-[var(--text-secondary)] text-sm mb-6">
-              One-time audit &amp; savings report.
-            </p>
-
-            {/* Price */}
-            <div className="mb-8 p-4 bg-[var(--bg-main)] rounded-xl border border-[var(--border-light)] group-hover:bg-[var(--bg-soft)] transition-colors">
-              <div className="flex items-baseline">
-                <span className="text-4xl font-bold text-[var(--text-primary)]">
-                  $0
-                </span>
+            <div className="relative z-10 flex flex-col h-full">
+              {/* Header */}
+              <div className="flex justify-between items-start mb-6">
+                <div className="w-12 h-12 rounded-xl bg-[var(--bg-emerald-soft)] flex items-center justify-center border border-[var(--border-light)] group-hover:scale-110 transition-transform">
+                  <Gift className="text-[var(--bg-dark)]" size={24} />
+                </div>
+                <div className="px-3 py-1 rounded-full bg-[var(--bg-emerald-soft)] text-[var(--bg-dark)] text-[10px] font-bold uppercase border border-[var(--border-light)]">
+                  Free Tier
+                </div>
               </div>
-              <p className="text-xs text-[var(--bg-dark)] mt-1 font-medium">
-                No credit card required
+
+              <h3 className="text-xl font-bold text-[var(--text-primary)] mb-2">
+                FinOps Snapshot™
+              </h3>
+              <p className="text-[var(--text-secondary)] text-sm mb-6">
+                One-time audit &amp; savings report.
               </p>
-            </div>
 
-            {/* Features List */}
-            <div className="space-y-4 mb-8 flex-1">
-              <p className="text-xs font-bold text-[var(--bg-dark)] uppercase tracking-widest mb-2">
-                What's Included
-              </p>
-              <ListItem text="30 days of cloud data analysis" theme="free" />
-              <ListItem text="AWS, Azure or GCP billing review" theme="free" />
-              <ListItem text="Idle resource identification" theme="free" />
-              <ListItem text="Savings opportunity report" theme="free" />
-
-              <div className="pt-4 border-t border-[var(--border-light)] space-y-4 opacity-60">
-                <ListItem text="Real-time monitoring" theme="muted" />
-                <ListItem text="Weekly optimization cadence" theme="muted" />
+              {/* Price */}
+              <div className="mb-8 p-4 bg-[var(--bg-main)] rounded-xl border border-[var(--border-light)] group-hover:bg-[var(--bg-soft)] transition-colors">
+                <div className="flex items-baseline">
+                  <span className="text-4xl font-bold text-[var(--text-primary)]">
+                    $0
+                  </span>
+                </div>
+                <p className="text-xs text-[var(--bg-dark)] mt-1 font-medium">
+                  No credit card required
+                </p>
               </div>
-            </div>
 
-            {/* CTA Button */}
-            <button
-              onClick={handleFreeSignup}
-              className="w-full py-4 bg-[var(--bg-main)] hover:bg-[var(--bg-soft)] border border-[var(--border-light)] rounded-[var(--radius-md)] text-[var(--text-primary)] text-sm font-bold transition-all flex items-center justify-center gap-2 group"
-            >
-              Get Free Snapshot
-              <ArrowRight
-                size={16}
-                className="group-hover:translate-x-1 transition-transform"
-              />
-            </button>
+              {/* Features List */}
+              <div className="space-y-4 mb-8 flex-1">
+                <p className="text-xs font-bold text-[var(--bg-dark)] uppercase tracking-widest mb-2">
+                  What&apos;s Included
+                </p>
+                <ListItem text="30 days of cloud data analysis" theme="free" />
+                <ListItem text="AWS, Azure or GCP billing review" theme="free" />
+                <ListItem text="Idle resource identification" theme="free" />
+                <ListItem text="Savings opportunity report" theme="free" />
+
+                <div className="pt-4 border-t border-[var(--border-light)] space-y-4 opacity-60">
+                  <ListItem text="Real-time monitoring" theme="muted" />
+                  <ListItem text="Weekly optimization cadence" theme="muted" />
+                </div>
+              </div>
+
+              {/* CTA Button */}
+              <button
+                onClick={handleFreeSignup}
+                className="w-full py-4 bg-[var(--bg-main)] hover:bg-[var(--bg-soft)] border border-[var(--border-light)] rounded-[var(--radius-md)] text-[var(--text-primary)] text-sm font-bold transition-all flex items-center justify-center gap-2 group"
+              >
+                Get Free Snapshot
+                <ArrowRight
+                  size={16}
+                  className="group-hover:translate-x-1 transition-transform"
+                />
+              </button>
+            </div>
           </motion.div>
 
           {/* === CARD 2: Enterprise === */}
@@ -167,72 +194,87 @@ const Pricing = () => {
             className="bg-[var(--bg-surface)] border-2 rounded-[var(--radius-lg)] p-8 relative flex flex-col h-full shadow-[0_0_40px_rgba(0,198,147,0.10)]"
             style={{ borderColor: "rgba(0,198,147,0.40)" }}
           >
-            {/* Highlight Badge (NO gradient) */}
-            <motion.div
-              animate={{ y: [0, -5, 0] }}
-              transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-              className="absolute -top-4 left-1/2 -translate-x-1/2 px-4 py-1.5 rounded-full text-white text-[10px] font-bold uppercase tracking-wider shadow-[var(--shadow-md)]"
-              style={{ backgroundColor: "var(--brand-primary)" }}
-            >
-              Most Popular
-            </motion.div>
+            {/* ===== Card Background Grid (only bg) ===== */}
+            <div
+              className="absolute inset-0 pointer-events-none"
+              style={{
+                backgroundImage: `
+                  linear-gradient(to right, rgba(28,35,33,0.03) 1px, transparent 1px),
+                  linear-gradient(to bottom, rgba(28,35,33,0.03) 1px, transparent 1px)
+                `,
+                backgroundSize: "32px 32px",
+                opacity: 0.16,
+              }}
+            />
 
-            {/* Header */}
-            <div className="flex justify-between items-start mb-6 mt-2">
-              <div className="w-12 h-12 rounded-xl bg-[var(--bg-soft-2)] flex items-center justify-center border border-[var(--border-light)] transition-transform">
-                <Activity className="text-[var(--bg-dark)]" size={24} />
-              </div>
-              <div className="px-3 py-1 rounded-full bg-[var(--bg-soft-2)] text-[var(--bg-dark)] text-[10px] font-bold uppercase border border-[var(--border-light)]">
-                Enterprise
-              </div>
-            </div>
+            <div className="relative z-10 flex flex-col h-full">
+              {/* Highlight Badge (NO gradient) */}
+              <motion.div
+                animate={{ y: [0, -5, 0] }}
+                transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+                className="absolute -top-4 left-1/2 -translate-x-1/2 px-4 py-1.5 rounded-full text-white text-[10px] font-bold uppercase tracking-wider shadow-[var(--shadow-md)]"
+                style={{ backgroundColor: "var(--brand-primary)" }}
+              >
+                Most Popular
+              </motion.div>
 
-            <h3 className="text-xl font-bold text-[var(--text-primary)] mb-2">
-              FinOps Continuous™
-            </h3>
-            <p className="text-[var(--text-secondary)] text-sm mb-6">
-              Always-on optimization service.
-            </p>
-
-            {/* Price */}
-            <div className="mb-8 p-4 bg-[var(--bg-soft)] rounded-xl border border-[var(--border-light)]">
-              <div className="flex items-baseline gap-2">
-                <span className="text-4xl font-bold text-[var(--text-primary)]">
-                  Custom
-                </span>
-                <span className="text-[var(--text-secondary)] text-sm">
-                  / month
-                </span>
+              {/* Header */}
+              <div className="flex justify-between items-start mb-6 mt-2">
+                <div className="w-12 h-12 rounded-xl bg-[var(--bg-soft-2)] flex items-center justify-center border border-[var(--border-light)] transition-transform">
+                  <Activity className="text-[var(--bg-dark)]" size={24} />
+                </div>
+                <div className="px-3 py-1 rounded-full bg-[var(--bg-soft-2)] text-[var(--bg-dark)] text-[10px] font-bold uppercase border border-[var(--border-light)]">
+                  Enterprise
+                </div>
               </div>
-              <p className="text-xs text-[var(--bg-dark)] mt-1 font-medium">
-                Pricing based on cloud spend
+
+              <h3 className="text-xl font-bold text-[var(--text-primary)] mb-2">
+                FinOps Continuous™
+              </h3>
+              <p className="text-[var(--text-secondary)] text-sm mb-6">
+                Always-on optimization service.
               </p>
-            </div>
 
-            {/* Features List */}
-            <div className="space-y-4 mb-8 flex-1">
-              <p className="text-xs font-bold text-[var(--bg-dark)] uppercase tracking-widest mb-2">
-                Everything in Free +
-              </p>
-              <ListItem text="Real-time billing data ingestion" theme="pro" />
-              <ListItem text="Continuous waste detection" theme="pro" />
-              <ListItem text="Weekly executive insights" theme="pro" />
-              <ListItem text="Savings Plan/RI strategy" theme="pro" />
-              <ListItem text="Anomaly detection & alerts" theme="pro" />
-              <ListItem text="Engineer Slack alerts" theme="pro" />
-            </div>
+              {/* Price */}
+              <div className="mb-8 p-4 bg-[var(--bg-soft)] rounded-xl border border-[var(--border-light)]">
+                <div className="flex items-baseline gap-2">
+                  <span className="text-4xl font-bold text-[var(--text-primary)]">
+                    Custom
+                  </span>
+                  <span className="text-[var(--text-secondary)] text-sm">
+                    / month
+                  </span>
+                </div>
+                <p className="text-xs text-[var(--bg-dark)] mt-1 font-medium">
+                  Pricing based on cloud spend
+                </p>
+              </div>
 
-            {/* CTA Button (NO gradient) */}
-            <button
-              onClick={handleScheduleDemo}
-              className="w-full py-4 rounded-[var(--radius-md)] text-white text-sm font-bold transition-all shadow-[var(--shadow-md)] flex items-center justify-center gap-2 group bg-[var(--brand-primary)]"
-            >
-              Schedule Demo
-              <ArrowRight
-                size={16}
-                className="group-hover:translate-x-1 transition-transform"
-              />
-            </button>
+              {/* Features List */}
+              <div className="space-y-4 mb-8 flex-1">
+                <p className="text-xs font-bold text-[var(--bg-dark)] uppercase tracking-widest mb-2">
+                  Everything in Free +
+                </p>
+                <ListItem text="Real-time billing data ingestion" theme="pro" />
+                <ListItem text="Continuous waste detection" theme="pro" />
+                <ListItem text="Weekly executive insights" theme="pro" />
+                <ListItem text="Savings Plan/RI strategy" theme="pro" />
+                <ListItem text="Anomaly detection & alerts" theme="pro" />
+                <ListItem text="Engineer Slack alerts" theme="pro" />
+              </div>
+
+              {/* CTA Button (NO gradient) */}
+              <button
+                onClick={handleScheduleDemo}
+                className="w-full py-4 rounded-[var(--radius-md)] text-white text-sm font-bold transition-all shadow-[var(--shadow-md)] flex items-center justify-center gap-2 group bg-[var(--brand-primary)]"
+              >
+                Schedule Demo
+                <ArrowRight
+                  size={16}
+                  className="group-hover:translate-x-1 transition-transform"
+                />
+              </button>
+            </div>
           </motion.div>
         </motion.div>
       </div>
@@ -257,6 +299,19 @@ const Pricing = () => {
               exit={{ scale: 0.95, opacity: 0, y: 20 }}
               className="relative w-full max-w-md bg-[var(--bg-surface)] border border-[var(--border-light)] rounded-[var(--radius-lg)] p-8 shadow-[var(--shadow-md)] overflow-hidden"
             >
+              {/* ===== Modal Background Grid (only bg) ===== */}
+              <div
+                className="absolute inset-0 pointer-events-none"
+                style={{
+                  backgroundImage: `
+                    linear-gradient(to right, rgba(28,35,33,0.03) 1px, transparent 1px),
+                    linear-gradient(to bottom, rgba(28,35,33,0.03) 1px, transparent 1px)
+                  `,
+                  backgroundSize: "28px 28px",
+                  opacity: 0.14,
+                }}
+              />
+
               {/* Top Line (NO gradient) */}
               <div
                 className="absolute top-0 left-0 w-full h-1"
@@ -271,49 +326,54 @@ const Pricing = () => {
                 <X size={20} />
               </button>
 
-              <div className="mb-6">
-                <div className="w-12 h-12 bg-[var(--bg-emerald-soft)] rounded-xl flex items-center justify-center mb-4 text-[var(--bg-dark)] border border-[var(--border-light)]">
-                  <Activity size={24} />
+              <div className="relative z-10">
+                <div className="mb-6">
+                  <div className="w-12 h-12 bg-[var(--bg-emerald-soft)] rounded-xl flex items-center justify-center mb-4 text-[var(--bg-dark)] border border-[var(--border-light)]">
+                    <Activity size={24} />
+                  </div>
+                  <h3 className="text-2xl font-bold text-[var(--text-primary)] mb-2">
+                    Book a Demo
+                  </h3>
+                  <p className="text-[var(--text-secondary)] text-sm">
+                    Tell us about your infrastructure, and we&apos;ll show you
+                    how we can optimize it.
+                  </p>
                 </div>
-                <h3 className="text-2xl font-bold text-[var(--text-primary)] mb-2">
-                  Book a Demo
-                </h3>
-                <p className="text-[var(--text-secondary)] text-sm">
-                  Tell us about your infrastructure, and we&apos;ll show you how
-                  we can optimize it.
-                </p>
+
+                {/* Form */}
+                <form
+                  className="space-y-4"
+                  onSubmit={(e) => e.preventDefault()}
+                >
+                  <div>
+                    <label className="block text-xs font-bold text-[var(--text-disabled)] uppercase mb-1">
+                      Work Email
+                    </label>
+                    <input
+                      type="email"
+                      placeholder="name@company.com"
+                      className="w-full bg-[var(--bg-main)] border border-[var(--border-light)] rounded-[var(--radius-md)] px-4 py-3 text-[var(--text-primary)] text-sm placeholder:text-[var(--text-disabled)] focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)]/40"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-[var(--text-disabled)] uppercase mb-1">
+                      Monthly Cloud Spend (Est.)
+                    </label>
+                    <select className="w-full bg-[var(--bg-main)] border border-[var(--border-light)] rounded-[var(--radius-md)] px-4 py-3 text-[var(--text-primary)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)]/40">
+                      <option>Less than $10k/mo</option>
+                      <option>$10k - $50k/mo</option>
+                      <option>$50k - $200k/mo</option>
+                      <option>$200k+/mo</option>
+                    </select>
+                  </div>
+
+                  {/* Submit (NO gradient) */}
+                  <button className="w-full py-3 text-white font-bold rounded-[var(--radius-md)] transition-all shadow-[var(--shadow-md)] mt-2 hover:-translate-y-0.5 bg-[var(--brand-primary)]">
+                    Submit Request
+                  </button>
+                </form>
               </div>
-
-              {/* Form */}
-              <form className="space-y-4" onSubmit={(e) => e.preventDefault()}>
-                <div>
-                  <label className="block text-xs font-bold text-[var(--text-disabled)] uppercase mb-1">
-                    Work Email
-                  </label>
-                  <input
-                    type="email"
-                    placeholder="name@company.com"
-                    className="w-full bg-[var(--bg-main)] border border-[var(--border-light)] rounded-[var(--radius-md)] px-4 py-3 text-[var(--text-primary)] text-sm placeholder:text-[var(--text-disabled)] focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)]/40"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-[var(--text-disabled)] uppercase mb-1">
-                    Monthly Cloud Spend (Est.)
-                  </label>
-                  <select className="w-full bg-[var(--bg-main)] border border-[var(--border-light)] rounded-[var(--radius-md)] px-4 py-3 text-[var(--text-primary)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)]/40">
-                    <option>Less than $10k/mo</option>
-                    <option>$10k - $50k/mo</option>
-                    <option>$50k - $200k/mo</option>
-                    <option>$200k+/mo</option>
-                  </select>
-                </div>
-
-                {/* Submit (NO gradient) */}
-                <button className="w-full py-3 text-white font-bold rounded-[var(--radius-md)] transition-all shadow-[var(--shadow-md)] mt-2 hover:-translate-y-0.5 bg-[var(--brand-primary)]">
-                  Submit Request
-                </button>
-              </form>
             </motion.div>
           </div>
         )}

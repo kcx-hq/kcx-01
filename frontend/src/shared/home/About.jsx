@@ -37,7 +37,7 @@ const About = () => {
       className="py-24 bg-[var(--bg-main)] text-[var(--text-primary)] relative overflow-hidden"
       id="about"
     >
-      {/* --- DYNAMIC BACKGROUNDS (theme updated: remove purple, use emerald/soft) --- */}
+      {/* --- DYNAMIC BACKGROUNDS --- */}
       <motion.div
         animate={{
           opacity: [0.18, 0.32, 0.18],
@@ -54,7 +54,12 @@ const About = () => {
           scale: [1.2, 1, 1.2],
           x: [20, -20, 20],
         }}
-        transition={{ duration: 12, repeat: Infinity, ease: "easeInOut", delay: 1 }}
+        transition={{
+          duration: 12,
+          repeat: Infinity,
+          ease: "easeInOut",
+          delay: 1,
+        }}
         className="absolute bottom-0 right-1/4 w-[500px] h-[500px] bg-[var(--highlight-green)] rounded-full blur-[100px] pointer-events-none"
       />
 
@@ -69,7 +74,6 @@ const About = () => {
         >
           <motion.span
             variants={fadeInUp}
-            // theme updated: primary accent
             className="text-[var(--brand-primary)] text-xs font-bold uppercase tracking-[0.2em] mb-4 block"
           >
             WHO WE ARE
@@ -89,9 +93,9 @@ const About = () => {
             variants={fadeInUp}
             className="text-[var(--text-secondary)] text-lg leading-relaxed mb-6"
           >
-            K&Co is a Cloud FinOps platform that helps engineering-led companies
-            understand, control, and optimize their cloud spend — without slowing
-            down development.
+            K&amp;Co is a Cloud FinOps platform that helps engineering-led
+            companies understand, control, and optimize their cloud spend —
+            without slowing down development.
           </motion.p>
 
           <motion.p
@@ -126,7 +130,6 @@ const About = () => {
             icon={TrendingUp}
             value="10-30%"
             label="Avg. Cost Reduction"
-            // theme updated
             iconColor="text-[var(--brand-primary)]"
             delay={0}
           />
@@ -163,7 +166,8 @@ const About = () => {
         >
           <h3 className="text-3xl font-bold mb-4">Why Partner With Us?</h3>
           <p className="text-[var(--text-secondary)]">
-            Click "See Our Approach" below to explore how we drive results.
+            Click &quot;See Our Approach&quot; below to explore how we drive
+            results.
           </p>
         </motion.div>
 
@@ -174,12 +178,10 @@ const About = () => {
           variants={containerVariants}
           className="grid grid-cols-1 md:grid-cols-3 gap-6"
         >
-          {/* CARD 1: FINANCIAL */}
           <ValueCard
             icon={DollarSign}
             title="ROI-Obsessed"
             desc="We look beyond simple savings. We optimize your unit economics to ensure every cloud dollar spent drives actual revenue."
-            // theme updated
             badgeBg="bg-[var(--highlight-yellow)]"
             iconColor="text-[var(--bg-dark)]"
             details={[
@@ -189,12 +191,10 @@ const About = () => {
             ]}
           />
 
-          {/* CARD 2: TECHNICAL */}
           <ValueCard
             icon={Code2}
             title="Engineering DNA"
             desc="We speak your team's language. Our recommendations are technical, practical, and ready to deploy—no 'fluff' reports."
-            // theme updated
             badgeBg="bg-[var(--highlight-green)]"
             iconColor="text-[var(--bg-dark)]"
             details={[
@@ -204,12 +204,10 @@ const About = () => {
             ]}
           />
 
-          {/* CARD 3: SAFETY */}
           <ValueCard
             icon={Lock}
             title="Risk-Free Execution"
             desc="We prioritize uptime above all else. Our 'Safe-Saving' protocols ensure cost cuts never compromise reliability."
-            // theme updated (remove purple)
             badgeBg="bg-[var(--bg-emerald-soft)]"
             iconColor="text-[var(--bg-dark)]"
             details={[
@@ -233,15 +231,30 @@ const StatItem = ({ icon: Icon, value, label, iconColor, delay }) => (
       visible: { scale: 1, opacity: 1, transition: { duration: 0.6, delay } },
     }}
     whileHover={{ scale: 1.05, y: -5 }}
-    className="flex flex-col items-center justify-center text-center p-4 rounded-xl hover:bg-[var(--bg-soft)] transition-colors duration-300"
+    className="flex flex-col items-center justify-center text-center p-4 rounded-xl hover:bg-[var(--bg-soft)] transition-colors duration-300 relative overflow-hidden"
   >
-    <div className="flex items-center gap-2 mb-2">
-      <Icon size={24} className={iconColor} />
-      <span className="text-3xl md:text-4xl font-bold">{value}</span>
+    {/* ✅ GRID FIX: stronger + visible */}
+    <div
+      className="absolute inset-0 pointer-events-none"
+      style={{
+        backgroundImage: `
+          linear-gradient(to right, rgba(28,35,33,0.085) 1px, transparent 1px),
+          linear-gradient(to bottom, rgba(28,35,33,0.085) 1px, transparent 1px)
+        `,
+        backgroundSize: "28px 28px",
+        opacity: 0.32,
+      }}
+    />
+
+    <div className="relative z-10">
+      <div className="flex items-center gap-2 mb-2">
+        <Icon size={24} className={iconColor} />
+        <span className="text-3xl md:text-4xl font-bold">{value}</span>
+      </div>
+      <span className="text-sm text-[var(--text-disabled)] uppercase tracking-wide font-medium">
+        {label}
+      </span>
     </div>
-    <span className="text-sm text-[var(--text-disabled)] uppercase tracking-wide font-medium">
-      {label}
-    </span>
   </motion.div>
 );
 
@@ -253,7 +266,11 @@ const ValueCard = ({ icon: Icon, title, desc, badgeBg, iconColor, details }) => 
     <motion.div
       variants={{
         hidden: { y: 50, opacity: 0 },
-        visible: { y: 0, opacity: 1, transition: { type: "spring", stiffness: 50 } },
+        visible: {
+          y: 0,
+          opacity: 1,
+          transition: { type: "spring", stiffness: 50 },
+        },
       }}
       whileHover={!isOpen ? { y: -10 } : {}}
       className={`
@@ -267,10 +284,23 @@ const ValueCard = ({ icon: Icon, title, desc, badgeBg, iconColor, details }) => 
         }
       `}
     >
-      {/* Background soft overlay */}
+      {/* Background soft overlay (kept) */}
       {!isOpen && (
         <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black/5 pointer-events-none transition-opacity duration-500 group-hover:opacity-0" />
       )}
+
+      {/* ✅ GRID FIX: stronger + visible */}
+      <div
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          backgroundImage: `
+            linear-gradient(to right, rgba(28,35,33,0.095) 1px, transparent 1px),
+            linear-gradient(to bottom, rgba(28,35,33,0.095) 1px, transparent 1px)
+          `,
+          backgroundSize: "34px 34px",
+          opacity: isOpen ? 0.26 : 0.34,
+        }}
+      />
 
       {/* MAIN CONTENT */}
       <div className="relative z-10 flex-1 flex flex-col">
@@ -283,7 +313,6 @@ const ValueCard = ({ icon: Icon, title, desc, badgeBg, iconColor, details }) => 
 
         <motion.h4
           layout
-          // theme updated
           className="text-2xl font-bold mb-4 group-hover:text-[var(--bg-dark)] transition-colors"
         >
           {title}
@@ -301,7 +330,6 @@ const ValueCard = ({ icon: Icon, title, desc, badgeBg, iconColor, details }) => 
       <motion.button
         layout
         onClick={() => setIsOpen(true)}
-        // theme updated: primary accent
         className="relative z-20 flex items-center gap-3 text-[var(--brand-primary)] text-sm font-bold cursor-pointer group/btn mt-auto w-fit px-4 py-2 rounded-[var(--radius-md)] hover:bg-[var(--bg-emerald-soft)] transition-colors"
       >
         <span className="w-2 h-2 rounded-full bg-[var(--brand-primary)] group-hover/btn:scale-125 transition-transform"></span>
@@ -320,51 +348,64 @@ const ValueCard = ({ icon: Icon, title, desc, badgeBg, iconColor, details }) => 
             animate={{ y: 0 }}
             exit={{ y: "100%" }}
             transition={{ type: "spring", damping: 25, stiffness: 200 }}
-            // theme updated
             className="absolute inset-0 bg-[var(--bg-surface)] z-30 p-8 flex flex-col border-t-4 border-[var(--brand-primary)]"
           >
-            <div className="flex justify-between items-start mb-6">
-              <h5 className="text-[var(--text-primary)] font-bold text-lg flex items-center gap-2">
-                {/* theme updated */}
-                <Zap size={18} className="text-[var(--brand-primary)]" /> How We Do It
-              </h5>
+            {/* ✅ GRID FIX: stronger + visible in overlay */}
+            <div
+              className="absolute inset-0 pointer-events-none"
+              style={{
+                backgroundImage: `
+                  linear-gradient(to right, rgba(28,35,33,0.09) 1px, transparent 1px),
+                  linear-gradient(to bottom, rgba(28,35,33,0.09) 1px, transparent 1px)
+                `,
+                backgroundSize: "28px 28px",
+                opacity: 0.28,
+              }}
+            />
+
+            <div className="relative z-10">
+              <div className="flex justify-between items-start mb-6">
+                <h5 className="text-[var(--text-primary)] font-bold text-lg flex items-center gap-2">
+                  <Zap size={18} className="text-[var(--brand-primary)]" /> How We
+                  Do It
+                </h5>
+
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setIsOpen(false);
+                  }}
+                  className="text-[var(--text-secondary)] hover:text-[var(--text-primary)] bg-black/5 hover:bg-black/10 p-2 rounded-full transition-colors"
+                >
+                  <X size={20} />
+                </button>
+              </div>
+
+              <ul className="space-y-4 mb-auto">
+                {details.map((item, index) => (
+                  <motion.li
+                    key={index}
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: index * 0.1 + 0.2 }}
+                    className="flex items-start gap-3 text-sm text-[var(--text-secondary)]"
+                  >
+                    <div className="mt-1.5 w-1.5 h-1.5 rounded-full bg-[var(--brand-primary)] flex-shrink-0 shadow-[0_0_8px_rgba(0,198,147,0.35)]" />
+                    {item}
+                  </motion.li>
+                ))}
+              </ul>
 
               <button
                 onClick={(e) => {
                   e.stopPropagation();
                   setIsOpen(false);
                 }}
-                className="text-[var(--text-secondary)] hover:text-[var(--text-primary)] bg-black/5 hover:bg-black/10 p-2 rounded-full transition-colors"
+                className="mt-auto text-xs text-[var(--text-disabled)] hover:text-[var(--text-primary)] text-center w-full pt-4 border-t border-[var(--border-light)] uppercase tracking-wider font-bold transition-colors"
               >
-                <X size={20} />
+                Close Details
               </button>
             </div>
-
-            <ul className="space-y-4 mb-auto">
-              {details.map((item, index) => (
-                <motion.li
-                  key={index}
-                  initial={{ opacity: 0, x: -10 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: index * 0.1 + 0.2 }}
-                  className="flex items-start gap-3 text-sm text-[var(--text-secondary)]"
-                >
-                  {/* theme updated */}
-                  <div className="mt-1.5 w-1.5 h-1.5 rounded-full bg-[var(--brand-primary)] flex-shrink-0 shadow-[0_0_8px_rgba(0,198,147,0.35)]" />
-                  {item}
-                </motion.li>
-              ))}
-            </ul>
-
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                setIsOpen(false);
-              }}
-              className="mt-auto text-xs text-[var(--text-disabled)] hover:text-[var(--text-primary)] text-center w-full pt-4 border-t border-[var(--border-light)] uppercase tracking-wider font-bold transition-colors"
-            >
-              Close Details
-            </button>
           </motion.div>
         )}
       </AnimatePresence>

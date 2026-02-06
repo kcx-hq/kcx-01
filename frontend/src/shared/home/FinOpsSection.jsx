@@ -27,15 +27,20 @@ const FinOpsSection = () => {
 
   return (
     <section className="py-24 bg-[var(--bg-main)] relative overflow-hidden">
-      {/* Animated Vertical Line (removed gradient) */}
-      <motion.div
-        initial={{ height: 0, opacity: 0 }}
-        whileInView={{ height: "100%", opacity: 1 }}
-        transition={{ duration: 1.5, ease: "easeInOut" }}
-        viewport={{ once: true }}
-        className="absolute top-0 left-1/2 -translate-x-1/2 w-px"
-        style={{ backgroundColor: "rgba(25,38,48,0.30)" }} // bg-dark @ 30%
+      {/* Subtle background grid (calm + theme-aligned) */}
+      <div
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          backgroundImage: `
+            linear-gradient(to right, rgba(28,35,33,0.06) 1px, transparent 1px),
+            linear-gradient(to bottom, rgba(28,35,33,0.06) 1px, transparent 1px)
+          `,
+          backgroundSize: "40px 40px",
+          opacity: 1,
+        }}
       />
+
+      
 
       <div className="max-w-7xl mx-auto px-6 relative z-10">
         {/* Header Section */}
@@ -101,7 +106,7 @@ const FinOpsSection = () => {
 
 // Extracted Component
 const FeatureRow = ({ icon: Icon, title, desc, tone, variants }) => {
-  // map tones to new theme tokens (no purple)
+  // map tones to provided theme tokens
   const toneMap = {
     warning: {
       bg: "bg-[var(--highlight-yellow)]",
@@ -135,7 +140,7 @@ const FeatureRow = ({ icon: Icon, title, desc, tone, variants }) => {
           ${styles.bg} flex items-center justify-center
           border ${styles.border}
           group-hover:scale-110
-          group-hover:shadow-[0_0_15px_rgba(0,0,0,0.08)]
+          group-hover:shadow-[0_0_15px_rgba(15,23,42,0.08)]
           transition-all duration-300
         `}
       >
