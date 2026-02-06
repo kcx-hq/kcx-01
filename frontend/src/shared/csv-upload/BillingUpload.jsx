@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
-import {  useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -30,6 +30,7 @@ const BillingUploads = () => {
   const clearUploadIds = useDashboardStore((s) => s.clearUploadIds);
   const setUploadIds = useDashboardStore((s) => s.setUploadIds);
   const dashboardPath = useDashboardStore((s) => s.dashboardPath);
+
   const formatBytes = (bytes) => {
     if (bytes == null) return "—";
     const sizes = ["B", "KB", "MB", "GB"];
@@ -82,12 +83,9 @@ const BillingUploads = () => {
     } catch (err) {
       console.error("Failed to fetch uploads:", err);
 
-      if (err?.response?.data?.message)
-        setErrorMessage(err.response.data.message);
-      else if (err?.response?.data?.error)
-        setErrorMessage(err.response.data.error);
-      else if (err?.request)
-        setErrorMessage("Cannot connect to backend server.");
+      if (err?.response?.data?.message) setErrorMessage(err.response.data.message);
+      else if (err?.response?.data?.error) setErrorMessage(err.response.data.error);
+      else if (err?.request) setErrorMessage("Cannot connect to backend server.");
       else setErrorMessage("Failed to load uploads.");
 
       setStatus("error");
@@ -99,7 +97,6 @@ const BillingUploads = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // ✅ filter rows by query
   const filteredUploads = useMemo(() => {
     const q = query.trim().toLowerCase();
     if (!q) return uploads;
@@ -122,16 +119,12 @@ const BillingUploads = () => {
     });
   }, [uploads, query]);
 
-  // ✅ store-based toggle
-  const toggleRow = (id) => {
-    toggleUploadId(id);
-  };
+  const toggleRow = (id) => toggleUploadId(id);
 
   const isAllSelected =
     filteredUploads.length > 0 &&
     filteredUploads.every((u) => uploadIds.includes(u.uploadid));
 
-  // ✅ select/unselect all on screen (store-safe)
   const toggleSelectAll = () => {
     const idsOnScreen = filteredUploads.map((u) => u.uploadid);
     const prevSet = new Set(uploadIds);
@@ -139,37 +132,34 @@ const BillingUploads = () => {
     const allOnScreenSelected = idsOnScreen.every((id) => prevSet.has(id));
 
     if (allOnScreenSelected) {
-      // unselect all on screen
       const next = uploadIds.filter((id) => !idsOnScreen.includes(id));
       setUploadIds(next);
     } else {
-      // select all on screen (keep previous)
       const merged = new Set([...uploadIds, ...idsOnScreen]);
       setUploadIds(Array.from(merged));
     }
   };
 
-  // ✅ clear using store action
   const clearSelection = () => clearUploadIds();
 
   return (
     <div className="min-h-screen bg-[#0f0f11] font-sans relative overflow-hidden">
-      {/* Background effects */}
-      <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:40px_40px] pointer-events-none" />
-      <div className="absolute top-0 left-1/4 w-96 h-96 bg-[#a02ff1]/10 rounded-full blur-[120px] pointer-events-none mix-blend-screen animate-pulse" />
-      <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-blue-600/10 rounded-full blur-[120px] pointer-events-none mix-blend-screen" />
+      {/* Minimal background grid (no glow/pulse blobs) */}
+      <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808010_1px,transparent_1px),linear-gradient(to_bottom,#80808010_1px,transparent_1px)] bg-[size:40px_40px] pointer-events-none" />
 
       <div className="relative z-10 max-w-6xl mx-auto px-6 py-12">
         {/* PAGE HEADER */}
         <div className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between mb-8">
           <div>
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 text-[#a02ff1] text-xs font-bold uppercase tracking-wider mb-4">
-              <span className="w-2 h-2 rounded-full bg-[#a02ff1]" />
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 text-white/90 text-xs font-bold uppercase tracking-wider mb-4">
+              <span className="w-2 h-2 rounded-full bg-[var(--brand-secondary)]" />
               Upload History
             </div>
+
             <h1 className="text-4xl md:text-5xl font-bold text-white tracking-tight">
               Billing Uploads
             </h1>
+
             <p className="text-gray-400 text-lg mt-3 max-w-2xl leading-relaxed">
               Select one or more uploads to keep their IDs in{" "}
               <span className="text-gray-300 font-mono">uploadIds</span>.
@@ -179,13 +169,14 @@ const BillingUploads = () => {
           <div className="flex items-center gap-3">
             <button
               onClick={() => navigate("/upload-csv-file-input")}
-              className="px-5 py-3 rounded-xl bg-white/10 hover:bg-white/20 text-white font-semibold transition-colors"
+              className="px-5 py-3 rounded-xl bg-white/10 hover:bg-white/15 text-white font-semibold transition-colors border border-white/10"
             >
               Upload another file
             </button>
+
             <button
               onClick={fetchUploads}
-              className="px-5 py-3 rounded-xl bg-white/10 hover:bg-white/20 text-white font-semibold transition-colors inline-flex items-center gap-2"
+              className="px-5 py-3 rounded-xl bg-white/10 hover:bg-white/15 text-white font-semibold transition-colors inline-flex items-center gap-2 border border-white/10"
             >
               <RefreshCcw className="w-4 h-4" />
               Refresh
@@ -201,52 +192,52 @@ const BillingUploads = () => {
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Search by filename, upload id, date..."
-              className="w-full pl-10 pr-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder:text-gray-500 outline-none focus:border-[#a02ff1]/60 focus:ring-2 focus:ring-[#a02ff1]/10 transition"
+              className="
+                w-full pl-10 pr-4 py-3 rounded-xl
+                bg-white/5 border border-white/10
+                text-white placeholder:text-gray-500
+                outline-none
+                focus:border-white/20
+                transition
+              "
             />
           </div>
 
           <div className="flex items-center gap-3">
             <div className="px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-gray-300 text-sm">
               Selected:{" "}
-              <span className="text-white font-semibold">
-                {uploadIds.length}
-              </span>
+              <span className="text-white font-semibold">{uploadIds.length}</span>
             </div>
 
             <button
               onClick={clearSelection}
               disabled={uploadIds.length === 0}
-              className={`px-5 py-3 rounded-xl font-semibold transition-colors ${
+              className={`px-5 py-3 rounded-xl font-semibold transition-colors border ${
                 uploadIds.length === 0
-                  ? "bg-white/5 text-gray-600 border border-white/10 cursor-not-allowed"
-                  : "bg-white/10 hover:bg-white/20 text-white border border-white/10"
+                  ? "bg-white/5 text-gray-600 border-white/10 cursor-not-allowed"
+                  : "bg-white/10 hover:bg-white/15 text-white border-white/10"
               }`}
             >
               Clear
             </button>
 
             <button
-              onClick={() => {
-                navigate(dashboardPath );
-              }}
+              onClick={() => navigate(dashboardPath)}
               disabled={uploadIds.length === 0}
-              className={`group px-6 py-3 rounded-xl font-bold transition-all inline-flex items-center gap-2 ${
+              className={`group px-6 py-3 rounded-xl font-bold transition-colors inline-flex items-center gap-2 border ${
                 uploadIds.length === 0
-                  ? "bg-[#a02ff1]/15 text-gray-400 border border-[#a02ff1]/20 cursor-not-allowed"
-                  : "bg-[#a02ff1] hover:bg-[#8e25d9] text-white shadow-[0_0_20px_rgba(160,47,241,0.35)]"
+                  ? "bg-white/5 text-gray-600 border-white/10 cursor-not-allowed"
+                  : "bg-[var(--brand-secondary)] hover:opacity-90 text-white border-transparent"
               }`}
             >
               Open Dashboard
-              <ArrowRight
-                size={18}
-                className="group-hover:translate-x-0.5 transition-transform"
-              />
+              <ArrowRight size={18} className="group-hover:translate-x-0.5 transition-transform" />
             </button>
           </div>
         </div>
 
         {/* TABLE CONTAINER */}
-        <div className="rounded-2xl border border-white/10 bg-[#0f0f11]/30 backdrop-blur-xl overflow-hidden shadow-2xl">
+        <div className="rounded-2xl border border-white/10 bg-[#111113] overflow-hidden">
           <AnimatePresence mode="wait">
             {status === "loading" && (
               <motion.div
@@ -256,7 +247,7 @@ const BillingUploads = () => {
                 exit={{ opacity: 0 }}
                 className="flex flex-col items-center justify-center min-h-[360px]"
               >
-                <Loader2 className="animate-spin text-[#a02ff1] w-12 h-12 mb-4" />
+                <Loader2 className="animate-spin text-[var(--brand-secondary)] w-12 h-12 mb-4" />
                 <p className="text-gray-400">Loading uploads...</p>
               </motion.div>
             )}
@@ -269,7 +260,7 @@ const BillingUploads = () => {
                 exit={{ opacity: 0 }}
                 className="flex flex-col items-center justify-center min-h-[360px] text-center p-10"
               >
-                <div className="w-20 h-20 rounded-full bg-red-500/10 flex items-center justify-center mb-6 text-red-500 border border-red-500/20">
+                <div className="w-20 h-20 rounded-full bg-white/5 flex items-center justify-center mb-6 text-red-400 border border-white/10">
                   <AlertCircle size={40} />
                 </div>
                 <h2 className="text-2xl font-bold text-white mb-2">
@@ -278,7 +269,7 @@ const BillingUploads = () => {
                 <p className="text-gray-400 mb-8 max-w-md">{errorMessage}</p>
                 <button
                   onClick={fetchUploads}
-                  className="px-6 py-3 rounded-xl bg-white/10 hover:bg-white/20 text-white font-semibold transition-colors"
+                  className="px-6 py-3 rounded-xl bg-white/10 hover:bg-white/15 text-white font-semibold transition-colors border border-white/10"
                 >
                   Retry
                 </button>
@@ -316,7 +307,7 @@ const BillingUploads = () => {
                               type="checkbox"
                               checked={isAllSelected}
                               onChange={toggleSelectAll}
-                              className="h-4 w-4 accent-[#a02ff1] cursor-pointer"
+                              className="h-4 w-4 accent-[var(--brand-secondary)] cursor-pointer"
                               title="Select all rows on screen"
                             />
                           </th>
@@ -337,9 +328,7 @@ const BillingUploads = () => {
                               key={u.uploadid}
                               onClick={() => toggleRow(u.uploadid)}
                               className={`border-b border-white/10 cursor-pointer transition-colors ${
-                                selected
-                                  ? "bg-[#a02ff1]/10"
-                                  : "hover:bg-white/5"
+                                selected ? "bg-white/5" : "hover:bg-white/5"
                               }`}
                             >
                               <td className="px-5 py-4">
@@ -348,7 +337,7 @@ const BillingUploads = () => {
                                   checked={selected}
                                   onChange={() => toggleRow(u.uploadid)}
                                   onClick={(e) => e.stopPropagation()}
-                                  className="h-4 w-4 accent-[#a02ff1] cursor-pointer"
+                                  className="h-4 w-4 accent-[var(--brand-secondary)] cursor-pointer"
                                 />
                               </td>
 

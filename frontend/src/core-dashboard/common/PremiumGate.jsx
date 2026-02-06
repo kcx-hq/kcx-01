@@ -2,24 +2,11 @@
 import React from "react";
 import { Crown, Lock } from "lucide-react";
 
-/**
- * PremiumGate
- *
- * Variants:
- * - variant="wrap" (default): wraps children, dims them, and shows a centered overlay card
- * - variant="full": covers the full container (use for full pages like pivot)
- * - variant="inlineBadge": shows a small "Premium" badge overlay (no CTA)
- * - variant="card": small crown+label overlay (compact)
- *
- * Notes:
- * - Parent must be `relative` for overlays to position correctly.
- * - In `full`, you can pass `minHeight` if you need extra scroll coverage.
- */
 const PremiumGate = ({
   children,
   variant = "wrap", // wrap | full | inlineBadge | card
-  minHeight, // optional (e.g. "10000px") for full overlay
-  onUpgradeClick, // optional click handler
+  minHeight,
+  onUpgradeClick,
   ctaText = "Upgrade to Access",
   title = "Premium Feature",
   description = "This feature is available in our paid version",
@@ -28,7 +15,7 @@ const PremiumGate = ({
     <button
       type="button"
       onClick={onUpgradeClick}
-      className="px-6 py-2 bg-yellow-500/20 hover:bg-yellow-500/30 border border-yellow-500/30 text-yellow-400 rounded-lg text-sm font-medium transition-colors flex items-center gap-2 mx-auto"
+      className="px-6 py-2 bg-yellow-100 hover:bg-yellow-200 border border-yellow-300 text-yellow-700 rounded-lg text-sm font-semibold transition-colors flex items-center gap-2 mx-auto"
     >
       <Lock size={16} />
       {ctaText}
@@ -36,24 +23,28 @@ const PremiumGate = ({
   );
 
   const FullContent = (
-    <div className="text-center p-6">
-      <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-yellow-500/20 border-2 border-yellow-500/30 mb-4">
-        <Crown size={32} className="text-yellow-400" />
+    <div className="text-center p-6 bg-white rounded-2xl border border-gray-200 shadow-lg">
+      <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-yellow-100 border border-yellow-300 mb-4">
+        <Crown size={32} className="text-yellow-600" />
       </div>
-      <h3 className="text-lg font-bold text-white mb-2">{title}</h3>
-      <p className="text-sm text-gray-400 mb-4 max-w-xs">{description}</p>
+      <h3 className="text-lg font-bold text-gray-900 mb-2">{title}</h3>
+      <p className="text-sm text-gray-600 mb-4 max-w-xs mx-auto">
+        {description}
+      </p>
       {CTA}
     </div>
   );
 
-  // Small badge overlay
+  /* ───────── Inline Badge ───────── */
   if (variant === "inlineBadge") {
     return (
       <div className="relative">
-        <div className="absolute inset-0 bg-[#0f0f11]/80 backdrop-blur-sm z-50 flex items-center justify-center rounded-xl">
-          <div className="inline-flex items-center gap-1.5 px-2 py-1 bg-yellow-500/20 border-2 border-yellow-500/30 rounded-lg">
-            <Crown size={12} className="text-yellow-400" />
-            <span className="text-yellow-400 font-bold text-[10px]">Premium</span>
+        <div className="absolute inset-0 bg-white/70 backdrop-blur-sm z-50 flex items-center justify-center rounded-xl">
+          <div className="inline-flex items-center gap-1.5 px-2 py-1 bg-yellow-100 border border-yellow-300 rounded-lg">
+            <Crown size={12} className="text-yellow-600" />
+            <span className="text-yellow-700 font-bold text-[10px]">
+              Premium
+            </span>
           </div>
         </div>
         <div className="opacity-50 pointer-events-none">{children}</div>
@@ -61,14 +52,16 @@ const PremiumGate = ({
     );
   }
 
-  // Compact card overlay (crown + label only)
+  /* ───────── Compact Card ───────── */
   if (variant === "card") {
     return (
       <div className="relative">
-        <div className="absolute inset-0 bg-[#0f0f11]/80 backdrop-blur-sm z-50 pointer-events-auto flex items-center justify-center rounded-2xl">
+        <div className="absolute inset-0 bg-white/70 backdrop-blur-sm z-50 flex items-center justify-center rounded-2xl">
           <div className="text-center p-2">
-            <Crown size={16} className="text-yellow-400 mx-auto mb-1" />
-            <span className="text-yellow-400 font-bold text-[10px]">Premium</span>
+            <Crown size={16} className="text-yellow-600 mx-auto mb-1" />
+            <span className="text-yellow-700 font-bold text-[10px]">
+              Premium
+            </span>
           </div>
         </div>
         <div className="opacity-50 pointer-events-none">{children}</div>
@@ -76,28 +69,27 @@ const PremiumGate = ({
     );
   }
 
-  // Full page/container overlay
+  /* ───────── Full Page Overlay ───────── */
   if (variant === "full") {
     return (
       <div className="relative">
         <div
-          className="absolute inset-0 bg-[#0f0f11]/80 backdrop-blur-sm z-50 pointer-events-auto"
+          className="absolute inset-0 bg-white/75 backdrop-blur-sm z-50 pointer-events-auto"
           style={minHeight ? { minHeight } : undefined}
         >
           <div className="sticky top-1/2 -translate-y-1/2 flex items-center justify-center">
             {FullContent}
           </div>
-          {/* keep children mounted if needed */}
           {children}
         </div>
       </div>
     );
   }
 
-  // Default: wrap (dims children + full CTA overlay card)
+  /* ───────── Default Wrap ───────── */
   return (
     <div className="relative">
-      <div className="absolute inset-0 bg-[#0f0f11]/80 backdrop-blur-sm z-50 pointer-events-auto flex items-center justify-center rounded-2xl">
+      <div className="absolute inset-0 bg-white/75 backdrop-blur-sm z-50 flex items-center justify-center rounded-2xl">
         {FullContent}
       </div>
       <div className="opacity-50 pointer-events-none">{children}</div>

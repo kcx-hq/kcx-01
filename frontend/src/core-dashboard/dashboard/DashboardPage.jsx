@@ -1,10 +1,4 @@
-import React, {
-  Suspense,
-  useCallback,
-  useEffect,
-  useMemo,
-  useState,
-} from "react";
+import React, { Suspense, useCallback, useEffect, useMemo, useState } from "react";
 import { useAuthStore } from "../../store/Authstore";
 import { useCaps } from "../../hooks/useCaps";
 
@@ -23,7 +17,6 @@ import {
 import { useKeepAliveRegistry } from "./hooks/useKeepAliveRegistry";
 import { useHeaderAnomalies } from "./hooks/useHeaderAnomalies";
 
-
 // lazy views
 import {
   Overview,
@@ -39,7 +32,7 @@ import {
 import VerticalSidebarConfig from "../verticalSidebar.config.js";
 
 const DashboardPage = () => {
-  const { fetchUser, user } = useAuthStore();
+  const { fetchUser } = useAuthStore();
   const { caps, api, loading: capsLoading, error: capsError } = useCaps();
 
   const route = useDashboardRoute();
@@ -69,7 +62,6 @@ const DashboardPage = () => {
   useEffect(() => {
     const init = async () => {
       const result = await fetchUser();
-      // Use the user returned from fetchUser (or store after fetch) so premium status is correct on reload
       const currentUser = result?.user ?? useAuthStore.getState()?.user;
       setIsLocked(!currentUser?.is_premium);
       setLoading(false);
@@ -108,20 +100,26 @@ const DashboardPage = () => {
 
   if (!hasAnyDashboardModule) {
     return (
-      <div className="min-h-screen bg-[#0f0f11] text-white font-sans">
+      <div
+        className="min-h-screen text-white font-sans"
+        style={{ backgroundColor: "var(--bg-main, #0f0f11)" }}
+      >
         <VerticalSidebar
           config={VerticalSidebarConfig}
           isLocked={isLocked}
           isPremiumUser={!isLocked}
         />
         <Header title="Dashboard" />
-        <main className="ml-[72px] lg:ml-[240px] pt-[64px] min-h-screen"></main>
+        <main className="ml-[72px] lg:ml-[240px] pt-[64px] min-h-screen" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#0f0f11] text-white font-sans">
+    <div
+      className="min-h-screen text-white font-sans"
+      style={{ backgroundColor: "var(--bg-main, #0f0f11)" }}
+    >
       <VerticalSidebar
         config={VerticalSidebarConfig}
         isLocked={isLocked}
@@ -135,19 +133,25 @@ const DashboardPage = () => {
       />
 
       <main className="ml-[72px] lg:ml-[240px] pt-[64px] min-h-screen relative transition-all duration-300">
-        <div className="p-4 lg:p-6 space-y-4 max-w-[1920px] mx-auto h-full">
-          <div className="fixed inset-0 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:40px_40px] pointer-events-none -z-10 ml-[72px] lg:ml-[240px] mt-[64px] transition-all duration-300" />
+        <div className="p-4 lg:p-6 space-y-4 max-w-[1920px] mx-auto h-full relative">
+          {/* ✅ Removed glowing/animated background grid.
+              Keep only a subtle static grid if you want, using low opacity. */}
+          <div
+            className="fixed inset-0 pointer-events-none -z-10 ml-[72px] lg:ml-[240px] mt-[64px] transition-all duration-300"
+            style={{
+              backgroundImage:
+                "linear-gradient(to right, rgba(255,255,255,0.04) 1px, transparent 1px), linear-gradient(to bottom, rgba(255,255,255,0.04) 1px, transparent 1px)",
+              backgroundSize: "40px 40px",
+              opacity: 0.25,
+            }}
+          />
 
           <Suspense fallback={<ComponentLoader />}>
             {shouldRender(route.isDataExplorer, "DataExplorer") &&
               isModuleEnabled(caps, "overview") &&
               hasEndpoint(caps, "overview", "dataExplorer") && (
                 <KeepAlive isActive={route.isDataExplorer}>
-                  <DataExplorer
-                    filters={memoizedFilters}
-                    api={api}
-                    caps={caps}
-                  />
+                  <DataExplorer filters={memoizedFilters} api={api} caps={caps} />
                 </KeepAlive>
               )}
 
@@ -178,33 +182,21 @@ const DashboardPage = () => {
             {shouldRender(route.isResources, "ResourceInventory") &&
               isModuleEnabled(caps, "resources") && (
                 <KeepAlive isActive={route.isResources}>
-                  <ResourceInventory
-                    filters={memoizedFilters}
-                    api={api}
-                    caps={caps}
-                  />
+                  <ResourceInventory filters={memoizedFilters} api={api} caps={caps} />
                 </KeepAlive>
               )}
 
             {shouldRender(route.isDataQuality, "DataQuality") &&
               isModuleEnabled(caps, "dataQuality") && (
                 <KeepAlive isActive={route.isDataQuality}>
-                  <DataQuality
-                    filters={memoizedFilters}
-                    api={api}
-                    caps={caps}
-                  />
+                  <DataQuality filters={memoizedFilters} api={api} caps={caps} />
                 </KeepAlive>
               )}
 
             {shouldRender(route.isOptimization, "Optimization") &&
               isModuleEnabled(caps, "optimization") && (
                 <KeepAlive isActive={route.isOptimization}>
-                  <Optimization
-                    filters={memoizedFilters}
-                    api={api}
-                    caps={caps}
-                  />
+                  <Optimization filters={memoizedFilters} api={api} caps={caps} />
                 </KeepAlive>
               )}
 
@@ -218,22 +210,14 @@ const DashboardPage = () => {
             {shouldRender(route.isAccounts, "AccountsOwnership") &&
               isModuleEnabled(caps, "governance") && (
                 <KeepAlive isActive={route.isAccounts}>
-                  <AccountsOwnership
-                    filters={memoizedFilters}
-                    api={api}
-                    caps={caps}
-                  />
+                  <AccountsOwnership filters={memoizedFilters} api={api} caps={caps} />
                 </KeepAlive>
               )}
 
             {shouldRender(route.isOverview, "Overview") &&
               isModuleEnabled(caps, "overview") && (
                 <KeepAlive isActive={route.isOverview}>
-                  <Overview
-                    onFilterChange={handleFilterChange}
-                    api={api}
-                    caps={caps}
-                  />
+                  <Overview onFilterChange={handleFilterChange} api={api} caps={caps} />
                 </KeepAlive>
               )}
           </Suspense>
