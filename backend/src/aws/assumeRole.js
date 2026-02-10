@@ -1,15 +1,12 @@
 import dotenv from "dotenv";
-dotenv.config(); // loads .env from backend/
+dotenv.config();
 
-import {
-  STSClient,
-  AssumeRoleCommand
-} from "@aws-sdk/client-sts";
+import { STSClient, AssumeRoleCommand } from "@aws-sdk/client-sts";
 
 /**
  * Assumes KCX role using base IAM user credentials
  */
-export async function assumeRole() {
+export default async function assumeRole() {
   try {
     const {
       AWS_REGION,
@@ -19,12 +16,13 @@ export async function assumeRole() {
       AWS_ASSUME_ROLE_SESSION_NAME,
     } = process.env;
 
-    // 🔒 Hard guardrails (fail fast)
+    // Hard guardrails
     if (!AWS_REGION) throw new Error("AWS_REGION missing");
     if (!AWS_ACCESS_KEY_ID) throw new Error("AWS_ACCESS_KEY_ID missing");
     if (!AWS_SECRET_ACCESS_KEY) throw new Error("AWS_SECRET_ACCESS_KEY missing");
     if (!AWS_ASSUME_ROLE_ARN) throw new Error("AWS_ASSUME_ROLE_ARN missing");
-    if (!AWS_ASSUME_ROLE_SESSION_NAME) throw new Error("AWS_ASSUME_ROLE_SESSION_NAME missing");
+    if (!AWS_ASSUME_ROLE_SESSION_NAME)
+      throw new Error("AWS_ASSUME_ROLE_SESSION_NAME missing");
 
     const stsClient = new STSClient({
       region: AWS_REGION,
