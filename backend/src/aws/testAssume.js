@@ -1,7 +1,8 @@
 import dotenv from "dotenv";
 dotenv.config(); // MUST be first
 
-import { assumeRole } from "./assumeRole.js";
+import assumeRole from "./assumeRole.js";
+
 
 async function test() {
   try {
