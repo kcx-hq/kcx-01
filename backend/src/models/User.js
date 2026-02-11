@@ -19,6 +19,7 @@ const User = sequelize.define(
       type: DataTypes.ENUM(...Object.values(UserRole)),
       defaultValue: UserRole.USER,
     },
+    has_uploaded: { type: DataTypes.BOOLEAN, defaultValue: false },
     is_active: { type: DataTypes.BOOLEAN, defaultValue: true },
     is_verified: { type: DataTypes.BOOLEAN, defaultValue: false },
     is_premium: { type: DataTypes.BOOLEAN, defaultValue: false },

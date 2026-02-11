@@ -6,6 +6,7 @@
 // - DOES NOT control flow. It only extracts/normalizes the user's input for the current step.
 
 import fetch from "node-fetch";
+import { timedFetch } from "../../../utils/test/timedFetch.js";
 
 const MODEL = "llama-3.1-8b-instant";
 const GROQ_CHAT_COMPLETIONS_URL = "https://api.groq.com/openai/v1/chat/completions";
@@ -144,7 +145,7 @@ export async function extractForStep({ step, userMessage, currentRequirements })
 
   // 2) Fallback: fetch OpenAI-compatible chat completions endpoint
   try {
-    const resp = await fetch(GROQ_CHAT_COMPLETIONS_URL, {
+    const resp = await timedFetch( req , GROQ_CHAT_COMPLETIONS_URL, {
       method: "POST",
       headers: {
         Authorization: `Bearer ${key}`,

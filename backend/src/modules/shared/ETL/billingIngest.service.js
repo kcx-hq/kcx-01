@@ -14,55 +14,141 @@ import { mapRow } from "../../../utils/sanitize.js";
 import { detectProvider } from "./provider-detect.service.js";
 import { autoSuggest } from "../../../utils/mapping/autoSuggest.js";
 import { internalFields } from "../../../utils/mapping/internalFields.js";
+import { msSince } from "../../../utils/test/timer.js";
+
 export async function ingestBillingCsv({ uploadId, filePath, clientid }) {
-  // 1️⃣ Detect provider & headers
-  const { headers, rows } = await readCsvWithHeaders(filePath);
+  const t0 = process.hrtime.bigint();
+  const marks = {};
+  const mark = (name) => (marks[name] = msSince(t0));
 
-  const provider = detectProvider(headers);
+  // helpful counters
+  let rowCount = 0;
+  let mappedCount = 0;
+  let dimsCount = 0;
+  let factsPushed = 0;
+  let factsSkipped = 0;
 
-  await storeDetectedColumns(provider, headers, clientid); // buffer
-
-  const suggestions = autoSuggest(headers, rows, internalFields);
-
-  await storeAutoSuggestions(provider, uploadId, suggestions, clientid);
-  const resolvedMapping = await loadResolvedMapping(
-    provider,
-    headers,
-    clientid
-  );
-
-  const mappedRows = rows.map((raw) => mapRow(raw, resolvedMapping));
-
-  const dims = await collectDimensions(mappedRows);
-
-  const transaction = await sequelize.transaction();
   try {
-    await bulkUpsertDimensions(dims, transaction);
-    await transaction.commit();
-  } catch (err) {
-    await transaction.rollback();
-    throw err;
-  }
+    /* 1) Read CSV + headers */
+    const { headers, rows } = await readCsvWithHeaders(filePath);
+    rowCount = rows?.length || 0;
+    mark("after readCsvWithHeaders");
 
-  const maps = await preloadDimensionMaps();
+    /* 2) Provider detect */
+    const provider = detectProvider(headers);
+    mark("after detectProvider");
 
-  for await (const row of mappedRows) {
-    const dimensionIds = resolveDimensionIdsFromMaps(row, maps);
+    /* 3) Store detected columns */
+    await storeDetectedColumns(provider, headers, clientid);
+    mark("after storeDetectedColumns");
 
-    if (
-      !dimensionIds.regionid ||
-      !dimensionIds.cloudaccountid ||
-      !dimensionIds.commitmentdiscountid ||
-      !dimensionIds.resourceid ||
-      !dimensionIds.serviceid ||
-      !dimensionIds.skuid
-    ) {
-      continue;
+    /* 4) Auto suggest + store suggestions */
+    const suggestions = autoSuggest(headers, rows, internalFields);
+    mark("after autoSuggest");
+
+    await storeAutoSuggestions(provider, uploadId, suggestions, clientid);
+    mark("after storeAutoSuggestions");
+
+    /* 5) Load resolved mapping */
+    const resolvedMapping = await loadResolvedMapping(provider, headers, clientid);
+    mark("after loadResolvedMapping");
+
+    /* 6) Map rows */
+    const mappedRows = rows.map((raw) => mapRow(raw, resolvedMapping));
+    mappedCount = mappedRows.length;
+    mark("after mapRows");
+
+    /* 7) Collect dims */
+    const dims = await collectDimensions(mappedRows);
+    // dims structure varies; log something useful
+    dimsCount =
+      Array.isArray(dims) ? dims.length : typeof dims === "object" && dims ? Object.keys(dims).length : 0;
+    mark("after collectDimensions");
+
+    /* 8) Upsert dims (transaction) */
+    const transaction = await sequelize.transaction();
+    try {
+      await bulkUpsertDimensions(dims, transaction , mark);
+      await transaction.commit();
+      mark("after bulkUpsertDimensions commit");
+    } catch (err) {
+      await transaction.rollback();
+      mark("after bulkUpsertDimensions rollback");
+      throw err;
     }
 
-    await pushFact(uploadId, row, dimensionIds);
-    
-  }
+    /* 9) Preload dimension maps */
+    const maps = await preloadDimensionMaps(dims);
+    mark("after preloadDimensionMaps");
 
-  await flushFacts();
+    /* 10) Push facts loop */
+    const loopStart = process.hrtime.bigint();
+
+    for (const row of mappedRows) {
+      const dimensionIds = resolveDimensionIdsFromMaps(row, maps);
+
+      if (
+        !dimensionIds.regionid ||
+        !dimensionIds.cloudaccountid ||
+        !dimensionIds.commitmentdiscountid ||
+        !dimensionIds.resourceid ||
+        !dimensionIds.serviceid ||
+        !dimensionIds.skuid
+      ) {
+        factsSkipped++;
+        continue;
+      }
+
+      await pushFact(uploadId, row, dimensionIds);
+      factsPushed++;
+    }
+
+    const loopMs = Number(process.hrtime.bigint() - loopStart) / 1e6;
+    marks["facts_loop_ms"] = Number(loopMs.toFixed(2));
+    mark("after pushFact loop");
+
+    /* 11) Flush facts */
+    await flushFacts();
+    mark("after flushFacts");
+
+    console.log(
+      JSON.stringify({
+        type: "ingestBillingCsv_breakdown",
+        uploadId,
+        clientid,
+        provider,
+        marks,
+        total_ms: msSince(t0),
+        counts: {
+          rows: rowCount,
+          mappedRows: mappedCount,
+          dims: dimsCount,
+          factsPushed,
+          factsSkipped,
+        },
+      })
+    );
+  } catch (err) {
+    console.error("ingestBillingCsv error:", err);
+
+    console.log(
+      JSON.stringify({
+        type: "ingestBillingCsv_breakdown_error",
+        uploadId,
+        clientid,
+        marks,
+        total_ms: msSince(t0),
+        counts: {
+          rows: rowCount,
+          mappedRows: mappedCount,
+          dims: dimsCount,
+          factsPushed,
+          factsSkipped,
+        },
+        error: err.message,
+      })
+    );
+
+    throw err;
+  }
 }

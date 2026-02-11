@@ -23,7 +23,8 @@ export async function storeDetectedColumns(provider, headers , clientid) {
 
   /* 3️⃣ Bulk insert (ignore existing) */
   await BillingDetectedColumn.bulkCreate(records, {
-    ignoreDuplicates: true, // MySQL / Postgres
+    ignoreDuplicates: true, 
+    returning : false 
   });
 }
 
@@ -89,52 +90,70 @@ export async function loadResolvedMapping(provider, headers , clientid) {
 
 // mapping.service.js
 
-export async function storeAutoSuggestions(provider, uploadId, suggestions , clientid) {
+const chunk = (arr, size = 1000) => {
+  const out = [];
+  for (let i = 0; i < arr.length; i += size) out.push(arr.slice(i, i + size));
+  return out;
+};
+
+export async function storeAutoSuggestions(provider, uploadId, suggestions, clientid, transaction) {
   if (!suggestions?.length) return;
 
   const suggestionRows = [];
   const autoMappingRows = [];
 
-  /* 1️⃣ Build buffers in memory */
+  // Build buffers in memory
   for (const col of suggestions) {
     const sourceColumn = col.csvColumn;
+    const list = col.suggestions || [];
 
-    for (const s of col.suggestions || []) {
+    for (const s of list) {
       suggestionRows.push({
         provider,
         uploadid: uploadId,
         source_column: sourceColumn,
         internal_field: s.field,
         score: s.score,
-        automapped: col.autoMapped,
-        clientid , 
+        automapped: !!col.autoMapped,
+        clientid,
         reasons: s.reasons ?? null,
+        status: "suggested", // if your table has it (your logs show status)
       });
     }
 
-    /* 2️⃣ Capture auto-mapped columns */
-    if (col.autoMapped && col.suggestions?.length) {
+    // Capture auto-mapped columns
+    if (col.autoMapped && list.length) {
       autoMappingRows.push({
         provider,
         source_column: sourceColumn,
-        internal_field: col.suggestions[0].field,
-        clientid
+        internal_field: list[0].field,
+        clientid,
+        priority: 1, // if you use priority
+        createdAt: new Date(), // if required by schema
       });
     }
   }
 
-  /* 3️⃣ Bulk insert suggestions */
+  // 1) Bulk insert suggestions (chunked)
   if (suggestionRows.length) {
-    await MappingSuggestion.bulkCreate(suggestionRows, {
-      ignoreDuplicates: true, // requires unique index
-    });
+    for (const batch of chunk(suggestionRows, 1000)) {
+      await MappingSuggestion.bulkCreate(batch, {
+        ignoreDuplicates: true,
+        returning: false,
+        transaction,
+      });
+    }
   }
 
-  /* 4️⃣ Bulk upsert auto mappings */
+  // 2) Bulk UPSERT auto mappings (better than ignoreDuplicates)
   if (autoMappingRows.length) {
-    await BillingColumnMapping.bulkCreate(autoMappingRows, {
-      ignoreDuplicates: true,
-    });
+    for (const batch of chunk(autoMappingRows, 1000)) {
+      await BillingColumnMapping.bulkCreate(batch, {
+        updateOnDuplicate: ["internal_field", "priority"], // update what should change
+        returning: false,
+        transaction,
+      });
+    }
   }
 }
 

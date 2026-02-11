@@ -9,19 +9,24 @@ import { BillingUpload, User } from "../../../models/index.js";
 import { CAPABILITIES_MAP } from "../../shared/capabilities/capabilities.map.js";
 import crypto from "crypto";
 import { Op } from "sequelize";
+import { msSince } from "../../../utils/test/timer.js";
+
 export const signUp = async (req, res) => {
+  const t0 = process.hrtime.bigint();
+  const marks = {};
+  const mark = (name) => (marks[name] = msSince(t0));
+
   try {
     const { email, password, full_name, role, client_name, client_email } =
       req.body;
 
-    // Validate required fields
+    /* 0) Basic validation */
     if (!email || !password || !full_name || !role) {
       return res.status(400).json({
         message: "Email, password, full name, and role are required",
       });
     }
 
-    // Validate email format
     if (!isValidEmail(email)) {
       return res.status(400).json({
         message: "Invalid email format",
@@ -33,13 +38,15 @@ export const signUp = async (req, res) => {
       ? client_email.toLowerCase().trim()
       : normalizedEmail;
 
-    // 1. Generate verification OTP ONCE
+    mark("after normalize + validate");
+
+    /* 1) Generate verification OTP */
     const { otp, expires } = generateVerificationOTP();
+    mark("after generate otp");
 
-    let user;
-
-    // 2. Check existing user
+    /* 2) Check existing user */
     const existingUser = await userService.getUserByEmail(normalizedEmail);
+    mark("after check existing user");
 
     if (existingUser) {
       if (existingUser.is_verified) {
@@ -52,11 +59,23 @@ export const signUp = async (req, res) => {
       existingUser.verification_otp = otp;
       existingUser.verification_otp_expires = expires;
       await existingUser.save();
+      mark("after update existing unverified user");
 
       await sendVerificationEmail(
         existingUser.email,
         existingUser.full_name,
         otp,
+      );
+      mark("after send verification email (existing user)");
+
+      console.log(
+        JSON.stringify({
+          type: "signup_breakdown",
+          requestId: req.requestId,
+          marks,
+          total_ms: msSince(t0),
+          path: "existing_unverified_user",
+        }),
       );
 
       return res.status(200).json({
@@ -70,35 +89,56 @@ export const signUp = async (req, res) => {
           createdAt: existingUser.createdAt,
         },
       });
-    } else {
-      // 3. Check or create client
-      const client =
-        (await clientService.getClientByEmail(normalizedClientEmail)) ??
-        (await clientService.createClient({
-          name:
-            client_name ||
-            normalizedEmail.split("@")[1]?.split(".")[0] ||
-            "Default Client",
-          email: normalizedClientEmail,
-        }));
-
-      // 4. Create user
-      user = await userService.createUser({
-        client_id: client.id,
-        email: normalizedEmail,
-        password_hash: password,
-        role: role,
-        full_name,
-        verification_otp: otp,
-        verification_otp_expires: expires,
-        is_verified: false,
-      });
     }
 
-    // 5. Send verification email (ONLY ONCE)
-    await sendVerificationEmail(user.email, user.full_name, otp);
+    /* 3) Check or create client */
+    const clientLookup = await clientService.getClientByEmail(
+      normalizedClientEmail,
+    );
+    mark("after get client by email");
 
-    // 6. Response
+    const client =
+      clientLookup ??
+      (await clientService.createClient({
+        name:
+          client_name ||
+          normalizedEmail.split("@")[1]?.split(".")[0] ||
+          "Default Client",
+        email: normalizedClientEmail,
+      }));
+
+    mark(clientLookup ? "after client found" : "after client created");
+
+    /* 4) Create user */
+    const user = await userService.createUser({
+      client_id: client.id,
+      email: normalizedEmail,
+      password_hash: password, // assuming service hashes it (recommended)
+      role,
+      full_name,
+      verification_otp: otp,
+      verification_otp_expires: expires,
+      is_verified: false,
+    });
+    mark("after create user");
+
+    /* 5) Send verification email */
+    sendVerificationEmail(user.email, user.full_name, otp).catch((err) =>
+      console.error("sendVerificationEmail failed:", err),
+    );
+    mark("after send verification email (new user)");
+
+    console.log(
+      JSON.stringify({
+        type: "signup_breakdown",
+        requestId: req.requestId,
+        marks,
+        total_ms: msSince(t0),
+        path: clientLookup ? "new_user_existing_client" : "new_user_new_client",
+      }),
+    );
+
+    /* 6) Response */
     return res.status(201).json({
       message: "User registered successfully. Please verify your email.",
       user: {
@@ -111,6 +151,18 @@ export const signUp = async (req, res) => {
     });
   } catch (error) {
     console.error("Signup error:", error);
+
+    // still log timings even on failure
+    console.log(
+      JSON.stringify({
+        type: "signup_breakdown_error",
+        requestId: req.requestId,
+        marks,
+        total_ms: msSince(t0),
+        error: error?.message,
+      }),
+    );
+
     return res.status(500).json({
       message: "Internal server error",
     });
@@ -118,8 +170,13 @@ export const signUp = async (req, res) => {
 };
 
 export const signIn = async (req, res) => {
+  const t0 = process.hrtime.bigint();
+  const marks = {};
+  const mark = (name) => (marks[name] = msSince(t0));
   try {
     const { email, password } = req.body;
+
+    console.log(email, password);
 
     /* 1. Required fields */
     if (!email || !password) {
@@ -136,6 +193,7 @@ export const signIn = async (req, res) => {
         message: "Invalid email or password",
       });
     }
+    mark("after find user");
     /* 4. Check password */
     const isPasswordValid = await bcrypt.compare(password, user.password_hash);
     if (!isPasswordValid) {
@@ -143,7 +201,7 @@ export const signIn = async (req, res) => {
         message: "Invalid email or password",
       });
     }
-
+    mark("after check password bcrypt compare");
     if (!user.is_verified) {
       const { otp, expires } = generateVerificationOTP();
       user.verification_otp = otp;
@@ -155,10 +213,12 @@ export const signIn = async (req, res) => {
           "OTP sent on registered Email.Please verify your email before logging in.",
       });
     }
+
     /* 5. Generate JWT */
-    const payload = { id: user.id, role: user.role, client_id: user.client_id };
+    const payload = { id: user.id, role: user.role, client_id: user.client_id  , has_uploaded: user.has_uploaded};
     const token = generateJWT(payload);
 
+    mark("after generate jwt");
     /* 6. Set cookie */
     // For cross-site deployments (frontend on Vercel, backend on Render) we need SameSite=None and Secure=true in production
     res.cookie("kandco_token", token, {
@@ -169,12 +229,16 @@ export const signIn = async (req, res) => {
       maxAge: 1 * 24 * 60 * 60 * 1000,
     });
 
-    /* 7. Check if user has existing upload */
-    const existingUpload = await BillingUpload.findOne({
-      where: { uploadedby: user.id },
-    });
-    const hasUploaded = !!existingUpload;
+    mark("after fetching existing upload");
 
+    console.log(
+      JSON.stringify({
+        type: "signin_breakdown",
+        requestId: req.requestId,
+        marks,
+        total_ms: msSince(t0),
+      }),
+    );
     /* 8. Response */
     return res.status(200).json({
       message: "Login successful",
@@ -183,7 +247,7 @@ export const signIn = async (req, res) => {
         email: user.email,
         role: user.role,
       },
-      hasUploaded,
+      hasUploaded: user.has_uploaded,
     });
   } catch (error) {
     console.error("Login error:", error);
@@ -194,18 +258,35 @@ export const signIn = async (req, res) => {
 };
 
 export const getUser = async (req, res) => {
+  const t0 = process.hrtime.bigint();
+  const marks = {};
+  const mark = (name) => (marks[name] = msSince(t0));
+
   try {
+    /* 1) Fetch user */
     const user = await userService.getUserById(req.user.id);
-    if (!user) return res.status(404).json({ error: "User not found" });
+    mark("after get user by id");
 
-    // Check if user has existing upload
-    const existingUpload = await BillingUpload.findOne({
-      where: { uploadedby: user.id },
-    });
-    const hasUploaded = !!existingUpload;
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
 
+    /* 3) Resolve capabilities */
     const caps = CAPABILITIES_MAP[req.client_id] || CAPABILITIES_MAP.core;
-    res.json({
+    mark("after resolve capabilities");
+
+    /* 4) Log breakdown */
+    console.log(
+      JSON.stringify({
+        type: "getUser_breakdown",
+        requestId: req.requestId,
+        marks,
+        total_ms: msSince(t0),
+      }),
+    );
+
+    /* 5) Response */
+    return res.json({
       id: user.id,
       email: user.email,
       full_name: user.full_name,
@@ -214,14 +295,31 @@ export const getUser = async (req, res) => {
       is_premium: user.is_premium || false,
       caps,
       createdAt: user.createdAt,
-      hasUploaded,
+      hasUploaded: user.has_uploaded,
     });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error("getUser error:", err);
+
+    // still log timings on error
+    console.log(
+      JSON.stringify({
+        type: "getUser_breakdown_error",
+        requestId: req.requestId,
+        marks,
+        total_ms: msSince(t0),
+        error: err.message,
+      }),
+    );
+
+    return res.status(500).json({ error: err.message });
   }
 };
 
 export const updateProfile = async (req, res) => {
+  const t0 = process.hrtime.bigint();
+  const marks = {};
+  const mark = (name) => (marks[name] = msSince(t0));
+
   try {
     const { full_name } = req.body;
     const userId = req.user.id;
@@ -229,14 +327,33 @@ export const updateProfile = async (req, res) => {
     if (!full_name || full_name.trim() === "") {
       return res.status(400).json({ message: "Full name is required" });
     }
+    const trimmedName = full_name.trim();
+    mark("after validate input");
 
-    const user = await userService.getUserById(userId);
-    if (!user) {
+    const [count, rows] = await User.update(
+      { full_name: trimmedName },
+      {
+        where: { id: userId },
+        returning: ["id", "email", "full_name", "role", "is_active", "createdAt"],
+      },
+    );
+    mark("after update returning");
+
+    if (!count) {
       return res.status(404).json({ message: "User not found" });
     }
 
-    user.full_name = full_name.trim();
-    await user.save();
+    const user = rows[0];
+
+    console.log(
+      JSON.stringify({
+        type: "updateProfile_breakdown",
+        requestId: req.requestId,
+        marks,
+        total_ms: msSince(t0),
+        mode: "single_query_update",
+      }),
+    );
 
     return res.status(200).json({
       message: "Profile updated successfully",
@@ -267,68 +384,135 @@ export const logout = (req, res) => {
 };
 
 export const verifyEmail = async (req, res) => {
+  const t0 = process.hrtime.bigint();
+  const marks = {};
+  const mark = (name) => (marks[name] = msSince(t0));
+
   try {
     const { email, otp } = req.body;
-    const normalizedEmail = email.toLowerCase().trim();
-    const user = await userService.getUserByEmail(normalizedEmail);
 
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
+    /* 1) Validate + normalize */
+    if (!email || !otp) {
+      return res.status(400).json({ message: "Email and OTP are required" });
     }
-    if (user.is_verified) {
-      return res.status(400).json({ message: "User already verified" });
+
+    const normalizedEmail = email.toLowerCase().trim();
+    mark("after normalize input");
+
+    /* 2) Single atomic UPDATE */
+    const [updatedCount] = await User.update(
+      {
+        is_verified: true,
+        verification_otp: null,
+        verification_otp_expires: null,
+      },
+      {
+        where: {
+          email: normalizedEmail,
+          is_verified: false,
+          verification_otp: otp,
+          verification_otp_expires: {
+            [Op.gt]: new Date(),
+          },
+        },
+      },
+    );
+    mark("after update verify user");
+
+    /* 3) No rows updated → invalid / expired / already verified */
+    if (updatedCount === 0) {
+      return res.status(400).json({
+        message: "Invalid or expired OTP",
+      });
     }
-    if (
-      user.verification_otp !== otp ||
-      new Date() > user.verification_otp_expires
-    ) {
-      return res.status(400).json({ message: "Invalid or expired OTP" });
-    }
-    user.is_verified = true;
-    user.verification_otp = null;
-    user.verification_otp_expires = null;
-    await user.save();
-    return res.status(200).json({ message: "Email verified successfully" });
+
+    /* 4) Log breakdown */
+    console.log(
+      JSON.stringify({
+        type: "verifyEmail_breakdown",
+        requestId: req.requestId,
+        marks,
+        total_ms: msSince(t0),
+        mode: "single_query_update",
+      }),
+    );
+
+    /* 5) Response */
+    return res.status(200).json({
+      message: "Email verified successfully",
+    });
   } catch (error) {
     console.error("Email verification error:", error);
+
+    console.log(
+      JSON.stringify({
+        type: "verifyEmail_breakdown_error",
+        requestId: req.requestId,
+        marks,
+        total_ms: msSince(t0),
+        error: error.message,
+      }),
+    );
+
     return res.status(500).json({ message: "Internal server error" });
   }
 };
 
 export const forgotPassword = async (req, res) => {
+  const t0 = process.hrtime.bigint();
+  const marks = {};
+  const mark = (name) => (marks[name] = msSince(t0));
+
   try {
     const { email } = req.body;
 
-    // Always return same message (anti user-enum)
-    let genericMsg = {
+    const genericMsg = {
       message: "A reset link has been sent to your email.",
     };
 
-    if (!email) return res.status(200).json(genericMsg);
+    if (!email) {
+      mark("after validate input");
+      return res.status(200).json(genericMsg);
+    }
+
+    const normalizedEmail = email.toLowerCase().trim();
+    mark("after normalize email");
 
     const user = await User.findOne({
-      where: {
-        email: email.toLowerCase().trim()
-      },
+      where: { email: normalizedEmail },
     });
+    mark("after find user");
 
-    if (!user) return res.status(200).json({ message: "User not exist" });
+    // Anti user-enum: still return generic response
+    if (!user) {
+      console.log(
+        JSON.stringify({
+          type: "forgotPassword_breakdown",
+          requestId: req.requestId,
+          marks,
+          total_ms: msSince(t0),
+          path: "user_not_found",
+        }),
+      );
+      return res.status(200).json(genericMsg);
+    }
 
-    // Generate token
+    /* Generate token */
     const rawToken = crypto.randomBytes(32).toString("hex");
     const tokenHash = crypto
       .createHash("sha256")
       .update(rawToken)
       .digest("hex");
 
-    // Save hash + expiry (15 mins)
     user.resetPasswordTokenHash = tokenHash;
     user.resetPasswordExpiresAt = new Date(Date.now() + 15 * 60 * 1000);
     await user.save();
+    mark("after save reset token");
 
     const resetUrl = `${process.env.FRONTEND_URL}/reset-password?token=${rawToken}`;
 
-    await sendEmail({
+    // ✅ Send email ASYNC (do not block response)
+    sendEmail({
       to: user.email,
       subject: "Reset your password",
       html: `
@@ -378,19 +562,48 @@ export const forgotPassword = async (req, res) => {
 </div>
 
       `,
+    }).catch((err) => {
+      console.error("reset password email failed:", err);
     });
+    mark("after enqueue reset email");
+
+    console.log(
+      JSON.stringify({
+        type: "forgotPassword_breakdown",
+        requestId: req.requestId,
+        marks,
+        total_ms: msSince(t0),
+      }),
+    );
 
     return res.status(200).json(genericMsg);
   } catch (err) {
+    console.error("Forgot password error:", err);
+
+    console.log(
+      JSON.stringify({
+        type: "forgotPassword_breakdown_error",
+        requestId: req.requestId,
+        marks,
+        total_ms: msSince(t0),
+        error: err.message,
+      }),
+    );
+
     return res.status(500).json({ message: "Server error" });
   }
 };
 
 export const resetPassword = async (req, res) => {
+  const t0 = process.hrtime.bigint();
+  const marks = {};
+  const mark = (name) => (marks[name] = msSince(t0));
+
   try {
     const { token } = req.params;
     const { password, confirmPassword } = req.body;
 
+    /* 1) Validate input */
     if (!password || !confirmPassword) {
       return res
         .status(400)
@@ -400,40 +613,63 @@ export const resetPassword = async (req, res) => {
     if (password !== confirmPassword) {
       return res.status(400).json({ message: "Passwords do not match." });
     }
+    mark("after validate input");
 
-    // Hash incoming token to compare with DB
+    /* 2) Hash token + password */
     const tokenHash = crypto.createHash("sha256").update(token).digest("hex");
+    const passwordHash = await bcrypt.hash(password, 10);
+    mark("after hash password");
 
-    const user = await User.findOne({
-      where: {
-        resetPasswordTokenHash: tokenHash,
-        resetPasswordExpiresAt: {
-          [Op.gt]: new Date(),
-        },
+    /* 3) Single atomic UPDATE */
+    const [updatedCount] = await User.update(
+      {
+        password_hash: passwordHash,
+        resetPasswordTokenHash: null,
+        resetPasswordExpiresAt: null,
       },
-    });
+      {
+        where: {
+          resetPasswordTokenHash: tokenHash,
+          resetPasswordExpiresAt: { [Op.gt]: new Date() },
+        },
+      }
+    );
+    mark("after update password");
 
-    if (!user) {
+    if (updatedCount === 0) {
       return res
         .status(400)
         .json({ message: "Reset link is invalid or expired." });
     }
 
-    // ✅ Update password (your field is password_hash)
-    // You can hash manually OR just set password_hash and let your beforeUpdate hook hash it.
-    // Option A (hash manually):
-    user.password_hash = password;
-
-    // Clear token fields
-    user.resetPasswordTokenHash = null;
-    user.resetPasswordExpiresAt = null;
-
-    await user.save();
+    /* 4) Log breakdown */
+    console.log(
+      JSON.stringify({
+        type: "resetPassword_breakdown",
+        requestId: req.requestId,
+        marks,
+        total_ms: msSince(t0),
+        mode: "single_query_update",
+      })
+    );
 
     return res
       .status(200)
       .json({ message: "Password reset successful. Please login." });
   } catch (err) {
+    console.error("Reset password error:", err);
+
+    console.log(
+      JSON.stringify({
+        type: "resetPassword_breakdown_error",
+        requestId: req.requestId,
+        marks,
+        total_ms: msSince(t0),
+        error: err.message,
+      })
+    );
+
     return res.status(500).json({ message: "Server error" });
   }
 };
+

@@ -9,7 +9,24 @@ dotenv.config({
 const sequelize = new Sequelize(process.env.DATABASE_URL, {
   dialect: 'postgres',
   protocol: 'postgres',
-  logging: false, // disable logging; set to console.log to see the raw SQL queries
+  logging: (sql, timing) => {
+    if (timing && timing > 100) {
+      console.log(
+        JSON.stringify({
+          type: "db_slow_query",
+          duration_ms: timing,
+          sql: sql.slice(0, 500),
+        })
+      );
+    }
+  },
+   pool: {
+    max: 10,
+    min: 2,        // keeps warm connections (VERY important for Neon)
+    acquire: 10000,
+    idle: 30000,
+  },
+  benchmark: true,
   dialectOptions: {
     ssl: {
       require: true,

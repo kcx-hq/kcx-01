@@ -21,6 +21,9 @@ const BillingUploads = sequelize.define(
   {
     tableName: "billing_uploads",
     timestamps: false,
+    indexes: [
+      { fields: ['uploadedby'] },
+    ]
   }
 );
 
