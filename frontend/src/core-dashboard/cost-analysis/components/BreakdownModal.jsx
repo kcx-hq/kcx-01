@@ -1,5 +1,6 @@
-import React from "react";
 import { X, AlertCircle } from "lucide-react";
+import React from "react";
+
 import { formatCurrency } from "../utils/format.js";
 
 const BreakdownModal = ({ isOpen, onClose, data }) => {

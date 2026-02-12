@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+
 import { DEFAULT_DYNAMICS, DEFAULT_OVERALL_STATS, DEFAULT_PERIODS } from '../utils/constants';
 
 export function useCostDriversData({
@@ -96,7 +97,7 @@ export function useCostDriversData({
         if (err?.name === 'AbortError') return;
         if (!abortControllerRef.current?.signal.aborted) {
           setErrorMessage('Error loading cost drivers. Please try again.');
-          // eslint-disable-next-line no-console
+           
           console.error('Error fetching cost drivers:', err);
         }
       } finally {

@@ -1,5 +1,5 @@
-import React from "react";
 import { Loader2 } from "lucide-react";
+import React from "react";
 
 export function LoadingState({ label = "Loading accounts data..." }) {
   return (

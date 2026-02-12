@@ -1,15 +1,13 @@
-import React, { useState } from "react";
 import axios from "axios";
-import { useNavigate } from "react-router-dom";
-import { Upload, Loader2, FileText, AlertCircle } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { Upload, FileText, AlertCircle } from "lucide-react";
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
+
 import  { useDashboardStore } from "../../store/Dashboard.store"; 
 const MAX_MB = 50;
 
-const CsvUploadInput = ({
-  uploadUrl,
-  withCredentials = true,
-}) => {
+const CsvUploadInput = () => {
   const navigate = useNavigate();
   
   // Use VITE_API_URL if uploadUrl is not provided

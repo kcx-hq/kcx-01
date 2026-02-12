@@ -1,6 +1,7 @@
-import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '../../common/widgets';
 import { TrendingUp, TrendingDown, Minus } from 'lucide-react';
+import React from 'react';
+
+import { Card, CardContent, CardHeader, CardTitle } from '../../common/widgets';
 
 const DriversList = ({ drivers, onDriverSelect, selectedDriver }) => {
   if (!drivers || drivers.length === 0) {

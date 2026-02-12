@@ -1,9 +1,8 @@
-import React, { useMemo, useState } from 'react';
-import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
-import { Server, Activity, Ghost, Tag, TrendingUp, Download, Search, List, LayoutGrid, Loader2, AlertCircle } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { Server, Activity, Ghost, Tag, TrendingUp, Loader2, AlertCircle } from 'lucide-react';
+import React, { useMemo, useState } from 'react';
+import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip } from 'recharts';
 
-import FilterBar from '../common/widgets/FilterBar.jsx';
 import { Card, CardContent, CardHeader, CardTitle } from '../common/widgets';
 
 const ResourceInventoryView = ({

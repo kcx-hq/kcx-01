@@ -1,5 +1,5 @@
-import React from 'react';
 import { Filter, RefreshCw, ChevronDown, BarChart2, Cloud, Settings, MapPin } from 'lucide-react';
+import React from 'react';
 
 const FilterSelect = ({ field, displayLabel, icon: Icon, iconColor, options, value, onChange }) => (
   <div className="flex flex-col gap-1.5">

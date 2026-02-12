@@ -8,17 +8,15 @@ import React, {
 } from "react";
 import { useLocation } from "react-router-dom";
 
-import VerticalSidebar from "../../../core-dashboard/common/Layout/VerticalSidebar";
 import Header from "../../../core-dashboard/common/Layout/Header";
-
-import { ComponentLoader } from "../../../core-dashboard/dashboard/components/Loaders";
+import VerticalSidebar from "../../../core-dashboard/common/Layout/VerticalSidebar";
 import KeepAlive from "../../../core-dashboard/dashboard/components/KeepAlive";
+import { ComponentLoader } from "../../../core-dashboard/dashboard/components/Loaders";
 
 // Client D sidebar config
-import ClientDSidebarConfig from "../verticalSidebar.config.js";
 import { useCaps } from "../../../hooks/useCaps.js";
 import { useAuthStore } from "../../../store/Authstore";
-import AccountsOwnershipContainer from "../accounts-ownership/AccountsOwnership.jsx";
+import ClientDSidebarConfig from "../verticalSidebar.config.js";
 
 // Lazy UI pages (UI only)
 const Overview = React.lazy(() => import("../overview/Overview"));

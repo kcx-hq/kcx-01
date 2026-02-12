@@ -1,5 +1,6 @@
-import { useMemo } from "react";
 import { FileText, Target, AlertTriangle, Shield } from "lucide-react";
+import { useMemo } from "react";
+
 import { formatPeriod } from "../../../../core-dashboard/reports/utils/reportUtils";
 
 export function useReportsDefinitions(reportData, isLocked) {

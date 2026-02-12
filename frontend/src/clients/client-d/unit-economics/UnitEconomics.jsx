@@ -1,9 +1,10 @@
-import React, { useMemo, useState } from "react";
-import { useAuthStore } from "../../../store/Authstore";
 import { AlertCircle, Loader2 } from "lucide-react";
+import React, { useMemo, useState } from "react";
 
-import UnitEconomicsView from "./UnitEconomicsView.jsx";
+import { useAuthStore } from "../../../store/Authstore";
+
 import { useUnitEconomicsData } from "./hooks/useUnitEconomicsData.js";
+import UnitEconomicsView from "./UnitEconomicsView.jsx";
 
 const UnitEconomics = ({ filters = {}, api, caps }) => {
   const { user } = useAuthStore();

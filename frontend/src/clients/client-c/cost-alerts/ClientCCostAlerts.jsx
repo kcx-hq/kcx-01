@@ -1,20 +1,17 @@
 // ClientCCostAlerts.jsx
-import React, { useState, useEffect, useMemo } from "react";
-import { 
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, 
-  PieChart, Pie, Cell, LineChart, Line, AreaChart, Area
-} from 'recharts';
 import { 
   AlertTriangle, 
   Bell, 
   TrendingUp, 
-  BarChartIcon, 
   PieChart as PieChartIcon,
   DollarSign,
-  AlertCircle,
-  Loader2,
-  Calendar
+  AlertCircle
 } from "lucide-react";
+import React, { useState, useEffect, useMemo } from "react";
+import { 
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, 
+  PieChart, Pie, Cell
+} from 'recharts';
 
 const ClientCCostAlerts = ({ api, caps }) => {
   const [alertsData, setAlertsData] = useState(null);

@@ -1,5 +1,5 @@
+import { TrendingUp, TrendingDown, ChevronRight } from 'lucide-react';
 import React from 'react';
-import { TrendingUp, TrendingDown, Minus, ChevronRight } from 'lucide-react';
 
 export function ClientCDriversList({ title, items, type, onSelect, sortBy }) {
   if (!items || items.length === 0) {

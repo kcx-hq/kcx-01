@@ -1,14 +1,13 @@
 import React, { useState } from 'react';
+
 import { useAuthStore } from '../../store/Authstore';
 
-import { useResourceInventoryData } from './hooks/useResourceInventoryData';
 import { useFilteredResources } from './hooks/useFilteredResources';
-import { useGroupedResources } from './hooks/useGroupedResources';
 import { useFlaggedResources } from './hooks/useFlaggedResources';
-
-import { exportResourceInventoryCSV } from './utils/csv';
-
+import { useGroupedResources } from './hooks/useGroupedResources';
+import { useResourceInventoryData } from './hooks/useResourceInventoryData';
 import ResourceInventoryView from './ResourceInventoryView';
+import { exportResourceInventoryCSV } from './utils/csv';
 
 const ResourceInventory = ({ filters, api, caps }) => {
   const { user } = useAuthStore();

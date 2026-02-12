@@ -1,12 +1,13 @@
 import PremiumGate from "../common/PremiumGate.jsx"; // reuse same component from overview (or copy here)
-import DataQualityStates from "./components/DataQualityStates.jsx";
-import ScoreCard from "./components/ScoreCard.jsx";
-import ComplianceMatrix from "./components/ComplianceMatrix.jsx";
+
 import ActionBar from "./components/ActionBar.jsx";
-import Tabs from "./components/Tabs.jsx";
+import ComplianceMatrix from "./components/ComplianceMatrix.jsx";
+import DataQualityStates from "./components/DataQualityStates.jsx";
+import IssueInspector from "./components/IssueInspector.jsx";
 import IssuesTable from "./components/IssuesTable.jsx";
 import PaginationBar from "./components/PaginationBar.jsx";
-import IssueInspector from "./components/IssueInspector.jsx";
+import ScoreCard from "./components/ScoreCard.jsx";
+import Tabs from "./components/Tabs.jsx";
 
 const DataQualityView = ({
   loading,

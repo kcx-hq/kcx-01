@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+
 import { hasEndpoint } from '../utils/capsUtils';
 
 export const useAnomalies = ({ api, caps, filters, skip }) => {

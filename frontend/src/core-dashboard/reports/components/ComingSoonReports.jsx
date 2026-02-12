@@ -1,6 +1,7 @@
-import React from "react";
-import { TrendingUp, Shield, FileText, Target } from "lucide-react";
 import { motion } from "framer-motion";
+import { TrendingUp, Shield, FileText, Target } from "lucide-react";
+import React from "react";
+
 import { getColorClasses } from "../utils/reportUtils";
 
 const ComingSoonReports = () => {

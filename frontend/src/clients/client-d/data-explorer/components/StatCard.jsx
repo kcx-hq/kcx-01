@@ -1,6 +1,6 @@
 // frontend/clients/client-d/dashboards/overview/data-explorer/components/StatCard.jsx
-import React from "react";
 import { Crown } from "lucide-react";
+import React from "react";
 
 const StatCard = ({ icon: Icon, label, value, locked }) => {
   return (

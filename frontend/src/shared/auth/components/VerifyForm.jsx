@@ -1,7 +1,7 @@
-import React from "react";
 import { CheckCircle2 } from "lucide-react";
+import React from "react";
 
-const VerifyForm = ({ otp, setOtp, handleVerify, isVerifying, emailForVerify, onBackToLogin }) => {
+const VerifyForm = ({ otp, setOtp, handleVerify, isVerifying, onBackToLogin }) => {
   return (
     <form onSubmit={handleVerify} className="space-y-6">
       <div className="flex flex-col items-center">

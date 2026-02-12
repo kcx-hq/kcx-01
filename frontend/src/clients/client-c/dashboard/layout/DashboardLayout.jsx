@@ -1,5 +1,5 @@
-import VerticalSidebar from '../../common/Layout/VerticalSidebar';
 import Header from '../../common/Layout/Header';
+import VerticalSidebar from '../../common/Layout/VerticalSidebar';
 
 const DashboardLayout = ({ title, children, anomalies = [], anomaliesCount = 0 }) => {
   return (

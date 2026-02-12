@@ -1,5 +1,5 @@
-import React from "react";
 import { Crown, Lock } from "lucide-react";
+import React from "react";
 
 export function TablePremiumOverlay() {
   return (

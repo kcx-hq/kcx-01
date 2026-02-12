@@ -38,7 +38,7 @@ export function useDriverDetails({ api, caps, driver, period }) {
         cacheRef.current.set(cacheKey, result);
       } catch (err) {
         if (err?.code !== 'NOT_SUPPORTED') {
-          // eslint-disable-next-line no-console
+           
           console.error('Error fetching driver details:', err);
         }
       } finally {

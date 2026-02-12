@@ -1,4 +1,5 @@
 import { ArrowUpRight, ArrowDownRight } from "lucide-react";
+
 import { formatCurrency } from "../utils/format.js";
 
 const KpiCard = ({ label, value, icon: Icon, iconColor, subValue, onClick, trend }) => (

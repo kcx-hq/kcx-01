@@ -5,23 +5,25 @@ import React, {
   useMemo,
   useState,
 } from "react";
-import { useAuthStore } from "../../store/Authstore";
-import { useCaps } from "../../hooks/useCaps";
 
-import VerticalSidebar from "../common/Layout/VerticalSidebar";
+import { useCaps } from "../../hooks/useCaps";
+import { useAuthStore } from "../../store/Authstore";
 import Header from "../common/Layout/Header";
+import VerticalSidebar from "../common/Layout/VerticalSidebar";
 
 // components/hooks
+import VerticalSidebarConfig from "../verticalSidebar.config.js";
+
 import KeepAlive from "./components/KeepAlive";
 import { ComponentLoader, SkeletonLoader } from "./components/Loaders";
-import { useDashboardRoute } from "./hooks/useDashboardRoutes";
 import {
   useDashboardCapabilities,
   isModuleEnabled,
   hasEndpoint,
 } from "./hooks/useDashboardCapabilities";
-import { useKeepAliveRegistry } from "./hooks/useKeepAliveRegistry";
+import { useDashboardRoute } from "./hooks/useDashboardRoutes";
 import { useHeaderAnomalies } from "./hooks/useHeaderAnomalies";
+import { useKeepAliveRegistry } from "./hooks/useKeepAliveRegistry";
 
 
 // lazy views
@@ -36,7 +38,6 @@ import {
   Reports,
   AccountsOwnership,
 } from "./lazyViews";
-import VerticalSidebarConfig from "../verticalSidebar.config.js";
 
 const DashboardPage = () => {
   const { fetchUser, user } = useAuthStore();

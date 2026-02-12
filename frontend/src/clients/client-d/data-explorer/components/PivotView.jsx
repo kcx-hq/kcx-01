@@ -1,6 +1,7 @@
 // frontend/clients/client-d/dashboards/overview/data-explorer/components/PivotView.jsx
-import React from "react";
 import { Layers } from "lucide-react";
+import React from "react";
+
 import PremiumGate from "../../../../core-dashboard/common/PremiumGate.jsx";
 
 const PivotView = ({ isLocked, groupByCol, clientSideGroupedData, handleDrillDown }) => {

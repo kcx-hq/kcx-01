@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+
 import { hasEndpoint } from './useDashboardCapabilities';
 
 export function useHeaderAnomalies({ api, caps, filters, route }) {

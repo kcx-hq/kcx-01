@@ -1,6 +1,7 @@
-import VerticalSidebar from '../../common/Layout/VerticalSidebar';
-import Header from '../../common/Layout/Header';
 import { Loader2 } from 'lucide-react';
+
+import Header from '../../common/Layout/Header';
+import VerticalSidebar from '../../common/Layout/VerticalSidebar';
 
 const SkeletonLoader = () => (
   <div className="min-h-screen bg-[#0f0f11] text-white font-sans">

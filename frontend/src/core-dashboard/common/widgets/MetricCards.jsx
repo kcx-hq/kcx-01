@@ -1,5 +1,5 @@
-import React from 'react';
 import { DollarSign, Zap, TrendingDown } from 'lucide-react';
+import React from 'react';
 
 const MetricCards = ({ totalSpend, leakageCost, efficiency }) => {
   const formatCurrency = (val) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(val);

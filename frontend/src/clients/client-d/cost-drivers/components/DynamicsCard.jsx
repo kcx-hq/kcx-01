@@ -1,4 +1,3 @@
-import React from "react";
 import {
   LayoutGrid,
   BarChart2,
@@ -7,7 +6,9 @@ import {
   ArrowDownRight,
   Trash2,
 } from "lucide-react";
+import React from "react";
 import { ResponsiveContainer, Treemap } from "recharts";
+
 import { formatCurrency } from "../../../../core-dashboard/cost-drivers/utils/format";
 
 export function DynamicsCard({

@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X } from "lucide-react";
-import { useNavigate } from "react-router-dom";
-import { useAuthStore } from "../../../store/Authstore.jsx"; // Updated path
+import React, { useState, useEffect } from "react";
 import { toast } from "react-hot-toast";
+import { useNavigate } from "react-router-dom";
+
+import { useAuthStore } from "../../../store/Authstore.jsx"; // Updated path
 
 import LoginForm from "./LoginForm";
 import SignupForm from "./SignupForm";

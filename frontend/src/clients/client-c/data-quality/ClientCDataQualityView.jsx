@@ -1,8 +1,3 @@
-import React from "react";
-import { 
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, 
-  PieChart, Pie, Cell, AreaChart, Area, Legend
-} from 'recharts';
 import { 
   AlertTriangle, 
   ShieldCheck, 
@@ -10,6 +5,11 @@ import {
   TrendingUp, 
   AlertCircle
 } from "lucide-react";
+import React from "react";
+import { 
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, 
+  PieChart, Pie, Cell, Legend
+} from 'recharts';
 
 const ClientCDataQualityView = ({
   api,

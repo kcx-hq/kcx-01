@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
-import { Target, Zap, Users, ArrowRight, TrendingUp, ShieldCheck, BarChart3, Earth, X, Code2, DollarSign, Lock } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Zap, ArrowRight, TrendingUp, ShieldCheck, BarChart3, Earth, X, Code2, DollarSign, Lock } from 'lucide-react';
+import React, { useState } from 'react';
 
 const About = () => {
   
@@ -94,7 +94,7 @@ const About = () => {
             className="text-center mb-12"
         >
             <h3 className="text-3xl font-bold text-white mb-4">Why Partner With Us?</h3>
-            <p className="text-gray-400">Click "See Our Approach" below to explore how we drive results.</p>
+            <p className="text-gray-400">Click &quot;See Our Approach&quot; below to explore how we drive results.</p>
         </motion.div>
 
         <motion.div 

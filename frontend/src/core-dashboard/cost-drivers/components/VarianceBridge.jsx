@@ -1,4 +1,5 @@
 import React from 'react';
+
 import { formatCurrency } from '../utils/format';
 
 export function VarianceBridge({ overallStats }) {

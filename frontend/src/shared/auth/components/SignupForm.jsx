@@ -1,6 +1,5 @@
-import React, { useState } from "react";
 import { Eye, EyeOff } from "lucide-react";
-
+import React, { useState } from "react";
 import { Link } from "react-router-dom";
 
 const SignupForm = ({ signupData, setSignupData, handleSignup, isSigningUp, showPassword, setShowPassword, onSwitchToLogin }) => {

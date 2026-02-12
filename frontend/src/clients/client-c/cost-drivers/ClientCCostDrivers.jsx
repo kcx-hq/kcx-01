@@ -1,9 +1,10 @@
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useState } from 'react';
+
 import { useDebounce } from '../../../hooks/useDebounce';
 
+import { ClientCCostDriversView } from './ClientCCostDriversView';
 import { useClientCCostDriversData } from './hooks/useClientCCostDriversData';
 import { useClientCDriverDetails } from './hooks/useClientCDriverDetails';
-import { ClientCCostDriversView } from './ClientCCostDriversView';
 
 export default function ClientCCostDrivers({ api, caps }) {
   // Only period state needed

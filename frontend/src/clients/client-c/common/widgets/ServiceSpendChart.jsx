@@ -1,6 +1,6 @@
+import { Server, Settings2 } from 'lucide-react';
 import React from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
-import { Server, Settings2 } from 'lucide-react';
 
 const ServiceSpendChart = ({ data, title = "Spend by Service", limit = 8, onLimitChange, totalSpend = 0 }) => {
   const formatCurrency = (val) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(val);

@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+
 import { normalizeDataQualityResponse, EMPTY_DQ_STATS } from "../utils/normalizeDataQuality";
 
 export const useDataQuality = ({ filters, api, caps }) => {

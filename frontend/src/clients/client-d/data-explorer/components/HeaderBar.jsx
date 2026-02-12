@@ -1,5 +1,4 @@
 // frontend/clients/client-d/dashboards/overview/data-explorer/components/HeaderBar.jsx
-import React, { useMemo } from "react";
 import {
   Download,
   Search,
@@ -17,6 +16,7 @@ import {
   Loader2,
   X,
 } from "lucide-react";
+import React, { useMemo } from "react";
 
 import StatCard from "./StatCard.jsx";
 

@@ -1,11 +1,12 @@
-import React, { useMemo, useState, useCallback, useEffect } from "react";
-import { useDebounce } from "../../../hooks/useDebounce.js";
 import { AlertCircle, Loader2, Calendar } from "lucide-react";
+import React, { useMemo, useState, useCallback, useEffect } from "react";
+
+import { useDebounce } from "../../../hooks/useDebounce.js";
 
 import ClientCCostAnalysisView from "./ClientCCostAnalysisView.jsx";
-import { normalizeCostAnalysisData } from "./utils/normalizeCostAnalysisData.js";
-import { useClientCCostAnalysisFilters } from "./hooks/useClientCCostAnalysisFilters.js";
 import { useClientCCostAnalysisData } from "./hooks/useClientCCostAnalysisData.js";
+import { useClientCCostAnalysisFilters } from "./hooks/useClientCCostAnalysisFilters.js";
+import { normalizeCostAnalysisData } from "./utils/normalizeCostAnalysisData.js";
 
 const ClientCCostAnalysis = ({ api, caps }) => {
   // Local filters with enhanced state management

@@ -1,5 +1,5 @@
-import React, { useMemo } from 'react';
 import { Globe } from 'lucide-react';
+import React, { useMemo } from 'react';
 
 const MostPopularRegion = ({ data, totalSpend = 0, billingPeriod = null }) => {
   const formatCurrency = (val) => new Intl.NumberFormat('en-US', { 

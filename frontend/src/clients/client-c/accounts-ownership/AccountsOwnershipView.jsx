@@ -1,7 +1,6 @@
 import React from 'react';
+
 import { Card, CardHeader, CardTitle, CardContent } from '../common/widgets';
-import FilterBar from '../common/widgets/FilterBar';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 
 const AccountsOwnershipView = ({
   filters,

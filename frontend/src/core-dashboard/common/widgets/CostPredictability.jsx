@@ -1,3 +1,12 @@
+import {
+  Target,
+  Calendar,
+  Activity,
+  Zap,
+  TrendingUp,
+  AlertCircle,
+  Loader2
+} from "lucide-react";
 import React, { useState, useMemo } from "react";
 import {
   ComposedChart,
@@ -11,15 +20,6 @@ import {
   ReferenceLine,
   ReferenceDot,
 } from "recharts";
-import {
-  Target,
-  Calendar,
-  Activity,
-  Zap,
-  TrendingUp,
-  AlertCircle,
-  Loader2
-} from "lucide-react";
 
 // --- HELPERS ---
 const formatCurrency = (val) =>

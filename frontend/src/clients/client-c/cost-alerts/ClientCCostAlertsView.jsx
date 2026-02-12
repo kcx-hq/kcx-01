@@ -1,23 +1,17 @@
-import React, { useState } from "react";
-import { 
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, 
-  PieChart, Pie, Cell, Legend, AreaChart, Area, RadarChart, Radar
-} from 'recharts';
 import { 
   Bell, 
   AlertTriangle, 
   CheckCircle, 
-  Clock, 
-  Filter, 
-  RefreshCw, 
-  ChevronDown, 
-  Cloud, 
-  Settings, 
-  MapPin,
+  Filter,
   DollarSign,
   TrendingUp,
   AlertCircle
 } from "lucide-react";
+import React, { useState } from "react";
+import { 
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, 
+  PieChart, Pie, Cell, Legend
+} from 'recharts';
 
 import FilterBar from "../common/widgets/FilterBar.jsx";
 

@@ -1,5 +1,5 @@
-import React from "react";
 import { TrendingUp } from "lucide-react";
+import React from "react";
 
 export function CostDriversEmptyState() {
   return (

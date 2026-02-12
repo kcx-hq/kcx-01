@@ -1,9 +1,10 @@
-import FilterBar from "../../../core-dashboard/common/widgets/FilterBar.jsx";
-import OverviewKpiGrid from "./components/OverviewKpiGrid.jsx";
-import CostTrendChart from "../../../core-dashboard/common/widgets/CostTrendChart.jsx";
-import ServiceSpendChart from "../../../core-dashboard/common/widgets/ServiceSpendChart.jsx";
 import PremiumGate from "../../../core-dashboard/common/PremiumGate.jsx";
+import CostTrendChart from "../../../core-dashboard/common/widgets/CostTrendChart.jsx";
+import FilterBar from "../../../core-dashboard/common/widgets/FilterBar.jsx";
+import ServiceSpendChart from "../../../core-dashboard/common/widgets/ServiceSpendChart.jsx";
 import OverviewStates from "../../../core-dashboard/overview/components/OverviewStates.jsx";
+
+import OverviewKpiGrid from "./components/OverviewKpiGrid.jsx";
 
 const OverviewView = ({
   filters,

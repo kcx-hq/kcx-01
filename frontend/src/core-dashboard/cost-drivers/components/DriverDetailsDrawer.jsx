@@ -1,4 +1,3 @@
-import React from "react";
 import { motion } from "framer-motion";
 import {
   Activity,
@@ -9,6 +8,7 @@ import {
   Tag,
   X,
 } from "lucide-react";
+import React from "react";
 import {
   BarChart,
   Bar,
@@ -18,8 +18,9 @@ import {
   ResponsiveContainer,
   Tooltip as RechartsTooltip,
 } from "recharts";
-import { formatCurrency } from "../utils/format";
+
 import PremiumGate from "../../common/PremiumGate";
+import { formatCurrency } from "../utils/format";
 
 export function DriverDetailsDrawer({
   driver,

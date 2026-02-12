@@ -1,10 +1,11 @@
 import React, { useMemo, useState, useCallback } from "react";
+
 import { useDebounce } from "../../../hooks/useDebounce.js";
 
+import { useOverviewData } from "./hooks/useOverviewData.js";
+import { useOverviewFilters } from "./hooks/useOverviewFilters.js";
 import OverviewView from "./OverviewView.jsx";
 import { normalizeOverviewData } from "./utils/normalizeOverviewData.js";
-import { useOverviewFilters } from "./hooks/useOverviewFilters.js";
-import { useOverviewData } from "./hooks/useOverviewData.js";
 
 const Overview = ({ onFilterChange, api, caps }) => {
   // Local filters

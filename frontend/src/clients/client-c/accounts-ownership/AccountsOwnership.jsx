@@ -1,16 +1,17 @@
 import React, { useMemo, useState, useCallback } from "react";
+
 import { useDebounce } from "../../../hooks/useDebounce.js";
 
 import AccountsOwnershipView from "./AccountsOwnershipView.jsx";
+import { useAccountsData } from "./hooks/useAccountsData.js";
+import { useComplianceData } from "./hooks/useComplianceData.js";
+import { useSummaryData } from "./hooks/useSummaryData.js";
 import { 
   normalizeAccountsData, 
   normalizeComplianceData, 
   normalizeSummaryData,
   mergeAccountData
 } from "./utils/normalizeAccountsData.js";
-import { useAccountsData } from "./hooks/useAccountsData.js";
-import { useComplianceData } from "./hooks/useComplianceData.js";
-import { useSummaryData } from "./hooks/useSummaryData.js";
 
 const AccountsOwnership = ({ api, caps }) => {
   // Local filters

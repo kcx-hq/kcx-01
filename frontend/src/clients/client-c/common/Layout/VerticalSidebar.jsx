@@ -1,7 +1,6 @@
 // src/components/VerticalSidebar.jsx
-import React, { useRef, useState, useEffect } from "react";
-import { NavLink, useNavigate, useLocation } from "react-router-dom";
 import axios from "axios";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   BarChart3,
   TrendingUp,
@@ -12,14 +11,14 @@ import {
   ShieldAlert,
   Table,
   Upload as UploadIcon,
-  Play,
   FileBarChart,
-  Loader2,
-  AlertCircle,
   Crown,
 } from "lucide-react";
+import React, { useRef, useState, useEffect } from "react";
+import { NavLink, useNavigate } from "react-router-dom";
+
 import { useAuthStore } from '../../../../store/Authstore';
-import { motion, AnimatePresence } from "framer-motion";
+
 
 const VerticalSidebar = ({ onCsvSelected, caps = {} }) => {
   const { user } = useAuthStore();

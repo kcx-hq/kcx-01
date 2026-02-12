@@ -1,4 +1,3 @@
-import React from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   Sparkles,
@@ -7,19 +6,17 @@ import {
   TrendingDown,
   AlertCircle,
   Loader2,
-  AlertTriangle,
-  Lightbulb,
 } from "lucide-react";
+import React from "react";
 
-import { formatCurrency } from "./utils/format";
-import { Tabs } from "./components/Tabs";
+
 import PremiumGate from "../common/PremiumGate";
-import { OpportunitiesTab } from "./components/OpportunitiesTab";
-import { IdleResourcesTab } from "./components/IdleResourcesTab";
-import { RightSizingTab } from "./components/RightSizingTab";
+
 import { CommitmentsTab } from "./components/CommitmentsTab";
-import { InsightModal } from "./components/InsightModal";
-import { ResourceSidePanel } from "./components/ResourceSidePanel";
+import { IdleResourcesTab } from "./components/IdleResourcesTab";
+import { OpportunitiesTab } from "./components/OpportunitiesTab";
+import { RightSizingTab } from "./components/RightSizingTab";
+import { Tabs } from "./components/Tabs";
 
 export function OptimizationView({
   // access

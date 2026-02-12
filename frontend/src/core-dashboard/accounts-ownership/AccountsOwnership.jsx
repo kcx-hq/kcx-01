@@ -1,6 +1,8 @@
 import React, { useCallback, useMemo, useState } from "react";
-import { useAuthStore } from "../../store/Authstore";
+
 import { useDebounce } from "../../hooks/useDebounce";
+import { useAuthStore } from "../../store/Authstore";
+
 import { AccountsOwnershipView } from "./AccountsOwnershipView";
 import { useAccountsOwnershipData } from "./hooks/useAccountsOwnershipData";
 import { formatCurrency } from "./utils/format";

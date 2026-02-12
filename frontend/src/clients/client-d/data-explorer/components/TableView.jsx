@@ -1,5 +1,4 @@
 // frontend/clients/client-d/dashboards/overview/data-explorer/components/TableView.jsx
-import React from "react";
 import {
   ChevronDown,
   ChevronUp,
@@ -8,6 +7,8 @@ import {
   Check,
   AlertCircle,
 } from "lucide-react";
+import React from "react";
+
 import TableRow from "../../../../core-dashboard/data-explorer/components/TableRow.jsx";
 
 const TableView = ({

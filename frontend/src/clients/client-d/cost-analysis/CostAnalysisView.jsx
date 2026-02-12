@@ -1,5 +1,4 @@
 // frontend/clients/client-d/dashboards/cost-analysis/CostAnalysisView.jsx
-import React, { useMemo } from "react";
 import {
   DollarSign,
   Activity,
@@ -9,13 +8,14 @@ import {
   Lock,
   Info,
 } from "lucide-react";
+import React, { useMemo } from "react";
 
-import KpiCard from "../../../core-dashboard/cost-analysis/components/KpiCard.jsx";
-import SpendBehaviorCard from "../../../core-dashboard/cost-analysis/components/SpendBehaviorCard.jsx";
-import BreakdownSidebar from "../../../core-dashboard/cost-analysis/components/BreakdownSidebar.jsx";
 import PremiumGate from "../../../core-dashboard/common/PremiumGate.jsx";
 import BreakdownModal from "../../../core-dashboard/cost-analysis/components/BreakdownModal.jsx";
+import BreakdownSidebar from "../../../core-dashboard/cost-analysis/components/BreakdownSidebar.jsx";
 import InfoModal from "../../../core-dashboard/cost-analysis/components/InfoModal.jsx";
+import KpiCard from "../../../core-dashboard/cost-analysis/components/KpiCard.jsx";
+import SpendBehaviorCard from "../../../core-dashboard/cost-analysis/components/SpendBehaviorCard.jsx";
 
 import { formatCurrency, formatDate } from "./utils/format.js";
 

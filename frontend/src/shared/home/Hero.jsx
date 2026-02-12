@@ -1,5 +1,11 @@
 // src/components/Hero.jsx
-import React, { useState, useEffect, useRef } from "react";
+import { 
+  motion, 
+  AnimatePresence, 
+  useMotionValue, 
+  useSpring, 
+  useTransform 
+} from "framer-motion";
 import { 
   ArrowRight, 
   Sparkles, 
@@ -12,13 +18,8 @@ import {
   Activity,
   ArrowUpRight
 } from "lucide-react";
-import { 
-  motion, 
-  AnimatePresence, 
-  useMotionValue, 
-  useSpring, 
-  useTransform 
-} from "framer-motion";
+import React, { useState, useEffect, useRef } from "react";
+
 import { AuthModal } from "../auth";
 
 // Add CSS for grid animation

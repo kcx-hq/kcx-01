@@ -1,6 +1,6 @@
-import React from 'react';
-import { TrendingUp, AlertTriangle, Target, Search } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { TrendingUp, AlertTriangle, Target, Search } from 'lucide-react';
+import React from 'react';
 
 const FinOpsSection = () => {
   
@@ -52,7 +52,7 @@ const FinOpsSection = () => {
             Why <span className="text-[#8B2FC9]">FinOps</span> Matters Now
           </h2>
           <p className="text-gray-400 text-lg">
-            Cloud spending is the new "dark matter". We help you move fast <em>without</em> breaking the bank.
+            Cloud spending is the new &quot;dark matter&quot;. We help you move fast <em>without</em> breaking the bank.
           </p>
         </motion.div>
 

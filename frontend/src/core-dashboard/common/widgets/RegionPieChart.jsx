@@ -1,6 +1,6 @@
+import { MapPin, Settings2 } from 'lucide-react';
 import React from 'react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
-import { MapPin, Settings2 } from 'lucide-react';
 
 const COLORS = ['#a02ff1', '#60a5fa', '#34d399', '#f87171', '#fbbf24', '#a78bfa', '#fb7185', '#38bdf8'];
 

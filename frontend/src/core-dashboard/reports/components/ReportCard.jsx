@@ -1,8 +1,9 @@
-import React from "react";
-import { Calendar, Download, Loader2 } from "lucide-react";
 import { motion } from "framer-motion";
-import { getColorClasses } from "../utils/reportUtils";
+import { Calendar, Download, Loader2 } from "lucide-react";
+import React from "react";
+
 import PremiumGate from "../../common/PremiumGate";
+import { getColorClasses } from "../utils/reportUtils";
 
 const ReportCard = ({
   report,

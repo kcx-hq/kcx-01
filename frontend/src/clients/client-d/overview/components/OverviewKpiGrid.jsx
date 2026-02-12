@@ -1,14 +1,12 @@
 // frontend/clients/client-d/dashboards/overview/components/OverviewKpiGrid.jsx
-import React, { useMemo } from "react";
-import KpiGrid from "../../../../core-dashboard/common/widgets/KpiGrid.jsx"; // ✅ your common KpiGrid
 import {
   DollarSign,
   TrendingUp,
-  CalendarDays,
   Layers,
-  Building2,
-  MapPin,
 } from "lucide-react";
+import React, { useMemo } from "react";
+
+import KpiGrid from "../../../../core-dashboard/common/widgets/KpiGrid.jsx"; // ✅ your common KpiGrid
 
 /**
  * Client-D Overview KPI Grid

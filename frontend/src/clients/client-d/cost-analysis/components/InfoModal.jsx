@@ -1,5 +1,5 @@
-import React from "react";
 import { X } from "lucide-react";
+import React from "react";
 
 const InfoModal = ({ isOpen, onClose, title, message, date, highlight }) => {
   if (!isOpen) return null;

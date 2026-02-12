@@ -1,5 +1,5 @@
-import React from 'react';
 import { MapPin, TrendingUp } from 'lucide-react';
+import React from 'react';
 
 const MostPopularRegion = ({ data, totalSpend, billingPeriod }) => {
   const formatCurrency = (val) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(val);

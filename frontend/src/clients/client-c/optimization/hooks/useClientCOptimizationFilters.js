@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useState } from "react";
-import { Users, Settings, MapPin, Cloud } from "lucide-react";
 
 export const useClientCOptimizationFilters = (api, caps) => {
   const [rawOptions, setRawOptions] = useState(null);

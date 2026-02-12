@@ -1,9 +1,9 @@
-import React, { useMemo } from "react";
 import { AlertCircle, Loader2, Calendar } from "lucide-react";
+import React, { useMemo } from "react";
 
 import ClientCDataQualityView from "./ClientCDataQualityView.jsx";
-import { normalizeDataQualityData } from "./utils/normalizeDataQualityData.js";
 import { useClientCDataQualityData } from "./hooks/useClientCDataQualityData.js";
+import { normalizeDataQualityData } from "./utils/normalizeDataQualityData.js";
 
 const ClientCDataQuality = ({ api, caps }) => {
   // Fetch data quality data

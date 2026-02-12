@@ -1,14 +1,14 @@
 import React, { useMemo } from "react";
-import PremiumGate from "../../../core-dashboard/common/PremiumGate.jsx";
 
-import DataQualityStates from "../../../core-dashboard/data-quality/components/DataQualityStates.jsx";
-import ScoreCard from "../../../core-dashboard/data-quality/components/ScoreCard.jsx";
-import ComplianceMatrix from "../../../core-dashboard/data-quality/components/ComplianceMatrix.jsx";
+import PremiumGate from "../../../core-dashboard/common/PremiumGate.jsx";
 import ActionBar from "../../../core-dashboard/data-quality/components/ActionBar.jsx";
-import Tabs from "../../../core-dashboard/data-quality/components/Tabs.jsx";
+import ComplianceMatrix from "../../../core-dashboard/data-quality/components/ComplianceMatrix.jsx";
+import DataQualityStates from "../../../core-dashboard/data-quality/components/DataQualityStates.jsx";
+import IssueInspector from "../../../core-dashboard/data-quality/components/IssueInspector.jsx";
 import IssuesTable from "../../../core-dashboard/data-quality/components/IssuesTable.jsx";
 import PaginationBar from "../../../core-dashboard/data-quality/components/PaginationBar.jsx";
-import IssueInspector from "../../../core-dashboard/data-quality/components/IssueInspector.jsx";
+import ScoreCard from "../../../core-dashboard/data-quality/components/ScoreCard.jsx";
+import Tabs from "../../../core-dashboard/data-quality/components/Tabs.jsx";
 
 import { formatCurrency } from "./utils/formatCurrency.js";
 

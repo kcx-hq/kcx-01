@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { motion } from 'framer-motion';
 import {
   DollarSign,
   MapPin,
@@ -11,7 +11,7 @@ import {
   ChevronUp,
   X
 } from 'lucide-react';
-import { motion } from 'framer-motion';
+import React, { useState } from 'react';
 
 /* ================= KPI CARD ================= */
 

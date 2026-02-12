@@ -1,7 +1,8 @@
-import React from 'react';
 import { motion } from 'framer-motion';
-import Navbar from './Navbar';
+import React from 'react';
+
 import Footer from './Footer';
+import Navbar from './Navbar';
 
 const TermsOfService = () => {
   const containerVariants = {

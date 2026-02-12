@@ -1,11 +1,12 @@
-import React, { useMemo, useState, useCallback, useEffect } from "react";
-import { useDebounce } from "../../../hooks/useDebounce.js";
 import { AlertCircle, Loader2, Calendar } from "lucide-react";
+import React, { useMemo, useState, useCallback } from "react";
+
+import { useDebounce } from "../../../hooks/useDebounce.js";
 
 import ClientCOptimizationView from "./ClientCOptimizationView.jsx";
-import { normalizeOptimizationData } from "./utils/normalizeOptimizationData.js";
-import { useClientCOptimizationFilters } from "./hooks/useClientCOptimizationFilters.js";
 import { useClientCOptimizationData } from "./hooks/useClientCOptimizationData.js";
+import { useClientCOptimizationFilters } from "./hooks/useClientCOptimizationFilters.js";
+import { normalizeOptimizationData } from "./utils/normalizeOptimizationData.js";
 
 const ClientCOptimization = ({ api, caps }) => {
   // Local filters with enhanced state management

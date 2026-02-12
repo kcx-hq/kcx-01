@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
-import { Clock, Activity, ArrowRight, Layers, CheckCircle2, X, FileText, Zap, Target } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Clock, Activity, ArrowRight, Layers, CheckCircle2, X, FileText, Zap, Target } from 'lucide-react';
+import React, { useState } from 'react';
 
 const Features = () => {
   

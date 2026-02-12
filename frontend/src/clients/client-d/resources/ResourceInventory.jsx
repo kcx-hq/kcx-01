@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
-import { useAuthStore } from '../../../store/Authstore';
 
-import { useResourceInventoryData } from '../../../core-dashboard/resources/hooks/useResourceInventoryData';
+
 import { useFilteredResources } from '../../../core-dashboard/resources/hooks/useFilteredResources';
-import { useGroupedResources } from '../../../core-dashboard/resources/hooks/useGroupedResources';
 import { useFlaggedResources } from '../../../core-dashboard/resources/hooks/useFlaggedResources';
-
+import { useGroupedResources } from '../../../core-dashboard/resources/hooks/useGroupedResources';
+import { useResourceInventoryData } from '../../../core-dashboard/resources/hooks/useResourceInventoryData';
 import { exportResourceInventoryCSV } from '../../../core-dashboard/resources/utils/csv';
+import { useAuthStore } from '../../../store/Authstore';
 
 import ResourceInventoryView from './ResourceInventoryView';
 

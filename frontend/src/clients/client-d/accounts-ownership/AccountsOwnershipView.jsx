@@ -1,9 +1,10 @@
-import React, { useMemo } from "react";
 import { Tags, ShieldAlert, Loader2, Download } from "lucide-react";
-import PremiumGate from "../../../core-dashboard/common/PremiumGate";
-import { LoadingState } from "../../../core-dashboard/accounts-ownership/components/LoadingState";
+import React, { useMemo } from "react";
+
 import { ErrorState } from "../../../core-dashboard/accounts-ownership/components/ErrorState";
+import { LoadingState } from "../../../core-dashboard/accounts-ownership/components/LoadingState";
 import { formatCurrency } from "../../../core-dashboard/accounts-ownership/utils/format";
+import PremiumGate from "../../../core-dashboard/common/PremiumGate";
 
 function Chip({ label, value, tone = "neutral" }) {
   const tones = {

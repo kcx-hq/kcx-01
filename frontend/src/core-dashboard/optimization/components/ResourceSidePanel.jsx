@@ -1,7 +1,8 @@
 // apps/frontend/src/features/optimization/components/ResourceSidePanel.jsx
-import React from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { X } from "lucide-react";
+import React from "react";
+
 import { formatCurrency } from "../utils/format";
 
 export function ResourceSidePanel({ selectedResource, onClose }) {

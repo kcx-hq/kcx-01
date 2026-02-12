@@ -1,9 +1,6 @@
-import { useEffect, useState } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
 import axios from "axios";
-import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import {
   Calendar,
   Clock,
@@ -14,8 +11,12 @@ import {
   User,
   Mail,
 } from "lucide-react";
-import toast from "react-hot-toast";
 import { DateTime } from "luxon";
+import DatePicker from "react-datepicker";
+import { useEffect, useState } from "react";
+import toast from "react-hot-toast";
+import { useLocation, useNavigate } from "react-router-dom";
+
 
 const API_URL = import.meta.env.VITE_API_URL;
 

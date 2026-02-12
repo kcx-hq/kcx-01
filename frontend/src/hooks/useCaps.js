@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
-import { getCachedCapabilities } from '../services/getCapabilities';
-import { fetchCapabilities } from '../services/capabilities.api';
+
 import { createApiClient } from '../services/apiClient';
+import { fetchCapabilities } from '../services/capabilities.api';
+import { getCachedCapabilities } from '../services/getCapabilities';
 
 /**
  * Hook to load capabilities and create API client

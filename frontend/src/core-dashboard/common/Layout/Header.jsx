@@ -1,8 +1,9 @@
 // src/components/Header.jsx
+import { motion, AnimatePresence } from 'framer-motion';
+import { ChevronDown, CheckCircle2, AlertTriangle, X, LogOut, User } from 'lucide-react';
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, Download, ChevronDown, CheckCircle2, AlertTriangle, X, LogOut, User } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+
 import { useAuthStore } from '../../../store/Authstore';
 
 

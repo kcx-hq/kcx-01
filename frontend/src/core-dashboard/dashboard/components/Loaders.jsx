@@ -1,7 +1,8 @@
-import React from 'react';
 import { Loader2 } from 'lucide-react';
-import VerticalSidebar from '../../common/Layout/VerticalSidebar';
+import React from 'react';
+
 import Header from '../../common/Layout/Header';
+import VerticalSidebar from '../../common/Layout/VerticalSidebar';
 
 export const ComponentLoader = () => (
   <div className="flex items-center justify-center min-h-[400px]">

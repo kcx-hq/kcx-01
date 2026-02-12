@@ -1,5 +1,5 @@
-import React, { useCallback } from "react";
 import { BarChart3, Activity, Crown } from "lucide-react";
+import React, { useCallback } from "react";
 import {
   AreaChart,
   Area,

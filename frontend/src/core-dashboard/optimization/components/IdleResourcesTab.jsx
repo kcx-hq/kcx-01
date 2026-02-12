@@ -1,7 +1,8 @@
 // apps/frontend/src/features/optimization/components/IdleResourcesTab.jsx
-import React from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { ChevronDown, Filter, Search, Zap } from "lucide-react";
+import React from "react";
+
 import { formatCurrency } from "../utils/format";
 
 export function IdleResourcesTab({

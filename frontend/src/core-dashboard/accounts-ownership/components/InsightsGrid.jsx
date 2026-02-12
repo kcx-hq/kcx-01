@@ -1,5 +1,6 @@
-import React from "react";
 import { Briefcase } from "lucide-react";
+import React from "react";
+
 import { formatCurrency } from "../utils/format";
 
 export function InsightsGrid({ insights }) {

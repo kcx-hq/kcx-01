@@ -1,6 +1,7 @@
 import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '../../common/widgets';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+
+import { Card, CardContent, CardHeader, CardTitle } from '../../common/widgets';
 
 const VarianceBridge = ({ data }) => {
   if (!data || !data.increases || !data.decreases) {

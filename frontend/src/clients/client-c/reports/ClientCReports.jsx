@@ -1,24 +1,18 @@
 // ClientCReports.jsx
-import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { motion } from "framer-motion";
 import { 
   FileText, 
   TrendingUp, 
   Calendar,
-  BarChartIcon, 
-  PieChart as PieChartIcon,
-  DollarSign,
   AlertCircle,
   Loader2,
   Users,
   Tag,
   Download,
   Target,
-  Shield,
-  Eye,
-  Clock,
-  Zap
+  Shield
 } from "lucide-react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 
 const ClientCReports = ({ api, caps }) => {
   const [reportsData, setReportsData] = useState(null);

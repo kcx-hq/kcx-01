@@ -1,5 +1,4 @@
 // frontend/core/dashboards/overview/data-explorer/DataExplorerView.jsx
-import React, { memo, useCallback } from "react";
 import {
   Download,
   Search,
@@ -23,11 +22,12 @@ import {
   Loader2,
   RotateCcw,
   Crown,
-  Lock,
 } from "lucide-react";
+import React, { useCallback } from "react";
+
+import PremiumGate from "../common/PremiumGate.jsx";
 
 import DataExplorerStates from "./components/DataExplorerStates.jsx";
-import PremiumGate from "../common/PremiumGate.jsx";
 import DetailPanel from "./components/DetailPanel.jsx";
 import TableRow from "./components/TableRow.jsx";
 import { downloadCsvFromBackend } from "./utils/downloadCsvFromBackend.js";

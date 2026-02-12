@@ -1,10 +1,13 @@
-import React from "react";
 import { Users, Loader2 } from "lucide-react";
+import React from "react";
+
+import PremiumGate from "../common/PremiumGate";
+
+import { AccountsTable } from "./components/AccountsTable";
 import { ErrorState } from "./components/ErrorState";
 import { InsightsGrid } from "./components/InsightsGrid";
 import { Toolbar } from "./components/Toolbar";
-import { AccountsTable } from "./components/AccountsTable";
-import PremiumGate from "../common/PremiumGate";
+
 
 export function AccountsOwnershipView({
   // states

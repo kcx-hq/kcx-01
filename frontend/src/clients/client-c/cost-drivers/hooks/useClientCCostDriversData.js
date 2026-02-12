@@ -1,4 +1,5 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect } from 'react';
+
 import { useApiCall } from '../../../../hooks/useApiCall';
 
 export const useClientCCostDriversData = ({

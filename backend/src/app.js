@@ -30,7 +30,7 @@ app.use(compression({ level: 6, threshold: 1024 }));
 
 app.use(
   cors({
-    origin: ["http://localhost:5173", "http://localhost:5174", "https://kcx-01.vercel.app"],
+    origin: ["http://localhost:5173", "http://localhost:4173", "https://kcx-01.vercel.app"],
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],

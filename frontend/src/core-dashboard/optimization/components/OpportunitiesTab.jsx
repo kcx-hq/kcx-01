@@ -1,7 +1,8 @@
 // apps/frontend/src/features/optimization/components/OpportunitiesTab.jsx
-import React from "react";
 import { motion } from "framer-motion";
-import { Target, Info } from "lucide-react";
+import { Target } from "lucide-react";
+import React from "react";
+
 import { formatCurrency } from "../utils/format";
 import { getPriorityColor } from "../utils/helpers";
 

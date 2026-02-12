@@ -1,5 +1,5 @@
-import React from "react";
 import { Loader2, AlertCircle } from "lucide-react";
+import React from "react";
 
 const DataExplorerStates = ({ type }) => {
   if (type === "loading") {

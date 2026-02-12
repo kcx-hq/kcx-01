@@ -1,9 +1,8 @@
-import React, { useMemo, useState } from "react";
-import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell, AreaChart, Area } from "recharts";
-import { DollarSign, Activity, Maximize2, TrendingUp, Calendar, Tag, Filter, ChevronDown, Cloud, Settings, MapPin, Building, Users, Loader2, AlertCircle } from "lucide-react";
 import { motion } from "framer-motion";
+import { DollarSign, Activity, Maximize2, TrendingUp, Calendar, Tag, Filter, ChevronDown, Cloud, Settings, MapPin, Users, AlertCircle } from "lucide-react";
+import React, { useState } from "react";
+import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell, AreaChart, Area } from "recharts";
 
-import FilterBar from "../common/widgets/FilterBar.jsx";
 
 import { Card, CardContent, CardHeader, CardTitle } from "../common/widgets";
 

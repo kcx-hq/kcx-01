@@ -1,10 +1,12 @@
 import React, { useMemo, useState, useCallback } from "react";
+
 import { useAuthStore } from "../../store/Authstore";
+
 import DataExplorerView from "./DataExplorerView.jsx";
-import { useDebouncedObject } from "./hooks/useDebouncedObject.js";
-import { useDataExplorerData } from "./hooks/useDataExplorerData.js";
 import { useClientSideGrouping } from "./hooks/useClientSideGrouping.js";
 import { useClientSideSort } from "./hooks/useClientSideSort.js";
+import { useDataExplorerData } from "./hooks/useDataExplorerData.js";
+import { useDebouncedObject } from "./hooks/useDebouncedObject.js";
 
 const DataExplorer = (
   { filters = { provider: "All", service: "All", region: "All" }, api, caps }

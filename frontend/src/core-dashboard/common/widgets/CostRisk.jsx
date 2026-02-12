@@ -1,3 +1,10 @@
+import {
+  ShieldAlert,
+  Flame,
+  Search,
+  TrendingUp,
+  LayoutGrid
+} from "lucide-react";
 import React, { useState } from "react";
 import {
   ScatterChart,
@@ -11,14 +18,6 @@ import {
   Cell,
   ReferenceArea
 } from "recharts";
-import {
-  ShieldAlert,
-  Flame,
-  Search,
-  AlertTriangle,
-  TrendingUp,
-  LayoutGrid
-} from "lucide-react";
 
 // --- HELPERS ---
 const formatCurrency = (val) =>

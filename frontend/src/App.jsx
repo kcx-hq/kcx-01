@@ -1,3 +1,4 @@
+import { motion, AnimatePresence } from "framer-motion";
 import React, { useEffect, useState } from "react";
 import {
   BrowserRouter as Router,
@@ -6,9 +7,22 @@ import {
   Navigate,
   useNavigate,
 } from "react-router-dom";
-import { motion, AnimatePresence } from "framer-motion";
 
 // Shared Components
+import ClientC from "./clients/client-c/client-c";
+
+// Dashboard Components
+
+import "./index.css";
+import ClientDDashboard from "./clients/client-d/dashboard/client-d.dashboard.page.jsx";
+import Dashboard from "./core-dashboard/dashboard/DashboardPage";
+import { useCaps } from "./hooks/useCaps.js";
+import ForgotPassword from "./shared/auth/components/ForgotPassword.jsx";
+import ResetPassword from "./shared/auth/components/ResetPassword.jsx";
+import Chatbot from "./shared/chatbot/Chatbot.jsx";
+import BillingUploads from "./shared/csv-upload/BillingUpload";
+import CSVUpload from "./shared/csv-upload/CSVUpload";
+import CsvUploadInput from "./shared/csv-upload/CSVUploadInput";
 import {
   Navbar,
   Hero,
@@ -23,24 +37,7 @@ import {
   TermsOfService,
   PrivacyPolicy,
 } from "./shared/home";
-
-// Dashboard Components
-import Dashboard from "./core-dashboard/dashboard/DashboardPage";
-import CSVUpload from "./shared/csv-upload/CSVUpload";
-
-import "./index.css";
-import BillingUploads from "./shared/csv-upload/BillingUpload";
-import CsvUploadInput from "./shared/csv-upload/CSVUploadInput";
-import ClientDDashboard from "./clients/client-d/dashboard/client-d.dashboard.page.jsx";
-
-import { useCaps } from "./hooks/useCaps.js";
 import { useDashboardStore } from "./store/Dashboard.store.jsx";
-
-import ClientC from "./clients/client-c/client-c";
-
-import Chatbot from "./shared/chatbot/Chatbot.jsx";
-import ForgotPassword from "./shared/auth/components/ForgotPassword.jsx";
-import ResetPassword from "./shared/auth/components/ResetPassword.jsx";
 const Home = () => {
   const [showJourneySection, setShowJourneySection] = useState(false);
   const [isCTAActivated, setIsCTAActivated] = useState(false);

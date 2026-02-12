@@ -1,7 +1,8 @@
-import React from 'react';
 import { ChevronRight } from 'lucide-react';
-import { formatCurrency } from '../utils/format';
+import React from 'react';
+
 import PremiumOverlay from '../components/PremiumOverlay';
+import { formatCurrency } from '../utils/format';
 
 const GroupedListView = ({ groupedData, isPremiumMasked, onRowClick }) => {
   return (

@@ -1,5 +1,6 @@
-import React from 'react';
 import { AlertTriangle } from 'lucide-react';
+import React from 'react';
+
 import Sparkline from '../components/Sparkline';
 import StatusBadge from '../components/StatusBadge';
 import { formatCurrency } from '../utils/format';

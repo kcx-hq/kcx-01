@@ -1,5 +1,6 @@
-import React from 'react';
 import { Trash2, AlertTriangle } from 'lucide-react';
+import React from 'react';
+
 import { formatCurrency } from '../utils/format';
 
 const ZombieListView = ({ data, onInspect }) => {

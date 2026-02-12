@@ -1,24 +1,12 @@
-import React from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   Sparkles,
   Target,
-  Zap,
-  TrendingDown,
-  AlertCircle,
-  Loader2,
-  AlertTriangle,
   Lightbulb,
-  Filter,
-  RefreshCw,
-  ChevronDown,
-  Cloud,
-  Settings,
-  MapPin,
   Calendar
 } from "lucide-react";
+import React from "react";
 
-import FilterBar from "../common/widgets/FilterBar.jsx";
 
 // Import components for different tabs
 const OpportunitiesTab = ({ opportunities, onSelectInsight, title = "Opportunities" }) => {

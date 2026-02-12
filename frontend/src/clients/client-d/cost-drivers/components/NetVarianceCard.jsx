@@ -1,5 +1,6 @@
-import React from "react";
 import { Activity } from "lucide-react";
+import React from "react";
+
 import { VarianceBridge } from "../../../../core-dashboard/cost-drivers/components/VarianceBridge";
 import { formatCurrency } from "../../../../core-dashboard/cost-drivers/utils/format";
 

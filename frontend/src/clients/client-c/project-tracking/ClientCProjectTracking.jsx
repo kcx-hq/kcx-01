@@ -1,20 +1,14 @@
 // ClientCProjectTracking.jsx
-import React, { useState, useEffect, useMemo } from "react";
-import { 
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, 
-  PieChart, Pie, Cell, LineChart, Line, AreaChart, Area
-} from 'recharts';
 import { 
   FolderOpen, 
-  TrendingUp, 
-  Calendar,
-  BarChartIcon, 
-  PieChart as PieChartIcon,
+  TrendingUp,
+  BarChartIcon,
   DollarSign,
-  AlertCircle,
-  Loader2,
-  Clock
+  AlertCircle
 } from "lucide-react";
+import React, { useState, useEffect, useMemo } from "react";
+
+
 
 const ClientCProjectTracking = ({ api, caps }) => {
   const [projectData, setProjectData] = useState(null);

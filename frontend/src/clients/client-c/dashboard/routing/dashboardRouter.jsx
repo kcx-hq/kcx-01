@@ -1,8 +1,9 @@
 import { Suspense } from "react";
-import ComponentLoader from "../layout/ComponentLoader";
+
 import KeepAlive from "../Keep-alive/KeepAlive";
-import * as Views from "../views/lazyViews";
+import ComponentLoader from "../layout/ComponentLoader";
 import { isModuleEnabled } from "../utils/capsUtils";
+import * as Views from "../views/lazyViews";
 
 
 

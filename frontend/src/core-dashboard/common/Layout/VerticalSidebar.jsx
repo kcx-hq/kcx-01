@@ -1,7 +1,7 @@
-import React, { useRef, useState, useEffect } from "react";
-import { NavLink, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Crown, Upload as UploadIcon } from "lucide-react";
+import React, { useRef, useState, useEffect } from "react";
+import { NavLink, useNavigate } from "react-router-dom";
 
 export default function VerticalSidebar({
   config,

@@ -1,8 +1,9 @@
 import React, { useMemo, useState, useCallback } from 'react';
+
 import { useDebounce } from '../../../hooks/useDebounce.js';
 
-import ResourceInventoryView from './ResourceInventoryView.jsx';
 import { useClientCResourceInventoryData } from './hooks/useClientCResourceInventoryData.js';
+import ResourceInventoryView from './ResourceInventoryView.jsx';
 
 const ResourceInventory = ({ api, caps }) => {
   // Local filters

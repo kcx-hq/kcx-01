@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+
 import { buildParamsFromFilters } from "../utils/helpers";
 
 export function useOptimizationData({ api, caps, parentFilters }) {
@@ -56,7 +57,7 @@ export function useOptimizationData({ api, caps, parentFilters }) {
       });
     } catch (err) {
       if (err?.code !== "NOT_SUPPORTED" && err?.name !== "AbortError") {
-        // eslint-disable-next-line no-console
+         
         console.error("Error fetching optimization data:", err);
         setError("Failed to load optimization data");
       }

@@ -1,7 +1,9 @@
 import React, { useMemo, useState, useCallback } from "react";
-import { useAuthStore } from "../../../store/Authstore";
-import { useOptimizationData } from "./hooks/useOptimizationData";
+
 import { OptimizationView } from "../../../core-dashboard/optimization/OptimizationView";
+import { useAuthStore } from "../../../store/Authstore";
+
+import { useOptimizationData } from "./hooks/useOptimizationData";
 
 export default function Optimization({ filters: parentFilters = {}, api, caps }) {
   const { user } = useAuthStore();

@@ -1,4 +1,3 @@
-import React, { useMemo } from "react";
 import { 
   DollarSign, 
   Activity, 
@@ -8,14 +7,15 @@ import {
   Lock,
   Loader2 
 } from "lucide-react";
+import React, { useMemo } from "react";
 
+import PremiumGate from "../common/PremiumGate.jsx";
+
+import BreakdownModal from "./components/BreakdownModal.jsx";
+import BreakdownSidebar from "./components/BreakdownSidebar.jsx";
+import InfoModal from "./components/InfoModal.jsx";
 import KpiCard from "./components/KpiCard.jsx";
 import SpendBehaviorCard from "./components/SpendBehaviorCard.jsx";
-import BreakdownSidebar from "./components/BreakdownSidebar.jsx";
-import PremiumGate from "../common/PremiumGate.jsx";
-import BreakdownModal from "./components/BreakdownModal.jsx";
-import InfoModal from "./components/InfoModal.jsx";
-
 import { formatCurrency, formatDate } from "./utils/format.js";
 
 const CostAnalysisView = ({

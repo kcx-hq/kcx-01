@@ -1,11 +1,11 @@
-import React from "react";
 import { FileText } from "lucide-react";
-import PremiumGate from "../common/PremiumGate";
+import React from "react";
 
-import LoadingState from "./components/LoadingState";
-import ReportCard from "./components/ReportCard";
+
 import AboutExecutiveReportsNote from "./components/AboutExecutiveReportsNote";
 import ComingSoonReports from "./components/ComingSoonReports";
+import LoadingState from "./components/LoadingState";
+import ReportCard from "./components/ReportCard";
 
 const ReportsView = ({
   fetchingData,

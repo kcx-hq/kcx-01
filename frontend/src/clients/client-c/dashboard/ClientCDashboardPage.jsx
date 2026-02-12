@@ -1,10 +1,13 @@
-import DashboardLayout from './layout/DashboardLayout';
-import DashboardRouter from './routing/dashboardRouter';
-import SkeletonLoader from './layout/SkeletonLoader';
-import { useCaps } from '../../../hooks/useCaps';
-import useDashboardInit from './hooks/useDashboardInits';
-import { useDashboardRoutes } from './routing/useDashboardRoutings';
 import { Navigate, useLocation } from 'react-router-dom';
+
+import { useCaps } from '../../../hooks/useCaps';
+
+import useDashboardInit from './hooks/useDashboardInits';
+import DashboardLayout from './layout/DashboardLayout';
+import SkeletonLoader from './layout/SkeletonLoader';
+import DashboardRouter from './routing/dashboardRouter';
+import { useDashboardRoutes } from './routing/useDashboardRoutings';
+
 
 const ClientCDashboardPage = () => {
   const loading = useDashboardInit();

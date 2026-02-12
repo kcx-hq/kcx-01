@@ -1,17 +1,18 @@
 // frontend/clients/client-d/dashboards/overview/data-explorer/DataExplorer.jsx
 import React, { useMemo, useState, useCallback, useEffect } from "react";
+
+import { useClientSideGrouping } from "../../../core-dashboard/data-explorer/hooks/useClientSideGrouping.js";
+import { useClientSideSort } from "../../../core-dashboard/data-explorer/hooks/useClientSideSort.js";
+import { useDebouncedObject } from "../../../core-dashboard/data-explorer/hooks/useDebouncedObject.js";
 import { useAuthStore } from "../../../store/Authstore";
 
 // ✅ Reuse core view (UI stays same)
 import DataExplorerView from "./DataExplorerView.jsx";
 
 // hooks (client-d)
-import { useDebouncedObject } from "../../../core-dashboard/data-explorer/hooks/useDebouncedObject.js";
 import { useDataExplorerData } from "./hooks/useDataExplorerData.js";
 
 // reuse core client-side helpers (or keep local if you already copied)
-import { useClientSideGrouping } from "../../../core-dashboard/data-explorer/hooks/useClientSideGrouping.js";
-import { useClientSideSort } from "../../../core-dashboard/data-explorer/hooks/useClientSideSort.js";
 
 const DataExplorer = ({ filters = { provider: "All", service: "All", region: "All" }, api, caps }) => {
   const { user } = useAuthStore();

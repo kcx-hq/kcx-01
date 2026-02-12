@@ -1,6 +1,7 @@
-import React from 'react';
-import { X, Tag, CheckCircle2, AlertTriangle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { X, Tag, CheckCircle2, AlertTriangle } from 'lucide-react';
+import React from 'react';
+
 import StatusBadge from '../components/StatusBadge';
 import { formatCurrency } from '../utils/format';
 

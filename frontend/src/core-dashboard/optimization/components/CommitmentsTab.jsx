@@ -1,6 +1,6 @@
 // apps/frontend/src/features/optimization/components/CommitmentsTab.jsx
-import React from "react";
 import { AlertCircle, Lightbulb } from "lucide-react";
+import React from "react";
 
 export function CommitmentsTab() {
   return (

@@ -1,5 +1,4 @@
 // frontend/clients/client-d/dashboards/resources/ResourceInventoryView.jsx
-import React, { useMemo } from "react";
 import {
   Box,
   Download,
@@ -13,13 +12,14 @@ import {
   TrendingUp,
   Crown,
 } from "lucide-react";
+import React, { useMemo } from "react";
 
-import KpiCard from "../../../core-dashboard/resources/components/KpiCard";
 import PremiumGate from "../../../core-dashboard/common/PremiumGate";
-import ResourceTableView from "../../../core-dashboard/resources/components/ResourceTable";
 import GroupedListView from "../../../core-dashboard/resources/components/GroupedList";
-import ZombieListView from "../../../core-dashboard/resources/components/ZombieList";
 import InspectorDrawerView from "../../../core-dashboard/resources/components/InspectorDrawer";
+import KpiCard from "../../../core-dashboard/resources/components/KpiCard";
+import ResourceTableView from "../../../core-dashboard/resources/components/ResourceTable";
+import ZombieListView from "../../../core-dashboard/resources/components/ZombieList";
 
 const EmptyState = ({ title, subtitle }) => (
   <div className="py-16 flex flex-col items-center justify-center text-center">

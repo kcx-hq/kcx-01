@@ -1,8 +1,8 @@
+import CostTrendChart from "../common/widgets/CostTrendChart.jsx";
 import FilterBar from "../common/widgets/FilterBar.jsx";
 import KpiGrid from "../common/widgets/KpiGrid.jsx";
-import CostTrendChart from "../common/widgets/CostTrendChart.jsx";
-import ServiceSpendChart from "../common/widgets/ServiceSpendChart.jsx";
 import MostPopularRegion from "../common/widgets/MostPopularRegion.jsx";
+import ServiceSpendChart from "../common/widgets/ServiceSpendChart.jsx";
 
 import OverviewStates from "./components/OverviewStates.jsx";
 

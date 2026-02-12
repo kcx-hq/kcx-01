@@ -1,4 +1,5 @@
 import React, { useCallback } from "react";
+
 import PremiumGate from "../../common/PremiumGate.jsx";
 import { COLOR_PALETTE } from "../utils/constants.js";
 import { formatCurrency } from "../utils/format.js";

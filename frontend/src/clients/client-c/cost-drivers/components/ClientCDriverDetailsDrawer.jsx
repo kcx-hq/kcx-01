@@ -1,6 +1,6 @@
-import React from 'react';
-import { X, TrendingUp, TrendingDown, Calendar, DollarSign, Percent } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { X, TrendingUp, TrendingDown, Calendar, DollarSign, Percent } from 'lucide-react';
+import React from 'react';
 
 export function ClientCDriverDetailsDrawer({ 
   driver, 

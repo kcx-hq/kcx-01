@@ -1,7 +1,7 @@
 // src/components/dashboard/KpiGrid.jsx
-import React, { useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import { ChevronDown, X, Crown } from "lucide-react";
+import React, { useMemo, useState } from "react";
 
 /**
  * Small, reusable KPI Card (unchanged behavior)

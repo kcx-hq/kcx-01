@@ -1,8 +1,3 @@
-import React from "react";
-import { 
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, 
-  PieChart, Pie, Cell, LineChart, Line, AreaChart, Area
-} from 'recharts';
 import { 
   DollarSign, 
   TrendingUp, 
@@ -10,6 +5,10 @@ import {
   BarChartIcon, 
   PieChart as PieChartIcon
 } from "lucide-react";
+import React from "react";
+import { XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, 
+  PieChart, Pie, Cell, AreaChart, Area
+} from 'recharts';
 
 const ClientCDepartmentCostView = ({
   api,

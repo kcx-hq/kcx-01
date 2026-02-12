@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
-import { Check, X as XIcon, Gift, Activity, ArrowRight, Zap, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Check, X as XIcon, Gift, Activity, ArrowRight, Zap, X } from 'lucide-react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 const Pricing = () => {
@@ -111,7 +111,7 @@ const Pricing = () => {
 
             {/* Features List */}
             <div className="space-y-4 mb-8 flex-1">
-                <p className="text-xs font-bold text-blue-400 uppercase tracking-widest mb-2">What's Included</p>
+                <p className="text-xs font-bold text-blue-400 uppercase tracking-widest mb-2">What&apos;s Included</p>
                 <ListItem text="30 days of cloud data analysis" theme="blue" />
                 <ListItem text="AWS, Azure or GCP billing review" theme="blue" />
                 <ListItem text="Idle resource identification" theme="blue" />
@@ -228,7 +228,7 @@ const Pricing = () => {
                    <Activity size={24} />
                 </div>
                 <h3 className="text-2xl font-bold text-white mb-2">Book a Demo</h3>
-                <p className="text-gray-400 text-sm">Tell us about your infrastructure, and we'll show you how we can optimize it.</p>
+                <p className="text-gray-400 text-sm">Tell us about your infrastructure, and we&apos;ll show you how we can optimize it.</p>
               </div>
 
               {/* Form */}

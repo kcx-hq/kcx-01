@@ -1,5 +1,6 @@
-import { X, AlertTriangle, CheckCircle } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { X, AlertTriangle, CheckCircle } from "lucide-react";
+
 import { formatCurrency } from "../utils/format.js";
 
 const explainIssue = (issue) => {

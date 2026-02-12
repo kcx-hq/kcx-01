@@ -1,12 +1,12 @@
 import js from "@eslint/js";
-import globals from "globals";
+import { defineConfig, globalIgnores } from "eslint/config";
+import importPlugin from "eslint-plugin-import";
 import react from "eslint-plugin-react";
 import reactHooks from "eslint-plugin-react-hooks";
 import reactPerf from "eslint-plugin-react-perf";
 import reactRefresh from "eslint-plugin-react-refresh";
-import importPlugin from "eslint-plugin-import";
 import unusedImports from "eslint-plugin-unused-imports";
-import { defineConfig, globalIgnores } from "eslint/config";
+import globals from "globals";
 
 export default defineConfig([
   globalIgnores(["dist", "node_modules", "coverage"]),

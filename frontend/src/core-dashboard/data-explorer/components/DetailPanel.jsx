@@ -1,6 +1,6 @@
-import React from "react";
-import { X, Copy } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { X, Copy } from "lucide-react";
+import React from "react";
 
 const DetailPanel = ({ selectedRow, setSelectedRow, allColumns }) => {
   return (

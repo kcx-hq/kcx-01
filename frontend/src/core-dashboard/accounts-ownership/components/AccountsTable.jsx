@@ -1,5 +1,6 @@
-import React from "react";
 import { AlertTriangle, CheckCircle } from "lucide-react";
+import React from "react";
+
 import { formatCurrency } from "../utils/format";
 
 export function AccountsTable({ accounts, sortBy, sortOrder, onSortChange }) {

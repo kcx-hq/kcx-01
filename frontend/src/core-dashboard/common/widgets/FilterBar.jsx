@@ -1,5 +1,6 @@
+import { Filter, RefreshCw, ChevronDown, Cloud, Settings, MapPin, Crown } from 'lucide-react';
 import React from 'react';
-import { Filter, RefreshCw, ChevronDown, Cloud, Settings, MapPin, Crown, Lock } from 'lucide-react';
+
 import { useAuthStore } from '../../../store/Authstore';
 
 const FilterSelect = ({ field, displayLabel, icon: Icon, iconColor, options, value, onChange, isPremiumField = false }) => {

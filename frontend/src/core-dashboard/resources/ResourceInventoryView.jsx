@@ -1,4 +1,3 @@
-import React from "react";
 import {
   Box,
   Download,
@@ -11,13 +10,15 @@ import {
   Tag,
   TrendingUp,
 } from "lucide-react";
+import React from "react";
 
-import KpiCard from "./components/KpiCard";
 import PremiumGate from "../common/PremiumGate";
-import ResourceTableView from "./components/ResourceTable";
+
 import GroupedListView from "./components/GroupedList";
-import ZombieListView from "./components/ZombieList";
 import InspectorDrawerView from "./components/InspectorDrawer";
+import KpiCard from "./components/KpiCard";
+import ResourceTableView from "./components/ResourceTable";
+import ZombieListView from "./components/ZombieList";
 
 const ResourceInventoryView = ({
   loading,

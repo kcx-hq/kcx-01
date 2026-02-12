@@ -1,5 +1,6 @@
+import { AlertTriangle, TrendingUp, Layers, Search } from "lucide-react";
 import React, { useMemo } from "react";
-import { Crown, AlertTriangle, TrendingUp, Layers, Search } from "lucide-react";
+
 import PremiumGate from "../../../core-dashboard/common/PremiumGate.jsx";
 
 import { fmtCurrency, fmtNumber, fmtPct, fmtDateShort, driftTone } from "./utils/format.js";

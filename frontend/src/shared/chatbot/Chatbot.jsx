@@ -220,7 +220,7 @@ shouldFocusAfterReplyRef.current = true;
         setLoading(false);
       }
     },
-    [sessionId, loading, pushBot, pushUser, navigate, focusInput],
+    [sessionId, loading, pushBot, pushUser, navigate],
   );
 
   const sendMessage = async () => {

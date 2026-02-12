@@ -1,5 +1,6 @@
+import { useDashboardStore } from "../store/Dashboard.store";
+ 
 import { http } from "./http";
-import { useDashboardStore } from "../store/Dashboard.store"; 
 
 /**
  * Creates a dynamic API client based on capabilities response.

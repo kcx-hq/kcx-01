@@ -1,5 +1,5 @@
-import React from "react";
 import { LayoutGrid } from "lucide-react";
+import React from "react";
 
 export function CostMapCard({ showTreeMap, increases, decreases }) {
   return (

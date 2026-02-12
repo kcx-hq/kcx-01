@@ -1,13 +1,14 @@
 // frontend/clients/client-d/dashboards/overview/data-explorer/DataExplorerView.jsx
 import React, { useCallback } from "react";
+
 import DataExplorerStates from "../../../core-dashboard/data-explorer/components/DataExplorerStates.jsx";
 import DetailPanel from "../../../core-dashboard/data-explorer/components/DetailPanel.jsx";
 import { downloadCsvFromBackend } from "../../../core-dashboard/data-explorer/utils/downloadCsvFromBackend.js";
 
-import HeaderBar from "./components/HeaderBar.jsx";
-import TableView from "./components/TableView.jsx";
-import PivotView from "./components/PivotView.jsx";
 import ColumnsDrawer from "./components/ColumnDrawer.jsx";
+import HeaderBar from "./components/HeaderBar.jsx";
+import PivotView from "./components/PivotView.jsx";
+import TableView from "./components/TableView.jsx";
 
 const DataExplorerView = (props) => {
   const {

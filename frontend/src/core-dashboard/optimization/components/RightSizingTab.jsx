@@ -1,6 +1,7 @@
 // apps/frontend/src/features/optimization/components/RightSizingTab.jsx
-import React from "react";
 import { TrendingDown, Info } from "lucide-react";
+import React from "react";
+
 import { formatCurrency } from "../utils/format";
 
 export function RightSizingTab({ rightSizingRecs = [], onSelectInsight }) {

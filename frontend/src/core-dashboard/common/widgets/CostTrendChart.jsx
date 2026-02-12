@@ -1,6 +1,6 @@
+import { TrendingUp, Settings2 } from 'lucide-react';
 import React from 'react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine } from 'recharts';
-import { TrendingUp, Settings2 } from 'lucide-react';
 
 const CostTrendChart = ({ data, limit = 30, onLimitChange, billingPeriod = null, avgDailySpend = 0 }) => {
   const formatCurrency = (val) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(val);

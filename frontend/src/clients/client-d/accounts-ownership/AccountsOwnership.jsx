@@ -1,8 +1,11 @@
 import React, { useCallback, useMemo, useState } from "react";
-import { useAuthStore } from "../../../store/Authstore";
-import { useDebounce } from "../../../hooks/useDebounce";
-import { AccountsOwnershipView } from "./AccountsOwnershipView";
+
 import { formatCurrency } from "../../../core-dashboard/accounts-ownership/utils/format";
+import { useDebounce } from "../../../hooks/useDebounce";
+import { useAuthStore } from "../../../store/Authstore";
+
+import { AccountsOwnershipView } from "./AccountsOwnershipView";
+
 
 // ✅ reuse core hook, but response is normalized differently on client-d
 import { useAccountsOwnershipData } from "./hooks/useAccountsOwnershipData";

@@ -1,4 +1,5 @@
 import { CheckCircle, ShieldAlert, Tag, FileWarning } from "lucide-react";
+
 import { formatCurrency } from "../utils/format.js";
 
 const getBadge = (issues) => {

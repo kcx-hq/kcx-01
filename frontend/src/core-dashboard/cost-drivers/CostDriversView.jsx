@@ -1,5 +1,5 @@
 // apps/frontend/src/features/costDrivers/views/CostDriversView.jsx
-import React from 'react';
+import { AnimatePresence, motion } from 'framer-motion';
 import {
   TrendingUp,
   Filter,
@@ -14,14 +14,14 @@ import {
   Loader2,
   Crown,
 } from 'lucide-react';
-import { AnimatePresence, motion } from 'framer-motion';
+import React from 'react';
 import { ResponsiveContainer, Treemap } from 'recharts';
 
-import { formatCurrency, formatDate } from './utils/format';
-import { PERIOD_OPTIONS } from './utils/constants';
+import { DriverDetailsDrawer } from './components/DriverDetailsDrawer';
 import { DriversList } from './components/DriversList';
 import { VarianceBridge } from './components/VarianceBridge';
-import { DriverDetailsDrawer } from './components/DriverDetailsDrawer';
+import { PERIOD_OPTIONS } from './utils/constants';
+import { formatCurrency, formatDate } from './utils/format';
 
 /**
  * Pure View component:

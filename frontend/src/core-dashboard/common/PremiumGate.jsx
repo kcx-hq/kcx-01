@@ -1,6 +1,6 @@
 // frontend/core/dashboards/overview/data-explorer/components/PremiumGate.jsx
-import React from "react";
 import { Crown, Lock } from "lucide-react";
+import React from "react";
 
 /**
  * PremiumGate

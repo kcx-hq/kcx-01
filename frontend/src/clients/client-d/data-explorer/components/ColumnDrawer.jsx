@@ -1,7 +1,7 @@
 // frontend/clients/client-d/dashboards/overview/data-explorer/components/ColumnsDrawer.jsx
-import React from "react";
-import { X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { X } from "lucide-react";
+import React from "react";
 
 const ColumnsDrawer = ({ open, onClose, allColumns, hiddenColumns, toggleColumn, searchTerm }) => {
   return (

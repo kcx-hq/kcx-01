@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+
 import { buildAccountsParams, normalizeAccountsResponse } from "../utils/buildParams";
 
 export function useAccountsOwnershipData({ api, caps, debouncedFilters, uploadId }) {
@@ -46,7 +47,7 @@ export function useAccountsOwnershipData({ api, caps, debouncedFilters, uploadId
         if (err?.code === "NOT_SUPPORTED") return;
         if (err?.name === "AbortError") return;
 
-        // eslint-disable-next-line no-console
+         
         console.error("Error fetching accounts data:", err);
 
         if (err?.response?.status === 401) {

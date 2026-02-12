@@ -1,11 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { 
   UserPlus, UploadCloud, LayoutDashboard, 
   ArrowRight, Zap, FileSpreadsheet, CheckCircle2,
   BarChart3
 } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
 
 const HowItWorks = ({ activateCTA = () => {} }) => {
   const [activeTab, setActiveTab] = useState(1);
