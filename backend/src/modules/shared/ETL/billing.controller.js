@@ -20,9 +20,10 @@ export async function uploadBillingCsv(req, res) {
   try {
     /* 1) Fast flag check */
     const hasUploadedFlag = req.user?.has_uploaded;
+    const isPremiumFlag = req.user?.is_premium;
     mark("after read has_uploaded flag");
 
-    if (hasUploadedFlag === true) {
+    if ( !isPremiumFlag && hasUploadedFlag ) {
       return res
         .status(403)
         .json({ message: "Free tier allows only one upload" });
@@ -36,14 +37,14 @@ export async function uploadBillingCsv(req, res) {
       // Fallback DB check (only if flag missing)
       if (hasUploadedFlag === undefined) {
         const userRow = await User.findByPk(req.user.id, {
-          attributes: ["has_uploaded"],
+          attributes: ["has_uploaded" , "is_premium"],
           transaction: t,
           lock: t.LOCK.UPDATE,
         });
 
         if (!userRow) throw new Error("User not found");
 
-        if (userRow.has_uploaded) {
+        if (!userRow.is_premium && userRow.has_uploaded) {
           const err = new Error("Free tier allows only one upload");
           err.statusCode = 403;
           throw err;

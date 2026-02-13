@@ -215,7 +215,7 @@ export const signIn = async (req, res) => {
     }
 
     /* 5. Generate JWT */
-    const payload = { id: user.id, role: user.role, client_id: user.client_id  , has_uploaded: user.has_uploaded};
+    const payload = { id: user.id, role: user.role, client_id: user.client_id  , has_uploaded: user.has_uploaded , is_premium : user.is_premium };
     const token = generateJWT(payload);
 
     mark("after generate jwt");
