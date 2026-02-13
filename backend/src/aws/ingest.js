@@ -39,9 +39,11 @@ async function ingest() {
         Key: s3Key,
       })
     );
-
-    const gunzip = createGunzip();
-    const stream = response.Body.pipe(gunzip).pipe(csv());
+    const isGzip = s3Key.toLowerCase().endsWith(".gz");
+    const inputStream = isGzip
+      ? response.Body.pipe(createGunzip())
+      : response.Body;
+    const stream = inputStream.pipe(csv());
 
     let insertCount = 0;
 
@@ -68,3 +70,5 @@ async function ingest() {
 }
 
 ingest();
+
+
