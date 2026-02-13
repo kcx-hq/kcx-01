@@ -1,0 +1,70 @@
+import { S3Client, GetObjectCommand } from "@aws-sdk/client-s3";
+import { createGunzip } from "zlib";
+import csv from "csv-parser";
+import assumeRole from "./assumeRole.js";
+import RawAwsBillingRow from "../models/RawAwsBillingRow.js";
+import sequelize from "../config/db.config.js";
+
+async function ingest() {
+  try {
+    const s3Key = process.argv[2];
+
+    if (!s3Key) {
+      console.error("❌ Please provide S3 key as argument.");
+      console.log(
+        "Usage: node src/aws/ingest.js demo/kcx-msu/data/.../file.csv.gz"
+      );
+      process.exit(1);
+    }
+
+    console.log("🔐 Assuming role...");
+    const creds = await assumeRole();
+
+    const s3 = new S3Client({
+      region: "ap-south-1",
+      credentials: {
+        accessKeyId: creds.accessKeyId,
+        secretAccessKey: creds.secretAccessKey,
+        sessionToken: creds.sessionToken,
+      },
+    });
+
+    const Bucket = "kcx-msu-billing";
+
+    console.log("📥 Fetching object:", s3Key);
+
+    const response = await s3.send(
+      new GetObjectCommand({
+        Bucket,
+        Key: s3Key,
+      })
+    );
+
+    const gunzip = createGunzip();
+    const stream = response.Body.pipe(gunzip).pipe(csv());
+
+    let insertCount = 0;
+
+    for await (const row of stream) {
+      await RawAwsBillingRow.create({
+        source_s3_key: s3Key,
+        row_data: row,
+      });
+
+      insertCount++;
+    }
+
+    console.log(`✅ Ingestion complete. Inserted ${insertCount} rows.`);
+
+    await sequelize.close();
+    process.exit(0);
+  } catch (err) {
+    console.error("❌ Ingestion failed:");
+    console.error(err);
+
+    await sequelize.close();
+    process.exit(1);
+  }
+}
+
+ingest();
