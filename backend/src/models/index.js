@@ -19,6 +19,7 @@ import BillingDetectedColumn from "./billingDectectedColumn.model.js";
 import MappingSuggestion from "./mappingSuggestion.model.js"
 import ChatSession from "./chatbot/ChatSession.model.js";
 import ChatMessage from "./chatbot/ChatMessage.model.js";
+import RawAwsBillingRow from "./rawBillingRaw.model.js";
 /* =========================
 
 
@@ -149,4 +150,5 @@ export {
   MappingSuggestion,
   ChatSession,
   ChatMessage,
+  RawAwsBillingRow
 };
