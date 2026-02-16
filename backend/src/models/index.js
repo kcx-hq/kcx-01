@@ -20,16 +20,18 @@ import MappingSuggestion from "./mappingSuggestion.model.js"
 import ChatSession from "./chatbot/ChatSession.model.js";
 import ChatMessage from "./chatbot/ChatMessage.model.js";
 import RawAwsBillingRow from "./rawBillingRaw.model.js";
+import ClientS3Integrations from "./clientS3Intergration.model.js";
+
 /* =========================
-
-
-
    Define Associations
 ========================= */
 
 // Client ↔ User
 Client.hasMany(User, { foreignKey: 'client_id', as: 'users' });
 User.belongsTo(Client, { foreignKey: 'client_id', as: 'client' });
+
+Client.hasMany(ClientS3Integrations, { foreignKey: 'clientid', as: 'client_s3_integrations' });
+ClientS3Integrations.belongsTo(Client, { foreignKey: 'clientid', as: 'client' });
 
 Client.hasMany(BillingColumnMapping, {
   foreignKey: 'clientid',
@@ -150,5 +152,6 @@ export {
   MappingSuggestion,
   ChatSession,
   ChatMessage,
-  RawAwsBillingRow
+  RawAwsBillingRow,
+  ClientS3Integrations
 };
