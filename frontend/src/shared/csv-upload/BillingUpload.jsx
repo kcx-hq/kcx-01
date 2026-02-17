@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import {  useNavigate } from "react-router-dom";
 import axios from "axios";
+// eslint-disable-next-line no-unused-vars
 import { motion, AnimatePresence } from "framer-motion";
 import {
   FileText,
@@ -29,6 +30,7 @@ const BillingUploads = () => {
   const toggleUploadId = useDashboardStore((s) => s.toggleUploadId);
   const clearUploadIds = useDashboardStore((s) => s.clearUploadIds);
   const setUploadIds = useDashboardStore((s) => s.setUploadIds);
+  const setSelectedUploads = useDashboardStore((s) => s.setSelectedUploads);
   const dashboardPath = useDashboardStore((s) => s.dashboardPath);
   const formatBytes = (bytes) => {
     if (bytes == null) return "—";
@@ -98,6 +100,29 @@ const BillingUploads = () => {
     fetchUploads();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useEffect(() => {
+    if (!uploadIds.length) {
+      setSelectedUploads([]);
+      return;
+    }
+
+    if (!uploads.length) return;
+
+    const uploadsById = new Map(uploads.map((u) => [u.uploadid, u]));
+    const selectedMeta = uploadIds
+      .map((id) => {
+        const row = uploadsById.get(id);
+        if (!row) return null;
+        return {
+          uploadId: id,
+          filename: row.filename || "",
+        };
+      })
+      .filter(Boolean);
+
+    setSelectedUploads(selectedMeta);
+  }, [uploadIds, uploads, setSelectedUploads]);
 
   // ✅ filter rows by query
   const filteredUploads = useMemo(() => {
@@ -181,7 +206,7 @@ const BillingUploads = () => {
               onClick={() => navigate("/upload-csv-file-input")}
               className="px-5 py-3 rounded-xl bg-white/10 hover:bg-white/20 text-white font-semibold transition-colors"
             >
-              Upload another file
+              Upload more/Connect Cloud
             </button>
             <button
               onClick={fetchUploads}
