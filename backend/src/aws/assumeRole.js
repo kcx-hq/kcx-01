@@ -1,14 +1,15 @@
 import dotenv from "dotenv";
-dotenv.config({
-  path: `.env.${process.env.NODE_ENV || "development"}`
-});
-
 import { STSClient, AssumeRoleCommand } from "@aws-sdk/client-sts";
 
+dotenv.config({
+  path: `.env.${process.env.NODE_ENV || "development"}`,
+});
+
 /**
- * Assumes KCX role using base IAM user credentials
+ * Assumes AWS role using base IAM user credentials.
+ * Supports runtime overrides for role/session/region to enable UI-driven checks.
  */
-export default async function assumeRole() {
+export default async function assumeRole(options = {}) {
   try {
     const {
       AWS_REGION,
@@ -18,16 +19,20 @@ export default async function assumeRole() {
       AWS_ASSUME_ROLE_SESSION_NAME,
     } = process.env;
 
-    // Hard guardrails
-    if (!AWS_REGION) throw new Error("AWS_REGION missing");
+    const region = options.region || AWS_REGION;
+    const roleArn = options.roleArn || AWS_ASSUME_ROLE_ARN;
+    const roleSessionName =
+      options.sessionName ||
+      AWS_ASSUME_ROLE_SESSION_NAME ||
+      `kcx-session-${Date.now()}`;
+
+    if (!region) throw new Error("AWS_REGION missing");
     if (!AWS_ACCESS_KEY_ID) throw new Error("AWS_ACCESS_KEY_ID missing");
     if (!AWS_SECRET_ACCESS_KEY) throw new Error("AWS_SECRET_ACCESS_KEY missing");
-    if (!AWS_ASSUME_ROLE_ARN) throw new Error("AWS_ASSUME_ROLE_ARN missing");
-    if (!AWS_ASSUME_ROLE_SESSION_NAME)
-      throw new Error("AWS_ASSUME_ROLE_SESSION_NAME missing");
+    if (!roleArn) throw new Error("Role ARN missing");
 
     const stsClient = new STSClient({
-      region: AWS_REGION,
+      region,
       credentials: {
         accessKeyId: AWS_ACCESS_KEY_ID,
         secretAccessKey: AWS_SECRET_ACCESS_KEY,
@@ -35,8 +40,8 @@ export default async function assumeRole() {
     });
 
     const command = new AssumeRoleCommand({
-      RoleArn: AWS_ASSUME_ROLE_ARN,
-      RoleSessionName: AWS_ASSUME_ROLE_SESSION_NAME,
+      RoleArn: roleArn,
+      RoleSessionName: roleSessionName,
     });
 
     const response = await stsClient.send(command);
@@ -46,9 +51,10 @@ export default async function assumeRole() {
       secretAccessKey: response.Credentials.SecretAccessKey,
       sessionToken: response.Credentials.SessionToken,
       expiration: response.Credentials.Expiration,
+      assumedRoleArn: response.AssumedRoleUser?.Arn || roleArn,
     };
   } catch (err) {
-    console.error("ASSUME ROLE FAILED ❌");
+    console.error("ASSUME ROLE FAILED");
     throw err;
   }
 }

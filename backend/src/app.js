@@ -10,6 +10,7 @@ import cors from 'cors';
 import coreDashboardRoutes from './modules/core-dashboard/core-dashboard.routes.js';
 import capabililitesRoutes from './modules/shared/capabilities/capabilities.routes.js';
 import chatbotRoutes from './modules/shared/chatbot/chat.routes.js'
+import cloudRoutes from "./modules/shared/cloud/cloud.route.js";
 
 import getClientDashboardRoutes from './modules/clients/index.js'
 dotenv.config({
@@ -55,6 +56,7 @@ app.use('/api/etl' , etlRoutes )
 app.use('/api/capabililites' , capabililitesRoutes )
 app.use('/api/dashboard', coreDashboardRoutes);
 app.use('/api/chatbot' , chatbotRoutes)
+app.use("/api/cloud", cloudRoutes);
 
 getClientDashboardRoutes(app);
 

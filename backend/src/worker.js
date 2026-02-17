@@ -30,10 +30,10 @@ async function main() {
       console.log("\n🔁 Poll cycle started");
 
       await pollClient({
-        clientid: "e757b872-9f72-45d0-9003-f48247a580c5",
+        clientid: "215eff15-bd75-44d0-bf06-ffee9122f38c",
         Bucket: "kcx-msu-billing",
         prefix: "demo/kcx-msu/data/test",
-        uploadedby: "f978b633-2075-4670-a4ec-778eb8f7f903",
+        uploadedby: "1f614495-beff-4f27-aa0f-7fff246a8dfa",
       });
 
       console.log("✅ Poll cycle done");
