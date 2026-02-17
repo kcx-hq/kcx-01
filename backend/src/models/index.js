@@ -72,6 +72,7 @@ BillingUpload.belongsTo(Client, { foreignKey: 'clientid', as: 'client' });
 User.hasMany(BillingUpload, { foreignKey: 'uploadedby', as: 'uploadedBillingFiles' });
 BillingUpload.belongsTo(User, { foreignKey: 'uploadedby', as: 'uploadedBy' });
 
+
 // BillingUpload ↔ BillingUsageFact
 BillingUpload.hasMany(BillingUsageFact, { foreignKey: 'uploadid', as: 'usageRecords' });
 BillingUsageFact.belongsTo(BillingUpload, { foreignKey: 'uploadid', as: 'upload' });

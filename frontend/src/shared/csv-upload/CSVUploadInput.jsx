@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import {
@@ -8,6 +8,7 @@ import {
   Cloud,
   ShieldCheck,
   Link2,
+  ArrowLeft,
 } from "lucide-react";
 // eslint-disable-next-line no-unused-vars
 import { motion, AnimatePresence } from "framer-motion";
@@ -37,8 +38,22 @@ const CsvUploadInput = ({
   const [cloudStatus, setCloudStatus] = useState("idle"); // idle | testing | tested | connecting | connected | error
   const [cloudMessage, setCloudMessage] = useState("");
   const [cloudPreview, setCloudPreview] = useState(null);
+  const [hasExistingUploads, setHasExistingUploads] = useState(false);
   const setUploadIds = useDashboardStore((s) => s.setUploadIds);
   const dashboardPath = useDashboardStore((s) => s.dashboardPath);
+
+  const formatDateTime = (value) => {
+    if (!value) return "--";
+    const d = new Date(value);
+    if (Number.isNaN(d.getTime())) return String(value);
+    return d.toLocaleString(undefined, {
+      year: "numeric",
+      month: "short",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  };
 
   const validate = (file) => {
     if (!file) return "No file selected.";
@@ -46,6 +61,23 @@ const CsvUploadInput = ({
     if (file.size > MAX_MB * 1024 * 1024) return `File exceeds ${MAX_MB}MB limit.`;
     return "";
   };
+
+  useEffect(() => {
+    const checkExistingUploads = async () => {
+      try {
+        const res = await axios.get(
+          `${import.meta.env.VITE_API_URL}/api/etl/get-billing-uploads`,
+          { withCredentials },
+        );
+        const uploads = Array.isArray(res.data) ? res.data : [];
+        setHasExistingUploads(uploads.length > 0);
+      } catch {
+        setHasExistingUploads(false);
+      }
+    };
+
+    checkExistingUploads();
+  }, [withCredentials]);
 
   const uploadFile = async (file) => {
     const msg = validate(file);
@@ -151,16 +183,18 @@ const CsvUploadInput = ({
         );
 
         const data = res?.data || {};
-        const sample = Array.isArray(data.sampleKeys) ? data.sampleKeys.length : 0;
+        const latestFileKey = data?.latestFile?.key || "";
         setCloudStatus("tested");
         setCloudMessage(
-          `Assumption success. Bucket "${data.bucket}" verified with ${sample} sample object(s).`,
+          latestFileKey
+            ? `Assumption success. Latest file detected under "${data.bucket}".`
+            : `Assumption success. Connected to "${data.bucket}", but no file found for this prefix.`,
         );
         setCloudPreview({
           assumedRoleArn: data.assumedRoleArn || "",
           bucket: data.bucket || "",
           prefix: data.prefix || "",
-          sampleKeys: Array.isArray(data.sampleKeys) ? data.sampleKeys : [],
+          latestFile: data.latestFile || null,
         });
       } catch (err) {
         const msg =
@@ -187,6 +221,19 @@ const CsvUploadInput = ({
       <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-blue-600/10 rounded-full blur-[120px] pointer-events-none mix-blend-screen" />
 
       <div className="relative z-10 w-full max-w-3xl">
+        {hasExistingUploads ? (
+          <div className="flex justify-end mb-4">
+            <button
+              type="button"
+              onClick={() => navigate("/billing-uploads")}
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white/5 border border-white/10 text-gray-200 hover:bg-white/10 hover:border-[#a02ff1]/35 transition"
+            >
+              <ArrowLeft className="w-4 h-4 text-[#a02ff1]" />
+              <span className="text-sm font-semibold">Back to Billing Uploads</span>
+            </button>
+          </div>
+        ) : null}
+
         <div className="text-center mb-10">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 text-[#a02ff1] text-xs font-bold uppercase tracking-wider mb-4">
             <span className="w-2 h-2 rounded-full bg-[#a02ff1]"></span>
@@ -341,26 +388,26 @@ const CsvUploadInput = ({
 
                     <div>
                       <label className="text-xs uppercase tracking-wider text-gray-400 font-semibold">
-                        RoleName
+                        Role Name
                       </label>
                       <input
                         type="text"
                         value={cloudForm.roleName}
                         onChange={(e) => updateCloudField("roleName", e.target.value)}
-                        placeholder="csv-download"
+                        placeholder="role name e.g. MyBillingAccessRole"
                         className="mt-2 w-full px-4 py-3 rounded-xl bg-[#0f0f11] border border-white/10 text-white placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-[#a02ff1]/40 focus:border-[#a02ff1]/50"
                       />
                     </div>
 
                     <div>
                       <label className="text-xs uppercase tracking-wider text-gray-400 font-semibold">
-                        Bucket + Prefix (exact)
+                        Bucket Prefix
                       </label>
                       <input
                         type="text"
                         value={cloudForm.bucketPrefix}
                         onChange={(e) => updateCloudField("bucketPrefix", e.target.value)}
-                        placeholder="kcx-msu-billing/demo/kcx-msu/data/"
+                        placeholder="bucket_Name/demo/data/billing"
                         className="mt-2 w-full px-4 py-3 rounded-xl bg-[#0f0f11] border border-white/10 text-white placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-[#a02ff1]/40 focus:border-[#a02ff1]/50"
                       />
                       <p className="mt-1 text-[11px] text-gray-500">
@@ -419,21 +466,30 @@ const CsvUploadInput = ({
                   {cloudStatus === "tested" && cloudPreview ? (
                     <div className="mt-3 p-3 rounded-xl border border-[#a02ff1]/20 bg-[#a02ff1]/5">
                       <p className="text-[11px] font-semibold text-[#d7b0ff] mb-2">
-                        Demo Preview: AWS access snapshot
+                        Demo Preview: Latest file snapshot
                       </p>
                       <p className="text-[11px] text-gray-400 mb-2">
                         {cloudPreview.bucket}
                         {cloudPreview.prefix ? `/${cloudPreview.prefix}` : ""}
                       </p>
-                      <div className="space-y-1 max-h-24 overflow-auto pr-1">
-                        {cloudPreview.sampleKeys.length > 0 ? (
-                          cloudPreview.sampleKeys.map((key, idx) => (
-                            <p key={`${key}-${idx}`} className="text-[11px] text-gray-300 truncate" title={key}>
-                              {idx + 1}. {key}
+                      <div className="space-y-1">
+                        {cloudPreview.latestFile?.key ? (
+                          <>
+                            <p
+                              className="text-[11px] text-gray-200 truncate"
+                              title={cloudPreview.latestFile.key}
+                            >
+                              File: {cloudPreview.latestFile.key}
                             </p>
-                          ))
+                            <p className="text-[11px] text-gray-400">
+                              Last modified:{" "}
+                              {formatDateTime(cloudPreview.latestFile.lastModified)}
+                            </p>
+                          </>
                         ) : (
-                          <p className="text-[11px] text-gray-500">No objects found for this prefix.</p>
+                          <p className="text-[11px] text-gray-500">
+                            No file object found for this prefix.
+                          </p>
                         )}
                       </div>
                     </div>
