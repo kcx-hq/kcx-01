@@ -1,71 +1,71 @@
-import React from 'react';
-import { Trash2, AlertTriangle } from 'lucide-react';
-import { formatCurrency } from '../utils/format';
+import React from "react";
+import { Trash2, AlertTriangle } from "lucide-react";
+import { formatCurrency } from "../utils/format";
 
 const ZombieListView = ({ data, onInspect }) => {
-  const zombies = data.filter((i) => i.status === 'Zombie');
+  const zombies = data.filter((i) => i.status === "Zombie");
   const potentialSavings = zombies.reduce((acc, curr) => acc + (curr.totalCost || 0), 0);
 
   return (
-    <div className="space-y-6">
-      <div className="bg-gradient-to-r from-orange-900/40 to-red-900/40 border border-orange-500/30 p-6 rounded-2xl flex items-center justify-between shadow-lg">
-        <div className="flex items-center gap-5">
-          <div className="p-4 bg-orange-500/20 rounded-full text-orange-400 border border-orange-500/20">
-            <Trash2 size={32} />
+    <div className="space-y-4 p-3 md:space-y-6 md:p-4">
+      <div className="flex flex-col justify-between gap-5 rounded-2xl border border-amber-200 bg-gradient-to-r from-amber-50 to-orange-50 p-4 md:flex-row md:items-center md:p-6">
+        <div className="flex items-center gap-4 md:gap-5">
+          <div className="rounded-full border border-amber-200 bg-white p-3 text-amber-700 md:p-4">
+            <Trash2 size={28} />
           </div>
           <div>
-            <h3 className="text-xl font-bold text-white mb-1">Cleanup Opportunity</h3>
-            <p className="text-sm text-gray-400">
-              <strong className="text-white">{zombies.length}</strong> resources identified as potential
-              zombies (Zero usage, high cost).
+            <h3 className="mb-1 text-lg font-black text-[var(--text-primary)] md:text-xl">Cleanup Opportunity</h3>
+            <p className="text-sm text-[var(--text-secondary)]">
+              <strong className="text-[var(--text-primary)]">{zombies.length}</strong> resources identified as potential
+              zombies (zero usage, high cost).
             </p>
           </div>
         </div>
-        <div className="text-right">
-          <p className="text-xs text-orange-300 uppercase font-bold tracking-wider mb-1">
+        <div className="text-left md:text-right">
+          <p className="mb-1 text-xs font-bold uppercase tracking-wider text-amber-700">
             Potential Monthly Savings
           </p>
-          <p className="text-4xl font-mono font-black text-orange-400">
+          <p className="font-mono text-3xl font-black text-amber-700 md:text-4xl">
             {formatCurrency(potentialSavings)}
           </p>
         </div>
       </div>
 
-      <div className="bg-[#1a1b20] border border-white/10 rounded-xl overflow-hidden shadow-lg">
-        <table className="w-full text-left text-xs">
-          <thead className="bg-[#15161a] text-gray-500 font-bold uppercase">
+      <div className="overflow-x-auto rounded-xl border border-[var(--border-light)] bg-white">
+        <table className="min-w-[760px] w-full text-left text-xs">
+          <thead className="bg-[var(--bg-surface)] font-bold uppercase text-[var(--text-muted)]">
             <tr>
-              <th className="px-6 py-4">Resource Identifier</th>
-              <th className="px-6 py-4">Detection Logic</th>
-              <th className="px-6 py-4 text-right">Cost Impact</th>
-              <th className="px-6 py-4 text-right">Action</th>
+              <th className="px-4 py-4 md:px-6">Resource Identifier</th>
+              <th className="px-4 py-4 md:px-6">Detection Logic</th>
+              <th className="px-4 py-4 text-right md:px-6">Cost Impact</th>
+              <th className="px-4 py-4 text-right md:px-6">Action</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-white/5">
+          <tbody className="divide-y divide-[var(--border-muted)]">
             {zombies.map((item) => (
-              <tr key={item.id} className="hover:bg-white/5 transition-colors group">
-                <td className="px-6 py-4">
-                  <div className="font-bold text-white truncate max-w-[300px] group-hover:text-orange-400 transition-colors">
+              <tr key={item.id} className="group transition-colors hover:bg-[var(--bg-surface)]">
+                <td className="px-4 py-4 md:px-6">
+                  <div className="max-w-[320px] truncate font-bold text-[var(--text-primary)] transition-colors group-hover:text-amber-700">
                     {item.id}
                   </div>
-                  <div className="text-[10px] text-gray-500 flex gap-2 mt-1">
-                    <span className="bg-white/5 px-1.5 rounded">{item.service}</span>
+                  <div className="mt-1 flex gap-2 text-[10px] text-[var(--text-muted)]">
+                    <span className="rounded bg-[var(--bg-soft)] px-1.5">{item.service}</span>
                     <span>{item.region}</span>
                   </div>
                 </td>
-                <td className="px-6 py-4">
+                <td className="px-4 py-4 md:px-6">
                   <div className="flex items-center gap-2">
-                    <AlertTriangle size={14} className="text-orange-500" />
-                    <span className="text-gray-300">0% Utilization / Idle</span>
+                    <AlertTriangle size={14} className="text-amber-600" />
+                    <span className="text-[var(--text-secondary)]">0% Utilization / Idle</span>
                   </div>
                 </td>
-                <td className="px-6 py-4 text-right font-mono font-bold text-white">
+                <td className="px-4 py-4 text-right font-mono font-bold text-[var(--text-primary)] md:px-6">
                   {formatCurrency(item.totalCost)}
                 </td>
-                <td className="px-6 py-4 text-right">
+                <td className="px-4 py-4 text-right md:px-6">
                   <button
                     onClick={() => onInspect(item)}
-                    className="px-4 py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-white font-bold transition-colors"
+                    className="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-2 font-bold text-[var(--brand-primary)] transition-colors hover:bg-emerald-100"
                   >
                     Inspect
                   </button>
@@ -74,7 +74,7 @@ const ZombieListView = ({ data, onInspect }) => {
             ))}
             {zombies.length === 0 && (
               <tr>
-                <td colSpan="4" className="p-10 text-center text-gray-500 italic">
+                <td colSpan="4" className="p-10 text-center italic text-[var(--text-muted)]">
                   No zombie resources detected. Infrastructure is clean.
                 </td>
               </tr>

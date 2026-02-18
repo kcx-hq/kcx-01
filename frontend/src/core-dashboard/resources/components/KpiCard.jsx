@@ -1,57 +1,71 @@
-import React from 'react';
-import { formatCurrency } from '../utils/format';
+import React from "react";
+import { formatCurrency } from "../utils/format";
+
+const toneStyles = {
+  neutral: {
+    icon: "border-emerald-100 bg-emerald-50 text-[var(--brand-primary)]",
+    active: "border-emerald-200 bg-emerald-50/60",
+  },
+  warning: {
+    icon: "border-amber-200 bg-amber-50 text-amber-700",
+    active: "border-amber-200 bg-amber-50/60",
+  },
+  critical: {
+    icon: "border-rose-200 bg-rose-50 text-rose-700",
+    active: "border-rose-200 bg-rose-50/60",
+  },
+  info: {
+    icon: "border-sky-200 bg-sky-50 text-sky-700",
+    active: "border-sky-200 bg-sky-50/60",
+  },
+};
 
 const KpiCard = ({
   title,
   count,
   cost,
   icon: Icon,
-  color,
+  tone = "neutral",
   isActive,
   onClick,
   label,
-}) => (
-  <div
-    onClick={onClick}
-    className={`relative p-4 rounded-2xl border cursor-pointer transition-all duration-200 group overflow-hidden ${
-      isActive
-        ? `bg-${color}-500/10 border-${color}-500/50 shadow-[0_0_20px_rgba(0,0,0,0.3)]`
-        : 'bg-[#1a1b20] border-white/10 hover:bg-[#25262b] hover:border-white/20'
-    }`}
-  >
-    <div className="flex justify-between items-start mb-2 relative z-10">
-      <div
-        className={`p-2 rounded-lg ${
-          isActive
-            ? `bg-${color}-500/20 text-${color}-400`
-            : 'bg-black/40 text-gray-400 group-hover:text-white'
-        }`}
-      >
-        <Icon size={18} />
-      </div>
-      <span className={`text-2xl font-black ${isActive ? 'text-white' : 'text-gray-200'}`}>
-        {count}
-      </span>
-    </div>
+}) => {
+  const style = toneStyles[tone] || toneStyles.neutral;
 
-    <div className="relative z-10">
-      <p
-        className={`text-xs font-bold uppercase tracking-wider ${
-          isActive ? `text-${color}-400` : 'text-gray-500'
-        }`}
-      >
-        {title}
-      </p>
-      <div className="flex items-center gap-1.5 mt-1">
-        <span className="text-xs font-mono text-gray-300">{formatCurrency(cost)}</span>
-        <span className="text-[10px] text-gray-600">{label}</span>
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`group relative w-full overflow-hidden rounded-2xl border p-4 text-left transition-all duration-200 ${
+        isActive
+          ? `${style.active} shadow-[0_12px_26px_-18px_rgba(0,119,88,0.4)]`
+          : "border-[var(--border-light)] bg-white hover:-translate-y-0.5 hover:border-emerald-200 hover:shadow-sm"
+      }`}
+    >
+      <div className="mb-2 flex items-start justify-between">
+        <div className={`rounded-xl border p-2 ${style.icon}`}>
+          <Icon size={18} />
+        </div>
+        <span className="text-2xl font-black tracking-tight text-[var(--text-primary)]">
+          {count}
+        </span>
       </div>
-    </div>
 
-    {isActive && (
-      <div className={`absolute -right-4 -bottom-4 w-24 h-24 bg-${color}-500/10 blur-[40px] rounded-full`} />
-    )}
-  </div>
-);
+      <div>
+        <p className="text-xs font-bold uppercase tracking-wider text-[var(--text-muted)]">
+          {title}
+        </p>
+        <div className="mt-1 flex items-center gap-1.5">
+          <span className="font-mono text-xs text-[var(--text-secondary)]">{formatCurrency(cost)}</span>
+          <span className="text-[10px] text-[var(--text-muted)]">{label}</span>
+        </div>
+      </div>
+
+      {isActive && (
+        <div className="pointer-events-none absolute -bottom-4 -right-4 h-20 w-20 rounded-full bg-emerald-200/40 blur-2xl" />
+      )}
+    </button>
+  );
+};
 
 export default KpiCard;

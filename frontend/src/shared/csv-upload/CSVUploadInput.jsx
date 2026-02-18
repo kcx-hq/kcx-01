@@ -1,7 +1,7 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
-import { Upload, FileText, AlertCircle } from "lucide-react";
+import { Upload, FileText, AlertCircle, X, CheckCircle2, FileUp } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useDashboardStore } from "../../store/Dashboard.store";
 
@@ -9,13 +9,14 @@ const MAX_MB = 50;
 
 const CsvUploadInput = () => {
   const navigate = useNavigate();
+  const fileInputRef = useRef(null);
 
-  // Use VITE_API_URL if uploadUrl is not provided
   const finalUploadUrl = `${import.meta.env.VITE_API_URL}/api/etl`;
 
   const [status, setStatus] = useState("idle"); // idle | uploading | error
   const [errorMessage, setErrorMessage] = useState("");
   const [fileDetails, setFileDetails] = useState(null);
+  const [isDragging, setIsDragging] = useState(false);
 
   const setUploadIds = useDashboardStore((s) => s.setUploadIds);
   const dashboardPath = useDashboardStore((s) => s.dashboardPath);
@@ -53,29 +54,36 @@ const CsvUploadInput = () => {
       });
 
       setUploadIds([res.data.uploadId] || []);
-      navigate(dashboardPath);
+      
+      // Small delay to show 100% state
+      setTimeout(() => {
+         navigate(dashboardPath);
+      }, 800);
+      
     } catch (err) {
+      console.error(err);
       let msg2 = "Upload failed.";
-
-      if (err?.response) {
-        msg2 =
-          err.response.data?.error ||
-          err.response.data?.message ||
-          err.response.data?.details ||
-          `Server error (${err.response.status}).`;
-      } else if (err?.request) {
-        msg2 = "Cannot connect to backend server.";
-      } else if (err?.message) {
-        msg2 = err.message;
-      }
-
+      if (err?.response?.data?.message) msg2 = err.response.data.message;
+      else if (err?.message) msg2 = err.message;
+      
       setStatus("error");
       setErrorMessage(msg2);
     }
   };
 
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e) => {
+    e.preventDefault();
+    setIsDragging(false);
+  };
+
   const handleDrop = (e) => {
     e.preventDefault();
+    setIsDragging(false);
     const file = e.dataTransfer.files?.[0];
     uploadFile(file);
   };
@@ -86,98 +94,93 @@ const CsvUploadInput = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#0f0f11] flex items-center justify-center px-6 py-12 font-sans relative overflow-hidden">
-      {/* background (kept subtle + on-brand) */}
-      <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:40px_40px] pointer-events-none" />
-      <div className="absolute top-0 left-1/4 w-96 h-96 rounded-full blur-[120px] pointer-events-none mix-blend-screen opacity-20"
-        style={{ backgroundColor: "var(--brand-secondary)" }}
+    <div className="min-h-screen bg-[#F7F8F7] flex items-center justify-center px-4 py-12 font-sans relative overflow-hidden">
+      
+      {/* ================= BACKGROUND GRID ================= */}
+      <div 
+        className="absolute inset-0 pointer-events-none opacity-60"
+        style={{
+          backgroundImage: `
+            linear-gradient(to right, rgba(0, 0, 0, 0.04) 1px, transparent 1px),
+            linear-gradient(to bottom, rgba(0, 0, 0, 0.04) 1px, transparent 1px)
+          `,
+          backgroundSize: "40px 40px",
+        }}
       />
-      <div className="absolute bottom-0 right-1/4 w-96 h-96 rounded-full blur-[120px] pointer-events-none mix-blend-screen opacity-15"
-        style={{ backgroundColor: "var(--brand-secondary)" }}
-      />
+      
+      {/* Decorative Glows */}
+      <div className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] bg-[var(--brand-primary)] rounded-full blur-[120px] opacity-10" />
+      <div className="absolute bottom-[-10%] right-[-10%] w-[500px] h-[500px] bg-[#0C4A6E] rounded-full blur-[120px] opacity-5" />
 
-      <div className="relative z-10 w-full max-w-3xl">
+      <div className="relative z-10 w-full max-w-2xl">
+        
+        {/* HEADER */}
         <div className="text-center mb-10">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 text-[var(--brand-secondary)] text-xs font-bold uppercase tracking-wider mb-4">
-            <span
-              className="w-2 h-2 rounded-full"
-              style={{ backgroundColor: "var(--brand-secondary)" }}
-            />
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white border border-slate-200 text-[var(--brand-primary)] text-xs font-bold uppercase tracking-wider mb-4 shadow-sm">
+            <span className="w-2 h-2 rounded-full bg-[var(--brand-primary)] animate-pulse" />
             Secure Ingestion
           </div>
 
-          <h1 className="text-4xl md:text-5xl font-bold text-white mb-4 tracking-tight">
+          <h1 className="text-3xl md:text-4xl font-bold text-[#192630] mb-3 tracking-tight">
             Upload Billing CSV
           </h1>
-          <p className="text-gray-400 text-lg max-w-xl mx-auto leading-relaxed">
-            Upload your billing export (CSV) to generate instant cost intelligence.
+          <p className="text-slate-500 text-lg max-w-lg mx-auto leading-relaxed">
+            Drag and drop your billing export here to generate instant cost intelligence.
           </p>
         </div>
 
+        {/* UPLOAD CARD */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-[#111113] border border-white/10 rounded-3xl overflow-hidden shadow-2xl relative"
+          className="bg-white border border-slate-200/60 rounded-3xl overflow-hidden shadow-xl shadow-slate-200/50 relative"
         >
-          <div className="p-10 min-h-[420px] flex flex-col items-center justify-center">
+          <div className="p-8 md:p-12 min-h-[400px] flex flex-col items-center justify-center">
+            
             <AnimatePresence mode="wait">
               {status === "uploading" ? (
+                /* LOADING STATE */
                 <motion.div
                   key="uploading"
-                  initial={{ opacity: 0, scale: 0.97 }}
+                  initial={{ opacity: 0, scale: 0.95 }}
                   animate={{ opacity: 1, scale: 1 }}
                   exit={{ opacity: 0 }}
-                  className="flex flex-col items-center justify-center w-full"
+                  className="flex flex-col items-center justify-center w-full max-w-md text-center"
                 >
-                  <div className="relative w-24 h-24 mb-8">
-                    <svg
-                      className="animate-spin w-full h-full"
-                      style={{ color: "var(--brand-secondary)" }}
-                      viewBox="0 0 24 24"
-                    >
-                      <circle
-                        className="opacity-25"
-                        cx="12"
-                        cy="12"
-                        r="10"
-                        stroke="currentColor"
-                        strokeWidth="4"
-                        fill="none"
-                      />
-                      <path
-                        className="opacity-75"
-                        fill="currentColor"
-                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                      />
-                    </svg>
+                  <div className="relative w-24 h-24 mb-6">
+                    {/* Ring Animation */}
+                    <div className="absolute inset-0 border-4 border-slate-100 rounded-full" />
+                    <div className="absolute inset-0 border-4 border-[var(--brand-primary)] border-t-transparent rounded-full animate-spin" />
+                    
                     <div className="absolute inset-0 flex items-center justify-center">
-                      <FileText className="text-white w-8 h-8" />
+                      <FileText className="text-[var(--brand-primary)] w-8 h-8" />
                     </div>
                   </div>
 
-                  <h2 className="text-2xl font-bold text-white mb-2">
-                    Uploading & Processing
-                  </h2>
-                  <p className="text-gray-400 mb-8 flex items-center gap-2">
-                    {fileDetails?.name} <span className="w-1 h-1 rounded-full bg-gray-600" />{" "}
-                    {fileDetails?.size}
+                  <h2 className="text-2xl font-bold text-[#192630] mb-2">Processing File</h2>
+                  <p className="text-slate-500 mb-8 flex items-center justify-center gap-2 text-sm bg-slate-50 py-1.5 px-4 rounded-full border border-slate-100">
+                    <span className="font-medium text-[#192630]">{fileDetails?.name}</span> 
+                    <span className="w-1 h-1 rounded-full bg-slate-300" /> 
+                    <span>{fileDetails?.size}</span>
                   </p>
 
-                  <div className="w-full max-w-sm bg-white/10 h-1.5 rounded-full overflow-hidden border border-white/10">
+                  <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden relative">
                     <motion.div
                       initial={{ width: "0%" }}
                       animate={{ width: "100%" }}
-                      transition={{ duration: 2 }}
-                      className="h-full"
-                      style={{ backgroundColor: "var(--brand-secondary)" }}
-                    />
+                      transition={{ duration: 2.5, ease: "easeInOut" }}
+                      className="h-full bg-[var(--brand-primary)] rounded-full relative overflow-hidden"
+                    >
+                        <div className="absolute inset-0 bg-white/20 w-full h-full animate-[shimmer_1s_infinite]" />
+                    </motion.div>
                   </div>
-
-                  <p className="text-xs text-gray-500 mt-4">
-                    Calculating unit costs and anomalies...
+                  
+                  <p className="text-xs text-slate-400 mt-4 font-medium animate-pulse">
+                    Parsing rows & calculating anomalies...
                   </p>
                 </motion.div>
               ) : (
+                /* IDLE / DRAG STATE */
                 <motion.div
                   key="idle"
                   initial={{ opacity: 0 }}
@@ -185,56 +188,83 @@ const CsvUploadInput = () => {
                   exit={{ opacity: 0 }}
                   className="w-full h-full flex flex-col items-center"
                 >
-                  <label
-                    className="w-full flex-1 border-2 border-dashed rounded-2xl flex flex-col items-center justify-center transition-all min-h-[300px] bg-transparent"
-                    style={{
-                      borderColor: "rgba(255,255,255,0.16)",
-                    }}
+                  <div
+                    onDragOver={handleDragOver}
+                    onDragLeave={handleDragLeave}
                     onDrop={handleDrop}
-                    onDragOver={(e) => e.preventDefault()}
+                    onClick={() => fileInputRef.current?.click()}
+                    className={`
+                      w-full flex-1 border-2 border-dashed rounded-2xl flex flex-col items-center justify-center transition-all duration-300 min-h-[320px] cursor-pointer group relative
+                      ${isDragging 
+                        ? 'border-[var(--brand-primary)] bg-[var(--brand-primary-soft)]/20 scale-[1.02]' 
+                        : status === 'error' 
+                          ? 'border-red-300 bg-red-50/50 hover:bg-red-50' 
+                          : 'border-slate-200 bg-slate-50/50 hover:border-[var(--brand-primary)] hover:bg-white'
+                      }
+                    `}
                   >
                     <input
+                      ref={fileInputRef}
                       type="file"
                       accept=".csv"
                       onChange={handleChange}
                       className="hidden"
                     />
 
-                    <div className="w-20 h-20 rounded-full bg-white/5 border border-white/10 flex items-center justify-center mb-6">
-                      <Upload
-                        className="w-8 h-8"
-                        style={{ color: "var(--brand-secondary)" }}
-                      />
+                    {/* Icon Circle */}
+                    <div className={`
+                      w-20 h-20 rounded-full flex items-center justify-center mb-6 transition-colors shadow-sm
+                      ${isDragging 
+                        ? 'bg-white text-[var(--brand-primary)]' 
+                        : status === 'error' 
+                          ? 'bg-red-100 text-red-500' 
+                          : 'bg-white text-[var(--brand-primary)] border border-slate-100 group-hover:scale-110 duration-300'
+                      }
+                    `}>
+                      {status === 'error' ? (
+                        <AlertCircle className="w-8 h-8" />
+                      ) : (
+                        <FileUp className="w-8 h-8" />
+                      )}
                     </div>
 
-                    <h3 className="font-bold text-xl mb-2 text-white">
-                      Click to upload or drag & drop
+                    <h3 className="font-bold text-xl mb-2 text-[#192630]">
+                      {isDragging ? "Drop file to upload" : "Click to upload or drag & drop"}
                     </h3>
-                    <p className="text-gray-500 text-sm mb-6">
+                    
+                    <p className="text-slate-500 text-sm mb-8">
                       Max file size {MAX_MB}MB (CSV only)
                     </p>
 
                     {status === "error" && (
-                      <div className="mt-2 flex items-center gap-2 text-red-400 text-sm">
-                        <AlertCircle className="w-4 h-4" />
-                        <span>{errorMessage}</span>
+                      <div className="absolute bottom-4 left-0 w-full px-4">
+                        <div className="bg-red-100 text-red-600 text-sm py-2 px-4 rounded-lg flex items-center justify-center gap-2 mx-auto max-w-sm border border-red-200">
+                          <AlertCircle size={16} /> {errorMessage}
+                        </div>
                       </div>
                     )}
 
-                    <div className="mt-6">
-                      <span
-                        className="inline-flex items-center justify-center px-4 py-2 rounded-xl text-sm font-semibold text-white"
-                        style={{ backgroundColor: "var(--brand-secondary)" }}
-                      >
-                        Choose file
-                      </span>
-                    </div>
-                  </label>
+                    <button className="px-6 py-2.5 rounded-xl bg-[var(--brand-primary)] text-white font-semibold text-sm shadow-lg shadow-[var(--brand-primary)]/20 group-hover:shadow-xl group-hover:-translate-y-0.5 transition-all duration-300">
+                      Select CSV File
+                    </button>
+                  </div>
                 </motion.div>
               )}
             </AnimatePresence>
           </div>
         </motion.div>
+        
+        {/* Helper Links */}
+        {/* <div className="mt-8 flex justify-center gap-6 text-sm font-medium text-slate-500">
+          <button className="hover:text-[var(--brand-primary)] transition-colors flex items-center gap-1.5">
+            <FileText size={14} /> Download Sample CSV
+          </button>
+          <span className="text-slate-300">|</span>
+          <button className="hover:text-[var(--brand-primary)] transition-colors">
+            Help Center
+          </button>
+        </div> */}
+
       </div>
     </div>
   );

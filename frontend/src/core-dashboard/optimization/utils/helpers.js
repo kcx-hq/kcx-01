@@ -1,7 +1,7 @@
 export const getPriorityColor = (priority) => {
-  if (priority === "HIGH IMPACT") return "text-red-400 bg-red-400/10 border-red-400/30";
-  if (priority === "MEDIUM IMPACT") return "text-orange-400 bg-orange-400/10 border-orange-400/30";
-  return "text-yellow-400 bg-yellow-400/10 border-yellow-400/30";
+  if (priority === "HIGH IMPACT") return "text-rose-700 bg-rose-50 border-rose-200";
+  if (priority === "MEDIUM IMPACT") return "text-amber-700 bg-amber-50 border-amber-200";
+  return "text-emerald-700 bg-emerald-50 border-emerald-200";
 };
 
 export const buildParamsFromFilters = (filters = {}) => {

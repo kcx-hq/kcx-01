@@ -3,8 +3,8 @@ import { Loader2 } from "lucide-react";
 
 export function LoadingState({ label = "Loading accounts data..." }) {
   return (
-    <div className="p-10 text-gray-500 text-center">
-      <Loader2 size={48} className="mx-auto mb-4 text-[#a02ff1] animate-spin" />
+    <div className="rounded-xl border border-[var(--border-light)] bg-white p-10 text-center text-[var(--text-muted)]">
+      <Loader2 size={48} className="mx-auto mb-4 animate-spin text-[var(--brand-primary)]" />
       <p>{label}</p>
     </div>
   );

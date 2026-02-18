@@ -17,10 +17,13 @@ import {
   Search,
   TrendingUp,
   LayoutGrid,
+  Activity,
+  Sparkles
 } from "lucide-react";
+import { motion } from "framer-motion";
 
 // --- THEME ---
-const BRAND = "var(--brand-secondary, #007758)";
+const BRAND_EMERALD = "#007758";
 
 // --- HELPERS ---
 const formatCurrency = (val) =>
@@ -31,216 +34,176 @@ const formatCurrency = (val) =>
     maximumFractionDigits: 0,
   }).format(val);
 
-// --- KPI CARD (theme cleaned: no glow/scale effects) ---
-const RiskKPI = ({ title, value, icon: Icon, color, subtext }) => (
-  <div className="bg-[#1a1b20] border border-white/5 rounded-xl p-4 flex items-center gap-4 relative overflow-hidden shadow-md">
-    {/* subtle watermark (no hover scale) */}
-    <div
-      className={`absolute right-0 top-0 p-4 opacity-[0.06] text-${color}`}
-      aria-hidden="true"
-    >
-      <Icon size={64} />
+// --- KPI CARD (Redesigned for Enterprise theme) ---
+const RiskKPI = ({ title, value, icon: Icon, colorClass, subtext }) => (
+  <div className="bg-white border border-slate-100 rounded-[2rem] p-6 flex flex-col justify-between relative overflow-hidden shadow-sm transition-all hover:shadow-md group">
+    {/* Subtle Decorative Aura */}
+    <div className={`absolute -right-4 -top-4 w-24 h-24 blur-3xl opacity-10 rounded-full bg-current ${colorClass.split('-')[0] === 'red' ? 'text-rose-500' : colorClass.split('-')[0] === 'orange' ? 'text-amber-500' : 'text-emerald-500'}`} />
+    
+    <div className="flex justify-between items-start z-10">
+      <div className={`p-3 rounded-2xl border ${colorClass} bg-opacity-10 shadow-sm transition-transform group-hover:scale-110`}>
+        <Icon size={20} strokeWidth={2.5} />
+      </div>
+      <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+         <Sparkles size={10} className="text-slate-300" />
+         <span className="text-[8px] font-black text-slate-400 uppercase tracking-tighter">Live Audit</span>
+      </div>
     </div>
 
-    <div className={`p-3 rounded-lg bg-${color}/10 text-${color}`}>
-      <Icon size={24} />
-    </div>
-
-    <div className="relative z-10">
-      <h3 className="text-[10px] font-bold uppercase tracking-widest text-gray-500">
+    <div className="mt-4 relative z-10">
+      <h3 className="text-[10px] font-black uppercase tracking-[0.15em] text-slate-400">
         {title}
       </h3>
-      <div className="text-xl font-black text-white mt-1">{value}</div>
-      <div className="text-[10px] text-gray-400 mt-1">{subtext}</div>
+      <div className="text-2xl font-black text-slate-900 mt-1 leading-none tracking-tight">
+        {value}
+      </div>
+      <div className="text-[10px] font-bold text-slate-400 mt-2 uppercase tracking-tighter">{subtext}</div>
     </div>
   </div>
 );
 
 // --- MAIN COMPONENT ---
 const CostRisk = ({ riskData = [], totalSpend = 0 }) => {
-  const [hoveredNode, setHoveredNode] = useState(null);
-
-  // Filter out tiny data points to keep chart clean
+  // Filter out tiny data points
   const chartData = riskData.filter((d) => d.x > 0);
 
   // Calculate Metrics
   const criticalCount = riskData.filter((d) => d.severity === "critical").length;
-  const highVelocityCount = riskData.filter((d) => d.y > 20).length; // >20% growth
-  const unallocatedItem = riskData.find((d) => d.name.includes("Unallocated"));
-  const unallocatedSpend = unallocatedItem ? unallocatedItem.x : 0;
-
-  // Custom Tooltip (no pulse)
-  const CustomTooltip = ({ active, payload }) => {
-    if (active && payload && payload.length) {
-      const data = payload[0].payload;
-      return (
-        <div className="bg-[#0f0f11]/95 backdrop-blur border border-white/10 p-3 rounded-xl shadow-2xl z-50 min-w-[180px]">
-          <div className="flex items-center justify-between mb-2 pb-2 border-b border-white/10">
-            <span className="font-bold text-xs text-white max-w-[120px] truncate">
-              {data.name}
-            </span>
-            {data.severity === "critical" && (
-              <Flame size={12} className="text-red-500" />
-            )}
-          </div>
-
-          <div className="space-y-1">
-            <div className="flex justify-between text-xs">
-              <span className="text-gray-400">Total Cost:</span>
-              <span className="font-mono font-bold text-white">
-                {formatCurrency(data.x)}
-              </span>
-            </div>
-
-            <div className="flex justify-between text-xs">
-              <span className="text-gray-400">Growth Rate:</span>
-              <span
-                className={`font-mono font-bold ${
-                  data.y > 0 ? "text-red-400" : "text-emerald-400"
-                }`}
-              >
-                {data.y > 0 ? "+" : ""}
-                {data.y}%
-              </span>
-            </div>
-
-            <div className="flex justify-between text-xs pt-1 mt-1 border-t border-white/5">
-              <span className="text-gray-500">Status:</span>
-              <span
-                className={`font-bold text-[10px] uppercase ${
-                  data.severity === "critical"
-                    ? "text-red-500"
-                    : data.severity === "high"
-                    ? "text-orange-400"
-                    : "text-emerald-500"
-                }`}
-              >
-                {data.status}
-              </span>
-            </div>
-          </div>
-        </div>
-      );
-    }
-    return null;
-  };
+  const highVelocityCount = riskData.filter((d) => d.y > 20).length;
+  const unallocatedSpend = riskData.find((d) => d.name.includes("Unallocated"))?.x || 0;
 
   return (
-    <div className="flex flex-col gap-4 h-full animate-in fade-in duration-500">
+    <div className="flex flex-col gap-6 h-full animate-in fade-in duration-700">
+      
       {/* --- ROW 1: RISK METRICS --- */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-3 shrink-0">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 shrink-0">
         <RiskKPI
           title="Critical Alerts"
           value={criticalCount}
-          subtext="Services with High Cost + High Growth"
+          subtext="High Cost + High Growth"
           icon={Flame}
-          color="red-500"
+          colorClass="bg-rose-50 border-rose-100 text-rose-600"
         />
         <RiskKPI
           title="Velocity Risk"
           value={highVelocityCount}
-          subtext="Services growing > 20% this period"
+          subtext="Growth > 20% Period Over Period"
           icon={TrendingUp}
-          color="orange-400"
+          colorClass="bg-amber-50 border-amber-100 text-amber-600"
         />
         <RiskKPI
           title="Blind Spot Spend"
           value={formatCurrency(unallocatedSpend)}
-          subtext="Unallocated or Untagged resources"
+          subtext="Untagged Resource Leakage"
           icon={Search}
-          color="emerald-400"
+          colorClass="bg-emerald-50 border-emerald-100 text-emerald-600"
         />
       </div>
 
-      <div className="flex flex-col lg:flex-row gap-4 h-[500px] min-h-0">
+      <div className="flex flex-col lg:flex-row gap-6 h-[550px] min-h-0">
         {/* --- LEFT: RISK MATRIX CHART --- */}
-        <div className="flex-[2] bg-[#1a1b20] border border-white/5 rounded-2xl p-4 flex flex-col shadow-2xl relative overflow-hidden">
-          <div className="flex justify-between items-start mb-2 shrink-0 z-10">
+        <div className="flex-[2] bg-white border border-slate-100 rounded-[2.5rem] p-8 flex flex-col shadow-sm relative overflow-visible transition-all hover:shadow-md">
+          <div className="flex justify-between items-start mb-8 shrink-0 z-10">
             <div>
-              <h3 className="text-white font-bold flex items-center gap-2">
-                <LayoutGrid
-                  size={16}
-                  style={{ color: BRAND }}
-                />{" "}
-                Risk Matrix
-              </h3>
-              <p className="text-xs text-gray-500">
-                X-Axis: Cost Magnitude | Y-Axis: Growth Velocity (%)
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-emerald-50 rounded-lg">
+                    <LayoutGrid size={18} className="text-[#007758]" />
+                </div>
+                <h3 className="text-xl font-black text-slate-800 tracking-tight leading-none">
+                  Risk Exposure Matrix
+                </h3>
+              </div>
+              <p className="text-xs font-medium text-slate-400 mt-2 ml-11">
+                Magnitude (Total Cost) vs. Velocity (Growth Rate Percentage)
               </p>
+            </div>
+            
+            <div className="flex gap-4 px-4 py-2 bg-slate-50 border border-slate-100 rounded-xl">
+                <div className="flex items-center gap-2 text-[9px] font-black uppercase text-slate-500 tracking-widest">
+                    <div className="w-2 h-2 rounded-full bg-rose-500" /> Critical
+                </div>
+                <div className="flex items-center gap-2 text-[9px] font-black uppercase text-slate-500 tracking-widest">
+                    <div className="w-2 h-2 rounded-full bg-emerald-500" /> Stable
+                </div>
             </div>
           </div>
 
           <div className="flex-1 w-full relative z-0">
             <ResponsiveContainer width="100%" height="100%">
-              <ScatterChart margin={{ top: 20, right: 20, bottom: 20, left: 0 }}>
-                <CartesianGrid
-                  strokeDasharray="3 3"
-                  stroke="#333"
-                  opacity={0.3}
-                />
+              <ScatterChart margin={{ top: 20, right: 30, bottom: 20, left: 10 }}>
+                <CartesianGrid strokeDasharray="6 6" stroke="#f1f5f9" vertical={false} />
                 <XAxis
                   type="number"
                   dataKey="x"
-                  name="Cost"
+                  stroke="#94a3b8"
                   tickFormatter={(val) => `$${val / 1000}k`}
-                  stroke="#555"
                   fontSize={10}
-                  tickLine={false}
+                  fontWeight={700}
                   axisLine={false}
+                  tickLine={false}
                 />
                 <YAxis
                   type="number"
                   dataKey="y"
-                  name="Growth"
-                  unit="%"
-                  stroke="#555"
+                  stroke="#94a3b8"
                   fontSize={10}
-                  tickLine={false}
+                  fontWeight={700}
+                  tickFormatter={(val) => `${val}%`}
                   axisLine={false}
+                  tickLine={false}
                 />
-                <Tooltip content={<CustomTooltip />} cursor={{ strokeDasharray: "3 3" }} />
-
-                {/* Background Zones */}
-                <ReferenceArea
-                  x1={0}
-                  y1={20}
-                  fill="red"
-                  fillOpacity={0.05}
-                  stroke="none"
-                />
-                <ReferenceLine y={0} stroke="#666" />
-                <ReferenceLine
-                  y={20}
-                  stroke="#fb7185"
-                  strokeDasharray="3 3"
-                  label={{
-                    value: "High Velocity Threshold",
-                    fill: "#fb7185",
-                    fontSize: 10,
-                    position: "insideTopRight",
+                <Tooltip 
+                  cursor={{ stroke: '#cbd5e1', strokeWidth: 1, strokeDasharray: '4 4' }}
+                  content={({ active, payload }) => {
+                    if (!active || !payload?.length) return null;
+                    const d = payload[0].payload;
+                    return (
+                        <div className="bg-[#192630] text-white p-4 rounded-2xl shadow-2xl border border-white/10 min-w-[200px] backdrop-blur-md">
+                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 border-b border-white/5 pb-2 truncate">{d.name}</p>
+                            <div className="space-y-2">
+                                <div className="flex justify-between items-center">
+                                    <span className="text-[11px] font-bold text-slate-300">Cost Focus</span>
+                                    <span className="text-[11px] font-black text-white">{formatCurrency(d.x)}</span>
+                                </div>
+                                <div className="flex justify-between items-center">
+                                    <span className="text-[11px] font-bold text-slate-300">Growth</span>
+                                    <span className={`text-[11px] font-black ${d.y > 0 ? 'text-rose-400' : 'text-emerald-400'}`}>{d.y}%</span>
+                                </div>
+                            </div>
+                        </div>
+                    );
                   }}
                 />
 
-                <Scatter
-                  name="Services"
-                  data={chartData}
-                  onClick={(p) => setHoveredNode(p)}
-                >
+                <ReferenceArea x1={0} y1={20} fill="#fff1f2" fillOpacity={0.4} />
+                <ReferenceLine y={0} stroke="#cbd5e1" strokeWidth={1} />
+                <ReferenceLine
+                  y={20}
+                  stroke="#fda4af"
+                  strokeDasharray="8 8"
+                  strokeWidth={2}
+                  label={{
+                    value: "HIGH VELOCITY ZONE",
+                    fill: "#f43f5e",
+                    fontSize: 9,
+                    fontWeight: 900,
+                    position: "insideTopRight",
+                    offset: 10
+                  }}
+                />
+
+                <Scatter data={chartData}>
                   {chartData.map((entry, index) => (
                     <Cell
                       key={`cell-${index}`}
                       fill={
-                        entry.severity === "critical"
-                          ? "#ef4444"
-                          : entry.severity === "high"
-                          ? "#f97316"
-                          : entry.severity === "medium"
-                          ? "#eab308"
-                          : "#10b981"
+                        entry.severity === "critical" ? "#f43f5e" : 
+                        entry.severity === "high" ? "#f59e0b" : 
+                        entry.severity === "medium" ? "#fbbf24" : "#10b981"
                       }
-                      fillOpacity={0.7}
-                      stroke="white"
-                      strokeWidth={1}
+                      className="drop-shadow-lg transition-all duration-300 hover:opacity-100 opacity-80"
+                      stroke="#fff"
+                      strokeWidth={2}
                     />
                   ))}
                 </Scatter>
@@ -250,26 +213,37 @@ const CostRisk = ({ riskData = [], totalSpend = 0 }) => {
         </div>
 
         {/* --- RIGHT: PRIORITY LIST --- */}
-        <div className="flex-1 bg-[#1a1b20] border border-white/10 rounded-2xl p-4 flex flex-col shadow-xl overflow-hidden relative">
-          <h3 className="text-white font-bold flex items-center gap-2 mb-4 shrink-0">
-            <ShieldAlert size={16} className="text-red-400" /> Priority Fixes
-          </h3>
-
-          {/* Coming Soon Overlay */}
-          <div className="flex-1 flex flex-col items-center justify-center text-gray-500 relative z-10">
-            <div className="flex flex-col items-center gap-3">
-              <ShieldAlert size={48} className="opacity-20" />
-              <span className="text-sm font-bold uppercase tracking-wider text-gray-400">
-                Coming Soon
-              </span>
-              <span className="text-xs text-gray-600 text-center max-w-[200px]">
-                Priority fixes feature will be available in a future update
-              </span>
+        <div className="flex-1 bg-white border border-slate-200 rounded-[2.5rem] p-8 flex flex-col shadow-sm overflow-hidden relative transition-all hover:border-emerald-100">
+          <div className="flex items-center gap-3 mb-8">
+            <div className="p-2 bg-rose-50 rounded-lg">
+                <ShieldAlert size={18} className="text-rose-600" />
             </div>
+            <h3 className="text-sm font-black text-slate-800 uppercase tracking-widest">
+                Priority Remediation
+            </h3>
           </div>
 
-          {/* Masked Content (hidden but preserved for future) */}
-          <div className="hidden">{/* ...unchanged... */}</div>
+          <div className="flex-1 flex flex-col items-center justify-center text-center relative z-10">
+            <div className="p-10 bg-slate-50 rounded-[2rem] border border-dashed border-slate-200">
+              <div className="relative mb-6 mx-auto w-16 h-16 flex items-center justify-center">
+                <Activity size={48} className="text-slate-200" />
+                <motion.div 
+                    animate={{ rotate: 360 }}
+                    transition={{ duration: 10, repeat: Infinity, ease: "linear" }}
+                    className="absolute inset-0 border-2 border-dashed border-emerald-200 rounded-full"
+                />
+              </div>
+              <span className="block text-xs font-black uppercase tracking-[0.2em] text-slate-800 mb-2">
+                Predictive Audit
+              </span>
+              <span className="text-[11px] font-bold text-slate-400 leading-relaxed max-w-[200px] block mx-auto">
+                AI-driven remediation paths are being mapped to your infrastructure.
+              </span>
+              <button className="mt-8 px-6 py-2 bg-slate-900 text-white rounded-xl text-[10px] font-black uppercase tracking-widest opacity-20 cursor-not-allowed">
+                 Locked Module
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     </div>

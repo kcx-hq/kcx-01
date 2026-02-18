@@ -4,10 +4,10 @@ import { Crown, Lock } from 'lucide-react';
 const PremiumOverlay = ({ variant = 'card' }) => {
   if (variant === 'inlineBadge') {
     return (
-      <div className="absolute inset-0 bg-[#0f0f11]/80 backdrop-blur-sm z-50 flex items-center justify-center rounded-xl">
-        <div className="inline-flex items-center gap-1.5 px-2 py-1 bg-yellow-500/20 border-2 border-yellow-500/30 rounded-lg">
-          <Crown size={12} className="text-yellow-400" />
-          <span className="text-yellow-400 font-bold text-[10px]">Premium</span>
+      <div className="absolute inset-0 z-50 flex items-center justify-center rounded-xl bg-white/75 backdrop-blur-sm">
+        <div className="inline-flex items-center gap-1.5 rounded-lg border border-amber-300 bg-amber-100 px-2 py-1">
+          <Crown size={12} className="text-amber-600" />
+          <span className="text-[10px] font-bold text-amber-700">Premium</span>
         </div>
       </div>
     );
@@ -15,16 +15,16 @@ const PremiumOverlay = ({ variant = 'card' }) => {
 
   if (variant === 'full') {
     return (
-      <div className="absolute inset-0 bg-[#0f0f11]/80 backdrop-blur-sm z-50 flex items-center justify-center">
-        <div className="text-center p-6">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-yellow-500/20 border-2 border-yellow-500/30 mb-4">
-            <Crown size={32} className="text-yellow-400" />
+      <div className="absolute inset-0 z-50 flex items-center justify-center bg-white/75 backdrop-blur-sm">
+        <div className="p-6 text-center">
+          <div className="mb-4 inline-flex h-16 w-16 items-center justify-center rounded-full border-2 border-amber-300 bg-amber-100">
+            <Crown size={32} className="text-amber-600" />
           </div>
-          <h3 className="text-lg font-bold text-white mb-2">Premium Feature</h3>
-          <p className="text-sm text-gray-400 mb-4 max-w-xs">
+          <h3 className="mb-2 text-lg font-bold text-[var(--text-primary)]">Premium Feature</h3>
+          <p className="mb-4 max-w-xs text-sm text-[var(--text-muted)]">
             This feature is available in our paid version
           </p>
-          <button className="px-6 py-2 bg-yellow-500/20 hover:bg-yellow-500/30 border border-yellow-500/30 text-yellow-400 rounded-lg text-sm font-medium transition-colors flex items-center gap-2 mx-auto">
+          <button className="mx-auto flex items-center gap-2 rounded-lg border border-amber-300 bg-amber-100 px-6 py-2 text-sm font-medium text-amber-700 transition-colors hover:bg-amber-200">
             <Lock size={16} />
             Upgrade to Access
           </button>
@@ -33,12 +33,11 @@ const PremiumOverlay = ({ variant = 'card' }) => {
     );
   }
 
-  // card default
   return (
-    <div className="absolute inset-0 bg-[#0f0f11]/80 backdrop-blur-sm z-50 pointer-events-auto flex items-center justify-center rounded-2xl">
-      <div className="text-center p-2">
-        <Crown size={16} className="text-yellow-400 mx-auto mb-1" />
-        <span className="text-yellow-400 font-bold text-[10px]">Premium</span>
+    <div className="absolute inset-0 z-50 flex pointer-events-auto items-center justify-center rounded-2xl bg-white/75 backdrop-blur-sm">
+      <div className="p-2 text-center">
+        <Crown size={16} className="mx-auto mb-1 text-amber-600" />
+        <span className="text-[10px] font-bold text-amber-700">Premium</span>
       </div>
     </div>
   );

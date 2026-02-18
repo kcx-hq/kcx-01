@@ -1,8 +1,9 @@
 import React, { useMemo } from "react";
-import { Globe } from "lucide-react";
+import { Globe, Map, Sparkles, MoveRight } from "lucide-react";
 
-const BRAND = "#007758"; // brand-secondary
-const HIGHLIGHT = "#e5f9f4";
+// KCX Primary Theme Emerald
+const BRAND_EMERALD = "#007758";
+const BRAND_SOFT = "rgba(0, 119, 88, 0.05)";
 
 const MostPopularRegion = ({ data, totalSpend = 0, billingPeriod = null }) => {
   const formatCurrency = (val) =>
@@ -24,40 +25,53 @@ const MostPopularRegion = ({ data, totalSpend = 0, billingPeriod = null }) => {
       .sort((a, b) => b.value - a.value);
   }, [data, totalSpend]);
 
-  const getFontSize = (percentage, maxPercentage) => {
-    if (percentage === maxPercentage) return "clamp(2.5rem, 6vw, 4rem)";
-    if (percentage > maxPercentage * 0.5) return "clamp(1.2rem, 3vw, 1.8rem)";
-    if (percentage > maxPercentage * 0.2) return "clamp(0.9rem, 2vw, 1.2rem)";
-    if (percentage > maxPercentage * 0.1) return "clamp(0.75rem, 1.5vw, 1rem)";
-    return "clamp(0.65rem, 1.2vw, 0.85rem)";
+  const getTierStyles = (percentage, maxPercentage) => {
+    if (percentage === maxPercentage) return { 
+        fontSize: "clamp(2rem, 5vw, 3.5rem)", 
+        fontWeight: 900, 
+        color: "#1e293b",
+        opacity: 1
+    };
+    if (percentage > maxPercentage * 0.5) return { 
+        fontSize: "clamp(1.2rem, 3vw, 1.8rem)", 
+        fontWeight: 700, 
+        color: "#334155",
+        opacity: 0.9
+    };
+    if (percentage > maxPercentage * 0.2) return { 
+        fontSize: "clamp(1rem, 2vw, 1.2rem)", 
+        fontWeight: 600, 
+        color: "#475569",
+        opacity: 0.8
+    };
+    return { 
+        fontSize: "clamp(0.75rem, 1.5vw, 0.9rem)", 
+        fontWeight: 500, 
+        color: "#64748b",
+        opacity: 0.6
+    };
   };
 
-  const periodLabel =
-    billingPeriod?.start && billingPeriod?.end
-      ? `${new Date(billingPeriod.start).toLocaleDateString()} - ${new Date(
-          billingPeriod.end
-        ).toLocaleDateString()} • `
-      : "Previous month • ";
+  const periodLabel = billingPeriod?.start && billingPeriod?.end
+    ? `${new Date(billingPeriod.start).toLocaleDateString(undefined, {month:'short', day:'numeric'})} - ${new Date(billingPeriod.end).toLocaleDateString(undefined, {month:'short', day:'numeric'})}`
+    : "Current Billing Cycle";
 
-  // ✅ LIGHT THEME WRAPPER CLASSES
-  const wrapperCls =
-    "bg-[var(--bg-surface,#ffffff)] border border-gray-200 rounded-2xl p-6 flex flex-col shadow-sm";
+  const wrapperCls = "bg-white border border-slate-100 rounded-3xl p-8 shadow-[0_8px_30px_rgb(0,0,0,0.04)] flex flex-col h-full overflow-hidden transition-all hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)]";
 
   if (allRegions.length === 0) {
     return (
       <div className={wrapperCls}>
-        <div className="mb-4 flex justify-between items-center">
-          <h3 className="text-sm font-bold text-gray-900 flex items-center gap-2">
-            <Globe size={16} style={{ color: BRAND }} />
-            Most Popular Region by Effective Cost
-          </h3>
-          <div className="text-[10px] text-gray-500">
-            {periodLabel}Use drill down → Provider
-          </div>
+        <div className="flex items-center gap-4 mb-8">
+            <div className="p-3 bg-emerald-50 rounded-2xl text-[#007758] shadow-sm border border-emerald-100">
+                <Globe size={22} />
+            </div>
+            <h3 className="text-xl font-bold text-slate-800 tracking-tight">Geographic Cost Distribution</h3>
         </div>
-
-        <div className="flex-1 flex items-center justify-center text-gray-500 text-sm min-h-[300px]">
-          No region data available
+        <div className="flex-1 flex flex-col items-center justify-center gap-3 py-16">
+            <div className="p-4 bg-slate-50 rounded-full">
+                <Map size={32} className="text-slate-200" />
+            </div>
+            <p className="text-slate-400 font-medium text-sm">No regional spend data identified</p>
         </div>
       </div>
     );
@@ -67,63 +81,81 @@ const MostPopularRegion = ({ data, totalSpend = 0, billingPeriod = null }) => {
 
   return (
     <div className={wrapperCls}>
-      <div className="mb-4 flex justify-between items-center">
-        <h3 className="text-sm font-bold text-gray-900 flex items-center gap-2">
-          <Globe size={16} style={{ color: BRAND }} />
-          Most Popular Region by Effective Cost
-        </h3>
+      {/* --- HEADER --- */}
+      <div className="flex flex-col sm:flex-row justify-between items-start gap-4 mb-8">
+        <div className="flex items-start gap-4">
+          <div className="p-3 bg-emerald-50 rounded-2xl text-[#007758] shadow-sm border border-emerald-100">
+            <Globe size={22} />
+          </div>
+          <div>
+            <h3 className="text-xl font-bold text-slate-800 tracking-tight">
+              Regional Cost Intensity
+            </h3>
+            <div className="flex items-center gap-2 mt-1.5">
+              <span className="flex items-center gap-1 text-[10px] font-bold text-[#007758] bg-emerald-50 px-2 py-0.5 rounded-full uppercase tracking-wider border border-emerald-100">
+                <Sparkles size={10} /> Active Footprint
+              </span>
+              <p className="text-slate-400 text-[11px] font-medium truncate max-w-[200px]">
+                {periodLabel}
+              </p>
+            </div>
+          </div>
+        </div>
 
-        <div className="text-[10px] text-gray-500">
-          {periodLabel}Use drill down → Provider
+        <div className="bg-slate-50 px-4 py-2 rounded-2xl border border-slate-100 hidden md:flex items-center gap-2">
+            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Action</span>
+            <MoveRight size={12} className="text-slate-300" />
+            <span className="text-[11px] font-bold text-slate-700">Provider Drill-down Available</span>
         </div>
       </div>
 
-      <div className="flex-1 flex flex-wrap items-center justify-center gap-x-3 gap-y-2 min-h-[300px] content-center p-4">
+      {/* --- REGION CLOUD --- */}
+      <div className="flex-1 flex flex-wrap items-center justify-center gap-x-6 gap-y-4 min-h-[350px] content-center p-6 bg-slate-50/30 rounded-[2.5rem] border border-dashed border-slate-100">
         {allRegions.map((region, index) => {
-          const fontSize = getFontSize(region.percentage, maxPercentage);
-          const isTopRegion = index === 0;
-
-          const baseColor = isTopRegion ? "#0f172a" : "rgba(15,23,42,0.65)";
+          const tierStyles = getTierStyles(region.percentage, maxPercentage);
+          const isTop = index === 0;
 
           return (
-            <span
+            <div
               key={index}
-              className="transition-colors cursor-default inline-block"
-              style={{
-                fontSize,
-                lineHeight: "1.2",
-                fontWeight: isTopRegion ? 700 : 400,
-                color: baseColor,
-                textShadow: isTopRegion
-                  ? "0 0 16px rgba(0,119,88,0.18)"
-                  : "none",
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.color = "#0f172a";
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.color = baseColor;
-              }}
-              title={`${region.name}: ${formatCurrency(region.value)} (${region.percentage.toFixed(
-                1
-              )}%)`}
+              className="relative group transition-all duration-300 transform hover:scale-110"
+              title={`${region.name}: ${formatCurrency(region.value)} (${region.percentage.toFixed(1)}%)`}
             >
-              {region.name}
-              {isTopRegion && (
-                <span
-                  className="ml-2 align-middle text-[10px] font-bold px-2 py-0.5 rounded border"
-                  style={{
-                    background: HIGHLIGHT,
-                    borderColor: BRAND,
-                    color: BRAND,
-                  }}
-                >
-                  TOP
+              <span
+                className="cursor-default inline-block leading-tight tracking-tighter transition-all duration-300 hover:text-[#007758]"
+                style={tierStyles}
+              >
+                {region.name}
+              </span>
+              
+              {isTop && (
+                <span className="absolute -top-4 -right-8 bg-[#007758] text-white text-[9px] font-black px-2 py-0.5 rounded-lg shadow-lg shadow-emerald-200 uppercase tracking-widest animate-bounce">
+                  Top Region
                 </span>
               )}
-            </span>
+
+              {/* Interaction Backdrop Glow */}
+              <div className="absolute inset-0 bg-emerald-400/10 blur-2xl rounded-full opacity-0 group-hover:opacity-100 transition-opacity -z-10" />
+            </div>
           );
         })}
+      </div>
+
+      {/* --- FOOTER LEGEND --- */}
+      <div className="mt-8 pt-6 border-t border-slate-50 flex items-center justify-between">
+        <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2">
+                <div className="w-2.5 h-2.5 rounded-full bg-[#1e293b]" />
+                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Primary Market</span>
+            </div>
+            <div className="flex items-center gap-2">
+                <div className="w-2.5 h-2.5 rounded-full bg-slate-300" />
+                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Emerging Nodes</span>
+            </div>
+        </div>
+        <div className="text-[11px] font-medium text-slate-400 italic">
+            Visual size represents percentage of aggregate cost
+        </div>
       </div>
     </div>
   );

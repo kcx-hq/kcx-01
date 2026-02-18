@@ -1,10 +1,12 @@
-import { Loader2 } from "lucide-react";
+import React from "react";
+import { Database, Clock } from "lucide-react";
 import FilterBar from "../common/widgets/FilterBar.jsx";
 import CostTrendChart from "../common/widgets/CostTrendChart.jsx";
 import ServiceSpendChart from "../common/widgets/ServiceSpendChart.jsx";
 import MostPopularRegion from "../common/widgets/MostPopularRegion.jsx";
 
 import PremiumGate from "../common/PremiumGate.jsx";
+import { SectionLoading, SectionRefreshOverlay } from "../common/SectionStates.jsx";
 import OverviewStates from "./components/OverviewStates.jsx";
 import OverviewKpiGrid from "./components/OverviewKpiGrid.jsx";
 
@@ -39,19 +41,17 @@ const OverviewView = ({
     avgDailySpend,
   } = extractedData;
 
-  if (
-    overviewData?.message ===
-    "No upload selected. Please select a billing upload."
-  ) {
+  if (overviewData?.message === "No upload selected. Please select a billing upload.") {
     return <OverviewStates type="noUpload" />;
   }
 
-  const accent = "var(--brand-secondary, #007758)";
+  if (loading && !overviewData) {
+    return <SectionLoading label="Analyzing Overview..." />;
+  }
 
   return (
-    <div className="animate-in fade-in zoom-in-95 duration-300 flex flex-col h-full relative">
-      {/* FILTERS */}
-      <div className="shrink-0 space-y-4 mb-6">
+    <div className="core-shell flex h-full flex-col animate-in fade-in duration-500">
+      <div className="sticky top-0 z-30 -mx-2 mb-4 bg-[var(--bg-main)]/95 px-2 py-2 backdrop-blur-sm">
         <FilterBar
           filters={filters}
           onChange={onFilterChange}
@@ -59,32 +59,14 @@ const OverviewView = ({
           providerOptions={filterOptions?.providers ?? []}
           serviceOptions={filterOptions?.services ?? []}
           regionOptions={filterOptions?.regions ?? []}
+          compactMobile
+          tight
         />
       </div>
 
-      {/* Loading Section */}
-      {(loading || isFiltering) && (
-        <div className="flex items-center justify-center py-12 bg-[#0f0f11]/50 rounded-2xl border border-white/5 mb-6">
-          <div className="flex flex-col items-center gap-4 text-center">
-            <Loader2 className="animate-spin w-10 h-10" style={{ color: accent }} />
-            <div>
-              <h3 className="text-gray-200 font-semibold text-lg">
-                {loading ? "Loading dashboard data..." : "Updating your filters..."}
-              </h3>
-              <p className="text-gray-500 text-sm mt-1">
-                {loading
-                  ? "Please wait while we fetch your overview information"
-                  : "Applying your selected filter preferences"}
-              </p>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* CONTENT */}
-      {overviewData && !loading && !isFiltering && (
-        <div className="flex-1 overflow-y-auto min-h-[50vh] animate-in fade-in duration-500">
-          <div className="space-y-6">
+      {overviewData && (
+        <div className="flex-1 space-y-5 pb-12">
+          <section className="relative">
             <OverviewKpiGrid
               spend={totalSpend}
               topRegion={topRegion}
@@ -97,8 +79,11 @@ const OverviewView = ({
               topRegionPercent={topRegionPercent}
               topServicePercent={topServicePercent}
             />
+            {isFiltering && <SectionRefreshOverlay label="Updating KPI cards..." />}
+          </section>
 
-            <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+          <section className="grid grid-cols-1 gap-6 xl:grid-cols-2">
+            <div className="relative h-full overflow-hidden rounded-2xl border border-slate-200 bg-white p-1 shadow-sm">
               <CostTrendChart
                 data={dailyData}
                 limit={chartFilters.trendChart.limit}
@@ -106,16 +91,24 @@ const OverviewView = ({
                 billingPeriod={billingPeriod}
                 avgDailySpend={avgDailySpend}
               />
+              {isFiltering && <SectionRefreshOverlay label="Refreshing trend chart..." />}
+            </div>
 
+            <div className="relative h-full overflow-hidden rounded-2xl border border-slate-200 bg-white p-1 shadow-sm">
               {isLocked ? (
-                <PremiumGate>
-                  <ServiceSpendChart
-                    data={filteredGroupedData}
-                    title="Spend by Service"
-                    limit={chartFilters.barChart.limit}
-                    onLimitChange={() => {}}
-                    totalSpend={totalSpend}
-                  />
+                <PremiumGate
+                  title="Service Breakdown"
+                  description="Unlock detailed service-level cost analysis."
+                >
+                  <div className="pointer-events-none h-full opacity-20 blur-sm">
+                    <ServiceSpendChart
+                      data={filteredGroupedData}
+                      title="Spend by Service"
+                      limit={chartFilters.barChart.limit}
+                      onLimitChange={() => {}}
+                      totalSpend={totalSpend}
+                    />
+                  </div>
                 </PremiumGate>
               ) : (
                 <ServiceSpendChart
@@ -126,35 +119,43 @@ const OverviewView = ({
                   totalSpend={totalSpend}
                 />
               )}
+              {isFiltering && <SectionRefreshOverlay label="Refreshing service chart..." />}
             </div>
+          </section>
 
-            <div className="w-full">
-              <MostPopularRegion
-                data={allRegionData}
-                totalSpend={totalSpend}
-                billingPeriod={billingPeriod}
-              />
+          <section className="relative overflow-hidden rounded-2xl border border-slate-200 bg-white p-1 shadow-sm">
+            <MostPopularRegion
+              data={allRegionData}
+              totalSpend={totalSpend}
+              billingPeriod={billingPeriod}
+            />
+            {isFiltering && <SectionRefreshOverlay label="Refreshing regional view..." />}
+          </section>
+
+          <div className="flex items-center justify-end gap-6 border-t border-slate-200/60 pt-4">
+            <div className="flex items-center gap-2 text-xs font-medium text-slate-400">
+              <Database size={12} />
+              <span>Source: Standard CSV Ingestion</span>
             </div>
-
-            <div className="flex justify-end items-center gap-4 pt-6 border-t border-white/10 text-xs text-gray-500">
-              <span>Data source: Database</span>
-              <span>•</span>
+            <div className="flex items-center gap-2 text-xs font-medium text-slate-400">
+              <Clock size={12} />
               <span>
-                Last processed:{" "}
-                {new Date().toLocaleDateString("en-US", {
-                  day: "numeric",
-                  month: "short",
-                  year: "numeric",
-                })}
+                Report Generated:{" "}
+                <span className="text-slate-600">
+                  {new Date().toLocaleDateString("en-US", {
+                    month: "short",
+                    day: "numeric",
+                    year: "numeric",
+                  })}
+                </span>
               </span>
             </div>
           </div>
         </div>
       )}
 
-      {/* Empty state */}
       {!overviewData && !loading && !isFiltering && (
-        <div className="flex-1 flex items-center justify-center min-h-[400px]">
+        <div className="flex min-h-[400px] flex-1 items-center justify-center">
           <OverviewStates type="empty" />
         </div>
       )}

@@ -3,16 +3,16 @@ import { FileText } from "lucide-react";
 
 const AboutExecutiveReportsNote = () => {
   return (
-    <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-4">
+    <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-4">
       <div className="flex items-start gap-3">
-        <FileText size={20} className="text-blue-400 flex-shrink-0 mt-0.5" />
+        <FileText size={20} className="mt-0.5 shrink-0 text-emerald-700" />
         <div>
-          <div className="text-sm font-semibold text-blue-400 mb-1">About Executive Reports</div>
-          <div className="text-xs text-gray-300 space-y-1">
-            <p>• Each report starts with a 1-page Executive Summary</p>
-            <p>• Reports are generated as PDFs for easy sharing and presentation</p>
-            <p>• All reports use clean typography and section headers for readability</p>
-            <p>• Reports consolidate dashboard insights into executive-friendly formats</p>
+          <div className="mb-1 text-sm font-semibold text-emerald-700">About Executive Reports</div>
+          <div className="space-y-1 text-xs text-emerald-800/90">
+            <p>- Each report starts with a one-page executive summary.</p>
+            <p>- Reports are generated as PDFs for easy sharing and presentation.</p>
+            <p>- All reports use clean section headers and readable typography.</p>
+            <p>- Reports consolidate dashboard insights into leadership-ready formats.</p>
           </div>
         </div>
       </div>

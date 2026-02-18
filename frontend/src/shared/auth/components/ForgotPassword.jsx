@@ -1,98 +1,136 @@
 import React, { useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import { Mail, ArrowLeft, KeyRound } from "lucide-react";
+import { toast } from "react-hot-toast";
 
 const API = import.meta.env.VITE_API_URL;
 
 export default function ForgotPassword() {
   const [email, setEmail] = useState("");
-  const [msg, setMsg] = useState("");
   const [loading, setLoading] = useState(false);
+  const [focusedField, setFocusedField] = useState(null);
   const navigate = useNavigate();
 
   const submit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    setMsg("");
 
     try {
       const res = await axios.post(`${API}/api/auth/forgot-password`, { email });
-      setMsg(res.data.message);
-    } catch {
-      setMsg("Something went wrong.");
+      toast.success(res.data.message || "Reset link sent!");
+      // Optional: navigate back after success or just show toast
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Something went wrong.");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-[#0a0a0c]">
-      <div className="w-full max-w-md">
-        {/* Card */}
-        <div className="bg-[#121218]/70 backdrop-blur-md border border-white/10 rounded-2xl shadow-2xl p-6">
-          <div className="mb-6">
-            <h1 className="text-2xl font-bold text-white">Forgot Password</h1>
-            <p className="text-sm text-gray-400 mt-1">
-              Enter your email and we’ll send you a reset link.
+    <div className="min-h-screen flex items-center justify-center p-4 bg-[#F7F8F7] relative overflow-hidden">
+      
+      {/* ================= BACKGROUND GRID ================= */}
+      <div 
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          backgroundImage: `
+            linear-gradient(to right, rgba(0, 0, 0, 0.04) 1px, transparent 1px),
+            linear-gradient(to bottom, rgba(0, 0, 0, 0.04) 1px, transparent 1px)
+          `,
+          backgroundSize: "40px 40px",
+        }}
+      />
+      
+      {/* Soft Glows */}
+      <div className="absolute top-[-10%] right-[-10%] w-[500px] h-[500px] bg-[var(--brand-primary)] rounded-full blur-[120px] opacity-10" />
+      <div className="absolute bottom-[-10%] left-[-10%] w-[500px] h-[500px] bg-[#0C4A6E] rounded-full blur-[120px] opacity-5" />
+
+      {/* ================= MAIN CARD ================= */}
+      <div className="w-full max-w-[440px] relative z-10">
+        <div className="bg-white border border-slate-200/60 rounded-3xl shadow-[0_20px_40px_-12px_rgba(0,0,0,0.1)] p-8 md:p-10">
+          
+          {/* Header Icon */}
+          <div className="flex justify-center mb-6">
+            <div className="w-14 h-14 bg-[var(--brand-primary-soft)] rounded-2xl flex items-center justify-center text-[var(--brand-primary)] shadow-sm">
+              <KeyRound size={28} />
+            </div>
+          </div>
+
+          <div className="text-center mb-8">
+            <h1 className="text-2xl font-bold text-[#192630] tracking-tight">Forgot Password?</h1>
+            <p className="text-slate-500 text-sm mt-2 leading-relaxed">
+              No worries, we'll send you reset instructions.
             </p>
           </div>
 
           <form onSubmit={submit} className="space-y-6">
-            {/* Email */}
-            <div>
-              <label className="text-[11px] font-semibold text-gray-500 uppercase tracking-wide mb-1 block">
+            {/* Email Input */}
+            <div className="space-y-1.5">
+              <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider pl-1 block">
                 Email Address
               </label>
-              <input
-                type="email"
-                className="bg-[#0a0a0c] border border-white/10 text-white rounded-xl py-2.5 px-3 focus:border-[#8B2FC9] focus:ring-[#8B2FC9]/20 outline-none w-full"
-                placeholder="you@example.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-              />
+              <div className="relative group">
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                  onFocus={() => setFocusedField('email')}
+                  onBlur={() => setFocusedField(null)}
+                  className={`
+                    w-full font-medium rounded-xl py-3 pl-11 pr-4 
+                    border outline-none text-sm transition-all duration-200 
+                    placeholder:text-slate-400
+                    ${focusedField === 'email' 
+                      ? 'bg-white border-[var(--brand-primary)] ring-4 ring-[var(--brand-primary-soft)] text-[#192630]' 
+                      : 'bg-slate-50 border-slate-200 text-slate-900 hover:border-slate-300 hover:bg-slate-100'}
+                  `}
+                  placeholder="Enter your email"
+                />
+                <div 
+                  className={`
+                    absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none z-10 transition-colors duration-200
+                    ${focusedField === 'email' ? 'text-[var(--brand-primary)]' : 'text-slate-400'}
+                  `}
+                >
+                  <Mail size={18} />
+                </div>
+              </div>
             </div>
 
-            {/* Message */}
-            {msg && (
-              <div className="text-sm rounded-xl px-3 py-2 bg-white/5 border border-white/10 text-gray-300">
-                {msg}
-              </div>
-            )}
-
-            {/* Button */}
+            {/* Submit Button */}
             <button
               type="submit"
               disabled={loading}
-              className="bg-[#8B2FC9] hover:bg-[#7a25b3] text-white font-bold rounded-xl py-3 shadow-[0_4px_14px_0_rgba(139,47,201,0.39)] w-full disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
+              className="w-full bg-[var(--brand-primary)] hover:bg-[var(--brand-primary-hover)] text-white font-bold rounded-xl py-3.5 text-sm shadow-lg shadow-[var(--brand-primary)]/30 hover:shadow-xl hover:-translate-y-0.5 transition-all disabled:opacity-50 disabled:shadow-none disabled:translate-y-0"
             >
-              {loading ? "Sending..." : "Send Reset Link"}
+              {loading ? (
+                <span className="flex items-center justify-center gap-2">
+                  <svg className="animate-spin h-5 w-5 text-white/90" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                  </svg>
+                  Sending...
+                </span>
+              ) : (
+                "Reset Password"
+              )}
             </button>
 
-            {/* Back to login */}
+            {/* Back to Login */}
             <div className="text-center pt-2">
               <button
                 type="button"
-                onClick={() => navigate("/login")}
-                className="text-sm text-[#8B2FC9] hover:text-white transition-colors font-medium"
+                onClick={() => navigate("/")}
+                className="inline-flex items-center justify-center gap-2 text-sm font-semibold text-slate-500 hover:text-[var(--brand-primary)] transition-colors group"
               >
-                Back to Login
+                <ArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform" />
+                Back to log in
               </button>
             </div>
           </form>
         </div>
-
-        {/* Footer hint */}
-        <p className="text-center text-xs text-gray-600 mt-4">
-          Remembered your password?{" "}
-          <button
-            type="button"
-            onClick={() => navigate("/login")}
-            className="text-[#8B2FC9] hover:text-white transition-colors font-medium"
-          >
-            Sign in
-          </button>
-        </p>
       </div>
     </div>
   );

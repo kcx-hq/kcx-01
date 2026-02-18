@@ -1,13 +1,15 @@
-import React, { Suspense, useCallback, useEffect, useMemo, useState } from "react";
+import React, { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useAuthStore } from "../../store/Authstore";
 import { useCaps } from "../../hooks/useCaps";
+import { AlertCircle, RefreshCw } from "lucide-react";
+import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 
 import VerticalSidebar from "../common/Layout/VerticalSidebar";
 import Header from "../common/Layout/Header";
 
-// components/hooks
 import KeepAlive from "./components/KeepAlive";
 import { ComponentLoader, SkeletonLoader } from "./components/Loaders";
+import ModuleErrorBoundary from "./components/ModuleErrorBoundary";
 import { useDashboardRoute } from "./hooks/useDashboardRoutes";
 import {
   useDashboardCapabilities,
@@ -17,7 +19,6 @@ import {
 import { useKeepAliveRegistry } from "./hooks/useKeepAliveRegistry";
 import { useHeaderAnomalies } from "./hooks/useHeaderAnomalies";
 
-// lazy views
 import {
   Overview,
   DataExplorer,
@@ -32,29 +33,53 @@ import {
 import VerticalSidebarConfig from "../verticalSidebar.config.js";
 
 const DashboardPage = () => {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const hasHandledInitialRedirect = useRef(false);
   const { fetchUser } = useAuthStore();
   const { caps, api, loading: capsLoading, error: capsError } = useCaps();
 
   const route = useDashboardRoute();
   const { shouldRender } = useKeepAliveRegistry(route);
   const [isLocked, setIsLocked] = useState(false);
-
   const [loading, setLoading] = useState(true);
 
-  const [filters, setFilters] = useState({
-    provider: "All",
-    service: "All",
-    region: "All",
-  });
+  const [filters, setFilters] = useState(() => ({
+    provider: searchParams.get("provider") || "All",
+    service: searchParams.get("service") || "All",
+    region: searchParams.get("region") || "All",
+  }));
+
 
   const handleFilterChange = useCallback((partial) => {
-    setFilters((prev) => ({ ...prev, ...partial }));
-  }, []);
+    setFilters((prev) => {
+      const next = { ...prev, ...partial };
+      const nextParams = new URLSearchParams(searchParams);
+
+      ["provider", "service", "region"].forEach((k) => {
+        const value = next[k];
+        if (!value || value === "All") nextParams.delete(k);
+        else nextParams.set(k, value);
+      });
+
+      setSearchParams(nextParams, { replace: true });
+      return next;
+    });
+  }, [searchParams, setSearchParams]);
 
   const memoizedFilters = useMemo(
     () => filters,
     [filters.provider, filters.service, filters.region],
   );
+
+  useEffect(() => {
+    setFilters({
+      provider: searchParams.get("provider") || "All",
+      service: searchParams.get("service") || "All",
+      region: searchParams.get("region") || "All",
+    });
+  }, [searchParams]);
 
   const anomaliesData = useHeaderAnomalies({ api, caps, filters, route });
   const { hasAnyDashboardModule } = useDashboardCapabilities(caps);
@@ -69,57 +94,65 @@ const DashboardPage = () => {
     init();
   }, [fetchUser]);
 
+  // On hard reload, always land on Overview first.
+  useEffect(() => {
+    if (hasHandledInitialRedirect.current) return;
+    hasHandledInitialRedirect.current = true;
+
+    const navEntry = performance.getEntriesByType("navigation")?.[0];
+    const isReload = navEntry?.type === "reload";
+    const isDashboardChildRoute =
+      location.pathname.startsWith("/dashboard/") && location.pathname !== "/dashboard";
+
+    if (isReload && isDashboardChildRoute) {
+      navigate("/dashboard", { replace: true });
+    }
+  }, [location.pathname, navigate]);
+
   const pageTitle = useMemo(() => {
     if (route.isDataExplorer) return "Data Explorer";
     if (route.isCostAnalysis) return "Cost Analysis";
     if (route.isCostDrivers) return "Cost Drivers";
     if (route.isResources) return "Resource Inventory";
-    if (route.isDataQuality) return "Data Quality Hub";
+    if (route.isDataQuality) return "Data Quality";
     if (route.isOptimization) return "Optimization";
     if (route.isReports) return "Reports";
     if (route.isAccounts) return "Account Ownership";
     return "Overview";
   }, [route]);
 
+  const withBoundary = useCallback((moduleName, node) => (
+    <ModuleErrorBoundary moduleName={moduleName}>
+      {node}
+    </ModuleErrorBoundary>
+  ), []);
+
   if (capsLoading || loading) return <SkeletonLoader />;
 
   if (capsError || !caps) {
     return (
-      <div className="min-h-screen bg-[#0f0f11] text-white font-sans flex items-center justify-center">
-        <div className="text-center">
-          <h2 className="text-2xl font-semibold mb-2">
-            Failed to Load Dashboard
-          </h2>
-          <p className="text-gray-400">
-            Unable to load capabilities. Please refresh the page.
+      <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[var(--bg-main)] p-6">
+        <div className="relative z-10 w-full max-w-md rounded-3xl border border-slate-200 bg-white p-10 text-center shadow-xl">
+          <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-red-50">
+            <AlertCircle className="h-8 w-8 text-red-500" />
+          </div>
+          <h2 className="mb-2 text-2xl font-bold text-[#192630]">Failed to Load Dashboard</h2>
+          <p className="mb-8 leading-relaxed text-slate-500">
+            We encountered an issue loading your account capabilities. This might be a temporary connection issue.
           </p>
+          <button
+            onClick={() => window.location.reload()}
+            className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#192630] px-6 py-3 font-semibold text-white transition-all hover:bg-black"
+          >
+            <RefreshCw size={18} /> Reload Page
+          </button>
         </div>
       </div>
     );
   }
 
-  if (!hasAnyDashboardModule) {
-    return (
-      <div
-        className="min-h-screen text-white font-sans"
-        style={{ backgroundColor: "var(--bg-main, #0f0f11)" }}
-      >
-        <VerticalSidebar
-          config={VerticalSidebarConfig}
-          isLocked={isLocked}
-          isPremiumUser={!isLocked}
-        />
-        <Header title="Dashboard" />
-        <main className="ml-[72px] lg:ml-[240px] pt-[64px] min-h-screen" />
-      </div>
-    );
-  }
-
   return (
-    <div
-      className="min-h-screen text-white font-sans"
-      style={{ backgroundColor: "var(--bg-main, #0f0f11)" }}
-    >
+    <div className="relative min-h-screen bg-[var(--bg-main)] font-sans text-slate-900">
       <VerticalSidebar
         config={VerticalSidebarConfig}
         isLocked={isLocked}
@@ -132,94 +165,122 @@ const DashboardPage = () => {
         anomaliesCount={anomaliesData.count}
       />
 
-      <main className="ml-[72px] lg:ml-[240px] pt-[64px] min-h-screen relative transition-all duration-300">
-        <div className="p-4 lg:p-6 space-y-4 max-w-[1920px] mx-auto h-full relative">
-          {/* ✅ Removed glowing/animated background grid.
-              Keep only a subtle static grid if you want, using low opacity. */}
-          <div
-            className="fixed inset-0 pointer-events-none -z-10 ml-[72px] lg:ml-[240px] mt-[64px] transition-all duration-300"
-            style={{
-              backgroundImage:
-                "linear-gradient(to right, rgba(255,255,255,0.04) 1px, transparent 1px), linear-gradient(to bottom, rgba(255,255,255,0.04) 1px, transparent 1px)",
-              backgroundSize: "40px 40px",
-              opacity: 0.25,
-            }}
-          />
+      <main className="relative ml-[72px] min-h-screen pt-[64px] transition-all duration-300 lg:ml-[240px]">
+        <div className="pointer-events-none fixed inset-0 -z-10 ml-[72px] bg-[var(--bg-main)] lg:ml-[240px] mt-[64px]">
+          <div className="absolute left-0 top-0 h-[400px] w-full bg-gradient-to-b from-white/80 to-transparent" />
+        </div>
 
+        <div className="relative z-10 mx-auto h-full max-w-[1920px] p-3 sm:p-4 md:p-6 lg:p-8">
           <Suspense fallback={<ComponentLoader />}>
-            {shouldRender(route.isDataExplorer, "DataExplorer") &&
-              isModuleEnabled(caps, "overview") &&
-              hasEndpoint(caps, "overview", "dataExplorer") && (
-                <KeepAlive isActive={route.isDataExplorer}>
-                  <DataExplorer filters={memoizedFilters} api={api} caps={caps} />
-                </KeepAlive>
-              )}
+            {!hasAnyDashboardModule ? (
+              <div className="flex h-[60vh] flex-col items-center justify-center text-center">
+                <h3 className="text-xl font-bold text-slate-700">No Modules Enabled</h3>
+                <p className="mt-2 text-slate-500">Please contact support to enable dashboard features for your account.</p>
+              </div>
+            ) : (
+              <>
+                {shouldRender(route.isDataExplorer, "DataExplorer") &&
+                isModuleEnabled(caps, "overview") &&
+                hasEndpoint(caps, "overview", "dataExplorer") && (
+                  withBoundary(
+                    "Data Explorer",
+                    <KeepAlive isActive={route.isDataExplorer}>
+                      <DataExplorer filters={memoizedFilters} api={api} caps={caps} />
+                    </KeepAlive>
+                  )
+                )}
 
-            {shouldRender(route.isCostAnalysis, "CostAnalysis") &&
-              isModuleEnabled(caps, "costAnalysis") && (
-                <KeepAlive isActive={route.isCostAnalysis}>
-                  <CostAnalysis
-                    filters={memoizedFilters}
-                    onFilterChange={handleFilterChange}
-                    api={api}
-                    caps={caps}
-                  />
-                </KeepAlive>
-              )}
+                {shouldRender(route.isCostAnalysis, "CostAnalysis") &&
+                isModuleEnabled(caps, "costAnalysis") && (
+                  withBoundary(
+                    "Cost Analysis",
+                    <KeepAlive isActive={route.isCostAnalysis}>
+                      <CostAnalysis
+                        filters={memoizedFilters}
+                        onFilterChange={handleFilterChange}
+                        api={api}
+                        caps={caps}
+                      />
+                    </KeepAlive>
+                  )
+                )}
 
-            {shouldRender(route.isCostDrivers, "CostDrivers") &&
-              isModuleEnabled(caps, "costDrivers") && (
-                <KeepAlive isActive={route.isCostDrivers}>
-                  <CostDrivers
-                    filters={memoizedFilters}
-                    onFilterChange={handleFilterChange}
-                    api={api}
-                    caps={caps}
-                  />
-                </KeepAlive>
-              )}
+                {shouldRender(route.isCostDrivers, "CostDrivers") &&
+                isModuleEnabled(caps, "costDrivers") && (
+                  withBoundary(
+                    "Cost Drivers",
+                    <KeepAlive isActive={route.isCostDrivers}>
+                      <CostDrivers
+                        filters={memoizedFilters}
+                        onFilterChange={handleFilterChange}
+                        api={api}
+                        caps={caps}
+                      />
+                    </KeepAlive>
+                  )
+                )}
 
-            {shouldRender(route.isResources, "ResourceInventory") &&
-              isModuleEnabled(caps, "resources") && (
-                <KeepAlive isActive={route.isResources}>
-                  <ResourceInventory filters={memoizedFilters} api={api} caps={caps} />
-                </KeepAlive>
-              )}
+                {shouldRender(route.isResources, "ResourceInventory") &&
+                isModuleEnabled(caps, "resources") && (
+                  withBoundary(
+                    "Resources",
+                    <KeepAlive isActive={route.isResources}>
+                      <ResourceInventory filters={memoizedFilters} api={api} caps={caps} />
+                    </KeepAlive>
+                  )
+                )}
 
-            {shouldRender(route.isDataQuality, "DataQuality") &&
-              isModuleEnabled(caps, "dataQuality") && (
-                <KeepAlive isActive={route.isDataQuality}>
-                  <DataQuality filters={memoizedFilters} api={api} caps={caps} />
-                </KeepAlive>
-              )}
+                {shouldRender(route.isDataQuality, "DataQuality") &&
+                isModuleEnabled(caps, "dataQuality") && (
+                  withBoundary(
+                    "Data Quality",
+                    <KeepAlive isActive={route.isDataQuality}>
+                      <DataQuality filters={memoizedFilters} api={api} caps={caps} />
+                    </KeepAlive>
+                  )
+                )}
 
-            {shouldRender(route.isOptimization, "Optimization") &&
-              isModuleEnabled(caps, "optimization") && (
-                <KeepAlive isActive={route.isOptimization}>
-                  <Optimization filters={memoizedFilters} api={api} caps={caps} />
-                </KeepAlive>
-              )}
+                {shouldRender(route.isOptimization, "Optimization") &&
+                isModuleEnabled(caps, "optimization") && (
+                  withBoundary(
+                    "Optimization",
+                    <KeepAlive isActive={route.isOptimization}>
+                      <Optimization filters={memoizedFilters} api={api} caps={caps} />
+                    </KeepAlive>
+                  )
+                )}
 
-            {shouldRender(route.isReports, "Reports") &&
-              isModuleEnabled(caps, "reports") && (
-                <KeepAlive isActive={route.isReports}>
-                  <Reports filters={memoizedFilters} api={api} caps={caps} />
-                </KeepAlive>
-              )}
+                {shouldRender(route.isReports, "Reports") &&
+                isModuleEnabled(caps, "reports") && (
+                  withBoundary(
+                    "Reports",
+                    <KeepAlive isActive={route.isReports}>
+                      <Reports filters={memoizedFilters} api={api} caps={caps} />
+                    </KeepAlive>
+                  )
+                )}
 
-            {shouldRender(route.isAccounts, "AccountsOwnership") &&
-              isModuleEnabled(caps, "governance") && (
-                <KeepAlive isActive={route.isAccounts}>
-                  <AccountsOwnership filters={memoizedFilters} api={api} caps={caps} />
-                </KeepAlive>
-              )}
+                {shouldRender(route.isAccounts, "AccountsOwnership") &&
+                isModuleEnabled(caps, "governance") && (
+                  withBoundary(
+                    "Accounts and Ownership",
+                    <KeepAlive isActive={route.isAccounts}>
+                      <AccountsOwnership filters={memoizedFilters} api={api} caps={caps} />
+                    </KeepAlive>
+                  )
+                )}
 
-            {shouldRender(route.isOverview, "Overview") &&
-              isModuleEnabled(caps, "overview") && (
-                <KeepAlive isActive={route.isOverview}>
-                  <Overview onFilterChange={handleFilterChange} api={api} caps={caps} />
-                </KeepAlive>
-              )}
+                {shouldRender(route.isOverview, "Overview") &&
+                isModuleEnabled(caps, "overview") && (
+                  withBoundary(
+                    "Overview",
+                    <KeepAlive isActive={route.isOverview}>
+                      <Overview onFilterChange={handleFilterChange} api={api} caps={caps} />
+                    </KeepAlive>
+                  )
+                )}
+              </>
+            )}
           </Suspense>
         </div>
       </main>

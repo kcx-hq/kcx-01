@@ -1,5 +1,8 @@
 import React, { memo } from "react";
 
+// KCX Brand Primary
+const BRAND_EMERALD = "#007758";
+
 const TableRow = memo(
   ({
     row,
@@ -13,24 +16,25 @@ const TableRow = memo(
     onSelect,
     onRowClick,
   }) => {
-    const rowHeight = getRowHeight();
+    const rowHeight = getRowHeight() || "py-3";
 
     return (
       <tr
-        className={`border-b border-white/5 transition-colors ${
+        className={`border-b border-slate-100 transition-all duration-200 group ${
           isSelected
-            ? "bg-[#a02ff1]/20"
+            ? "bg-emerald-50/60"
             : rIdx % 2 === 0
-            ? "bg-[#1a1b20]"
-            : "bg-[#0f0f11] hover:bg-white/5"
+            ? "bg-white"
+            : "bg-slate-50/30 hover:bg-slate-50"
         }`}
       >
-        <td className="sticky left-0 z-20 bg-inherit border-r border-white/10 text-center px-2">
+        {/* Checkbox Column */}
+        <td className="sticky left-0 z-20 bg-inherit border-r border-slate-100 text-center px-4">
           <input
             type="checkbox"
             checked={isSelected}
             onChange={onSelect}
-            className="rounded border-gray-600 bg-black/40 accent-[#a02ff1]"
+            className="w-4 h-4 rounded-md border-slate-300 text-[#007758] focus:ring-emerald-500 transition-all cursor-pointer"
           />
         </td>
 
@@ -40,6 +44,8 @@ const TableRow = memo(
           const val = row?.[col];
           const numVal = parseFloat(val);
           const maxVal = columnMaxValues?.[col] || 1;
+          
+          // Data Bar calculation (Emerald tint)
           const barWidth =
             isCost && !isNaN(numVal) && showDataBars
               ? Math.min(100, Math.abs((numVal / maxVal) * 100))
@@ -49,24 +55,36 @@ const TableRow = memo(
             <td
               key={`${globalIndex}-${cIdx}`}
               onClick={onRowClick}
-              className={`px-4 ${rowHeight} border-r border-white/5 whitespace-nowrap cursor-pointer relative overflow-hidden ${
+              className={`px-5 ${rowHeight} border-r border-slate-100 whitespace-nowrap cursor-pointer relative overflow-hidden transition-colors ${
                 cIdx === 0
-                  ? "sticky left-[50px] z-10 shadow-[4px_0_10px_rgba(0,0,0,0.5)] border-r-[#a02ff1]/50 bg-inherit"
-                  : ""
-              } ${isCost ? "text-right font-mono" : "text-gray-300"}`}
+                  ? "sticky left-[60px] z-10 shadow-[4px_0_10px_rgba(0,0,0,0.02)] border-r-emerald-500/20 bg-inherit font-bold text-slate-900"
+                  : isSelected ? "text-slate-900" : "text-slate-600"
+              } ${isCost ? "text-right font-mono" : ""}`}
             >
+              {/* Animated Data Bar Background */}
               {barWidth > 0 && (
                 <div
-                  className="absolute inset-y-0 right-0 bg-[#a02ff1]/20 pointer-events-none"
+                  className="absolute inset-y-0 right-0 bg-emerald-500/10 pointer-events-none transition-all duration-1000 ease-out"
                   style={{ width: `${barWidth}%` }}
                 />
               )}
-              <span className="relative z-10">
-                {val !== null && val !== undefined
-                  ? isCost && !isNaN(numVal)
-                    ? numVal.toFixed(4)
-                    : String(val)
-                  : "-"}
+
+              {/* Cell Value */}
+              <span className="relative z-10 text-[11px] font-medium leading-none tracking-tight">
+                {val !== null && val !== undefined ? (
+                  isCost && !isNaN(numVal) ? (
+                    <span className={numVal > 0 ? "text-slate-900" : "text-emerald-600"}>
+                      {numVal.toLocaleString(undefined, {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 4,
+                      })}
+                    </span>
+                  ) : (
+                    String(val)
+                  )
+                ) : (
+                  <span className="text-slate-300 italic font-normal">empty</span>
+                )}
               </span>
             </td>
           );
@@ -80,12 +98,13 @@ const TableRow = memo(
       prevProps.isSelected === nextProps.isSelected &&
       prevProps.showDataBars === nextProps.showDataBars &&
       prevProps.visibleColumns.length === nextProps.visibleColumns.length &&
-      JSON.stringify(prevProps.row) === JSON.stringify(nextProps.row) &&
-      JSON.stringify(prevProps.columnMaxValues) ===
-        JSON.stringify(nextProps.columnMaxValues)
+      // Strict equality for data objects
+      prevProps.row === nextProps.row &&
+      prevProps.columnMaxValues === nextProps.columnMaxValues
     );
   }
 );
 
 TableRow.displayName = "TableRow";
+
 export default TableRow;

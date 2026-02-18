@@ -2,17 +2,14 @@
 @tailwind components;
 @tailwind utilities;
 
-
-
 @layer base {
   :root {
     /* =====================
-       Brand
+       Brand Variables
     ===================== */
     --brand-primary: #007758;
     --brand-primary-hover: #00b889;
     --brand-primary-soft: #e2f3ee;
-
     --brand-secondary: #192630;
 
     /* =====================
@@ -79,27 +76,25 @@
     --transition-base: 250ms ease;
   }
 
+  html {
+    scroll-behavior: smooth;
+  }
+
   body {
     background-color: var(--bg-main);
     color: var(--text-primary);
   }
+  
+  /* Custom Selection Color matching your Brand */
+  ::selection {
+    background-color: rgba(0, 119, 88, 0.22);
+    color: var(--text-primary);
+  }
 }
 
-
-html {
-  scroll-behavior: smooth;
-}
-
-body {
-  background-color: #0f0f11;
-  color: white;
-}
-
-/* Custom Selection Color matching your Brand */
-::selection {
-  background-color: rgba(139, 47, 201, 0.3);
-  color: white;
-}
+/* =====================
+   Utilities & Animations
+===================== */
 
 /* Performance Optimizations for Hover Effects */
 * {
@@ -132,18 +127,8 @@ body {
 
 /* Enhanced tooltip styling for sidebar */
 .sidebar-tooltip {
+  /* Animation defined in tailwind.config.js now, but kept here for fallback */
   animation: tooltipFadeIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-}
-
-@keyframes tooltipFadeIn {
-  from {
-    opacity: 0;
-    transform: translateX(-15px) translateY(-50%) scale(0.96);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(0) translateY(-50%) scale(1);
-  }
 }
 
 /* Smooth hover bridge effect */
@@ -151,25 +136,28 @@ body {
   animation: bridgeFadeIn 0.3s ease-out forwards;
 }
 
-@keyframes bridgeFadeIn {
-  from {
-    opacity: 0;
-    width: 0;
+@layer components {
+  .core-shell {
+    @apply relative space-y-4 font-sans text-[var(--text-primary)] md:space-y-6;
   }
-  to {
-    opacity: 1;
-    width: 12px;
+
+  .core-panel {
+    @apply rounded-2xl border border-[var(--border-light)] bg-white p-4 md:p-5;
   }
-}
 
-.glass-btn {
-  @apply px-3 py-1.5 text-xs rounded-xl
-  bg-black/40 hover:bg-black/60
-  border border-white/10 backdrop-blur-md;
-}
+  .core-card {
+    @apply rounded-xl border border-[var(--border-light)] bg-white shadow-sm;
+  }
 
-.glass-bubble {
-  @apply bg-black/50 backdrop-blur-md
-  border border-white/10 rounded-2xl
-  px-4 py-3 max-w-[85%];
+  .glass-btn {
+    @apply px-3 py-1.5 text-xs rounded-xl
+    bg-black/40 hover:bg-black/60
+    border border-white/10 backdrop-blur-md transition-all;
+  }
+
+  .glass-bubble {
+    @apply bg-black/50 backdrop-blur-md
+    border border-white/10 rounded-2xl
+    px-4 py-3 max-w-[85%];
+  }
 }

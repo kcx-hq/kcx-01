@@ -1,19 +1,18 @@
-// apps/frontend/src/features/optimization/components/OpportunitiesTab.jsx
 import React from "react";
 import { motion } from "framer-motion";
-import { Target, Info } from "lucide-react";
+import { Target } from "lucide-react";
 import { formatCurrency } from "../utils/format";
 import { getPriorityColor } from "../utils/helpers";
 
 export function OpportunitiesTab({ opportunities = [], onSelectInsight }) {
   if (!opportunities || opportunities.length === 0) {
     return (
-      <div className="bg-[#1a1b20]/60 backdrop-blur-md border border-white/5 rounded-xl p-8 text-center">
-        <Target size={48} className="text-gray-500 mx-auto mb-4" />
-        <h3 className="text-lg font-bold text-white mb-2">No Optimization Opportunities Available</h3>
-        <p className="text-sm text-gray-400">
-          Insufficient data to generate optimization opportunities.
-          Please upload more billing data or check back after more usage history is available.
+      <div className="rounded-xl border border-[var(--border-light)] bg-white p-8 text-center">
+        <Target size={48} className="mx-auto mb-4 text-[var(--text-muted)]" />
+        <h3 className="mb-2 text-lg font-bold text-[var(--text-primary)]">No Optimization Opportunities Available</h3>
+        <p className="text-sm text-[var(--text-muted)]">
+          Insufficient data to generate optimization opportunities. Upload more billing data
+          or check back after more usage history is available.
         </p>
       </div>
     );
@@ -27,41 +26,43 @@ export function OpportunitiesTab({ opportunities = [], onSelectInsight }) {
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ delay: index * 0.05 }}
-          className="bg-[#1a1b20]/60 backdrop-blur-md border border-white/5 rounded-xl p-6 hover:border-[#a02ff1]/30 transition-all cursor-pointer"
+          className="cursor-pointer rounded-xl border border-[var(--border-light)] bg-white p-6 transition-all hover:-translate-y-0.5 hover:border-emerald-200 hover:shadow-sm"
           onClick={() => onSelectInsight?.(opp)}
         >
-          <div className="flex items-start justify-between mb-4">
+          <div className="mb-4 flex items-start justify-between">
             <div className="flex-1">
-              <div className="flex items-center gap-3 mb-2">
-                <span className={`px-3 py-1 rounded-full text-xs font-bold border ${getPriorityColor(opp.priority)}`}>
+              <div className="mb-2 flex items-center gap-3">
+                <span className={`rounded-full border px-3 py-1 text-xs font-bold ${getPriorityColor(opp.priority)}`}>
                   {opp.priority || "LOW IMPACT"}
                 </span>
-                <h3 className="text-lg font-bold text-white">{opp.title || "Untitled Opportunity"}</h3>
+                <h3 className="text-lg font-bold text-[var(--text-primary)]">{opp.title || "Untitled Opportunity"}</h3>
               </div>
 
-              <p className="text-sm text-gray-400 mb-4">{opp.description || "No description provided."}</p>
+              <p className="mb-4 text-sm text-[var(--text-secondary)]">{opp.description || "No description provided."}</p>
 
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
                 <div>
-                  <div className="text-xs text-gray-500 mb-1">Estimated Monthly Savings</div>
-                  <div className="text-xl font-bold text-green-400">{formatCurrency(opp.savings)}</div>
+                  <div className="mb-1 text-xs text-[var(--text-muted)]">Estimated Monthly Savings</div>
+                  <div className="text-xl font-bold text-emerald-700">{formatCurrency(opp.savings)}</div>
                 </div>
                 <div>
-                  <div className="text-xs text-gray-500 mb-1">Confidence</div>
-                  <div className="text-sm font-semibold text-white">{opp.confidence || "N/A"}</div>
+                  <div className="mb-1 text-xs text-[var(--text-muted)]">Confidence</div>
+                  <div className="text-sm font-semibold text-[var(--text-primary)]">{opp.confidence || "N/A"}</div>
                 </div>
                 <div>
-                  <div className="text-xs text-gray-500 mb-1">Affected Regions</div>
-                  <div className="text-sm text-gray-300">
+                  <div className="mb-1 text-xs text-[var(--text-muted)]">Affected Regions</div>
+                  <div className="text-sm text-[var(--text-secondary)]">
                     {Array.isArray(opp.regions) ? opp.regions.join(", ") : (opp.regions || "N/A")}
                   </div>
                 </div>
               </div>
             </div>
           </div>
-
         </motion.div>
       ))}
     </div>
   );
 }
+
+export default OpportunitiesTab;
+

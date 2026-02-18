@@ -4,56 +4,44 @@ import { motion } from "framer-motion";
 import { getColorClasses } from "../utils/reportUtils";
 import PremiumGate from "../../common/PremiumGate";
 
-const ReportCard = ({
-  report,
-  index,
-  onDownload,
-  downloading,
-  canDownload,
-}) => {
+const ReportCard = ({ report, index, onDownload, downloading, canDownload }) => {
   const Icon = report.icon;
-  console.log(report)
 
   const content = (
     <motion.div
       key={report.id}
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: index * 0.1 }}
-      className="relative bg-[#1a1b20]/60 backdrop-blur-md border border-white/5 rounded-xl p-6 transition-all hover:border-[#a02ff1]/30"
+      transition={{ delay: index * 0.08 }}
+      className="relative rounded-xl border border-[var(--border-light)] bg-white p-4 transition-all hover:-translate-y-0.5 hover:border-emerald-200 hover:shadow-sm md:p-6"
     >
-      <div className="flex items-start justify-between mb-4">
-        <div className="flex items-start gap-4 flex-1">
-          <div className={`p-3 rounded-lg ${getColorClasses(report.color)}`}>
-            <Icon size={24} />
+      <div className="mb-4 flex items-start justify-between gap-4">
+        <div className="flex flex-1 items-start gap-4">
+          <div className={`rounded-lg border p-3 ${getColorClasses(report.color)}`}>
+            <Icon size={22} />
           </div>
 
           <div className="flex-1">
-            <div className="flex items-center gap-3 mb-2">
-              <h3 className="text-lg font-bold text-white">{report.title}</h3>
-              <span className="px-2 py-1 bg-white/5 rounded text-xs text-gray-400">
+            <div className="mb-2 flex flex-wrap items-center gap-2">
+              <h3 className="text-base font-bold text-[var(--text-primary)] md:text-lg">{report.title}</h3>
+              <span className="rounded border border-[var(--border-light)] bg-[var(--bg-surface)] px-2 py-1 text-xs text-[var(--text-muted)]">
                 {report.frequency}
               </span>
             </div>
 
-            <p className="text-sm text-gray-400 mb-4">{report.description}</p>
+            <p className="mb-3 text-sm text-[var(--text-secondary)]">{report.description}</p>
 
-            <div className="flex items-center gap-2 text-xs text-gray-500 mb-4">
+            <div className="mb-4 flex items-center gap-2 text-xs text-[var(--text-muted)]">
               <Calendar size={14} />
               <span>Period: {report.period}</span>
             </div>
 
-            <div className="bg-[#0f0f11] rounded-lg p-4 border border-white/5">
-              <div className="text-xs text-gray-500 mb-2 font-bold uppercase">
-                Includes
-              </div>
+            <div className="rounded-lg border border-[var(--border-light)] bg-[var(--bg-surface)] p-4">
+              <div className="mb-2 text-xs font-bold uppercase text-[var(--text-muted)]">Includes</div>
               <ul className="space-y-1.5">
                 {report.includes.map((item, idx) => (
-                  <li
-                    key={idx}
-                    className="text-sm text-gray-300 flex items-start gap-2"
-                  >
-                    <span className="text-[#a02ff1] mt-1">•</span>
+                  <li key={idx} className="flex items-start gap-2 text-sm text-[var(--text-secondary)]">
+                    <span className="mt-1 text-[var(--brand-primary)]">-</span>
                     <span>{item}</span>
                   </li>
                 ))}
@@ -63,11 +51,11 @@ const ReportCard = ({
         </div>
       </div>
 
-      <div className="flex items-center justify-end pt-4 border-t border-white/5">
+      <div className="flex items-center justify-end border-t border-[var(--border-muted)] pt-4">
         <button
           onClick={() => onDownload(report.id)}
           disabled={downloading || !canDownload}
-          className="px-6 py-2 bg-[#a02ff1] hover:bg-[#8e25d9] disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg text-sm font-medium transition-colors flex items-center gap-2"
+          className="inline-flex items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-2 text-sm font-semibold text-[var(--brand-primary)] transition-colors hover:bg-emerald-100 disabled:cursor-not-allowed disabled:opacity-50"
         >
           {downloading ? (
             <>
@@ -85,7 +73,11 @@ const ReportCard = ({
     </motion.div>
   );
 
-  return report.isLocked ? <div className="relative bg-[#1a1b20]/60 backdrop-blur-md border border-white/5 rounded-xl p-6 transition-all hover:border-[#a02ff1]/30"><PremiumGate>{content}</PremiumGate></div> : content;
+  if (report.isLocked) {
+    return <PremiumGate variant="wrap">{content}</PremiumGate>;
+  }
+
+  return content;
 };
 
 export default ReportCard;

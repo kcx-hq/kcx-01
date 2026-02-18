@@ -1,5 +1,4 @@
-
-const PaginationBar = ({
+﻿const PaginationBar = ({
   currentPage,
   totalPages,
   actualTotalPages,
@@ -12,14 +11,12 @@ const PaginationBar = ({
   const safeTotalPages = totalPages || 1;
   const safePage = currentPage > safeTotalPages ? safeTotalPages : currentPage;
 
-  
-
   return (
-    <div className="p-3 bg-[#15161a] border-t border-white/10 flex justify-between items-center text-xs text-gray-500">
+    <div className="flex items-center justify-between border-t border-[var(--border-light)] bg-[var(--bg-surface)] p-3 text-xs text-[var(--text-muted)]">
       <span>
         Page {safePage} of {safeTotalPages}
         {isLocked && actualTotalPages > accessiblePages && (
-          <span className="text-gray-500 ml-1">({actualTotalPages} total)</span>
+          <span className="ml-1 text-[var(--text-muted)]">({actualTotalPages} total)</span>
         )}
       </span>
 
@@ -27,7 +24,7 @@ const PaginationBar = ({
         <button
           onClick={onPrev}
           disabled={currentPage === 1}
-          className="px-3 py-1 bg-white/5 rounded hover:bg-white/10 disabled:opacity-30"
+          className="rounded border border-[var(--border-light)] bg-white px-3 py-1 text-[var(--text-secondary)] transition-colors hover:bg-[var(--bg-soft)] disabled:opacity-30"
         >
           Prev
         </button>
@@ -40,7 +37,7 @@ const PaginationBar = ({
                 (currentPage >= accessiblePages && actualTotalPages <= accessiblePages)
               : currentPage >= safeTotalPages
           }
-          className="px-3 py-1 bg-white/5 rounded hover:bg-white/10 disabled:opacity-30"
+          className="rounded border border-[var(--border-light)] bg-white px-3 py-1 text-[var(--text-secondary)] transition-colors hover:bg-[var(--bg-soft)] disabled:opacity-30"
         >
           Next
         </button>
@@ -50,3 +47,4 @@ const PaginationBar = ({
 };
 
 export default PaginationBar;
+

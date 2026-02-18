@@ -1,4 +1,3 @@
-// src/components/Header.jsx
 import React, { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
@@ -8,6 +7,9 @@ import {
   X,
   LogOut,
   User,
+  Settings,
+  Bell,
+  ShieldCheck
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuthStore } from "../../../store/Authstore";
@@ -26,13 +28,13 @@ const Header = ({ title, anomalies = [], anomaliesCount = 0 }) => {
   const profileMenuRef = useRef(null);
 
   const hasAnomalies = anomaliesCount > 0;
+  
   const formatCurrency = (val) =>
     new Intl.NumberFormat("en-US", {
       style: "currency",
       currency: "USD",
     }).format(val);
 
-  // Initialize form with user data
   useEffect(() => {
     if (showProfileSettings && user) {
       setFullName(user.full_name || "");
@@ -40,17 +42,13 @@ const Header = ({ title, anomalies = [], anomaliesCount = 0 }) => {
     }
   }, [showProfileSettings, user]);
 
-  // Close profile menu when clicking outside
+  // Click outside to close menu
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (
-        profileMenuRef.current &&
-        !profileMenuRef.current.contains(event.target)
-      ) {
+      if (profileMenuRef.current && !profileMenuRef.current.contains(event.target)) {
         setShowProfileMenu(false);
       }
     };
-
     if (showProfileMenu) document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [showProfileMenu]);
@@ -60,7 +58,6 @@ const Header = ({ title, anomalies = [], anomaliesCount = 0 }) => {
       await logout();
       navigate("/sign-in");
     } catch (error) {
-      console.error("Logout failed:", error);
       navigate("/sign-in");
     }
   };
@@ -85,7 +82,6 @@ const Header = ({ title, anomalies = [], anomaliesCount = 0 }) => {
     } else {
       setUpdateError(result.message || "Failed to update profile");
     }
-
     setIsUpdating(false);
   };
 
@@ -94,135 +90,114 @@ const Header = ({ title, anomalies = [], anomaliesCount = 0 }) => {
     if (!open) setVisibleAnomaliesCount(5);
   };
 
-  // ✅ theme tokens (no glow / no gradients)
-  const BRAND = "var(--brand-secondary, #007758)";
-
   return (
     <>
-      <header
-        className="fixed top-0 left-[72px] lg:left-[240px] right-0 h-[64px] border-b border-white/10 z-[80] flex items-center px-4 lg:px-6 justify-between transition-all duration-300"
-        style={{ backgroundColor: BRAND }}
-      >
-        {/* Left: Title */}
-        <div className="flex flex-col justify-center">
-          <div className="flex items-center gap-2 text-[10px] text-white/70 font-medium uppercase tracking-wider mb-0.5">
-            <span className="cursor-pointer hover:text-white">K&Co.</span>
-            <span className="opacity-70">/</span>
-            <span className="text-white">Dashboard</span>
+      {/* Z-INDEX FIX: 
+         Increased z-index to 100 to ensure the profile menu drops OVER 
+         any dashboard filters or sticky content below.
+      */}
+      <header className="fixed top-0 left-[72px] lg:left-[240px] right-0 h-[64px] bg-white border-b border-slate-200 z-[100] flex items-center px-3 sm:px-4 md:px-6 justify-between transition-all duration-300">
+        
+        {/* === LEFT: BREADCRUMBS & TITLE === */}
+        <div className="flex flex-col justify-center min-w-0">
+          <div className="hidden sm:flex items-center gap-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-0.5">
+            <span className="hover:text-[var(--brand-primary)] cursor-pointer transition-colors">KCX</span>
+            <span className="text-slate-300">/</span>
+            <span className="text-slate-600">Dashboard</span>
           </div>
-          <h1 className="text-lg font-bold text-white tracking-tight">
+          <h1 className="truncate text-base sm:text-lg font-bold text-[#192630] tracking-tight leading-none">
             {title}
           </h1>
         </div>
 
-        {/* Right: Actions */}
-        <div className="flex items-center gap-3">
-          {/* Status Indicators (kept, but no glow) */}
-          <div className="flex items-center gap-2">
-            {hasAnomalies ? (
-              <button
-                onClick={() => handleDialogToggle(true)}
-                className="flex items-center gap-2 px-3 py-1.5 bg-black/20 border border-white/20 rounded-lg hover:bg-black/30 transition-all"
-              >
-                <AlertTriangle size={14} className="text-amber-300" />
-                <span className="text-xs font-semibold text-white">
-                  Anomalies
-                </span>
-                <span className="text-[10px] bg-black/25 text-white px-1.5 py-0.5 rounded font-bold">
-                  {anomaliesCount}
-                </span>
-              </button>
-            ) : (
-              <button
-                onClick={() => handleDialogToggle(true)}
-                className="flex items-center gap-2 px-3 py-1.5 bg-black/20 border border-white/20 rounded-lg hover:bg-black/30 transition-all"
-              >
-                <CheckCircle2 size={14} className="text-emerald-300" />
-                <span className="text-xs font-semibold text-white">
-                  Smooth
-                </span>
-              </button>
-            )}
-          </div>
+        {/* === RIGHT: ACTIONS === */}
+        <div className="flex items-center gap-2 sm:gap-3">
+          
+          {/* SEARCH BAR REMOVED */}
 
-          {/* User Profile */}
-          <div className="pl-2 border-l border-white/20 ml-1 relative" ref={profileMenuRef}>
+          {/* STATUS INDICATOR */}
+          <button
+            onClick={() => handleDialogToggle(true)}
+            className={`
+              flex items-center gap-2 px-3 py-1.5 rounded-full border transition-all
+              ${hasAnomalies 
+                ? "bg-amber-50 border-amber-200 text-amber-700 hover:bg-amber-100" 
+                : "bg-emerald-50 border-emerald-200 text-emerald-700 hover:bg-emerald-100"
+              }
+            `}
+          >
+            {hasAnomalies ? (
+              <AlertTriangle size={16} fill="currentColor" className="text-amber-500" />
+            ) : (
+              <CheckCircle2 size={16} fill="currentColor" className="text-emerald-500" />
+            )}
+            <span className="hidden sm:inline text-xs font-bold">
+              {hasAnomalies ? `${anomaliesCount} Issues` : "System Healthy"}
+            </span>
+          </button>
+
+          {/* NOTIFICATIONS */}
+          <button className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-50 rounded-full transition-colors relative">
+            <Bell size={20} />
+            <span className="absolute top-2 right-2.5 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></span>
+          </button>
+
+          <div className="h-6 w-px bg-slate-200 mx-1" />
+
+          {/* USER PROFILE */}
+          <div className="relative" ref={profileMenuRef}>
             <button
               onClick={() => setShowProfileMenu(!showProfileMenu)}
-              className="group flex items-center gap-2 p-1 rounded-full hover:bg-black/20 transition-all"
+              className="flex items-center gap-3 p-1 pl-2 hover:bg-slate-50 rounded-full transition-all border border-transparent hover:border-slate-100"
             >
-              <div className="w-7 h-7 rounded-full bg-black/25 border border-white/20 flex items-center justify-center text-white font-bold text-xs">
-                {user?.full_name
-                  ? user.full_name.charAt(0).toUpperCase()
-                  : user?.email
-                    ? user.email.charAt(0).toUpperCase()
-                    : "KC"}
-              </div>
-
-              <div className="hidden sm:block text-left">
-                <div className="text-xs font-bold text-white">
-                  {user?.full_name || user?.email || "Client Admin"}
+              <div className="hidden sm:block text-right">
+                <div className="text-xs font-bold text-[#192630]">
+                  {user?.full_name || "Admin User"}
+                </div>
+                <div className="text-[10px] text-slate-500 font-medium">
+                  {user?.role || "Viewer"}
                 </div>
               </div>
-
-              <ChevronDown
-                size={12}
-                className={`text-white/70 group-hover:text-white transition-transform ${
-                  showProfileMenu ? "rotate-180" : ""
-                }`}
-              />
+              
+              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#192630] to-[#2C3E50] flex items-center justify-center text-white text-xs font-bold shadow-md ring-2 ring-white">
+                {user?.full_name ? user.full_name.charAt(0).toUpperCase() : "U"}
+              </div>
+              
+              <ChevronDown size={14} className="text-slate-400 mr-1" />
             </button>
 
-            {/* Profile Dropdown Menu */}
-            <AnimatePresence mode="wait">
+            {/* DROPDOWN MENU */}
+            <AnimatePresence>
               {showProfileMenu && (
                 <motion.div
-                  initial={{ opacity: 0, y: -10, scale: 0.98 }}
+                  initial={{ opacity: 0, y: 10, scale: 0.95 }}
                   animate={{ opacity: 1, y: 0, scale: 1 }}
-                  exit={{ opacity: 0, y: -10, scale: 0.98 }}
-                  transition={{ duration: 0.15, ease: [0.4, 0, 0.2, 1] }}
-                  className="absolute right-0 top-full mt-2 w-56 bg-[#121214] border border-white/10 rounded-lg shadow-2xl z-50 overflow-hidden"
+                  exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                  className="absolute right-0 top-full mt-2 w-60 bg-white border border-slate-100 rounded-xl shadow-xl shadow-slate-200/50 overflow-hidden z-[110]"
                 >
-                  {/* User Info */}
-                  <div className="p-3 border-b border-white/10">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-black/25 border border-white/10 flex items-center justify-center text-white font-bold text-sm">
-                        {user?.full_name
-                          ? user.full_name.charAt(0).toUpperCase()
-                          : user?.email
-                            ? user.email.charAt(0).toUpperCase()
-                            : "KC"}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="text-sm font-bold text-white truncate">
-                          {user?.full_name || user?.email || "Client Admin"}
-                        </div>
-                        <div className="text-xs text-white/60 truncate">
-                          {user?.email || "No email"}
-                        </div>
-                      </div>
-                    </div>
+                  <div className="p-4 border-b border-slate-50 bg-slate-50/50">
+                    <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Signed in as</p>
+                    <p className="text-sm font-semibold text-[#192630] truncate">{user?.email}</p>
+                  </div>
+                  
+                  <div className="p-1.5">
+                    <button 
+                      onClick={() => { setShowProfileMenu(false); setShowProfileSettings(true); }}
+                      className="w-full flex items-center gap-3 px-3 py-2 text-sm text-slate-600 hover:text-[#192630] hover:bg-slate-50 rounded-lg transition-colors"
+                    >
+                      <Settings size={16} /> Account Settings
+                    </button>
+                    <button className="w-full flex items-center gap-3 px-3 py-2 text-sm text-slate-600 hover:text-[#192630] hover:bg-slate-50 rounded-lg transition-colors">
+                      <ShieldCheck size={16} /> Security & Privacy
+                    </button>
                   </div>
 
-                  {/* Menu Items */}
-                  <div className="p-1">
-                    <button
-                      onClick={() => {
-                        setShowProfileMenu(false);
-                        setShowProfileSettings(true);
-                      }}
-                      className="w-full flex items-center gap-3 px-3 py-2 text-sm text-white/80 hover:bg-white/5 rounded-lg transition-colors"
-                    >
-                      <User size={16} className="text-white/60" />
-                      <span>Profile Settings</span>
-                    </button>
-
-                    <button
+                  <div className="border-t border-slate-50 p-1.5">
+                    <button 
                       onClick={handleLogout}
-                      className="w-full flex items-center gap-3 px-3 py-2 text-sm text-red-300 hover:bg-red-400/10 rounded-lg transition-colors"
+                      className="w-full flex items-center gap-3 px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                     >
-                      <LogOut size={16} className="text-red-300" />
-                      <span>Logout</span>
+                      <LogOut size={16} /> Sign Out
                     </button>
                   </div>
                 </motion.div>
@@ -232,232 +207,124 @@ const Header = ({ title, anomalies = [], anomaliesCount = 0 }) => {
         </div>
       </header>
 
-      {/* Insights Dialog */}
-      {showDialog && (
-        <div
-          className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4"
-          onClick={() => handleDialogToggle(false)}
-        >
-          <div
-            className="bg-[#121214] border border-white/10 rounded-2xl shadow-2xl max-w-2xl w-full max-h-[80vh] overflow-hidden"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="p-5 border-b border-white/10 flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                {hasAnomalies ? (
-                  <>
-                    <div className="p-2 rounded-lg bg-white/5 border border-white/10">
-                      <AlertTriangle size={20} className="text-amber-300" />
-                    </div>
-                    <div>
-                      <h2 className="text-lg font-bold text-white">
-                        Anomalies Detected
-                      </h2>
-                      <p className="text-xs text-white/60 mt-0.5">
-                        {anomaliesCount} cost anomalies found requiring attention
-                      </p>
-                    </div>
-                  </>
-                ) : (
-                  <>
-                    <div className="p-2 rounded-lg bg-white/5 border border-white/10">
-                      <CheckCircle2 size={20} className="text-emerald-300" />
-                    </div>
-                    <div>
-                      <h2 className="text-lg font-bold text-white">
-                        Smooth Operations
-                      </h2>
-                      <p className="text-xs text-white/60 mt-0.5">
-                        No cost leakage detected. All costs are within expected ranges.
-                      </p>
-                    </div>
-                  </>
-                )}
-              </div>
-              <button
-                onClick={() => handleDialogToggle(false)}
-                className="p-1.5 rounded-lg hover:bg-white/5 text-white/70 hover:text-white transition-colors"
-              >
-                <X size={18} />
-              </button>
-            </div>
-
-            <div className="p-5 overflow-y-auto max-h-[calc(80vh-100px)]">
-              {hasAnomalies ? (
-                <div className="space-y-3">
-                  <p className="text-sm text-white/80 mb-4">
-                    The following cost anomalies have been detected. These represent unusual cost spikes that may indicate inefficiencies or require investigation.
-                  </p>
-
-                  <div className="space-y-2">
-                    {anomalies.slice(0, visibleAnomaliesCount).map((item, index) => (
-                      <div
-                        key={index}
-                        className="bg-black/20 border border-white/10 rounded-lg p-3 hover:bg-black/30 transition-colors"
-                      >
-                        <div className="flex items-start justify-between gap-3">
-                          <div className="flex-1 min-w-0">
-                            <p
-                              className="text-sm font-semibold text-white truncate"
-                              title={item.ServiceName || "Unknown Service"}
-                            >
-                              {item.ServiceName || "Unknown Service"}
-                            </p>
-                            <p
-                              className="text-xs text-white/60 mt-1 truncate"
-                              title={`${item.ProviderName || "N/A"} • ${item.RegionName || "N/A"}`}
-                            >
-                              {item.ProviderName || "N/A"} • {item.RegionName || "N/A"}
-                            </p>
-                            {item.ResourceId && (
-                              <p
-                                className="text-xs text-white/50 mt-1 truncate"
-                                title={item.ResourceId}
-                              >
-                                Resource: {item.ResourceId}
-                              </p>
-                            )}
-                          </div>
-
-                          <div className="text-right ml-4 flex-shrink-0">
-                            <p className="text-sm font-bold text-amber-300 whitespace-nowrap">
-                              {formatCurrency(item.cost)}
-                            </p>
-                            {item.ChargePeriodStart && (
-                              <p className="text-xs text-white/50 mt-1 whitespace-nowrap">
-                                {item.ChargePeriodStart.split(" ")[0]}
-                              </p>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-
-                  {anomalies.length > visibleAnomaliesCount ? (
-                    <div className="flex justify-center pt-3">
-                      <button
-                        onClick={() => setVisibleAnomaliesCount(anomalies.length)}
-                        className="px-4 py-2 bg-black/20 border border-white/10 hover:bg-black/30 rounded-lg text-xs font-semibold text-white/80 transition-colors"
-                      >
-                        Load More ({anomalies.length - visibleAnomaliesCount} remaining)
-                      </button>
-                    </div>
-                  ) : visibleAnomaliesCount > 5 ? (
-                    <div className="flex justify-center pt-3">
-                      <button
-                        onClick={() => setVisibleAnomaliesCount(5)}
-                        className="px-4 py-2 bg-black/20 border border-white/10 hover:bg-black/30 rounded-lg text-xs font-semibold text-white/80 transition-colors"
-                      >
-                        Show Less
-                      </button>
-                    </div>
-                  ) : null}
-                </div>
-              ) : (
-                <div className="text-center py-8">
-                  <CheckCircle2 size={48} className="text-emerald-300 mx-auto mb-4" />
-                  <p className="text-lg font-semibold text-white mb-2">
-                    All Systems Operating Smoothly
-                  </p>
-                  <p className="text-sm text-white/60">
-                    Your cost management is optimal. No anomalies or cost leakage detected in the current dataset.
-                  </p>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Profile Settings Modal */}
+      {/* === ANOMALIES DIALOG === */}
       <AnimatePresence>
-        {showProfileSettings && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4"
-            onClick={() => setShowProfileSettings(false)}
+        {showDialog && (
+          <motion.div 
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-slate-900/20 backdrop-blur-sm z-[150] flex items-center justify-center p-4"
+            onClick={() => handleDialogToggle(false)}
           >
-            <motion.div
-              initial={{ scale: 0.98, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.98, opacity: 0 }}
+            <motion.div 
+              initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }}
               onClick={(e) => e.stopPropagation()}
-              className="bg-[#121214] border border-white/10 rounded-2xl shadow-2xl max-w-md w-full overflow-hidden"
+              className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full overflow-hidden border border-slate-100"
             >
-              <div className="p-5 border-b border-white/10 flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-lg bg-white/5 border border-white/10">
-                    <User size={20} className="text-white/80" />
+              <div className="p-6 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+                <div className="flex items-center gap-4">
+                  <div className={`p-3 rounded-xl border ${hasAnomalies ? "bg-amber-50 border-amber-100 text-amber-600" : "bg-emerald-50 border-emerald-100 text-emerald-600"}`}>
+                    {hasAnomalies ? <AlertTriangle size={24} /> : <CheckCircle2 size={24} />}
                   </div>
                   <div>
-                    <h2 className="text-lg font-bold text-white">Profile Settings</h2>
-                    <p className="text-xs text-white/60 mt-0.5">
-                      Update your profile information
+                    <h2 className="text-xl font-bold text-[#192630]">
+                      {hasAnomalies ? "Anomalies Detected" : "System Healthy"}
+                    </h2>
+                    <p className="text-sm text-slate-500">
+                      {hasAnomalies 
+                        ? `${anomaliesCount} potential cost issues found.` 
+                        : "No cost leakage detected in the current period."
+                      }
                     </p>
                   </div>
                 </div>
-                <button
-                  onClick={() => setShowProfileSettings(false)}
-                  className="p-1.5 rounded-lg hover:bg-white/5 text-white/70 hover:text-white transition-colors"
-                >
-                  <X size={18} />
+                <button onClick={() => handleDialogToggle(false)} className="p-2 hover:bg-slate-100 rounded-full text-slate-400 hover:text-slate-600 transition-colors">
+                  <X size={20} />
                 </button>
               </div>
 
-              <form onSubmit={handleUpdateProfile} className="p-5 space-y-4">
+              <div className="p-6 max-h-[60vh] overflow-y-auto custom-scrollbar">
+                {hasAnomalies ? (
+                  <div className="space-y-3">
+                    {anomalies.slice(0, visibleAnomaliesCount).map((item, i) => (
+                      <div key={i} className="flex items-center justify-between p-4 rounded-xl border border-slate-100 bg-white hover:border-slate-200 hover:shadow-sm transition-all">
+                        <div>
+                          <p className="font-semibold text-[#192630]">{item.ServiceName || "Unknown Service"}</p>
+                          <p className="text-xs text-slate-500 mt-1">{item.ProviderName} • {item.RegionName}</p>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-sm font-bold text-amber-600">{formatCurrency(item.cost)}</p>
+                          <p className="text-[10px] text-slate-400 mt-1">{item.ChargePeriodStart?.split(" ")[0]}</p>
+                        </div>
+                      </div>
+                    ))}
+                    {anomalies.length > visibleAnomaliesCount && (
+                      <button onClick={() => setVisibleAnomaliesCount(anomalies.length)} className="w-full py-3 text-sm text-[var(--brand-primary)] font-semibold hover:bg-slate-50 rounded-xl transition-colors">
+                        View All Anomalies
+                      </button>
+                    )}
+                  </div>
+                ) : (
+                  <div className="text-center py-12">
+                    <div className="w-16 h-16 bg-emerald-50 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <CheckCircle2 size={32} className="text-emerald-500" />
+                    </div>
+                    <p className="text-slate-600 font-medium">Everything looks good!</p>
+                  </div>
+                )}
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* === PROFILE SETTINGS MODAL === */}
+      <AnimatePresence>
+        {showProfileSettings && (
+          <motion.div 
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-slate-900/20 backdrop-blur-sm z-[150] flex items-center justify-center p-4"
+            onClick={() => setShowProfileSettings(false)}
+          >
+            <motion.div 
+              initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }}
+              onClick={(e) => e.stopPropagation()}
+              className="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden"
+            >
+              <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+                <h3 className="font-bold text-lg text-[#192630]">Edit Profile</h3>
+                <button onClick={() => setShowProfileSettings(false)}><X size={20} className="text-slate-400 hover:text-slate-600" /></button>
+              </div>
+              
+              <form onSubmit={handleUpdateProfile} className="p-6 space-y-5">
                 <div>
-                  <label className="block text-xs font-semibold text-white/60 uppercase tracking-wider mb-2">
-                    Full Name
-                  </label>
-                  <input
-                    type="text"
+                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Full Name</label>
+                  <input 
                     value={fullName}
                     onChange={(e) => setFullName(e.target.value)}
-                    className="w-full bg-black/25 border border-white/15 rounded-lg px-4 py-3 text-sm text-white focus:outline-none focus:border-white/30 transition-colors"
-                    placeholder="Enter your full name"
-                    required
+                    className="w-full p-3 bg-white border border-slate-200 rounded-xl text-sm font-medium text-[#192630] focus:border-[var(--brand-primary)] focus:ring-4 focus:ring-[var(--brand-primary-soft)] outline-none transition-all"
+                    placeholder="Jane Doe"
                   />
                 </div>
-
+                
                 <div>
-                  <label className="block text-xs font-semibold text-white/60 uppercase tracking-wider mb-2">
-                    Email
-                  </label>
-                  <input
-                    type="email"
+                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Email Address</label>
+                  <input 
                     value={user?.email || ""}
                     disabled
-                    className="w-full bg-black/15 border border-white/10 rounded-lg px-4 py-3 text-sm text-white/50 cursor-not-allowed"
+                    className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-500 cursor-not-allowed"
                   />
-                  <p className="text-[10px] text-white/50 mt-1">
-                    Email cannot be changed
-                  </p>
                 </div>
 
                 {updateError && (
-                  <div className="p-3 bg-red-400/10 border border-red-400/30 rounded-lg">
-                    <p className="text-xs text-red-300">{updateError}</p>
+                  <div className="p-3 bg-red-50 text-red-600 text-sm rounded-lg border border-red-100 flex items-center gap-2">
+                    <AlertTriangle size={16} /> {updateError}
                   </div>
                 )}
 
-                <div className="flex items-center gap-3 pt-2">
-                  <button
-                    type="button"
-                    onClick={() => setShowProfileSettings(false)}
-                    className="flex-1 px-4 py-2.5 bg-white/5 border border-white/10 rounded-lg text-sm font-semibold text-white/80 hover:bg-white/10 transition-colors"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={isUpdating}
-                    className="flex-1 px-4 py-2.5 rounded-lg text-sm font-semibold text-white disabled:opacity-50 disabled:cursor-not-allowed"
-                    style={{ backgroundColor: BRAND }}
-                  >
-                    {isUpdating ? "Updating..." : "Save Changes"}
+                <div className="flex gap-3 pt-2">
+                  <button type="button" onClick={() => setShowProfileSettings(false)} className="flex-1 py-2.5 rounded-xl border border-slate-200 text-slate-600 font-semibold hover:bg-slate-50 transition-colors">Cancel</button>
+                  <button type="submit" disabled={isUpdating} className="flex-1 py-2.5 rounded-xl bg-[var(--brand-primary)] text-white font-bold shadow-lg shadow-[var(--brand-primary)]/20 hover:shadow-xl hover:-translate-y-0.5 transition-all disabled:opacity-50">
+                    {isUpdating ? "Saving..." : "Save Changes"}
                   </button>
                 </div>
               </form>

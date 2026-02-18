@@ -8,43 +8,43 @@ export function VarianceBridge({ overallStats }) {
   const getHeight = (val) => `${Math.max(4, (Math.abs(val) / maxVal) * 100)}%`;
 
   return (
-    <div className="h-40 flex items-end justify-between gap-3 px-4 pb-2 relative select-none bg-[#1a1b20] rounded-xl border border-white/10 p-4 shadow-lg">
-      <div className="absolute inset-0 border-b border-white/5 pointer-events-none" />
+    <div className="relative flex h-36 select-none items-end justify-between gap-2 rounded-xl border border-[var(--border-light)] bg-[var(--bg-surface)] p-3 pb-2 md:h-40 md:gap-3 md:px-4">
+      <div className="pointer-events-none absolute inset-0 border-b border-[var(--border-muted)]" />
 
-      <div className="w-1/4 flex flex-col items-center group relative">
-        <div style={{ height: getHeight(overallStats.totalPrev) }} className="w-full bg-gray-600 rounded-t-lg opacity-60 hover:opacity-100 transition-opacity relative flex justify-center">
-          <span className="absolute -top-7 text-[10px] font-bold text-gray-300 bg-black/80 border border-white/10 px-1.5 py-0.5 rounded">
+      <div className="group relative flex w-1/4 flex-col items-center">
+        <div style={{ height: getHeight(overallStats.totalPrev) }} className="relative flex w-full justify-center rounded-t-lg bg-slate-300 transition-opacity hover:opacity-100">
+          <span className="absolute -top-7 rounded border border-[var(--border-light)] bg-white px-1.5 py-0.5 text-[10px] font-bold text-[var(--text-secondary)]">
             {formatCurrency(overallStats.totalPrev)}
           </span>
         </div>
-        <span className="text-[9px] text-gray-400 mt-2 font-bold uppercase tracking-wider">Start</span>
+        <span className="mt-2 text-[9px] font-bold uppercase tracking-wider text-[var(--text-muted)]">Start</span>
       </div>
 
-      <div className="w-1/4 flex flex-col items-center group relative">
-        <div style={{ height: getHeight(overallStats.totalIncreases) }} className="w-full bg-red-500/20 border-t border-red-500 rounded-t-lg relative flex justify-center hover:bg-red-500/30 transition-colors">
-          <span className="absolute -top-7 text-[10px] font-bold text-red-400 bg-black/80 border border-red-500/30 px-1.5 py-0.5 rounded">
+      <div className="group relative flex w-1/4 flex-col items-center">
+        <div style={{ height: getHeight(overallStats.totalIncreases) }} className="relative flex w-full justify-center rounded-t-lg border-t border-amber-400 bg-amber-100 transition-colors hover:bg-amber-200">
+          <span className="absolute -top-7 rounded border border-amber-200 bg-white px-1.5 py-0.5 text-[10px] font-bold text-amber-700">
             +{formatCurrency(overallStats.totalIncreases)}
           </span>
         </div>
-        <span className="text-[9px] text-red-400 mt-2 font-bold uppercase tracking-wider">Increases</span>
+        <span className="mt-2 text-[9px] font-bold uppercase tracking-wider text-amber-700">Increases</span>
       </div>
 
-      <div className="w-1/4 flex flex-col items-center group relative">
-        <div style={{ height: getHeight(overallStats.totalDecreases) }} className="w-full bg-green-500/20 border-t border-green-500 rounded-t-lg relative flex justify-center hover:bg-green-500/30 transition-colors">
-          <span className="absolute -top-7 text-[10px] font-bold text-green-400 bg-black/80 border border-green-500/30 px-1.5 py-0.5 rounded">
+      <div className="group relative flex w-1/4 flex-col items-center">
+        <div style={{ height: getHeight(overallStats.totalDecreases) }} className="relative flex w-full justify-center rounded-t-lg border-t border-emerald-400 bg-emerald-100 transition-colors hover:bg-emerald-200">
+          <span className="absolute -top-7 rounded border border-emerald-200 bg-white px-1.5 py-0.5 text-[10px] font-bold text-[var(--brand-primary)]">
             {formatCurrency(overallStats.totalDecreases)}
           </span>
         </div>
-        <span className="text-[9px] text-green-400 mt-2 font-bold uppercase tracking-wider">Savings</span>
+        <span className="mt-2 text-[9px] font-bold uppercase tracking-wider text-[var(--brand-primary)]">Savings</span>
       </div>
 
-      <div className="w-1/4 flex flex-col items-center group relative">
-        <div style={{ height: getHeight(overallStats.totalCurr) }} className="w-full bg-[#a02ff1] rounded-t-lg relative flex justify-center hover:brightness-110 transition-all">
-          <span className="absolute -top-7 text-[10px] font-bold text-white bg-black/80 border border-[#a02ff1]/50 px-1.5 py-0.5 rounded">
+      <div className="group relative flex w-1/4 flex-col items-center">
+        <div style={{ height: getHeight(overallStats.totalCurr) }} className="relative flex w-full justify-center rounded-t-lg bg-[var(--brand-primary)] transition-all hover:brightness-110">
+          <span className="absolute -top-7 rounded border border-emerald-200 bg-white px-1.5 py-0.5 text-[10px] font-bold text-[var(--brand-primary)]">
             {formatCurrency(overallStats.totalCurr)}
           </span>
         </div>
-        <span className="text-[9px] text-[#a02ff1] mt-2 font-bold uppercase tracking-wider">End</span>
+        <span className="mt-2 text-[9px] font-bold uppercase tracking-wider text-[var(--brand-primary)]">End</span>
       </div>
     </div>
   );
