@@ -21,6 +21,7 @@ import ChatSession from "./chatbot/ChatSession.model.js";
 import ChatMessage from "./chatbot/ChatMessage.model.js";
 import RawAwsBillingRow from "./rawBillingRaw.model.js";
 import ClientS3Integrations from "./clientS3Intergration.model.js";
+import CloudAccountCredentials from "./cloudAccountCredentials.model.js";
 
 /* =========================
    Define Associations
@@ -32,6 +33,9 @@ User.belongsTo(Client, { foreignKey: 'client_id', as: 'client' });
 
 Client.hasMany(ClientS3Integrations, { foreignKey: 'clientid', as: 'client_s3_integrations' });
 ClientS3Integrations.belongsTo(Client, { foreignKey: 'clientid', as: 'client' });
+
+Client.hasMany(CloudAccountCredentials, { foreignKey: 'clientid', as: 'cloud_account_credentials' });
+CloudAccountCredentials.belongsTo(Client, { foreignKey: 'clientid', as: 'client' });
 
 Client.hasMany(BillingColumnMapping, {
   foreignKey: 'clientid',
@@ -154,5 +158,6 @@ export {
   ChatSession,
   ChatMessage,
   RawAwsBillingRow,
-  ClientS3Integrations
+  ClientS3Integrations,
+  CloudAccountCredentials
 };

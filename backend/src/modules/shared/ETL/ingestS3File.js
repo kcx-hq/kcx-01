@@ -21,14 +21,16 @@ import { autoSuggest } from "../../../utils/mapping/autoSuggest.js";
 import { internalFields } from "../../../utils/mapping/internalFields.js";
 
 
-export async function ingestS3File({region , s3Key , clientid  , uploadId , Bucket}){
+export async function ingestS3File({region , s3Key , clientid  , uploadId , Bucket , clientcreds}){
   try {
-    const creds = await assumeRole();
+    const creds = await assumeRole({region , clientcreds});
+
 
     const s3 = new S3Client({
       region: region,
       credentials: creds,
     });
+
 
     const response = await s3.send(
       new GetObjectCommand({
@@ -36,6 +38,7 @@ export async function ingestS3File({region , s3Key , clientid  , uploadId , Buck
         Key: s3Key,
       })
     );
+
 
     const isGzip = s3Key.toLowerCase().endsWith(".gz");
     const inputStream = isGzip

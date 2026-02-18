@@ -11,6 +11,10 @@ dotenv.config({
  */
 export default async function assumeRole(options = {}) {
   try {
+
+
+    
+
     const {
       AWS_REGION,
       AWS_ACCESS_KEY_ID,
@@ -19,23 +23,27 @@ export default async function assumeRole(options = {}) {
       AWS_ASSUME_ROLE_SESSION_NAME,
     } = process.env;
 
+    
+
     const region = options.region || AWS_REGION;
     const roleArn = options.roleArn || AWS_ASSUME_ROLE_ARN;
     const roleSessionName =
       options.sessionName ||
       AWS_ASSUME_ROLE_SESSION_NAME ||
       `kcx-session-${Date.now()}`;
+    const awsAccessKeyId = options.clientcreds.accessKeyId ;
+    const awsSecretAccessKey = options.clientcreds.secretAccessKey ;
 
     if (!region) throw new Error("AWS_REGION missing");
-    if (!AWS_ACCESS_KEY_ID) throw new Error("AWS_ACCESS_KEY_ID missing");
-    if (!AWS_SECRET_ACCESS_KEY) throw new Error("AWS_SECRET_ACCESS_KEY missing");
+    if (!awsAccessKeyId) throw new Error("AWS_ACCESS_KEY_ID missing");
+    if (!awsSecretAccessKey) throw new Error("AWS_SECRET_ACCESS_KEY missing");
     if (!roleArn) throw new Error("Role ARN missing");
 
     const stsClient = new STSClient({
       region,
       credentials: {
-        accessKeyId: AWS_ACCESS_KEY_ID,
-        secretAccessKey: AWS_SECRET_ACCESS_KEY,
+        accessKeyId: awsAccessKeyId,
+        secretAccessKey: awsSecretAccessKey,
       },
     });
 

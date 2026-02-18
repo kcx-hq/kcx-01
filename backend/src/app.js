@@ -11,7 +11,7 @@ import coreDashboardRoutes from './modules/core-dashboard/core-dashboard.routes.
 import capabililitesRoutes from './modules/shared/capabilities/capabilities.routes.js';
 import chatbotRoutes from './modules/shared/chatbot/chat.routes.js'
 import cloudRoutes from "./modules/shared/cloud/cloud.route.js";
-
+import cloudAccountCredentialsRoutes from "./modules/internal/cloud-account-credentials/cloudAccountCredential.route.js"
 import getClientDashboardRoutes from './modules/clients/index.js'
 dotenv.config({
   path: `.env.${process.env.NODE_ENV || "development"}`
@@ -57,6 +57,7 @@ app.use('/api/capabililites' , capabililitesRoutes )
 app.use('/api/dashboard', coreDashboardRoutes);
 app.use('/api/chatbot' , chatbotRoutes)
 app.use("/api/cloud", cloudRoutes);
+app.use("/internal/cloud-account-credentials" , cloudAccountCredentialsRoutes)
 
 getClientDashboardRoutes(app);
 
