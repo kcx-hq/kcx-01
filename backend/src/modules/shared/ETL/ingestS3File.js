@@ -21,12 +21,19 @@ import { autoSuggest } from "../../../utils/mapping/autoSuggest.js";
 import { internalFields } from "../../../utils/mapping/internalFields.js";
 
 
-export async function ingestS3File({s3Key , clientid  , uploadId , Bucket}){
+export async function ingestS3File({
+  s3Key,
+  clientid,
+  uploadId,
+  Bucket,
+  region = "ap-south-1",
+  assumeRoleOptions = null,
+}){
   try {
-    const creds = await assumeRole();
+    const creds = await assumeRole(assumeRoleOptions || {});
 
     const s3 = new S3Client({
-      region: "ap-south-1",
+      region,
       credentials: creds,
     });
 
@@ -46,10 +53,7 @@ export async function ingestS3File({s3Key , clientid  , uploadId , Bucket}){
  
     let headers;
     let provider;
-    let resolvedMapping;
-
     const sampleRows = [];
-    const mappedRowsForDims = [];
 
     let isFirstRow = true;
 
@@ -64,25 +68,23 @@ export async function ingestS3File({s3Key , clientid  , uploadId , Bucket}){
       }
 
       sampleRows.push(rawRow);
-
-      // Take first 200 rows for suggestion
-      if (sampleRows.length === 200 && !resolvedMapping) {
-        const suggestions = autoSuggest(headers, sampleRows, internalFields);
-
-        await storeAutoSuggestions(provider, uploadId, suggestions, clientid);
-
-        resolvedMapping = await loadResolvedMapping(
-          provider,
-          headers,
-          clientid
-        );
-      }
-
-      if (resolvedMapping) {
-        const mapped = mapRow(rawRow, resolvedMapping);
-        mappedRowsForDims.push(mapped);
-      }
     }
+
+    // Resolve mapping even for small files (<200 rows), then map all rows.
+    const suggestionRows = sampleRows.slice(0, 200);
+    const suggestions = autoSuggest(headers, suggestionRows, internalFields);
+
+    await storeAutoSuggestions(provider, uploadId, suggestions, clientid);
+
+    const resolvedMapping = await loadResolvedMapping(
+      provider,
+      headers,
+      clientid
+    );
+
+    const mappedRowsForDims = sampleRows.map((rawRow) =>
+      mapRow(rawRow, resolvedMapping)
+    );
 
     /* ======================
        DIMENSIONS UPSERT

@@ -13,6 +13,7 @@ import {
 // eslint-disable-next-line no-unused-vars
 import { motion, AnimatePresence } from "framer-motion";
 import  { useDashboardStore } from "../../store/Dashboard.store"; 
+import CloudFileManagerPanel from "./CloudFileManagerPanel";
 const MAX_MB = 50;
 
 const CsvUploadInput = ({
@@ -24,6 +25,7 @@ const CsvUploadInput = ({
   // Use VITE_API_URL if uploadUrl is not provided
   const finalUploadUrl = uploadUrl || `${import.meta.env.VITE_API_URL}/api/etl`;
   const cloudVerifyUrl = `${import.meta.env.VITE_API_URL}/api/cloud/aws/verify-connection`;
+  const cloudConnectUrl = `${import.meta.env.VITE_API_URL}/api/cloud/aws/connect`;
 
   const [mode, setMode] = useState("csv"); // csv | cloud
   const [csvStatus, setCsvStatus] = useState("idle"); // idle | uploading | error
@@ -38,6 +40,7 @@ const CsvUploadInput = ({
   const [cloudStatus, setCloudStatus] = useState("idle"); // idle | testing | tested | connecting | connected | error
   const [cloudMessage, setCloudMessage] = useState("");
   const [cloudPreview, setCloudPreview] = useState(null);
+  const [cloudConnection, setCloudConnection] = useState(null);
   const [hasExistingUploads, setHasExistingUploads] = useState(false);
   const setUploadIds = useDashboardStore((s) => s.setUploadIds);
   const dashboardPath = useDashboardStore((s) => s.dashboardPath);
@@ -142,7 +145,12 @@ const CsvUploadInput = ({
   const updateCloudField = (field, value) => {
     setCloudForm((prev) => ({ ...prev, [field]: value }));
     setCloudPreview(null);
-    if (cloudStatus === "error") {
+    setCloudConnection(null);
+    if (
+      cloudStatus === "error" ||
+      cloudStatus === "tested" ||
+      cloudStatus === "connected"
+    ) {
       setCloudStatus("idle");
       setCloudMessage("");
     }
@@ -209,8 +217,44 @@ const CsvUploadInput = ({
       return;
     }
 
-    setCloudStatus("connected");
-    setCloudMessage("Connection setup step is ready. Persistence will be added next.");
+    setCloudStatus("connecting");
+    setCloudMessage("");
+    setCloudPreview(null);
+    setCloudConnection(null);
+
+    try {
+      const res = await axios.post(
+        cloudConnectUrl,
+        {
+          accountId: cloudForm.accountId.trim(),
+          roleName: cloudForm.roleName.trim(),
+          bucketPrefix: cloudForm.bucketPrefix.trim(),
+          region: cloudForm.region.trim(),
+        },
+        { withCredentials },
+      );
+
+      const data = res?.data || {};
+      setCloudStatus("connected");
+      setCloudMessage("Cloud connection successful. Opening file manager.");
+      setCloudConnection({
+        accountId: cloudForm.accountId.trim(),
+        roleName: cloudForm.roleName.trim(),
+        bucketPrefix: cloudForm.bucketPrefix.trim(),
+        region: cloudForm.region.trim(),
+        rootPrefix: data.rootPrefix || "",
+        bucket: data.bucket || "",
+      });
+    } catch (err) {
+      const msg =
+        err?.response?.data?.message ||
+        err?.response?.data?.error ||
+        err?.message ||
+        "Cloud connection failed.";
+      setCloudStatus("error");
+      setCloudMessage(msg);
+      setCloudConnection(null);
+    }
   };
 
   return (
@@ -220,7 +264,7 @@ const CsvUploadInput = ({
       <div className="absolute top-0 left-1/4 w-96 h-96 bg-[#a02ff1]/10 rounded-full blur-[120px] pointer-events-none mix-blend-screen animate-pulse" />
       <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-blue-600/10 rounded-full blur-[120px] pointer-events-none mix-blend-screen" />
 
-      <div className="relative z-10 w-full max-w-3xl">
+      <div className={`relative z-10 w-full ${cloudConnection ? "max-w-6xl" : "max-w-3xl"}`}>
         {hasExistingUploads ? (
           <div className="flex justify-end mb-4">
             <button
@@ -351,6 +395,16 @@ const CsvUploadInput = ({
                     )}
                   </label>
                 </motion.div>
+              ) : cloudConnection ? (
+                <motion.div
+                  key="cloud-file-manager"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="w-full max-w-5xl"
+                >
+                  <CloudFileManagerPanel cloudConfig={cloudConnection} />
+                </motion.div>
               ) : (
                 <motion.div
                   key="cloud-form"
@@ -433,16 +487,33 @@ const CsvUploadInput = ({
                     <button
                       type="button"
                       onClick={() => handleCloudAction("test")}
-                      disabled={cloudStatus === "testing" || cloudStatus === "connecting"}
-                      className="flex-1 px-4 py-3 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 text-white font-semibold transition disabled:opacity-60"
+                      disabled={
+                        cloudStatus === "testing" ||
+                        cloudStatus === "connecting" ||
+                        cloudStatus === "tested" ||
+                        cloudStatus === "connected"
+                      }
+                      className={`flex-1 px-4 py-3 rounded-xl font-semibold transition ${
+                        cloudStatus === "tested" || cloudStatus === "connected"
+                          ? "bg-white/5 border border-white/10 text-gray-500 cursor-not-allowed"
+                          : "bg-[#a02ff1] hover:bg-[#8e25d9] text-white"
+                      }`}
                     >
                       {cloudStatus === "testing" ? "Testing..." : "Test Connection"}
                     </button>
                     <button
                       type="button"
                       onClick={() => handleCloudAction("connect")}
-                      disabled={cloudStatus === "testing" || cloudStatus === "connecting"}
-                      className="flex-1 px-4 py-3 rounded-xl bg-[#a02ff1] hover:bg-[#8e25d9] text-white font-semibold transition disabled:opacity-60"
+                      disabled={
+                        cloudStatus !== "tested" ||
+                        cloudStatus === "testing" ||
+                        cloudStatus === "connecting"
+                      }
+                      className={`flex-1 px-4 py-3 rounded-xl font-semibold transition ${
+                        cloudStatus === "tested"
+                          ? "bg-[#a02ff1] hover:bg-[#8e25d9] text-white"
+                          : "bg-white/5 border border-white/10 text-gray-500 cursor-not-allowed"
+                      }`}
                     >
                       {cloudStatus === "connecting" ? "Connecting..." : "Connect Cloud"}
                     </button>

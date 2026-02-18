@@ -3,7 +3,10 @@ import {
   ListObjectsV2Command,
   S3Client,
 } from "@aws-sdk/client-s3";
+import { v4 as uuidv4 } from "uuid";
 import assumeRole from "../../../aws/assumeRole.js";
+import { BillingUpload } from "../../../models/index.js";
+import { ingestS3File } from "../ETL/ingestS3File.js";
 
 function ensureTrailingSlash(value) {
   if (!value) return "";
@@ -310,12 +313,17 @@ export async function listCloudFiles({
 }
 
 export async function selectCloudFileForIngestion({
+  clientId,
+  userId,
   accountId,
   roleName,
   bucketPrefix,
   region,
   filePath,
 }) {
+  if (!clientId) throw new Error("Missing client context");
+  if (!userId) throw new Error("Missing user context");
+
   const context = resolveCloudContext({
     accountId,
     roleName,
@@ -348,9 +356,42 @@ export async function selectCloudFileForIngestion({
     }),
   );
 
+  const uploadId = uuidv4();
+  const uploadedAt = head.LastModified ? new Date(head.LastModified) : new Date();
+  const billingDay = uploadedAt.toISOString().slice(0, 10);
+  const checksum =
+    head.ETag?.replace(/"/g, "") ||
+    `${safeRelativePath}:${head.ContentLength || 0}:${uploadedAt.toISOString()}`;
+
+  await BillingUpload.create({
+    uploadid: uploadId,
+    clientid: clientId,
+    uploadedby: userId,
+    filename: objectKey,
+    filesize: Number(head.ContentLength || 0),
+    billingperiodstart: billingDay,
+    billingperiodend: billingDay,
+    checksum,
+    uploadedat: uploadedAt,
+  });
+
+  await ingestS3File({
+    s3Key: objectKey,
+    clientid: clientId,
+    uploadId,
+    Bucket: context.bucket,
+    region: context.region,
+    assumeRoleOptions: {
+      roleArn: buildRoleArn(context.accountId, context.roleName),
+      sessionName: `kcx-cloud-ingest-${uploadId.slice(0, 8)}`,
+      region: context.region,
+    },
+  });
+
   return {
     ok: true,
-    message: "File selected for ingestion",
+    message: "File ingested successfully",
+    uploadId,
     file: {
       name: safeRelativePath.split("/").pop(),
       path: safeRelativePath,

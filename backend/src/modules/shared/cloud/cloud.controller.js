@@ -64,6 +64,8 @@ export async function selectCloudFile(req, res) {
   try {
     const { accountId, roleName, bucketPrefix, region, filePath } = req.body || {};
     const result = await selectCloudFileForIngestion({
+      clientId: req.client_id,
+      userId: req.user?.id,
       accountId,
       roleName,
       bucketPrefix,
