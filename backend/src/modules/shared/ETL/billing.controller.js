@@ -3,6 +3,7 @@ import { BillingUpload } from "../../../models/index.js";
 import { ingestBillingCsv } from "./billingIngest.service.js";
 import { getUserById } from "../user/user.service.js";
 import fs from "fs/promises";
+import { ingestS3File } from "./ingestS3File.js";
 
 export async function uploadBillingCsv(req, res) {
   const file = req.file;
@@ -70,4 +71,57 @@ export async function getUploadById(req, res) {
     where: { clientid: req.client_id, uploadid: req.params.uploadId },
   });
   res.json(upload);
+}
+
+export async function s3Ingest(req, res) {
+  console.log("Ingesting billing CSV from S3");
+
+  console.log(req.body);
+
+  try {
+    const s3Key = req.body.detail.object.key;
+    const size = req.body.detail.object.size;
+    const account = req.body.account;
+    const bucket = req.body.detail.bucket.name;
+    const clientid = "d15d543d-c51d-4829-bab1-c3bd4e67cba1";
+    const region = req.body.region
+
+    // BASIC "fingerprint"
+    const tempChecksum = req.body.detail.object.etag + req.body.detail.object.sequencer;
+
+    // dedupe: same key + same lastModified + same size
+    const exists = await BillingUpload.findOne({
+      where: {
+        clientid,
+        filename: s3Key,
+        filesize: size,
+        checksum: tempChecksum,
+      },
+      attributes: ["uploadid"],
+    });
+
+    if (exists) return;
+    // create upload row (uploadid becomes your uploadId)
+    const upload = await BillingUpload.create({
+      clientid,
+      uploadedby : "00000000-0000-0000-0000-000000000001", // system user id
+      filename: s3Key,
+      filesize: size,
+      checksum: tempChecksum, // placeholder for now
+      billingperiodstart: new Date().toISOString().slice(0, 10), // temp
+      billingperiodend: new Date().toISOString().slice(0, 10), // temp
+      uploadedat: new Date(), // IMPORTANT: use S3 last modified
+    });
+
+    await ingestS3File({
+      region, 
+      s3Key: s3Key,
+      clientid,
+      uploadId: upload.uploadid,
+      Bucket: bucket,
+    });
+  } catch (e) {
+    console.log(e);
+  }
+  return res.json("completed");
 }

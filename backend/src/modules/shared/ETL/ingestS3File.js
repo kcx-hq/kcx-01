@@ -21,12 +21,12 @@ import { autoSuggest } from "../../../utils/mapping/autoSuggest.js";
 import { internalFields } from "../../../utils/mapping/internalFields.js";
 
 
-export async function ingestS3File({s3Key , clientid  , uploadId , Bucket}){
+export async function ingestS3File({region , s3Key , clientid  , uploadId , Bucket}){
   try {
     const creds = await assumeRole();
 
     const s3 = new S3Client({
-      region: "ap-south-1",
+      region: region,
       credentials: creds,
     });
 
