@@ -1,7 +1,16 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
-import { Upload, Loader2, FileText, AlertCircle } from "lucide-react";
+import {
+  Upload,
+  FileText,
+  AlertCircle,
+  Cloud,
+  ShieldCheck,
+  Link2,
+  ArrowLeft,
+} from "lucide-react";
+// eslint-disable-next-line no-unused-vars
 import { motion, AnimatePresence } from "framer-motion";
 import  { useDashboardStore } from "../../store/Dashboard.store"; 
 const MAX_MB = 50;
@@ -13,13 +22,39 @@ const CsvUploadInput = ({
   const navigate = useNavigate();
   
   // Use VITE_API_URL if uploadUrl is not provided
-  const finalUploadUrl = `${import.meta.env.VITE_API_URL}/api/etl`;
+  const finalUploadUrl = uploadUrl || `${import.meta.env.VITE_API_URL}/api/etl`;
+  const cloudVerifyUrl = `${import.meta.env.VITE_API_URL}/api/cloud/aws/verify-connection`;
 
-  const [status, setStatus] = useState("idle"); // idle | uploading | error
-  const [errorMessage, setErrorMessage] = useState("");
+  const [mode, setMode] = useState("csv"); // csv | cloud
+  const [csvStatus, setCsvStatus] = useState("idle"); // idle | uploading | error
+  const [csvErrorMessage, setCsvErrorMessage] = useState("");
   const [fileDetails, setFileDetails] = useState(null);
-const setUploadIds = useDashboardStore((s) => s.setUploadIds);
-const dashboardPath = useDashboardStore((s) => s.dashboardPath);
+  const [cloudForm, setCloudForm] = useState({
+    accountId: "",
+    roleName: "",
+    bucketPrefix: "",
+    region: "ap-south-1",
+  });
+  const [cloudStatus, setCloudStatus] = useState("idle"); // idle | testing | tested | connecting | connected | error
+  const [cloudMessage, setCloudMessage] = useState("");
+  const [cloudPreview, setCloudPreview] = useState(null);
+  const [hasExistingUploads, setHasExistingUploads] = useState(false);
+  const setUploadIds = useDashboardStore((s) => s.setUploadIds);
+  const dashboardPath = useDashboardStore((s) => s.dashboardPath);
+
+  const formatDateTime = (value) => {
+    if (!value) return "--";
+    const d = new Date(value);
+    if (Number.isNaN(d.getTime())) return String(value);
+    return d.toLocaleString(undefined, {
+      year: "numeric",
+      month: "short",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  };
+
   const validate = (file) => {
     if (!file) return "No file selected.";
     if (!file.name.toLowerCase().endsWith(".csv")) return "Only CSV files are allowed.";
@@ -27,11 +62,28 @@ const dashboardPath = useDashboardStore((s) => s.dashboardPath);
     return "";
   };
 
+  useEffect(() => {
+    const checkExistingUploads = async () => {
+      try {
+        const res = await axios.get(
+          `${import.meta.env.VITE_API_URL}/api/etl/get-billing-uploads`,
+          { withCredentials },
+        );
+        const uploads = Array.isArray(res.data) ? res.data : [];
+        setHasExistingUploads(uploads.length > 0);
+      } catch {
+        setHasExistingUploads(false);
+      }
+    };
+
+    checkExistingUploads();
+  }, [withCredentials]);
+
   const uploadFile = async (file) => {
     const msg = validate(file);
     if (msg) {
-      setStatus("error");
-      setErrorMessage(msg);
+      setCsvStatus("error");
+      setCsvErrorMessage(msg);
       return;
     }
 
@@ -40,8 +92,8 @@ const dashboardPath = useDashboardStore((s) => s.dashboardPath);
       size: (file.size / 1024 / 1024).toFixed(2) + " MB",
     });
 
-    setStatus("uploading");
-    setErrorMessage("");
+    setCsvStatus("uploading");
+    setCsvErrorMessage("");
 
     const formData = new FormData();
     formData.append("file", file);
@@ -49,10 +101,11 @@ const dashboardPath = useDashboardStore((s) => s.dashboardPath);
     try {
       const res = await axios.post(finalUploadUrl, formData, {
         headers: { "Content-Type": "multipart/form-data" },
-        withCredentials : true,
+        withCredentials,
       });
 
-      setUploadIds([res.data.uploadId] || []);
+      const nextUploadIds = res?.data?.uploadId ? [res.data.uploadId] : [];
+      setUploadIds(nextUploadIds);
       // ✅ success -> dashboard
       navigate(dashboardPath);
     } catch (err) {
@@ -70,8 +123,8 @@ const dashboardPath = useDashboardStore((s) => s.dashboardPath);
         msg2 = err.message;
       }
 
-      setStatus("error");
-      setErrorMessage(msg2);
+      setCsvStatus("error");
+      setCsvErrorMessage(msg2);
     }
   };
 
@@ -86,6 +139,80 @@ const dashboardPath = useDashboardStore((s) => s.dashboardPath);
     uploadFile(file);
   };
 
+  const updateCloudField = (field, value) => {
+    setCloudForm((prev) => ({ ...prev, [field]: value }));
+    setCloudPreview(null);
+    if (cloudStatus === "error") {
+      setCloudStatus("idle");
+      setCloudMessage("");
+    }
+  };
+
+  const validateCloud = () => {
+    if (!cloudForm.accountId.trim()) return "Account ID is required.";
+    if (!/^\d{12}$/.test(cloudForm.accountId.trim())) {
+      return "Account ID must be a 12-digit number.";
+    }
+    if (!cloudForm.roleName.trim()) return "RoleName is required.";
+    if (!cloudForm.bucketPrefix.trim()) return "Bucket (prefix) is required.";
+    return "";
+  };
+
+  const handleCloudAction = async (action) => {
+    const validationMessage = validateCloud();
+    if (validationMessage) {
+      setCloudStatus("error");
+      setCloudMessage(validationMessage);
+      setCloudPreview(null);
+      return;
+    }
+
+    if (action === "test") {
+      setCloudStatus("testing");
+      setCloudMessage("");
+      try {
+        const res = await axios.post(
+          cloudVerifyUrl,
+          {
+            accountId: cloudForm.accountId.trim(),
+            roleName: cloudForm.roleName.trim(),
+            bucketPrefix: cloudForm.bucketPrefix.trim(),
+            region: cloudForm.region.trim(),
+          },
+          { withCredentials },
+        );
+
+        const data = res?.data || {};
+        const latestFileKey = data?.latestFile?.key || "";
+        setCloudStatus("tested");
+        setCloudMessage(
+          latestFileKey
+            ? `Assumption success. Latest file detected under "${data.bucket}".`
+            : `Assumption success. Connected to "${data.bucket}", but no file found for this prefix.`,
+        );
+        setCloudPreview({
+          assumedRoleArn: data.assumedRoleArn || "",
+          bucket: data.bucket || "",
+          prefix: data.prefix || "",
+          latestFile: data.latestFile || null,
+        });
+      } catch (err) {
+        const msg =
+          err?.response?.data?.message ||
+          err?.response?.data?.error ||
+          err?.message ||
+          "Connection verification failed.";
+        setCloudStatus("error");
+        setCloudMessage(msg);
+        setCloudPreview(null);
+      }
+      return;
+    }
+
+    setCloudStatus("connected");
+    setCloudMessage("Connection setup step is ready. Persistence will be added next.");
+  };
+
   return (
     <div className="min-h-screen bg-[#0f0f11] flex items-center justify-center px-6 py-12 font-sans relative overflow-hidden">
       {/* background */}
@@ -94,17 +221,72 @@ const dashboardPath = useDashboardStore((s) => s.dashboardPath);
       <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-blue-600/10 rounded-full blur-[120px] pointer-events-none mix-blend-screen" />
 
       <div className="relative z-10 w-full max-w-3xl">
+        {hasExistingUploads ? (
+          <div className="flex justify-end mb-4">
+            <button
+              type="button"
+              onClick={() => navigate("/billing-uploads")}
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white/5 border border-white/10 text-gray-200 hover:bg-white/10 hover:border-[#a02ff1]/35 transition"
+            >
+              <ArrowLeft className="w-4 h-4 text-[#a02ff1]" />
+              <span className="text-sm font-semibold">Back to Billing Uploads</span>
+            </button>
+          </div>
+        ) : null}
+
         <div className="text-center mb-10">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 text-[#a02ff1] text-xs font-bold uppercase tracking-wider mb-4">
             <span className="w-2 h-2 rounded-full bg-[#a02ff1]"></span>
             Secure Ingestion
           </div>
           <h1 className="text-4xl md:text-5xl font-bold text-white mb-4 tracking-tight">
-            Upload Billing CSV
+            Ingest Billing Data
           </h1>
           <p className="text-gray-400 text-lg max-w-xl mx-auto leading-relaxed">
-            Upload your billing export (CSV) to generate instant cost intelligence.
+            Choose how you want to ingest data for cost intelligence.
           </p>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+          <button
+            type="button"
+            onClick={() => setMode("csv")}
+            className={`group relative rounded-2xl border p-5 text-left transition-all ${
+              mode === "csv"
+                ? "border-[#a02ff1]/60 bg-[#a02ff1]/10 shadow-[0_0_20px_rgba(160,47,241,0.18)]"
+                : "border-white/10 bg-white/5 hover:bg-white/10"
+            }`}
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl border border-white/10 bg-[#0f0f11] flex items-center justify-center">
+                <Upload className="w-5 h-5 text-[#a02ff1]" />
+              </div>
+              <div>
+                <p className="text-white font-semibold">Upload CSV</p>
+                <p className="text-xs text-gray-400">Drag, drop, and ingest now</p>
+              </div>
+            </div>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setMode("cloud")}
+            className={`group relative rounded-2xl border p-5 text-left transition-all ${
+              mode === "cloud"
+                ? "border-[#a02ff1]/60 bg-[#a02ff1]/10 shadow-[0_0_20px_rgba(160,47,241,0.18)]"
+                : "border-white/10 bg-white/5 hover:bg-white/10"
+            }`}
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl border border-white/10 bg-[#0f0f11] flex items-center justify-center">
+                <Cloud className="w-5 h-5 text-[#a02ff1]" />
+              </div>
+              <div>
+                <p className="text-white font-semibold">Connect Cloud (AWS)</p>
+                <p className="text-xs text-gray-400">Assume role based connection</p>
+              </div>
+            </div>
+          </button>
         </div>
 
         <motion.div
@@ -114,7 +296,7 @@ const dashboardPath = useDashboardStore((s) => s.dashboardPath);
         >
           <div className="p-10 min-h-[420px] flex flex-col items-center justify-center">
             <AnimatePresence mode="wait">
-              {status === "uploading" ? (
+              {mode === "csv" && csvStatus === "uploading" ? (
                 <motion.div
                   key="uploading"
                   initial={{ opacity: 0, scale: 0.95 }}
@@ -141,9 +323,9 @@ const dashboardPath = useDashboardStore((s) => s.dashboardPath);
                   </div>
                   <p className="text-xs text-gray-500 mt-4 animate-pulse">Calculating unit costs and anomalies...</p>
                 </motion.div>
-              ) : (
+              ) : mode === "csv" ? (
                 <motion.div
-                  key="idle"
+                  key="csv-idle"
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
@@ -161,13 +343,158 @@ const dashboardPath = useDashboardStore((s) => s.dashboardPath);
                     <h3 className="font-bold text-xl mb-2 text-white">Click to upload or drag & drop</h3>
                     <p className="text-gray-500 text-sm mb-6">Max file size {MAX_MB}MB (CSV only)</p>
 
-                    {status === "error" && (
+                    {csvStatus === "error" && (
                       <div className="mt-2 flex items-center gap-2 text-red-400 text-sm">
                         <AlertCircle className="w-4 h-4" />
-                        <span>{errorMessage}</span>
+                        <span>{csvErrorMessage}</span>
                       </div>
                     )}
                   </label>
+                </motion.div>
+              ) : (
+                <motion.div
+                  key="cloud-form"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="w-full max-w-xl"
+                >
+                  <div className="text-center mb-7">
+                    <h2 className="text-2xl font-bold text-white mb-2">Connect Cloud (AWS)</h2>
+                    <p className="text-gray-400 text-sm">
+                      Enter role access details to enable S3 billing ingestion.
+                    </p>
+                  </div>
+
+                  <div className="space-y-4">
+                    <div>
+                      <label className="text-xs uppercase tracking-wider text-gray-400 font-semibold">
+                        Account ID (12 digits)
+                      </label>
+                      <input
+                        type="text"
+                        value={cloudForm.accountId}
+                        onChange={(e) =>
+                          updateCloudField(
+                            "accountId",
+                            e.target.value.replace(/\D/g, "").slice(0, 12),
+                          )
+                        }
+                        placeholder="123456789012"
+                        inputMode="numeric"
+                        className="mt-2 w-full px-4 py-3 rounded-xl bg-[#0f0f11] border border-white/10 text-white placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-[#a02ff1]/40 focus:border-[#a02ff1]/50"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="text-xs uppercase tracking-wider text-gray-400 font-semibold">
+                        Role Name
+                      </label>
+                      <input
+                        type="text"
+                        value={cloudForm.roleName}
+                        onChange={(e) => updateCloudField("roleName", e.target.value)}
+                        placeholder="role name e.g. MyBillingAccessRole"
+                        className="mt-2 w-full px-4 py-3 rounded-xl bg-[#0f0f11] border border-white/10 text-white placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-[#a02ff1]/40 focus:border-[#a02ff1]/50"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="text-xs uppercase tracking-wider text-gray-400 font-semibold">
+                        Bucket Prefix
+                      </label>
+                      <input
+                        type="text"
+                        value={cloudForm.bucketPrefix}
+                        onChange={(e) => updateCloudField("bucketPrefix", e.target.value)}
+                        placeholder="bucket_Name/demo/data/billing"
+                        className="mt-2 w-full px-4 py-3 rounded-xl bg-[#0f0f11] border border-white/10 text-white placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-[#a02ff1]/40 focus:border-[#a02ff1]/50"
+                      />
+                      <p className="mt-1 text-[11px] text-gray-500">
+                        Format: bucket-name/folder/path/
+                      </p>
+                    </div>
+
+                    <div>
+                      <label className="text-xs uppercase tracking-wider text-gray-400 font-semibold">
+                        AWS Billing Region
+                      </label>
+                      <input
+                        type="text"
+                        value={cloudForm.region}
+                        onChange={(e) => updateCloudField("region", e.target.value)}
+                        placeholder="ap-south-1"
+                        className="mt-2 w-full px-4 py-3 rounded-xl bg-[#0f0f11] border border-white/10 text-white placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-[#a02ff1]/40 focus:border-[#a02ff1]/50"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="mt-6 flex flex-col sm:flex-row gap-3">
+                    <button
+                      type="button"
+                      onClick={() => handleCloudAction("test")}
+                      disabled={cloudStatus === "testing" || cloudStatus === "connecting"}
+                      className="flex-1 px-4 py-3 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 text-white font-semibold transition disabled:opacity-60"
+                    >
+                      {cloudStatus === "testing" ? "Testing..." : "Test Connection"}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleCloudAction("connect")}
+                      disabled={cloudStatus === "testing" || cloudStatus === "connecting"}
+                      className="flex-1 px-4 py-3 rounded-xl bg-[#a02ff1] hover:bg-[#8e25d9] text-white font-semibold transition disabled:opacity-60"
+                    >
+                      {cloudStatus === "connecting" ? "Connecting..." : "Connect Cloud"}
+                    </button>
+                  </div>
+
+                  {cloudMessage ? (
+                    <div className="mt-4 p-3 rounded-xl border border-white/10 bg-[#0f0f11]/70">
+                      <div className="flex items-start gap-2 text-xs">
+                        {cloudStatus === "tested" || cloudStatus === "connected" ? (
+                          <ShieldCheck className="w-4 h-4 text-green-400 mt-0.5" />
+                        ) : cloudStatus === "error" ? (
+                          <AlertCircle className="w-4 h-4 text-red-400 mt-0.5" />
+                        ) : (
+                          <Link2 className="w-4 h-4 text-[#a02ff1] mt-0.5" />
+                        )}
+                        <p className="text-gray-400">{cloudMessage}</p>
+                      </div>
+                    </div>
+                  ) : null}
+
+                  {cloudStatus === "tested" && cloudPreview ? (
+                    <div className="mt-3 p-3 rounded-xl border border-[#a02ff1]/20 bg-[#a02ff1]/5">
+                      <p className="text-[11px] font-semibold text-[#d7b0ff] mb-2">
+                        Demo Preview: Latest file snapshot
+                      </p>
+                      <p className="text-[11px] text-gray-400 mb-2">
+                        {cloudPreview.bucket}
+                        {cloudPreview.prefix ? `/${cloudPreview.prefix}` : ""}
+                      </p>
+                      <div className="space-y-1">
+                        {cloudPreview.latestFile?.key ? (
+                          <>
+                            <p
+                              className="text-[11px] text-gray-200 truncate"
+                              title={cloudPreview.latestFile.key}
+                            >
+                              File: {cloudPreview.latestFile.key}
+                            </p>
+                            <p className="text-[11px] text-gray-400">
+                              Last modified:{" "}
+                              {formatDateTime(cloudPreview.latestFile.lastModified)}
+                            </p>
+                          </>
+                        ) : (
+                          <p className="text-[11px] text-gray-500">
+                            No file object found for this prefix.
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  ) : null}
+
                 </motion.div>
               )}
             </AnimatePresence>
