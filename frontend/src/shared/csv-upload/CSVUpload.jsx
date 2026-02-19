@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { Loader2, Lock } from "lucide-react";
+// eslint-disable-next-line no-unused-vars
 import { motion } from "framer-motion";
 import { useAuthStore } from "../../store/Authstore";
 import CSVUploadInput from "./CSVUploadInput"; // adjust path

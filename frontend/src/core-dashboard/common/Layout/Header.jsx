@@ -1,14 +1,17 @@
 // src/components/Header.jsx
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Search, Download, ChevronDown, CheckCircle2, AlertTriangle, X, LogOut, User } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuthStore } from '../../../store/Authstore';
+import { useDashboardStore } from '../../../store/Dashboard.store';
 
 
 const Header = ({ title, anomalies = [], anomaliesCount = 0 }) => {
   const navigate = useNavigate();
   const { logout, user, updateProfile, fetchUser } = useAuthStore();
+  const uploadIds = useDashboardStore((s) => s.uploadIds);
+  const selectedUploads = useDashboardStore((s) => s.selectedUploads);
   
   const [showDialog, setShowDialog] = useState(false);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
@@ -20,6 +23,44 @@ const Header = ({ title, anomalies = [], anomaliesCount = 0 }) => {
   const profileMenuRef = useRef(null);
   const hasAnomalies = anomaliesCount > 0;
   const formatCurrency = (val) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(val);
+  const activeSource = useMemo(() => {
+    if (!uploadIds.length) {
+      return { label: '', chips: [], remainingCount: 0, fullText: '' };
+    }
+
+    const selectedNames = uploadIds
+      .map((id) => {
+        const entry = selectedUploads.find((item) => item.uploadId === id);
+        const filePath = entry?.filename || '';
+        return filePath.split(/[\\/]/).pop();
+      })
+      .filter(Boolean);
+
+    if (!selectedNames.length) {
+      const fallback = `${uploadIds.length} files selected`;
+      return {
+        label: uploadIds.length === 1 ? 'Source' : 'Sources',
+        chips: [fallback],
+        remainingCount: 0,
+        fullText: fallback,
+      };
+    }
+
+    const visibleCount = 3;
+    const visibleNames = selectedNames.slice(0, visibleCount);
+    const remainingCount = Math.max(0, selectedNames.length - visibleNames.length);
+
+    return {
+      label: uploadIds.length === 1 ? 'Source' : 'Sources',
+      chips: visibleNames,
+      remainingCount,
+      fullText: selectedNames.join(', '),
+    };
+  }, [uploadIds, selectedUploads]);
+  const activeSourceKey = useMemo(
+    () => `${activeSource.label}:${activeSource.fullText}`,
+    [activeSource.label, activeSource.fullText],
+  );
 
   // Initialize form with user data
   useEffect(() => {
@@ -128,6 +169,63 @@ const Header = ({ title, anomalies = [], anomaliesCount = 0 }) => {
           <span className="text-[#a02ff1]">Dashboard</span>
         </div>
         <h1 className="text-lg font-bold text-white tracking-tight">{title}</h1>
+      </div>
+
+      <div className="hidden md:flex flex-1 justify-center px-4">
+        <AnimatePresence mode="wait">
+          {activeSource.chips.length ? (
+            <motion.div
+              key={activeSourceKey}
+              initial={{ opacity: 0, y: -6, scale: 0.985 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -6, scale: 0.985 }}
+              transition={{ duration: 0.2, ease: [0.4, 0, 0.2, 1] }}
+              whileHover={{ y: -1 }}
+              className="relative max-w-[480px] min-w-0 px-3 py-1.5 rounded-lg border border-white/10 bg-white/5 overflow-hidden"
+            >
+              <motion.div
+                aria-hidden
+                className="pointer-events-none absolute inset-0 bg-gradient-to-r from-transparent via-[#a02ff1]/10 to-transparent"
+                animate={{ opacity: [0.1, 0.28, 0.1] }}
+                transition={{ duration: 3.2, repeat: Infinity, ease: 'easeInOut' }}
+              />
+              <p className="relative text-[10px] uppercase tracking-wider text-gray-500 font-semibold flex items-center gap-1.5">
+                <motion.span
+                  className="inline-block w-1.5 h-1.5 rounded-full bg-[#a02ff1]"
+                  animate={{ scale: [1, 1.2, 1], opacity: [0.6, 1, 0.6] }}
+                  transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
+                />
+                {activeSource.label}
+              </p>
+              <motion.div
+                key={activeSource.fullText}
+                initial={{ opacity: 0, x: 6 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.2, delay: 0.03 }}
+                className="relative mt-0.5 flex items-center gap-1.5 min-w-0"
+                title={activeSource.fullText}
+              >
+                {activeSource.chips.map((name, idx) => (
+                  <motion.span
+                    key={`${name}-${idx}`}
+                    initial={{ opacity: 0, y: 3 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.15, delay: idx * 0.04 }}
+                    className="inline-flex items-center max-w-[120px] px-2 py-0.5 rounded-full border border-white/10 bg-black/20 text-[11px] text-gray-200 font-medium truncate"
+                    title={name}
+                  >
+                    {name}
+                  </motion.span>
+                ))}
+                {activeSource.remainingCount > 0 ? (
+                  <span className="inline-flex items-center px-2 py-0.5 rounded-full border border-[#a02ff1]/30 bg-[#a02ff1]/10 text-[11px] text-[#d5b3f7] font-semibold whitespace-nowrap">
+                    +{activeSource.remainingCount} more
+                  </span>
+                ) : null}
+              </motion.div>
+            </motion.div>
+          ) : null}
+        </AnimatePresence>
       </div>
 
  
