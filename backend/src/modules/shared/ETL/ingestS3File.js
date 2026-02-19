@@ -25,12 +25,12 @@ export async function ingestS3File({
   s3Key,
   clientid,
   uploadId,
-  Bucket , clientcreds,
+  Bucket , clientcreds = null,
   region = "ap-south-1",
   assumeRoleOptions = null,
 }){
   try {
-    const creds = await assumeRole( region , clientcreds , assumeRoleOptions || {});
+    const creds = await assumeRole( {region , clientcreds , assumeRoleOptions  });
 
 
     const s3 = new S3Client({
