@@ -19,23 +19,16 @@ import BillingDetectedColumn from "./billingDectectedColumn.model.js";
 import MappingSuggestion from "./mappingSuggestion.model.js"
 import ChatSession from "./chatbot/ChatSession.model.js";
 import ChatMessage from "./chatbot/ChatMessage.model.js";
-import RawAwsBillingRow from "./rawBillingRaw.model.js";
-import ClientS3Integrations from "./clientS3Intergration.model.js";
-import CloudAccountCredentials from "./cloudAccountCredentials.model.js";
-
 /* =========================
+
+
+
    Define Associations
 ========================= */
 
 // Client ↔ User
 Client.hasMany(User, { foreignKey: 'client_id', as: 'users' });
 User.belongsTo(Client, { foreignKey: 'client_id', as: 'client' });
-
-Client.hasMany(ClientS3Integrations, { foreignKey: 'clientid', as: 'client_s3_integrations' });
-ClientS3Integrations.belongsTo(Client, { foreignKey: 'clientid', as: 'client' });
-
-Client.hasMany(CloudAccountCredentials, { foreignKey: 'clientid', as: 'cloud_account_credentials' });
-CloudAccountCredentials.belongsTo(Client, { foreignKey: 'clientid', as: 'client' });
 
 Client.hasMany(BillingColumnMapping, {
   foreignKey: 'clientid',
@@ -77,7 +70,6 @@ BillingUpload.belongsTo(Client, { foreignKey: 'clientid', as: 'client' });
 // User ↔ BillingUpload
 User.hasMany(BillingUpload, { foreignKey: 'uploadedby', as: 'uploadedBillingFiles' });
 BillingUpload.belongsTo(User, { foreignKey: 'uploadedby', as: 'uploadedBy' });
-
 
 // BillingUpload ↔ BillingUsageFact
 BillingUpload.hasMany(BillingUsageFact, { foreignKey: 'uploadid', as: 'usageRecords' });
@@ -157,7 +149,4 @@ export {
   MappingSuggestion,
   ChatSession,
   ChatMessage,
-  RawAwsBillingRow,
-  ClientS3Integrations,
-  CloudAccountCredentials
 };

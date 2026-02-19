@@ -1,20 +1,13 @@
 import dotenv from "dotenv";
+dotenv.config();
+
 import { STSClient, AssumeRoleCommand } from "@aws-sdk/client-sts";
 
-dotenv.config({
-  path: `.env.${process.env.NODE_ENV || "development"}`,
-});
-
 /**
- * Assumes AWS role using base IAM user credentials.
- * Supports runtime overrides for role/session/region to enable UI-driven checks.
+ * Assumes KCX role using base IAM user credentials
  */
-export default async function assumeRole(options = {}) {
+export default async function assumeRole() {
   try {
-
-
-    
-
     const {
       AWS_REGION,
       AWS_ACCESS_KEY_ID,
@@ -23,35 +16,25 @@ export default async function assumeRole(options = {}) {
       AWS_ASSUME_ROLE_SESSION_NAME,
     } = process.env;
 
-
-
-    
-
-    const region = options.region || AWS_REGION;
-    const roleArn = options.roleArn || AWS_ASSUME_ROLE_ARN;
-    const roleSessionName =
-      options.sessionName ||
-      AWS_ASSUME_ROLE_SESSION_NAME ||
-      `kcx-session-${Date.now()}`;
-    const awsAccessKeyId =  AWS_ACCESS_KEY_ID || options.clientcreds.accessKeyId ;
-    const awsSecretAccessKey =  AWS_SECRET_ACCESS_KEY || options.clientcreds.secretAccessKey;
-
-    if (!region) throw new Error("AWS_REGION missing");
-    if (!awsAccessKeyId) throw new Error("AWS_ACCESS_KEY_ID missing");
-    if (!awsSecretAccessKey) throw new Error("AWS_SECRET_ACCESS_KEY missing");
-    if (!roleArn) throw new Error("Role ARN missing");
+    // Hard guardrails
+    if (!AWS_REGION) throw new Error("AWS_REGION missing");
+    if (!AWS_ACCESS_KEY_ID) throw new Error("AWS_ACCESS_KEY_ID missing");
+    if (!AWS_SECRET_ACCESS_KEY) throw new Error("AWS_SECRET_ACCESS_KEY missing");
+    if (!AWS_ASSUME_ROLE_ARN) throw new Error("AWS_ASSUME_ROLE_ARN missing");
+    if (!AWS_ASSUME_ROLE_SESSION_NAME)
+      throw new Error("AWS_ASSUME_ROLE_SESSION_NAME missing");
 
     const stsClient = new STSClient({
-      region,
+      region: AWS_REGION,
       credentials: {
-        accessKeyId: awsAccessKeyId,
-        secretAccessKey: awsSecretAccessKey,
+        accessKeyId: AWS_ACCESS_KEY_ID,
+        secretAccessKey: AWS_SECRET_ACCESS_KEY,
       },
     });
 
     const command = new AssumeRoleCommand({
-      RoleArn: roleArn,
-      RoleSessionName: roleSessionName,
+      RoleArn: AWS_ASSUME_ROLE_ARN,
+      RoleSessionName: AWS_ASSUME_ROLE_SESSION_NAME,
     });
 
     const response = await stsClient.send(command);
@@ -61,10 +44,9 @@ export default async function assumeRole(options = {}) {
       secretAccessKey: response.Credentials.SecretAccessKey,
       sessionToken: response.Credentials.SessionToken,
       expiration: response.Credentials.Expiration,
-      assumedRoleArn: response.AssumedRoleUser?.Arn || roleArn,
     };
   } catch (err) {
-    console.error("ASSUME ROLE FAILED");
+    console.error("ASSUME ROLE FAILED ❌");
     throw err;
   }
 }

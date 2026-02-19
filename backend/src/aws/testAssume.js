@@ -1,6 +1,10 @@
+import dotenv from "dotenv";
+dotenv.config(); // MUST be first
+
 import assumeRole from "./assumeRole.js";
 
-export async function test() {
+
+async function test() {
   try {
     console.log("ENV CHECK");
     console.log("AWS_REGION =", process.env.AWS_REGION);
