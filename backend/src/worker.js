@@ -1,5 +1,6 @@
 import sequelize from "./config/db.config.js";
-import { pollClient } from "./modules/shared/ETL/polling.service.js";
+import { pollClient } from "./modules/shared/ETL/pollClient.js";
+import { pollOnce } from "./modules/shared/ETL/pollOnce.js";
 
 const INTERVAL_MS = 2 * 60 * 1000; // 2 minutes
 
@@ -29,12 +30,7 @@ async function main() {
     try {
       console.log("\n🔁 Poll cycle started");
 
-      await pollClient({
-        clientid: "215eff15-bd75-44d0-bf06-ffee9122f38c",
-        Bucket: "kcx-msu-billing",
-        prefix: "demo/kcx-msu/data/test",
-        uploadedby: "1f614495-beff-4f27-aa0f-7fff246a8dfa",
-      });
+      await pollOnce();
 
       console.log("✅ Poll cycle done");
     } catch (e) {
