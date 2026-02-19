@@ -1,24 +1,19 @@
 import React from "react";
-import { Users, Loader2 } from "lucide-react";
-import { ErrorState } from "./components/ErrorState";
-import { InsightsGrid } from "./components/InsightsGrid";
-import { Toolbar } from "./components/Toolbar";
-import { AccountsTable } from "./components/AccountsTable";
+import { Users } from "lucide-react";
+import ErrorState from "./components/ErrorState";
+import InsightsGrid from "./components/InsightsGrid";
+import Toolbar from "./components/Toolbar";
+import AccountsTable from "./components/AccountsTable";
 import PremiumGate from "../common/PremiumGate";
+import { SectionLoading } from "../common/SectionStates.jsx";
 
 export function AccountsOwnershipView({
-  // states
   isPremiumMasked,
   loading,
-  isFiltering,
   error,
-
-  // data
   insights,
   providers,
   filteredAccounts,
-
-  // ui state
   searchTerm,
   setSearchTerm,
   filterOwner,
@@ -28,28 +23,26 @@ export function AccountsOwnershipView({
   sortBy,
   sortOrder,
   onSortChange,
-
-  // actions
   onReset,
   onExport,
   hasData,
 }) {
   if (error && !hasData) return <ErrorState error={error} />;
+  if (loading && !hasData) {
+    return <SectionLoading label="Analyzing Accounts & Ownership..." />;
+  }
 
   return (
-    <div className="p-6 space-y-6 min-h-screen bg-[#0f0f11] text-white font-sans animate-in fade-in duration-500 relative">
-      {/* Header */}
-      <div className="flex flex-col gap-4">
+    <div className="core-shell animate-in fade-in duration-500">
+      <div className="core-panel flex flex-col gap-4">
         <div>
-          <h1 className="text-2xl font-bold flex items-center gap-2">
-            <Users className="text-[#a02ff1]" /> Accounts & Ownership
+          <h1 className="flex items-center gap-2 text-xl font-black tracking-tight md:text-2xl">
+            <Users className="text-[var(--brand-primary)]" /> Accounts & Ownership
           </h1>
-          <p className="text-gray-400 text-sm mt-1">
-            Cost attribution and governance ledger. Identify account-level cost
-            ownership and accountability gaps.
-            <span className="text-gray-500 text-xs block mt-1">
-              Ownership is inferred from resource tags and is not explicitly
-              configured.
+          <p className="mt-1 text-sm text-[var(--text-muted)]">
+            Cost attribution and governance ledger. Identify account-level cost ownership and accountability gaps.
+            <span className="mt-1 block text-xs text-[var(--text-muted)]">
+              Ownership is inferred from resource tags and is not explicitly configured.
             </span>
           </p>
         </div>
@@ -57,7 +50,7 @@ export function AccountsOwnershipView({
 
       <InsightsGrid insights={insights} />
 
-      <div className="bg-[#1a1b20] border border-white/10 rounded-xl flex flex-col shadow-lg">
+      <div className="core-card flex flex-col overflow-hidden">
         <Toolbar
           searchTerm={searchTerm}
           setSearchTerm={setSearchTerm}
@@ -70,43 +63,27 @@ export function AccountsOwnershipView({
           onExport={onExport}
         />
 
-        {/* Table section: loading overlay (same as Overview/Cost-Analysis) below toolbar */}
-        <div className="overflow-x-auto relative min-h-[50vh]">
-          {(loading || isFiltering) && (
-            <div
-              className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-[#0f0f11]/95 backdrop-blur-sm rounded-b-xl border-t border-white/5"
-              aria-busy="true"
-              aria-live="polite"
-            >
-              <Loader2 className="animate-spin text-[#a02ff1]" size={40} strokeWidth={2} />
-              <p className="mt-3 text-sm font-medium text-gray-400">
-                {loading && !hasData ? "Loading accounts…" : "Updating…"}
-              </p>
-            </div>
-          )}
-
+        <div className="relative min-h-[50vh] overflow-x-auto">
           {!hasData && !loading ? (
-            <div className="p-10 text-center text-gray-500">
+            <div className="p-10 text-center text-[var(--text-muted)]">
               <p>No account data available. Upload billing data to view ownership.</p>
             </div>
-          ) : (
-            isPremiumMasked ? (
-              <PremiumGate variant="wrap">
-                <AccountsTable
-                  accounts={filteredAccounts}
-                  sortBy={sortBy}
-                  sortOrder={sortOrder}
-                  onSortChange={onSortChange}
-                />
-              </PremiumGate>
-            ) : (
+          ) : isPremiumMasked ? (
+            <PremiumGate variant="wrap">
               <AccountsTable
                 accounts={filteredAccounts}
                 sortBy={sortBy}
                 sortOrder={sortOrder}
                 onSortChange={onSortChange}
               />
-            )
+            </PremiumGate>
+          ) : (
+            <AccountsTable
+              accounts={filteredAccounts}
+              sortBy={sortBy}
+              sortOrder={sortOrder}
+              onSortChange={onSortChange}
+            />
           )}
         </div>
       </div>

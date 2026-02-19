@@ -1,7 +1,8 @@
-import PremiumGate from "../common/PremiumGate.jsx"; // reuse same component from overview (or copy here)
-import DataQualityStates from "./components/DataQualityStates.jsx";
+﻿import PremiumGate from "../common/PremiumGate.jsx";
+import { ShieldCheck } from "lucide-react";
+import { DataQualityStates } from "./components/DataQualityStates.jsx";
 import ScoreCard from "./components/ScoreCard.jsx";
-import ComplianceMatrix from "./components/ComplianceMatrix.jsx";
+import { ComplianceMatrix } from "./components/ComplianceMatrix.jsx";
 import ActionBar from "./components/ActionBar.jsx";
 import Tabs from "./components/Tabs.jsx";
 import IssuesTable from "./components/IssuesTable.jsx";
@@ -11,21 +12,16 @@ import IssueInspector from "./components/IssueInspector.jsx";
 const DataQualityView = ({
   loading,
   stats,
-
   activeTab,
   currentPage,
   totalPages,
   actualTotalPages,
   accessiblePages,
-  itemsPerPage,
-
   selectedIssue,
   setSelectedIssue,
-
   isLocked,
   isAccessingPremiumPage,
   currentListData,
-
   onTabChange,
   onRowClick,
   onPrev,
@@ -46,18 +42,29 @@ const DataQualityView = ({
     (isPremiumTab || (isAccessingPremiumPage && activeTab === "overview"));
 
   return (
-    <div className="p-6 space-y-6 min-h-screen bg-[#0f0f11] text-white font-sans animate-in fade-in duration-500 relative">
-      {/* HEADER ROW */}
-      <div className="flex flex-col lg:flex-row gap-6">
+    <div className="core-shell animate-in fade-in duration-500">
+      <div className="core-panel">
+        <div className="flex items-center gap-3">
+          <div className="rounded-xl border border-emerald-100 bg-emerald-50 p-2">
+            <ShieldCheck size={18} className="text-[var(--brand-primary)]" />
+          </div>
+          <div>
+            <h1 className="text-lg font-black tracking-tight md:text-xl">Data Quality</h1>
+            <p className="text-xs text-[var(--text-muted)] md:text-sm">
+              Validate billing integrity, metadata coverage, and anomaly risks.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div className="flex flex-col gap-4 lg:flex-row lg:gap-6">
         <ScoreCard stats={stats} />
         <ComplianceMatrix stats={stats} />
       </div>
 
-      {/* ACTION BAR */}
       <ActionBar stats={stats} />
 
-      {/* MAIN TABLE */}
-      <div className="bg-[#1a1b20] border border-white/10 rounded-xl flex flex-col h-[550px] relative">
+      <div className="relative flex h-[62vh] min-h-[420px] flex-col overflow-hidden rounded-xl border border-[var(--border-light)] bg-white md:h-[560px]">
         <Tabs
           stats={stats}
           activeTab={activeTab}
@@ -65,10 +72,9 @@ const DataQualityView = ({
           isLocked={isLocked}
         />
 
-        <div className="flex-1 overflow-auto relative">
+        <div className="dq-scrollbar relative flex-1 overflow-auto">
           {shouldShowGate ? (
             <PremiumGate mode="wrap">
-             
               <IssuesTable
                 rows={currentListData}
                 activeTab={activeTab}
@@ -109,16 +115,36 @@ const DataQualityView = ({
             </>
           )}
         </div>
-
-      
       </div>
 
       <IssueInspector
         selectedIssue={selectedIssue}
         setSelectedIssue={setSelectedIssue}
       />
+
+      <style>{`
+        .dq-scrollbar {
+          scrollbar-width: thin;
+          scrollbar-color: #9fb8af transparent;
+        }
+        .dq-scrollbar::-webkit-scrollbar {
+          width: 6px;
+          height: 6px;
+        }
+        .dq-scrollbar::-webkit-scrollbar-track {
+          background: transparent;
+        }
+        .dq-scrollbar::-webkit-scrollbar-thumb {
+          background-color: #b7cbc4;
+          border-radius: 999px;
+        }
+        .dq-scrollbar::-webkit-scrollbar-thumb:hover {
+          background-color: #8da89e;
+        }
+      `}</style>
     </div>
   );
 };
 
 export default DataQualityView;
+

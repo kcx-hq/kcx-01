@@ -2,7 +2,7 @@ import { useMemo } from "react";
 import { FileText, Target, AlertTriangle, Shield } from "lucide-react";
 import { formatPeriod } from "../utils/reportUtils";
 
-export function useReportsDefinitions(reportData , isLocked) {
+export function useReportsDefinitions(reportData, isLocked) {
   return useMemo(() => {
     const period = reportData?.billingPeriod
       ? formatPeriod(reportData.billingPeriod)
@@ -43,11 +43,11 @@ export function useReportsDefinitions(reportData , isLocked) {
         ],
         description: "Shows identified optimization opportunities and their potential impact",
         color: "green",
-        isLocked: isLocked,
+        isLocked,
       },
       {
         id: "risk-predictability",
-        title: "Risk & Predictability Brief",
+        title: "Risk and Predictability Brief",
         icon: AlertTriangle,
         frequency: "Monthly",
         period,
@@ -59,12 +59,12 @@ export function useReportsDefinitions(reportData , isLocked) {
           "Strategic risk indicators",
         ],
         description: "Strategic insights on cost concentration and dependency risks",
-        color: "yellow",
-        isLocked: isLocked,
+        color: "amber",
+        isLocked,
       },
       {
         id: "governance-accountability",
-        title: "Governance & Accountability Snapshot",
+        title: "Governance and Accountability Snapshot",
         icon: Shield,
         frequency: "Quarterly",
         period,
@@ -76,9 +76,9 @@ export function useReportsDefinitions(reportData , isLocked) {
           "Accountability mapping",
         ],
         description: "Governance metrics and accountability tracking for enterprise compliance",
-        color: "purple",
-        isLocked: isLocked,
+        color: "teal",
+        isLocked,
       },
     ];
-  }, [reportData]);
+  }, [reportData, isLocked]);
 }

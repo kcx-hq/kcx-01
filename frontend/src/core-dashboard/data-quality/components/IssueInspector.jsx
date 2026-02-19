@@ -1,4 +1,4 @@
-import { X, AlertTriangle, CheckCircle } from "lucide-react";
+﻿import { X, AlertTriangle, CheckCircle } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { formatCurrency } from "../utils/format.js";
 
@@ -19,7 +19,7 @@ const IssueInspector = ({ selectedIssue, setSelectedIssue }) => {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={() => setSelectedIssue(null)}
-            className="fixed inset-0 bg-black/70 backdrop-blur-sm z-40"
+            className="fixed inset-x-0 bottom-0 top-8 z-40 bg-black/35 backdrop-blur-sm md:top-10"
           />
 
           <motion.div
@@ -27,62 +27,64 @@ const IssueInspector = ({ selectedIssue, setSelectedIssue }) => {
             animate={{ x: 0 }}
             exit={{ x: "100%" }}
             transition={{ type: "spring", damping: 25 }}
-            className="fixed right-0 top-0 bottom-0 w-[500px] bg-[#1a1b20] border-l border-white/10 shadow-2xl z-50 flex flex-col"
+            className="fixed bottom-0 right-0 top-8 z-50 w-full border-l border-[var(--border-light)] bg-white shadow-2xl md:top-10 md:w-[500px]"
           >
-            <div className="p-6 border-b border-white/10 bg-[#25262b] flex justify-between items-start">
-              <div>
-                <span className="text-xs text-gray-500 uppercase font-bold tracking-wider">
-                  Issue Inspector
-                </span>
-                <h2 className="text-xl font-bold text-white mt-1 break-all">
-                  {selectedIssue?.ResourceId || "Unknown Resource"}
-                </h2>
+            <div className="flex h-full flex-col">
+              <div className="flex items-start justify-between border-b border-[var(--border-light)] bg-[var(--bg-surface)] p-5 md:p-6">
+                <div>
+                  <span className="text-xs font-bold uppercase tracking-wider text-[var(--text-muted)]">
+                    Issue Inspector
+                  </span>
+                  <h2 className="mt-1 break-all text-xl font-bold text-[var(--text-primary)]">
+                    {selectedIssue?.ResourceId || "Unknown Resource"}
+                  </h2>
+                </div>
+                <button
+                  onClick={() => setSelectedIssue(null)}
+                  className="rounded-full p-2 transition-colors hover:bg-white"
+                >
+                  <X size={20} className="text-[var(--text-muted)]" />
+                </button>
               </div>
-              <button
-                onClick={() => setSelectedIssue(null)}
-                className="p-2 hover:bg-white/10 rounded-full"
-              >
-                <X size={20} className="text-gray-400" />
-              </button>
-            </div>
 
-            <div className="flex-1 overflow-y-auto p-6 space-y-6">
-              {selectedIssue?._issues?.length > 0 ? (
-                <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-4">
-                  <h3 className="text-sm font-bold text-red-400 mb-2 flex items-center gap-2">
-                    <AlertTriangle size={14} /> Diagnosis
-                  </h3>
-                  <ul className="list-disc list-inside text-xs text-gray-300 space-y-2">
-                    {selectedIssue._issues.map((issue) => (
-                      <li key={issue}>
-                        <strong className="text-white">{issue}:</strong>
-                        {explainIssue(issue)}
-                      </li>
+              <div className="flex-1 space-y-6 overflow-y-auto p-5 md:p-6">
+                {selectedIssue?._issues?.length > 0 ? (
+                  <div className="rounded-xl border border-rose-200 bg-rose-50 p-4">
+                    <h3 className="mb-2 flex items-center gap-2 text-sm font-bold text-rose-700">
+                      <AlertTriangle size={14} /> Diagnosis
+                    </h3>
+                    <ul className="list-inside list-disc space-y-2 text-xs text-[var(--text-secondary)]">
+                      {selectedIssue._issues.map((issue) => (
+                        <li key={issue}>
+                          <strong className="text-[var(--text-primary)]">{issue}:</strong>
+                          {explainIssue(issue)}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm font-bold text-emerald-700">
+                    <CheckCircle size={16} /> No Quality Issues Detected.
+                  </div>
+                )}
+
+                <div>
+                  <h3 className="mb-2 text-sm font-bold text-[var(--text-primary)]">Record Details</h3>
+                  <div className="divide-y divide-[var(--border-muted)] overflow-hidden rounded-lg border border-[var(--border-light)] bg-[var(--bg-surface)]">
+                    {["ServiceName", "RegionName", "UsageType", "Operation"].map((k) => (
+                      <div key={k} className="flex justify-between p-3 text-xs">
+                        <span className="text-[var(--text-muted)]">{k}</span>
+                        <span className="text-right font-mono text-[var(--text-secondary)]">
+                          {selectedIssue?.[k] || "--"}
+                        </span>
+                      </div>
                     ))}
-                  </ul>
-                </div>
-              ) : (
-                <div className="bg-green-500/10 border border-green-500/20 rounded-xl p-4 flex items-center gap-2 text-green-400 text-sm font-bold">
-                  <CheckCircle size={16} /> No Quality Issues Detected.
-                </div>
-              )}
-
-              <div>
-                <h3 className="text-sm font-bold text-white mb-2">Record Details</h3>
-                <div className="bg-black/20 rounded-lg border border-white/5 divide-y divide-white/5">
-                  {["ServiceName", "RegionName", "UsageType", "Operation"].map((k) => (
-                    <div key={k} className="flex justify-between p-3 text-xs">
-                      <span className="text-gray-500">{k}</span>
-                      <span className="text-gray-200 font-mono text-right">
-                        {selectedIssue?.[k] || "--"}
+                    <div className="flex justify-between bg-white p-3 text-xs">
+                      <span className="font-bold text-[var(--text-muted)]">Billed Cost</span>
+                      <span className="font-mono font-bold text-[var(--text-primary)]">
+                        {formatCurrency(selectedIssue?._parsedCost || 0)}
                       </span>
                     </div>
-                  ))}
-                  <div className="flex justify-between p-3 text-xs bg-white/5">
-                    <span className="text-gray-500 font-bold">Billed Cost</span>
-                    <span className="text-white font-mono font-bold">
-                      {formatCurrency(selectedIssue?._parsedCost || 0)}
-                    </span>
                   </div>
                 </div>
               </div>

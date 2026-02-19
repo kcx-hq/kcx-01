@@ -2,20 +2,99 @@
 @tailwind components;
 @tailwind utilities;
 
-html {
-  scroll-behavior: smooth;
+@layer base {
+  :root {
+    /* =====================
+       Brand Variables
+    ===================== */
+    --brand-primary: #007758;
+    --brand-primary-hover: #00b889;
+    --brand-primary-soft: #e2f3ee;
+    --brand-secondary: #192630;
+
+    /* =====================
+       Backgrounds
+    ===================== */
+    --bg-main: #f2f3f2;
+    --bg-surface: #f7f8f7;
+    --bg-soft: #ecefed;
+    --bg-soft-2: #e4e8e6;
+    --bg-dark: #192630;
+
+    /* =====================
+       Highlights
+    ===================== */
+    --highlight-green: #e2f3ee;
+    --highlight-blue: #e9f1fb;
+    --highlight-purple: #f2ebf8;
+    --highlight-yellow: #fbf6e8;
+
+    /* =====================
+       Text
+    ===================== */
+    --text-primary: #1c2321;
+    --text-secondary: #4b5a55;
+    --text-muted: #8a9a94;
+    --text-disabled: #c7cfcb;
+
+    --text-on-dark: #ffffff;
+    --text-on-dark-muted: #9ca3af;
+
+    /* =====================
+       Borders
+    ===================== */
+    --border-light: #dde3e0;
+    --border-muted: #eef1ef;
+    --border-dark: rgba(255, 255, 255, 0.12);
+
+    /* =====================
+       Shadows
+    ===================== */
+    --shadow-sm: 0 1px 3px rgba(15, 23, 42, 0.06);
+    --shadow-md: 0 12px 32px rgba(15, 23, 42, 0.1);
+
+    /* =====================
+       Radius
+    ===================== */
+    --radius-sm: 8px;
+    --radius-md: 12px;
+    --radius-lg: 16px;
+
+    /* =====================
+       Spacing
+    ===================== */
+    --space-xs: 4px;
+    --space-sm: 8px;
+    --space-md: 16px;
+    --space-lg: 24px;
+    --space-xl: 32px;
+
+    /* =====================
+       Transitions
+    ===================== */
+    --transition-fast: 150ms ease;
+    --transition-base: 250ms ease;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    background-color: var(--bg-main);
+    color: var(--text-primary);
+  }
+  
+  /* Custom Selection Color matching your Brand */
+  ::selection {
+    background-color: rgba(0, 119, 88, 0.22);
+    color: var(--text-primary);
+  }
 }
 
-body {
-  background-color: #0f0f11;
-  color: white;
-}
-
-/* Custom Selection Color matching your Brand */
-::selection {
-  background-color: rgba(139, 47, 201, 0.3);
-  color: white;
-}
+/* =====================
+   Utilities & Animations
+===================== */
 
 /* Performance Optimizations for Hover Effects */
 * {
@@ -48,18 +127,8 @@ body {
 
 /* Enhanced tooltip styling for sidebar */
 .sidebar-tooltip {
+  /* Animation defined in tailwind.config.js now, but kept here for fallback */
   animation: tooltipFadeIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-}
-
-@keyframes tooltipFadeIn {
-  from {
-    opacity: 0;
-    transform: translateX(-15px) translateY(-50%) scale(0.96);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(0) translateY(-50%) scale(1);
-  }
 }
 
 /* Smooth hover bridge effect */
@@ -67,25 +136,28 @@ body {
   animation: bridgeFadeIn 0.3s ease-out forwards;
 }
 
-@keyframes bridgeFadeIn {
-  from {
-    opacity: 0;
-    width: 0;
+@layer components {
+  .core-shell {
+    @apply relative space-y-4 font-sans text-[var(--text-primary)] md:space-y-6;
   }
-  to {
-    opacity: 1;
-    width: 12px;
+
+  .core-panel {
+    @apply rounded-2xl border border-[var(--border-light)] bg-white p-4 md:p-5;
   }
-}
 
-.glass-btn {
-  @apply px-3 py-1.5 text-xs rounded-xl
-  bg-black/40 hover:bg-black/60
-  border border-white/10 backdrop-blur-md;
-}
+  .core-card {
+    @apply rounded-xl border border-[var(--border-light)] bg-white shadow-sm;
+  }
 
-.glass-bubble {
-  @apply bg-black/50 backdrop-blur-md
-  border border-white/10 rounded-2xl
-  px-4 py-3 max-w-[85%];
+  .glass-btn {
+    @apply px-3 py-1.5 text-xs rounded-xl
+    bg-black/40 hover:bg-black/60
+    border border-white/10 backdrop-blur-md transition-all;
+  }
+
+  .glass-bubble {
+    @apply bg-black/50 backdrop-blur-md
+    border border-white/10 rounded-2xl
+    px-4 py-3 max-w-[85%];
+  }
 }

@@ -42,6 +42,7 @@ const DataExplorer = (
     loading,
     isInitialLoad,
     isFiltering,
+    isPaginating,
     data,
     totalCount,
     allColumns,
@@ -188,6 +189,7 @@ const DataExplorer = (
       loading={loading}
       isInitialLoad={isInitialLoad}
       isFiltering={isFiltering}
+      isPaginating={isPaginating}
       data={data}
       totalCount={totalCount}
       allColumns={allColumns}

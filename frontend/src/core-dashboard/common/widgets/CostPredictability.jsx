@@ -9,7 +9,6 @@ import {
   Tooltip,
   ResponsiveContainer,
   ReferenceLine,
-  ReferenceDot,
 } from "recharts";
 import {
   Target,
@@ -18,8 +17,10 @@ import {
   Zap,
   TrendingUp,
   AlertCircle,
-  Loader2
+  Loader2,
+  Sparkles
 } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 
 // --- HELPERS ---
 const formatCurrency = (val) =>
@@ -28,7 +29,7 @@ const formatCurrency = (val) =>
     currency: "USD",
     minimumFractionDigits: 0,
     maximumFractionDigits: 0,
-  }).format(val);
+  }).format(val || 0);
 
 const formatDate = (dateStr) => {
   if (!dateStr) return "";
@@ -36,257 +37,225 @@ const formatDate = (dateStr) => {
   return `${date.toLocaleString("default", { month: "short" })} ${date.getDate()}`;
 };
 
-// --- COMPACT KPI COMPONENT ---
-const CompactKPI = ({ 
-  title, 
-  value, 
-  icon: Icon, 
-  color, 
-  isActive, 
-  onClick, 
-  trend 
-}) => (
-  <button
-    onClick={onClick}
-    className={`
-      relative group flex items-center gap-4 p-3 rounded-xl border transition-all duration-300 w-full text-left
-      ${isActive 
-        ? `bg-[#1a1b20] border-${color} shadow-[0_0_20px_rgba(0,0,0,0.3)] scale-[1.02]` 
-        : "bg-[#0f0f11] border-white/5 hover:bg-[#1a1b20] hover:border-white/10"
-      }
-    `}
-  >
-    {isActive && (
-      <div className={`absolute left-0 top-0 bottom-0 w-1 rounded-l-xl bg-${color}`} />
-    )}
-    <div className={`
-      p-2.5 rounded-lg shrink-0 transition-colors
-      ${isActive ? `bg-${color}/20 text-${color}` : "bg-white/5 text-gray-500 group-hover:text-gray-300"}
-    `}>
-      <Icon size={20} />
-    </div>
-    <div className="flex-1 min-w-0">
-      <p className="text-[10px] font-bold uppercase tracking-widest text-gray-500 mb-0.5">
-        {title}
-      </p>
-      <div className="flex items-baseline gap-2">
-        <span className={`text-lg font-black tracking-tight ${isActive ? "text-white" : "text-gray-300"}`}>
-          {value || "$0"}
-        </span>
-        {trend && (
-          <span className="text-[10px] font-mono text-gray-500">
-            {trend}
-          </span>
-        )}
+const BRAND_EMERALD = "#007758";
+
+// --- REDESIGNED COMPACT KPI ---
+const CompactKPI = ({ title, value, icon: Icon, tone = "brand", isActive, onClick, trend }) => {
+  const styles = {
+    brand: { bg: "bg-emerald-50", text: "text-[#007758]", border: "border-emerald-100" },
+    cyan: { bg: "bg-blue-50", text: "text-blue-600", border: "border-blue-100" },
+    rose: { bg: "bg-rose-50", text: "text-rose-600", border: "border-rose-100" },
+  }[tone];
+
+  return (
+    <button
+      onClick={onClick}
+      className={`relative flex items-center gap-4 p-4 rounded-[1.5rem] border transition-all duration-300 w-full text-left shadow-sm
+        ${isActive 
+          ? `bg-white border-slate-200 ring-4 ring-slate-50` 
+          : `bg-slate-50/50 border-slate-100 hover:bg-white hover:border-slate-200 hover:shadow-md`}`}
+    >
+      <div className={`p-3 rounded-2xl border transition-transform duration-300 ${styles.bg} ${styles.text} ${styles.border} ${isActive ? 'scale-110 shadow-sm' : ''}`}>
+        <Icon size={20} />
       </div>
-    </div>
-    <div className={`transition-opacity duration-300 ${isActive ? "opacity-100" : "opacity-0"}`}>
-       <div className={`w-2 h-2 rounded-full bg-${color} shadow-[0_0_8px_currentColor]`} />
-    </div>
-  </button>
-);
+
+      <div className="flex-1 min-w-0">
+        <p className="text-[10px] font-black uppercase tracking-[0.15em] text-slate-400 mb-0.5">
+          {title}
+        </p>
+        <div className="flex items-baseline gap-2">
+          <span className={`text-xl font-black tracking-tight ${isActive ? "text-slate-900" : "text-slate-600"}`}>
+            {value || "$0"}
+          </span>
+          {trend && <span className="text-[10px] font-bold text-slate-400">{trend}</span>}
+        </div>
+      </div>
+
+      {isActive && (
+        <motion.div layoutId="active-dot" className="w-2 h-2 rounded-full bg-[#007758]" />
+      )}
+    </button>
+  );
+};
 
 // --- MAIN COMPONENT ---
-const CostPredictability = ({ 
-  chartData = [], 
-  anomalies = [], 
-  kpis = {} 
-}) => {
+const CostPredictability = ({ chartData = [], anomalies = [], kpis = {} }) => {
   const [activeView, setActiveView] = useState("score");
+  const score = Number(kpis.predictabilityScore || 0);
 
-  const score = kpis.predictabilityScore || 0;
-  const scoreColor = score >= 80 ? "emerald-400" : score >= 50 ? "yellow-400" : "red-400";
-  const scoreTailwind = score >= 80 ? "emerald-400" : score >= 50 ? "yellow-400" : "red-400";
-
-  // Filter Data Logic
   const viewData = useMemo(() => {
-    if (!chartData || chartData.length === 0) return [];
+    if (!chartData?.length) return [];
     if (activeView === "forecast") {
-      const historyPoints = chartData.filter(d => d.type === 'history');
-      const cutoffIndex = Math.max(0, historyPoints.length - 7);
-      return chartData.slice(cutoffIndex);
+      const historyPoints = chartData.filter((d) => d.type === "history");
+      return chartData.slice(Math.max(0, historyPoints.length - 10));
     }
     return chartData;
   }, [chartData, activeView]);
 
-  const todayEntry = chartData?.findLast(d => d.type === 'history');
-  const lastHistoryDate = todayEntry?.date;
-
   return (
-    <div className="flex flex-col gap-4 animate-in fade-in duration-500 w-full">
+    <div className="flex flex-col gap-6 animate-in fade-in duration-500 w-full">
       
-      {/* --- ROW 1: KPIS --- */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-3 shrink-0">
-        <CompactKPI 
+      {/* --- KPIS GRID --- */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 shrink-0">
+        <CompactKPI
           title="Stability Score"
           value={`${score.toFixed(0)}/100`}
           icon={Target}
-          color={scoreTailwind}
           isActive={activeView === "score"}
           onClick={() => setActiveView("score")}
         />
-        <CompactKPI 
+        <CompactKPI
           title="Projected Spend"
           value={formatCurrency(kpis.forecastTotal || 0)}
           trend="Next 30 Days"
           icon={Calendar}
-          color="cyan-400"
+          tone="cyan"
           isActive={activeView === "forecast"}
           onClick={() => setActiveView("forecast")}
         />
-        <CompactKPI 
+        <CompactKPI
           title="Volatility"
           value={`±${kpis.trend ? Math.abs(kpis.trend).toFixed(1) : "0.0"}%`}
           trend="Daily Variance"
           icon={Activity}
-          color="rose-400"
+          tone="rose"
           isActive={activeView === "variance"}
           onClick={() => setActiveView("variance")}
         />
       </div>
 
-      {/* --- ROW 2: CHART AREA --- */}
-      {/* Forced height to ensure graph appears */}
-      <div className="h-[450px] bg-[#1a1b20] border border-white/5 rounded-2xl p-4 flex flex-col shadow-2xl relative overflow-hidden">
+      {/* --- CHART CANVAS --- */}
+      <div className="h-[480px] bg-white border border-slate-100 rounded-[2.5rem] p-8 flex flex-col shadow-sm relative overflow-visible transition-all hover:shadow-md">
         
-        {/* Header */}
-        <div className="flex justify-between items-start mb-4 z-10 shrink-0">
+        {/* Dynamic Header */}
+        <div className="flex justify-between items-start mb-10 z-10">
           <div>
-            <h3 className="text-white font-bold flex items-center gap-2">
-              {activeView === 'score' && <><Target size={16} className={`text-${scoreTailwind}`} /> Overall Stability Analysis</>}
-              {activeView === 'forecast' && <><TrendingUp size={16} className="text-cyan-400" /> AI Spending Projection</>}
-              {activeView === 'variance' && <><AlertCircle size={16} className="text-rose-400" /> Anomaly Detection</>}
-            </h3>
-            <p className="text-xs text-gray-500 mt-1 max-w-lg">
-               {activeView === 'score' && "Reviewing historical consistency combined with future AI projections."}
-               {activeView === 'forecast' && "Zoomed view of the transition from actuals to predicted costs."}
-               {activeView === 'variance' && "Highlighting specific dates where spending deviated significantly from the baseline."}
+            <div className="flex items-center gap-3">
+               <div className="p-2 bg-emerald-50 rounded-lg">
+                  {activeView === "score" && <Target size={18} className="text-[#007758]" />}
+                  {activeView === "forecast" && <TrendingUp size={18} className="text-blue-600" />}
+                  {activeView === "variance" && <AlertCircle size={18} className="text-rose-600" />}
+               </div>
+               <h3 className="text-xl font-black text-slate-800 tracking-tight leading-none">
+                 {activeView === "score" && "Stability Analysis"}
+                 {activeView === "forecast" && "Spending Projection"}
+                 {activeView === "variance" && "Anomaly Intelligence"}
+               </h3>
+            </div>
+            <p className="text-xs font-medium text-slate-400 mt-2 ml-11">
+              {activeView === "score" && "Reviewing historical consistency combined with future projections."}
+              {activeView === "forecast" && "Transition from actual consumption to predicted expenditure."}
+              {activeView === "variance" && "Detecting spending deviations from established baseline patterns."}
             </p>
           </div>
 
-          <div className="flex gap-4 text-[10px] font-bold bg-[#0f0f11]/50 p-2 rounded-lg border border-white/5">
-            <div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-[#a02ff1]"></div>Actual</div>
-            <div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full border border-cyan-400"></div>Forecast</div>
-            {activeView === 'variance' && (
-              <div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-rose-500"></div>Anomaly</div>
-            )}
+          <div className="flex gap-6 px-5 py-2.5 bg-slate-50 rounded-2xl border border-slate-100">
+            <div className="flex items-center gap-2 text-[10px] font-black uppercase text-slate-500 tracking-widest">
+              <div className="w-2 h-2 rounded-full bg-[#007758]" /> Actual
+            </div>
+            <div className="flex items-center gap-2 text-[10px] font-black uppercase text-slate-500 tracking-widest">
+              <div className="w-2 h-2 rounded-full border-2 border-blue-400" /> Forecast
+            </div>
           </div>
         </div>
 
-        {/* The Graph */}
-        <div className="flex-1 w-full relative z-0 min-h-0">
-          {!chartData || chartData.length === 0 ? (
-            <div className="absolute inset-0 flex flex-col items-center justify-center text-gray-500">
-               <Loader2 className="animate-spin mb-2" size={24} />
-               <p className="text-xs font-bold">Waiting for data...</p>
+        {/* Recharts Component */}
+        <div className="flex-1 w-full relative min-h-0">
+          {!chartData?.length ? (
+            <div className="absolute inset-0 flex flex-col items-center justify-center gap-3">
+              <div className="p-4 bg-slate-50 rounded-full animate-spin">
+                <Loader2 size={24} className="text-slate-300" />
+              </div>
+              <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Loading Cloud Intelligence</p>
             </div>
           ) : (
             <ResponsiveContainer width="100%" height="100%">
-              <ComposedChart data={viewData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+              <ComposedChart data={viewData} margin={{ top: 0, right: 0, left: -20, bottom: 0 }}>
                 <defs>
-                  <linearGradient id="purpleGradient" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#a02ff1" stopOpacity={0.4} />
-                    <stop offset="95%" stopColor="#a02ff1" stopOpacity={0} />
+                  <linearGradient id="brandArea" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor={BRAND_EMERALD} stopOpacity={0.15} />
+                    <stop offset="95%" stopColor={BRAND_EMERALD} stopOpacity={0} />
                   </linearGradient>
-                  <pattern id="hatch" patternUnits="userSpaceOnUse" width="4" height="4" rotation={45}>
-                     <path d="M-1,1 l2,-2 M0,4 l4,-4 M3,5 l2,-2" stroke="#22d3ee" strokeWidth="1" opacity={0.3} />
-                  </pattern>
                 </defs>
 
-                <CartesianGrid strokeDasharray="3 3" stroke="#333" vertical={false} opacity={0.3} />
-                
-                <XAxis 
-                  dataKey="date" 
-                  stroke="#555" 
-                  fontSize={10} 
-                  tickFormatter={(str) => formatDate(str)} 
-                  tickLine={false} 
-                  axisLine={false} 
+                <CartesianGrid strokeDasharray="6 6" stroke="#f1f5f9" vertical={false} />
+
+                <XAxis
+                  dataKey="date"
+                  stroke="#94a3b8"
+                  fontSize={10}
+                  fontWeight={700}
+                  tickFormatter={(str) => formatDate(str)}
+                  axisLine={false}
+                  tickLine={false}
                   dy={10}
-                  minTickGap={30}
                 />
-                <YAxis 
-                  stroke="#555" 
-                  fontSize={10} 
-                  tickFormatter={(val) => `$${val}`} 
-                  tickLine={false} 
-                  axisLine={false} 
-                  width={40}
+                <YAxis
+                  stroke="#94a3b8"
+                  fontSize={10}
+                  fontWeight={700}
+                  tickFormatter={(val) => `$${val}`}
+                  axisLine={false}
+                  tickLine={false}
                 />
-                
+
                 <Tooltip
-                  cursor={{ stroke: '#fff', strokeWidth: 1, strokeDasharray: '4 4', opacity: 0.3 }}
+                  cursor={{ stroke: '#cbd5e1', strokeWidth: 1, strokeDasharray: '4 4' }}
                   content={({ active, payload, label }) => {
-                    if (active && payload && payload.length) {
-                      const data = payload[0].payload;
-                      return (
-                        <div className="bg-[#0f0f11]/95 backdrop-blur border border-white/10 p-3 rounded-xl shadow-[0_0_30px_rgba(0,0,0,0.5)]">
-                          <p className="text-[10px] font-bold text-gray-500 uppercase mb-2">{formatDate(label)}</p>
-                          {data.actual !== null && (
-                            <div className="flex justify-between items-center gap-4 mb-1">
-                              <span className="text-xs text-gray-300">Actual Spend</span>
-                              <span className="text-sm font-bold font-mono text-white">{formatCurrency(data.actual)}</span>
-                            </div>
-                          )}
-                          {data.forecast !== null && (
+                    if (!active || !payload?.length) return null;
+                    const data = payload[0].payload;
+                    return (
+                      <div className="bg-[#192630] text-white p-4 rounded-2xl shadow-2xl border border-white/10 min-w-[200px] backdrop-blur-md">
+                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 border-b border-white/5 pb-2">
+                          {formatDate(label)}
+                        </p>
+                        <div className="space-y-2">
+                          {data.actual !== undefined && (
                             <div className="flex justify-between items-center gap-4">
-                              <span className="text-xs text-cyan-400">AI Forecast</span>
-                              <span className="text-sm font-bold font-mono text-cyan-400">{formatCurrency(data.forecast)}</span>
+                              <span className="text-[11px] font-bold text-slate-300">Measured Cost</span>
+                              <span className="text-sm font-black text-emerald-400">{formatCurrency(data.actual)}</span>
                             </div>
                           )}
-                          {data.range && (
-                             <div className="mt-2 pt-2 border-t border-white/10 text-[10px] text-gray-500">
-                                Confidence: {formatCurrency(data.range[0])} - {formatCurrency(data.range[1])}
-                             </div>
+                          {data.forecast !== undefined && (
+                            <div className="flex justify-between items-center gap-4">
+                              <span className="text-[11px] font-bold text-slate-300">AI Projection</span>
+                              <span className="text-sm font-black text-blue-400">{formatCurrency(data.forecast)}</span>
+                            </div>
                           )}
                         </div>
-                      );
-                    }
-                    return null;
+                      </div>
+                    );
                   }}
                 />
 
                 <Area
                   type="monotone"
                   dataKey="actual"
-                  stroke="#a02ff1"
-                  strokeWidth={3}
-                  fill="url(#purpleGradient)"
-                  activeDot={{ r: 6, fill: "#fff", stroke: "#a02ff1" }}
-                  animationDuration={1000}
+                  stroke={BRAND_EMERALD}
+                  strokeWidth={3.5}
+                  fill="url(#brandArea)"
+                  animationDuration={1500}
                 />
-                <Area
-                  dataKey="range"
-                  stroke="none"
-                  fill="url(#hatch)"
-                  animationDuration={1000}
-                />
+
                 <Line
                   type="monotone"
                   dataKey="forecast"
-                  stroke="#22d3ee"
-                  strokeWidth={2}
-                  strokeDasharray="4 4"
+                  stroke="#3b82f6"
+                  strokeWidth={3}
+                  strokeDasharray="8 6"
                   dot={false}
-                  animationDuration={1000}
+                  animationDuration={1500}
                 />
-                {lastHistoryDate && (
-                  <ReferenceLine 
-                      x={lastHistoryDate} 
-                      stroke="#fff" 
-                      strokeOpacity={0.2} 
+
+                {activeView === "variance" && anomalies.map((a, idx) => (
+                  <ReferenceLine
+                    key={idx}
+                    x={a.date}
+                    stroke="#f43f5e"
+                    strokeWidth={2}
+                    strokeDasharray="4 4"
+                    label={{ position: 'top', value: '⚠', fill: '#f43f5e', fontSize: 14 }}
                   />
-                )}
-                {activeView === 'variance' && anomalies.map((anomaly, idx) => (
-                   <ReferenceLine 
-                      key={idx}
-                      x={anomaly.date} 
-                      stroke="#fb7185"
-                      strokeDasharray="2 2"
-                      strokeOpacity={0.6}
-                   >
-                      <ReferenceDot r={4} fill="#fb7185" stroke="none" />
-                   </ReferenceLine>
                 ))}
               </ComposedChart>
             </ResponsiveContainer>
@@ -294,21 +263,20 @@ const CostPredictability = ({
         </div>
       </div>
 
-      {/* --- ROW 3: INSIGHTS STRIP --- */}
-      <div className="shrink-0 flex items-center gap-3 p-3 rounded-xl bg-gradient-to-r from-[#a02ff1]/10 to-transparent border border-[#a02ff1]/20">
-        <div className="p-2 rounded-lg bg-[#a02ff1]/20 text-[#a02ff1]">
-            <Zap size={16} />
+      {/* --- FOOTER INSIGHTS --- */}
+      <div className="shrink-0 flex items-center gap-4 p-5 rounded-[1.5rem] bg-emerald-50/50 border border-emerald-100 shadow-sm transition-all hover:bg-emerald-50">
+        <div className="p-3 rounded-2xl bg-white border border-emerald-100 shadow-sm text-[#007758]">
+          <Sparkles size={18} className="animate-pulse" />
         </div>
         <div className="flex-1">
-            <h4 className="text-xs font-bold text-white">AI Analysis</h4>
-            <p className="text-[11px] text-gray-400">
-                {score > 80 
-                 ? "Spending is highly predictable. No major interventions required." 
-                 : "Volatility detected. Check the highlighted Variance dates above to optimize costs."}
-            </p>
+          <h4 className="text-xs font-black text-slate-800 uppercase tracking-widest">KCX AI Analysis</h4>
+          <p className="text-[11px] font-bold text-slate-500 mt-0.5 leading-relaxed">
+            {score > 80
+              ? "Infrastructure spending remains within predictable thresholds. Cloud unit efficiency is optimized."
+              : "Variance detected above baseline thresholds. Recommended to audit the highlighted dates for spike origins."}
+          </p>
         </div>
       </div>
-
     </div>
   );
 };

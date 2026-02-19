@@ -32,7 +32,7 @@ export default function AccountsOwnershipContainer({ filters = {}, api, caps }) 
 
   const debouncedApiFilters = useDebounce(apiFilters, 300);
 
-  const { accountsData, loading, isFiltering, error } = useAccountsOwnershipData({
+  const { accountsData, loading, error } = useAccountsOwnershipData({
     api,
     caps,
     debouncedFilters: debouncedApiFilters,
@@ -203,7 +203,6 @@ export default function AccountsOwnershipContainer({ filters = {}, api, caps }) 
     <AccountsOwnershipView
       isPremiumMasked={isPremiumMasked}
       loading={loading}
-      isFiltering={isFiltering}
       error={error}
       insights={extracted.insights || {}}
       providers={extracted.providers || []}

@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback } from "react";
+﻿import React, { useState, useMemo, useCallback } from "react";
 import { useAuthStore } from "../../store/Authstore";
 import DataQualityView from "./DataQualityView.jsx";
 import { useDataQuality } from "./hooks/useDataQuality.js";
@@ -109,7 +109,6 @@ const DataQuality = ({ filters, api, caps }) => {
       totalPages={totalPages}
       actualTotalPages={actualTotalPages}
       accessiblePages={accessiblePages}
-      itemsPerPage={itemsPerPage}
       selectedIssue={selectedIssue}
       isLocked={isLocked}
       isAccessingPremiumPage={isAccessingPremiumPage}
@@ -127,3 +126,4 @@ const DataQuality = ({ filters, api, caps }) => {
 };
 
 export default DataQuality;
+

@@ -1,4 +1,4 @@
-// frontend/core/dashboards/overview/data-quality/hooks/useDataQuality.js
+﻿// frontend/core/dashboards/overview/data-quality/hooks/useDataQuality.js
 import { useEffect, useState } from "react";
 
 const EMPTY_STATS = {
@@ -60,3 +60,4 @@ export const useDataQuality = ({ filters, api, caps }) => {
 
   return { loading, stats };
 };
+

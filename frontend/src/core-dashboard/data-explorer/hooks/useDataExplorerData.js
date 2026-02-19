@@ -14,6 +14,7 @@ export const useDataExplorerData = ({
   const [loading, setLoading] = useState(true);
   const [isInitialLoad, setIsInitialLoad] = useState(true);
   const [isFiltering, setIsFiltering] = useState(false);
+  const [isPaginating, setIsPaginating] = useState(false);
 
   const [data, setData] = useState([]);
   const [totalCount, setTotalCount] = useState(0);
@@ -38,8 +39,10 @@ export const useDataExplorerData = ({
       const filterChanged = (prevFiltersStr !== currFiltersStr) && !isInitialLoad;
       const pageChanged = prevPageRef.current !== currentPage && !isInitialLoad;
 
-      if (isInitialLoad || pageChanged) setLoading(true);
+      // Keep table visible during pagination; only use full loading on first load.
+      if (isInitialLoad) setLoading(true);
       else if (filterChanged) setIsFiltering(true);
+      else if (pageChanged) setIsPaginating(true);
 
       try {
         if (!api || !caps) return;
@@ -95,6 +98,7 @@ export const useDataExplorerData = ({
         if (!isMounted) return;
         setLoading(false);
         setIsFiltering(false);
+        setIsPaginating(false);
         if (isInitialLoad) setIsInitialLoad(false);
         // Update refs
         prevColumnFiltersRef.current = { ...(columnFilters || {}) };
@@ -114,6 +118,7 @@ export const useDataExplorerData = ({
     loading,
     isInitialLoad,
     isFiltering,
+    isPaginating,
     data,
     totalCount,
     allColumns,

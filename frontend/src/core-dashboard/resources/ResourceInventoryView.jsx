@@ -5,7 +5,6 @@ import {
   Search,
   List,
   LayoutGrid,
-  Loader2,
   Server,
   Ghost,
   Tag,
@@ -18,25 +17,29 @@ import ResourceTableView from "./components/ResourceTable";
 import GroupedListView from "./components/GroupedList";
 import ZombieListView from "./components/ZombieList";
 import InspectorDrawerView from "./components/InspectorDrawer";
+import { SectionLoading } from "../common/SectionStates.jsx";
 
 const ResourceInventoryView = ({
   loading,
   isPremiumMasked,
-
-  // state
   searchTerm,
   activeTab,
   grouping,
   selectedResource,
-
-  // data
-  stats,
-  filteredData,
-  groupedData,
-  inventory,
-  flaggedResources,
-
-  // handlers
+  stats = {
+    total: 0,
+    totalCost: 0,
+    zombieCount: 0,
+    zombieCost: 0,
+    untaggedCount: 0,
+    untaggedCost: 0,
+    spikingCount: 0,
+    spikingCost: 0,
+  },
+  filteredData = [],
+  groupedData = {},
+  inventory = [],
+  flaggedResources = new Set(),
   onExportCSV,
   setSearchTerm,
   setActiveTab,
@@ -45,11 +48,7 @@ const ResourceInventoryView = ({
   onToggleFlag,
 }) => {
   if (loading) {
-    return (
-      <div className="flex h-96 items-center justify-center text-[#a02ff1]">
-        <Loader2 className="animate-spin" size={48} />
-      </div>
-    );
+    return <SectionLoading label="Analyzing Resources..." />;
   }
 
   const isGatedTab =
@@ -57,34 +56,32 @@ const ResourceInventoryView = ({
   const isZombieGated = isPremiumMasked && activeTab === "zombie";
 
   return (
-    <div className="p-0 space-y-6 text-white font-sans animate-in fade-in duration-500 relative">
-      {/* HEADER */}
-      <div className="flex justify-between items-center">
+    <div className="core-shell animate-in fade-in duration-500">
+      <div className="core-panel flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
-          <h1 className="text-2xl font-bold flex items-center gap-2">
-            <Box className="text-[#a02ff1]" /> Asset Manager
+          <h1 className="flex items-center gap-2 text-xl font-black tracking-tight md:text-2xl">
+            <Box className="text-[var(--brand-primary)]" size={22} /> Asset Manager
           </h1>
-          <p className="text-gray-400 text-sm mt-1">
+          <p className="mt-1 text-sm text-[var(--text-muted)]">
             Full inventory visibility and waste detection.
           </p>
         </div>
 
         <button
           onClick={onExportCSV}
-          className="flex items-center gap-2 px-4 py-2 bg-[#a02ff1]/10 hover:bg-[#a02ff1]/20 border border-[#a02ff1]/30 rounded-lg text-xs font-bold text-[#a02ff1] transition-all whitespace-nowrap"
+          className="inline-flex items-center justify-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-2 text-xs font-bold text-[var(--brand-primary)] transition-all hover:bg-emerald-100 whitespace-nowrap"
         >
           <Download size={14} /> Export CSV
         </button>
       </div>
 
-      {/* KPI CARDS */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
         <KpiCard
           title="Total Assets"
           count={stats.total}
           cost={stats.totalCost}
           icon={Server}
-          color="blue"
+          tone="neutral"
           label="Total Spend"
           isActive={activeTab === "all"}
           onClick={() => setActiveTab("all")}
@@ -94,12 +91,11 @@ const ResourceInventoryView = ({
           count={stats.zombieCount}
           cost={stats.zombieCost}
           icon={Ghost}
-          color="orange"
+          tone="warning"
           label="Wasted Spend"
           isActive={activeTab === "zombie"}
           onClick={() => setActiveTab("zombie")}
         />
-        {/* Untagged (premium KPI) */}
         <div className="relative">
           {isPremiumMasked ? (
             <PremiumGate variant="card">
@@ -108,7 +104,7 @@ const ResourceInventoryView = ({
                 count={stats.untaggedCount}
                 cost={stats.untaggedCost}
                 icon={Tag}
-                color="red"
+                tone="critical"
                 label="Unallocated"
                 isActive={activeTab === "untagged"}
                 onClick={() => setActiveTab("untagged")}
@@ -120,14 +116,13 @@ const ResourceInventoryView = ({
               count={stats.untaggedCount}
               cost={stats.untaggedCost}
               icon={Tag}
-              color="red"
+              tone="critical"
               label="Unallocated"
               isActive={activeTab === "untagged"}
               onClick={() => setActiveTab("untagged")}
             />
           )}
         </div>
-        {/* Spiking (premium KPI) */}
         <div className="relative">
           {isPremiumMasked ? (
             <PremiumGate variant="card">
@@ -136,7 +131,7 @@ const ResourceInventoryView = ({
                 count={stats.spikingCount}
                 cost={stats.spikingCost}
                 icon={TrendingUp}
-                color="purple"
+                tone="info"
                 label="Cost at Risk"
                 isActive={activeTab === "spiking"}
                 onClick={() => setActiveTab("spiking")}
@@ -148,7 +143,7 @@ const ResourceInventoryView = ({
               count={stats.spikingCount}
               cost={stats.spikingCost}
               icon={TrendingUp}
-              color="purple"
+              tone="info"
               label="Cost at Risk"
               isActive={activeTab === "spiking"}
               onClick={() => setActiveTab("spiking")}
@@ -157,25 +152,24 @@ const ResourceInventoryView = ({
         </div>
       </div>
 
-      {/* TOOLBAR */}
-      <div className="flex flex-col md:flex-row justify-between gap-4 border-b border-white/10 pb-4 items-center">
-        <div className="flex bg-[#1a1b20] p-1 rounded-xl border border-white/10">
+      <div className="flex flex-col gap-3 rounded-xl border border-[var(--border-light)] bg-white p-3 md:flex-row md:items-center md:justify-between md:gap-4">
+        <div className="flex rounded-xl border border-[var(--border-light)] bg-[var(--bg-soft)] p-1">
           <button
             onClick={() => setActiveTab("all")}
-            className={`px-4 py-1.5 text-xs font-bold rounded-lg transition-all ${
+            className={`rounded-lg px-4 py-1.5 text-xs font-bold transition-all ${
               ["all", "untagged", "spiking"].includes(activeTab)
-                ? "bg-[#a02ff1] text-white"
-                : "text-gray-400 hover:text-white"
+                ? "bg-white text-[var(--brand-primary)] shadow-sm"
+                : "text-[var(--text-muted)] hover:text-[var(--text-secondary)]"
             }`}
           >
             Inventory
           </button>
           <button
             onClick={() => setActiveTab("zombie")}
-            className={`px-4 py-1.5 text-xs font-bold rounded-lg transition-all ${
+            className={`rounded-lg px-4 py-1.5 text-xs font-bold transition-all ${
               activeTab === "zombie"
-                ? "bg-[#a02ff1] text-white"
-                : "text-gray-400 hover:text-white"
+                ? "bg-white text-[var(--brand-primary)] shadow-sm"
+                : "text-[var(--text-muted)] hover:text-[var(--text-secondary)]"
             }`}
           >
             Cleanup
@@ -183,16 +177,13 @@ const ResourceInventoryView = ({
         </div>
 
         {["all", "untagged", "spiking"].includes(activeTab) && (
-          <div className="flex gap-3 w-full md:w-auto">
-            {/* Search (premium masked) */}
-            <div className="relative flex-1 md:w-64">
+          <div className="flex w-full flex-col gap-3 md:w-auto md:flex-row">
+            <div className="relative flex-1 md:w-72">
               {isPremiumMasked ? (
-                <PremiumGate
-                  variant="inlineBadge"
-                >
+                <PremiumGate variant="inlineBadge">
                   <div className="relative">
                     <Search
-                      className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500"
+                      className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)]"
                       size={14}
                     />
                     <input
@@ -200,14 +191,14 @@ const ResourceInventoryView = ({
                       placeholder="Search resources..."
                       value={searchTerm}
                       readOnly
-                      className="w-full pl-9 pr-4 py-2 bg-[#1a1b20] border border-white/10 rounded-xl text-xs text-white"
+                      className="w-full rounded-xl border border-[var(--border-light)] bg-[var(--bg-surface)] py-2 pl-9 pr-4 text-xs text-[var(--text-secondary)]"
                     />
                   </div>
                 </PremiumGate>
               ) : (
                 <div className="relative">
                   <Search
-                    className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500"
+                    className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)]"
                     size={14}
                   />
                   <input
@@ -215,19 +206,19 @@ const ResourceInventoryView = ({
                     placeholder="Search resources..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full pl-9 pr-4 py-2 bg-[#1a1b20] border border-white/10 rounded-xl text-xs text-white focus:border-[#a02ff1] outline-none"
+                    className="w-full rounded-xl border border-[var(--border-light)] bg-white py-2 pl-9 pr-4 text-xs text-[var(--text-primary)] outline-none transition-all focus:border-emerald-200 focus:ring-2 focus:ring-emerald-100"
                   />
                 </div>
               )}
             </div>
 
-            <div className="flex bg-[#1a1b20] rounded-xl p-1 border border-white/10">
+            <div className="flex rounded-xl border border-[var(--border-light)] bg-[var(--bg-soft)] p-1">
               <button
                 onClick={() => setGrouping("none")}
-                className={`px-3 py-1 rounded-lg text-[10px] font-bold ${
+                className={`rounded-lg px-3 py-1 text-[10px] font-bold transition-all ${
                   grouping === "none"
-                    ? "bg-white/10 text-white"
-                    : "text-gray-400"
+                    ? "bg-white text-[var(--brand-primary)] shadow-sm"
+                    : "text-[var(--text-muted)]"
                 }`}
                 title="List View"
               >
@@ -235,10 +226,10 @@ const ResourceInventoryView = ({
               </button>
               <button
                 onClick={() => setGrouping("service")}
-                className={`px-3 py-1 rounded-lg text-[10px] font-bold ${
+                className={`rounded-lg px-3 py-1 text-[10px] font-bold transition-all ${
                   grouping === "service"
-                    ? "bg-white/10 text-white"
-                    : "text-gray-400"
+                    ? "bg-white text-[var(--brand-primary)] shadow-sm"
+                    : "text-[var(--text-muted)]"
                 }`}
                 title="Group by Service"
               >
@@ -249,14 +240,12 @@ const ResourceInventoryView = ({
         )}
       </div>
 
-      {/* MAIN CONTENT */}
-      <div className="min-h-[500px]">
+      <div className="min-h-[460px]">
         {["all", "untagged", "spiking"].includes(activeTab) && (
-          <div className="bg-[#1a1b20] border border-white/10 rounded-xl overflow-hidden shadow-lg relative">
-            {/* ✅ Correct masking: wrap the actual table/list content so it dims + blocks clicks */}
+          <div className="relative overflow-hidden rounded-xl border border-[var(--border-light)] bg-white shadow-sm">
             {isGatedTab ? (
               <PremiumGate variant="full" minHeight="100%">
-                <div className="overflow-x-auto max-h-[600px] overflow-y-auto relative">
+                <div className="relative max-h-[68vh] overflow-auto">
                   {grouping === "none" ? (
                     <ResourceTableView
                       rows={filteredData}
@@ -274,7 +263,7 @@ const ResourceInventoryView = ({
                 </div>
               </PremiumGate>
             ) : (
-              <div className="overflow-x-auto max-h-[600px] overflow-y-auto relative">
+              <div className="relative max-h-[68vh] overflow-auto">
                 {grouping === "none" ? (
                   <ResourceTableView
                     rows={filteredData}
@@ -295,21 +284,13 @@ const ResourceInventoryView = ({
         )}
 
         {activeTab === "zombie" && (
-          <div className="bg-[#1a1b20] border border-white/10 rounded-xl overflow-hidden shadow-lg relative min-h-[400px]">
-            {/* ✅ Correct masking: wrap ZombieListView instead of hiding it */}
+          <div className="relative min-h-[380px] overflow-hidden rounded-xl border border-[var(--border-light)] bg-white shadow-sm">
             {isZombieGated ? (
-              <PremiumGate variant="wrap" >
-                <ZombieListView
-                  data={inventory}
-                  onInspect={setSelectedResource}
-                />
-
+              <PremiumGate variant="wrap">
+                <ZombieListView data={inventory} onInspect={setSelectedResource} />
               </PremiumGate>
             ) : (
-              <ZombieListView
-                data={inventory}
-                onInspect={setSelectedResource}
-              />
+              <ZombieListView data={inventory} onInspect={setSelectedResource} />
             )}
           </div>
         )}

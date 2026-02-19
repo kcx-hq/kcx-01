@@ -1,4 +1,3 @@
-// apps/frontend/src/features/costDrivers/views/CostDriversView.jsx
 import React from 'react';
 import {
   TrendingUp,
@@ -22,40 +21,23 @@ import { PERIOD_OPTIONS } from './utils/constants';
 import { DriversList } from './components/DriversList';
 import { VarianceBridge } from './components/VarianceBridge';
 import { DriverDetailsDrawer } from './components/DriverDetailsDrawer';
+import { SectionLoading } from '../common/SectionStates.jsx';
 
-/**
- * Pure View component:
- * - No data fetching
- * - No complex business logic
- * - Receives everything from Container via props
- */
 export function CostDriversView({
   api,
   caps,
-  filters,
-
-  // access/premium
   isMasked,
-
-  // query controls
   period,
   setPeriod,
   activeServiceFilter,
   setActiveServiceFilter,
   showTreeMap,
   setShowTreeMap,
-
-  // selection
   selectedDriver,
   setSelectedDriver,
   onSelectDriver,
   onBack,
-
-  // sorting
   sortListBy,
-  setSortListBy,
-
-  // data
   loading,
   isRefreshing,
   errorMessage,
@@ -67,29 +49,18 @@ export function CostDriversView({
   dynamics,
   periods,
   availableServices,
-
-  // details drawer hook result
-  details, // { loading, stats }
+  details,
 }) {
-  // Don't render if module not enabled or API not available
   if (!api || !caps || !caps.modules?.costDrivers?.enabled) return null;
 
-  // Loading full page (initial)
   if (loading) {
-    return (
-      <div className="p-10 text-center text-gray-500 flex items-center justify-center min-h-screen">
-        <div className="flex flex-col items-center gap-4">
-          <Loader2 className="animate-spin text-[#a02ff1]" size={32} />
-          <span>Analyzing cost drivers...</span>
-        </div>
-      </div>
-    );
+    return <SectionLoading label="Analyzing Cost Drivers..." />;
   }
 
   const hasNoDrivers = !errorMessage && increases.length === 0 && decreases.length === 0;
 
   return (
-    <div className="p-4 space-y-4 min-h-screen bg-[#0f0f11] text-white font-sans animate-in fade-in duration-500 relative">
+    <div className="core-shell">
       <AnimatePresence mode="wait">
         {!selectedDriver ? (
           <motion.div
@@ -99,25 +70,20 @@ export function CostDriversView({
             exit={{ opacity: 0, x: -20 }}
             className="space-y-4"
           >
-            {/* 1) Header + Filters (STATIC) */}
-            <div className="flex flex-col xl:flex-row justify-between items-start xl:items-center gap-4">
+            <div className="flex flex-col items-start justify-between gap-4 xl:flex-row xl:items-center">
               <div>
-                <h1 className="text-xl font-bold flex items-center gap-2">
-                  <TrendingUp className="text-[#a02ff1]" size={20} /> Cost Drivers
+                <h1 className="flex items-center gap-2 text-xl font-bold">
+                  <TrendingUp className="text-[var(--brand-primary)]" size={20} /> Cost Drivers
                 </h1>
-
                 {periods?.prev && periods?.current && (
-                  <p className="text-gray-400 text-xs">
-                    Comparing <strong>{formatDate(periods.prev)}</strong> to{' '}
-                    <strong>{formatDate(periods.current)}</strong>
+                  <p className="text-xs text-[var(--text-muted)]">
+                    Comparing <strong>{formatDate(periods.prev)}</strong> to <strong>{formatDate(periods.current)}</strong>
                   </p>
                 )}
               </div>
 
-              {/* Filter toolbar */}
-              <div className="flex flex-wrap items-center gap-2 bg-[#1a1b20] p-1 rounded-xl border border-white/10">
-                {/* Period toggle: 7 is premium (masked users cannot use it) */}
-                <div className="flex bg-black/40 rounded-lg p-0.5 border border-white/5 gap-0.5">
+              <div className="flex w-full flex-wrap items-center gap-2 rounded-xl border border-[var(--border-light)] bg-white p-2 md:w-auto">
+                <div className="flex gap-0.5 rounded-lg border border-[var(--border-light)] bg-[var(--bg-soft)] p-0.5">
                   {PERIOD_OPTIONS.map((d) => {
                     const isPremiumPeriod = isMasked && d === 7;
                     const isActive = period === d;
@@ -128,19 +94,16 @@ export function CostDriversView({
                         onClick={() => !isPremiumPeriod && setPeriod(d)}
                         disabled={isPremiumPeriod}
                         className={[
-                          'relative px-2.5 py-1 text-[10px] font-bold rounded-md transition-all',
-                          isPremiumPeriod ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer',
+                          'relative rounded-md px-2.5 py-1 text-[10px] font-bold transition-all',
+                          isPremiumPeriod ? 'cursor-not-allowed opacity-60' : 'cursor-pointer',
                           isActive
-                            ? 'bg-[#a02ff1] text-white shadow-[0_0_10px_rgba(160,47,241,0.5)]'
-                            : 'bg-white/5 text-gray-400 hover:text-gray-200 hover:bg-white/10 border border-transparent',
+                            ? 'bg-[var(--brand-primary)] text-white shadow-[0_8px_20px_rgba(0,119,88,0.28)]'
+                            : 'border border-transparent bg-white text-[var(--text-muted)] hover:bg-[var(--bg-surface)] hover:text-[var(--text-secondary)]',
                         ].join(' ')}
                       >
                         {isPremiumPeriod && (
-                          <span className="absolute -top-0.5 -right-0.5 z-10">
-                            <Crown
-                              size={10}
-                              className="text-yellow-400 drop-shadow-[0_0_2px_rgba(250,204,21,0.8)]"
-                            />
+                          <span className="absolute -right-0.5 -top-0.5 z-10">
+                            <Crown size={10} className="text-amber-500" />
                           </span>
                         )}
                         {d} Days
@@ -149,15 +112,14 @@ export function CostDriversView({
                   })}
                 </div>
 
-                <div className="h-4 w-px bg-white/10" />
+                <div className="h-4 w-px bg-[var(--border-light)]" />
 
-                {/* Service Filter (masked for non-premium) */}
                 <div className="relative group">
                   {isMasked && (
-                    <div className="absolute inset-0 bg-[#0f0f11]/80 backdrop-blur-sm z-50 pointer-events-auto flex items-center justify-center rounded-lg">
-                      <div className="inline-flex items-center gap-1.5 px-2 py-1 bg-yellow-500/10 border border-yellow-500/30 rounded-md">
-                        <Crown size={12} className="text-yellow-400" />
-                        <span className="text-yellow-400 font-bold text-[10px]">Premium</span>
+                    <div className="absolute inset-0 z-50 flex pointer-events-auto items-center justify-center rounded-lg bg-white/80 backdrop-blur-sm">
+                      <div className="inline-flex items-center gap-1.5 rounded-md border border-amber-300 bg-amber-100 px-2 py-1">
+                        <Crown size={12} className="text-amber-600" />
+                        <span className="text-[10px] font-bold text-amber-700">Premium</span>
                       </div>
                     </div>
                   )}
@@ -167,10 +129,10 @@ export function CostDriversView({
                     onChange={(e) => !isMasked && setActiveServiceFilter(e.target.value)}
                     disabled={isMasked}
                     className={[
-                      'appearance-none bg-[#0f0f11] border border-white/10 hover:border-[#a02ff1]/50 rounded-lg pl-3 pr-8 py-2 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-[#a02ff1]/50 transition-all min-w-[120px] z-40 relative',
+                      'relative z-40 min-w-[120px] appearance-none rounded-lg border border-[var(--border-light)] bg-white py-2 pl-3 pr-8 text-xs font-medium transition-all focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)]/40 hover:border-emerald-200',
                       isMasked
-                        ? 'cursor-not-allowed text-gray-300 opacity-50 pointer-events-none'
-                        : 'cursor-pointer text-gray-300',
+                        ? 'pointer-events-none cursor-not-allowed text-[var(--text-muted)] opacity-50'
+                        : 'cursor-pointer text-[var(--text-secondary)]',
                     ].join(' ')}
                   >
                     {(availableServices?.length ? availableServices : ['All']).map((service) => (
@@ -182,191 +144,186 @@ export function CostDriversView({
 
                   <Filter
                     size={14}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none z-40"
+                    className="pointer-events-none absolute right-3 top-1/2 z-40 -translate-y-1/2 text-[var(--text-muted)]"
                   />
                 </div>
               </div>
             </div>
 
-            {/* Error / Info message */}
-            {errorMessage && (
-              <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-xl p-4 flex items-start gap-3">
-                <AlertTriangle className="text-yellow-400 flex-shrink-0 mt-0.5" size={20} />
-                <div className="flex-1">
-                  <p className="text-yellow-400 font-medium text-sm">{errorMessage}</p>
-                  {String(errorMessage).includes('No billing data') && (
-                    <p className="text-yellow-300/70 text-xs mt-2">
-                      Go to the Upload page to add your billing files.
-                    </p>
-                  )}
-                </div>
-              </div>
-            )}
-
-            {/* 2) Content Area (refreshing overlay only) */}
             <div className="relative">
               {isRefreshing && (
-                <div className="absolute top-4 right-4 z-50 flex items-center gap-2 px-3 py-1.5 bg-[#a02ff1]/20 border border-[#a02ff1]/30 rounded-lg backdrop-blur-sm">
-                  <Loader2 className="text-[#a02ff1] animate-spin" size={14} />
-                  <span className="text-[#a02ff1] text-xs font-medium">Updating...</span>
+                <div className="absolute inset-0 z-50 flex items-center justify-center rounded-2xl bg-white/55 backdrop-blur-[1px]">
+                  <div className="inline-flex items-center gap-2 rounded-lg border border-emerald-200 bg-white px-3 py-2 shadow-sm">
+                    <Loader2 className="animate-spin text-[var(--brand-primary)]" size={14} />
+                    <span className="text-xs font-semibold text-[var(--brand-primary)]">Updating...</span>
+                  </div>
                 </div>
               )}
 
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-                {/* Waterfall Bridge */}
-                <div className="lg:col-span-2 bg-[#1a1b20] border border-white/10 rounded-xl p-4 flex flex-col sm:flex-row gap-6 items-center shadow-lg">
-                  <div className="flex-1 min-w-[180px]">
-                    <h3 className="text-xs font-bold text-gray-400 uppercase mb-2 flex items-center gap-2">
-                      <Activity size={14} className="text-[#a02ff1]" /> Net Variance
-                    </h3>
+              <div className={isRefreshing ? 'pointer-events-none opacity-60 transition-opacity' : 'transition-opacity'}>
+                {errorMessage && (
+                  <div className="mb-4 flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50 p-4">
+                    <AlertTriangle className="mt-0.5 shrink-0 text-amber-600" size={20} />
+                    <div className="flex-1">
+                      <p className="text-sm font-medium text-amber-700">{errorMessage}</p>
+                      {String(errorMessage).includes('No billing data') && (
+                        <p className="mt-2 text-xs text-amber-700/80">
+                          Go to the Upload page to add your billing files.
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                )}
 
-                    <div className="flex items-baseline gap-2">
-                      <span
-                        className={[
-                          'text-3xl font-mono font-bold',
-                          overallStats?.diff > 0 ? 'text-red-400' : 'text-green-400',
-                        ].join(' ')}
-                      >
-                        {overallStats?.diff > 0 ? '+' : ''}
-                        {formatCurrency(overallStats?.diff)}
-                      </span>
+                <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+                  <div className="flex flex-col items-center gap-6 rounded-xl border border-[var(--border-light)] bg-white p-4 shadow-sm sm:flex-row lg:col-span-2">
+                    <div className="min-w-[180px] flex-1">
+                      <h3 className="mb-2 flex items-center gap-2 text-xs font-bold uppercase text-[var(--text-muted)]">
+                        <Activity size={14} className="text-[var(--brand-primary)]" /> Net Variance
+                      </h3>
 
-                      <span
-                        className={[
-                          'text-xs font-bold px-1.5 py-0.5 rounded',
-                          overallStats?.diff > 0 ? 'bg-red-500/10 text-red-400' : 'bg-green-500/10 text-green-400',
-                        ].join(' ')}
-                      >
-                        {overallStats?.pct ? `${overallStats.pct.toFixed(1)}%` : '0%'}
-                      </span>
+                      <div className="flex items-baseline gap-2">
+                        <span
+                          className={[
+                            'font-mono text-3xl font-bold',
+                            overallStats?.diff > 0 ? 'text-amber-700' : 'text-[var(--brand-primary)]',
+                          ].join(' ')}
+                        >
+                          {overallStats?.diff > 0 ? '+' : ''}
+                          {formatCurrency(overallStats?.diff)}
+                        </span>
+
+                        <span
+                          className={[
+                            'rounded px-1.5 py-0.5 text-xs font-bold',
+                            overallStats?.diff > 0 ? 'bg-amber-50 text-amber-700' : 'bg-emerald-50 text-[var(--brand-primary)]',
+                          ].join(' ')}
+                        >
+                          {overallStats?.pct ? `${overallStats.pct.toFixed(1)}%` : '0%'}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="hidden h-24 w-px bg-[var(--border-light)] sm:block" />
+
+                    <div className="w-full flex-[2]">
+                      <VarianceBridge overallStats={overallStats} />
                     </div>
                   </div>
 
-                  <div className="w-px h-24 bg-white/10 hidden sm:block" />
+                  <div className="relative rounded-xl border border-[var(--border-light)] bg-white p-4 shadow-sm">
+                    <div className="mb-3 flex items-center justify-between">
+                      <h3 className="flex items-center gap-2 text-xs font-bold uppercase text-[var(--text-muted)]">
+                        {showTreeMap ? <LayoutGrid size={12} /> : <BarChart2 size={12} />}
+                        {showTreeMap ? 'Cost Map' : 'Dynamics'}
+                      </h3>
 
-                  <div className="flex-[2] w-full">
-                    <VarianceBridge overallStats={overallStats} />
+                      <button
+                        onClick={() => setShowTreeMap((p) => !p)}
+                        className={[
+                          'rounded-lg p-1.5 transition-all',
+                          showTreeMap
+                            ? 'border border-[var(--brand-primary)] bg-[var(--brand-primary)] text-white shadow-[0_8px_20px_rgba(0,119,88,0.28)]'
+                            : 'border border-[var(--border-light)] bg-[var(--bg-surface)] text-[var(--text-muted)] hover:bg-emerald-50 hover:text-[var(--brand-primary)]',
+                        ].join(' ')}
+                        title="Toggle View"
+                      >
+                        {showTreeMap ? <List size={14} /> : <LayoutGrid size={14} />}
+                      </button>
+                    </div>
+
+                    {showTreeMap ? (
+                      <div className="h-48">
+                        <ResponsiveContainer width="100%" height="100%">
+                          <Treemap
+                            data={[...increases.slice(0, 10), ...decreases.slice(0, 10)].map((item) => ({
+                              name: item.name,
+                              value: Math.abs(item.diff),
+                              fill: item.diff > 0 ? '#f59e0b' : '#007758',
+                            }))}
+                            dataKey="value"
+                            stroke="#eef1ef"
+                            fill="#007758"
+                            contentStyle={{ fontSize: '10px', fontWeight: 'bold' }}
+                          />
+                        </ResponsiveContainer>
+                      </div>
+                    ) : (
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="rounded-lg border border-[var(--border-light)] bg-[var(--bg-surface)] p-2">
+                          <div className="mb-1 flex items-center gap-1.5 text-sky-700">
+                            <PlusCircle size={10} />
+                            <span className="text-[9px] font-bold uppercase">New</span>
+                          </div>
+                          <span className="text-sm font-mono font-bold text-[var(--text-primary)]">
+                            {formatCurrency(dynamics?.newSpend)}
+                          </span>
+                        </div>
+
+                        <div className="rounded-lg border border-[var(--border-light)] bg-[var(--bg-surface)] p-2">
+                          <div className="mb-1 flex items-center gap-1.5 text-amber-700">
+                            <TrendingUp size={10} />
+                            <span className="text-[9px] font-bold uppercase">Growth</span>
+                          </div>
+                          <span className="text-sm font-mono font-bold text-[var(--text-primary)]">
+                            {formatCurrency(dynamics?.expansion)}
+                          </span>
+                        </div>
+
+                        <div className="rounded-lg border border-[var(--border-light)] bg-[var(--bg-surface)] p-2">
+                          <div className="mb-1 flex items-center gap-1.5 text-[var(--brand-primary)]">
+                            <ArrowDownRight size={10} />
+                            <span className="text-[9px] font-bold uppercase">Saved</span>
+                          </div>
+                          <span className="text-sm font-mono font-bold text-[var(--text-primary)]">
+                            {formatCurrency(dynamics?.optimization)}
+                          </span>
+                        </div>
+
+                        <div className="rounded-lg border border-[var(--border-light)] bg-[var(--bg-surface)] p-2">
+                          <div className="mb-1 flex items-center gap-1.5 text-[var(--text-muted)]">
+                            <Trash2 size={10} />
+                            <span className="text-[9px] font-bold uppercase">Gone</span>
+                          </div>
+                          <span className="text-sm font-mono font-bold text-[var(--text-primary)]">
+                            {formatCurrency(dynamics?.deleted)}
+                          </span>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
 
-                {/* Dynamics / Tree Map */}
-                <div className="bg-[#1a1b20] border border-white/10 rounded-xl p-4 relative shadow-lg">
-                  <div className="flex justify-between items-center mb-3">
-                    <h3 className="text-xs font-bold text-gray-400 uppercase flex items-center gap-2">
-                      {showTreeMap ? <LayoutGrid size={12} /> : <BarChart2 size={12} />}
-                      {showTreeMap ? 'Cost Map' : 'Dynamics'}
-                    </h3>
-
-                    <button
-                      onClick={() => setShowTreeMap((p) => !p)}
-                      className={[
-                        'p-1.5 rounded-lg transition-all',
-                        showTreeMap
-                          ? 'bg-[#a02ff1] text-white border border-[#a02ff1] shadow-[0_0_8px_rgba(160,47,241,0.4)]'
-                          : 'bg-black/40 hover:bg-black/60 text-gray-400 hover:text-gray-200 border border-white/10',
-                      ].join(' ')}
-                      title="Toggle View"
-                    >
-                      {showTreeMap ? <List size={14} /> : <LayoutGrid size={14} />}
-                    </button>
-                  </div>
-
-                  {showTreeMap ? (
-                    <div className="h-48">
-                      <ResponsiveContainer width="100%" height="100%">
-                        <Treemap
-                          data={[...increases.slice(0, 10), ...decreases.slice(0, 10)].map((item) => ({
-                            name: item.name,
-                            value: Math.abs(item.diff),
-                            fill: item.diff > 0 ? '#ef4444' : '#10b981',
-                          }))}
-                          dataKey="value"
-                          stroke="#1a1b20"
-                          fill="#8884d8"
-                          contentStyle={{ fontSize: '10px', fontWeight: 'bold' }}
-                        />
-                      </ResponsiveContainer>
+                <div className="relative mt-4">
+                  {hasNoDrivers ? (
+                    <div className="flex flex-col items-center justify-center rounded-xl border border-[var(--border-light)] bg-white py-20">
+                      <TrendingUp className="mb-4 text-[var(--text-muted)]" size={48} />
+                      <p className="mb-2 text-lg font-medium text-[var(--text-secondary)]">No Cost Changes Detected</p>
+                      <p className="max-w-md text-center text-sm text-[var(--text-muted)]">
+                        Try adjusting the time period, filters, or minimum change threshold to see cost drivers.
+                      </p>
                     </div>
                   ) : (
-                    <div className="grid grid-cols-2 gap-3">
-                      <div className="bg-black/20 p-2 rounded-lg border border-white/5">
-                        <div className="flex items-center gap-1.5 text-blue-400 mb-1">
-                          <PlusCircle size={10} />
-                          <span className="text-[9px] font-bold uppercase">New</span>
-                        </div>
-                        <span className="text-sm font-mono font-bold text-white">
-                          {formatCurrency(dynamics?.newSpend)}
-                        </span>
-                      </div>
-
-                      <div className="bg-black/20 p-2 rounded-lg border border-white/5">
-                        <div className="flex items-center gap-1.5 text-red-400 mb-1">
-                          <TrendingUp size={10} />
-                          <span className="text-[9px] font-bold uppercase">Growth</span>
-                        </div>
-                        <span className="text-sm font-mono font-bold text-white">
-                          {formatCurrency(dynamics?.expansion)}
-                        </span>
-                      </div>
-
-                      <div className="bg-black/20 p-2 rounded-lg border border-white/5">
-                        <div className="flex items-center gap-1.5 text-green-400 mb-1">
-                          <ArrowDownRight size={10} />
-                          <span className="text-[9px] font-bold uppercase">Saved</span>
-                        </div>
-                        <span className="text-sm font-mono font-bold text-white">
-                          {formatCurrency(dynamics?.optimization)}
-                        </span>
-                      </div>
-
-                      <div className="bg-black/20 p-2 rounded-lg border border-white/5">
-                        <div className="flex items-center gap-1.5 text-gray-400 mb-1">
-                          <Trash2 size={10} />
-                          <span className="text-[9px] font-bold uppercase">Gone</span>
-                        </div>
-                        <span className="text-sm font-mono font-bold text-white">
-                          {formatCurrency(dynamics?.deleted)}
-                        </span>
-                      </div>
+                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                      <DriversList
+                        title="Top Increases"
+                        items={filteredIncreases}
+                        type="inc"
+                        onSelect={onSelectDriver}
+                        sortBy={sortListBy}
+                      />
+                      <DriversList
+                        title="Top Savings"
+                        items={filteredDecreases}
+                        type="dec"
+                        onSelect={onSelectDriver}
+                        sortBy={sortListBy}
+                      />
                     </div>
                   )}
                 </div>
               </div>
             </div>
-
-            {/* 3) Lists */}
-            <div className="relative">
-              {hasNoDrivers ? (
-                <div className="flex flex-col items-center justify-center py-20 bg-[#1a1b20] border border-white/10 rounded-xl">
-                  <TrendingUp className="text-gray-500 mb-4" size={48} />
-                  <p className="text-gray-400 text-lg font-medium mb-2">No Cost Changes Detected</p>
-                  <p className="text-gray-500 text-sm text-center max-w-md">
-                    Try adjusting the time period, filters, or minimum change threshold to see cost drivers.
-                  </p>
-                </div>
-              ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <DriversList
-                    title="Top Increases"
-                    items={filteredIncreases}
-                    type="inc"
-                    onSelect={onSelectDriver}
-                    sortBy={sortListBy}
-                  />
-                  <DriversList
-                    title="Top Savings"
-                    items={filteredDecreases}
-                    type="dec"
-                    onSelect={onSelectDriver}
-                    sortBy={sortListBy}
-                  />
-                </div>
-              )}
-            </div>
-
-            {/* Sort controls (optional future UI)
-                If you want UI buttons for sortBy, add them here and call setSortListBy('pct'|'diff')
-            */}
           </motion.div>
         ) : (
           <DriverDetailsDrawer

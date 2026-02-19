@@ -10,20 +10,22 @@ export function ErrorState({ error }) {
       error.includes("expired"));
 
   return (
-    <div className="p-10 text-gray-500 text-center">
-      <AlertTriangle size={48} className="mx-auto mb-4 text-red-400" />
-      <p className="text-white mb-2">{error || "No account data available"}</p>
+    <div className="rounded-xl border border-[var(--border-light)] bg-white p-10 text-center text-[var(--text-muted)]">
+      <AlertTriangle size={48} className="mx-auto mb-4 text-rose-600" />
+      <p className="mb-2 text-[var(--text-primary)]">{error || "No account data available"}</p>
 
       {isAuthError ? (
         <button
           onClick={() => window.location.reload()}
-          className="mt-4 px-4 py-2 bg-[#a02ff1] hover:bg-[#8e25d9] text-white rounded-lg text-sm font-medium transition-colors"
+          className="mt-4 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-2 text-sm font-medium text-[var(--brand-primary)] transition-colors hover:bg-emerald-100"
         >
           Refresh Page
         </button>
       ) : (
-        <p className="text-xs text-gray-600 mt-2">Upload billing data to view account ownership information</p>
+        <p className="mt-2 text-xs text-[var(--text-muted)]">Upload billing data to view account ownership information</p>
       )}
     </div>
   );
 }
+
+export default ErrorState;

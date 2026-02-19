@@ -1,39 +1,54 @@
+import React, { useState } from "react";
+import { Mail, Lock, ArrowRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+
 const LoginForm = ({ loginData, setLoginData, handleLogin, isSigningIn, onSwitchToSignup }) => {
-  const navigate = useNavigate()
+  const navigate = useNavigate();
+  const [focusedField, setFocusedField] = useState(null);
+  const [rememberMe, setRememberMe] = useState(false);
+
   return (
     <form onSubmit={handleLogin} className="space-y-6">
-      <div>
-        <label className="text-[11px] font-semibold text-gray-500 uppercase tracking-wide mb-1 block">Email Address</label>
-        <input
+      <div className="space-y-5">
+        
+        {/* Email Field */}
+        <InputGroup 
+          label="Email Address"
           type="email"
+          placeholder="you@company.com"
           value={loginData.email}
           onChange={(e) => setLoginData({ ...loginData, email: e.target.value })}
-          required
-          className="bg-[#0a0a0c] border border-white/10 text-white rounded-xl py-2.5 px-3 focus:border-[#8B2FC9] focus:ring-[#8B2FC9]/20 outline-none w-full"
-          placeholder="you@example.com"
+          icon={Mail}
+          isFocused={focusedField === 'email'}
+          onFocus={() => setFocusedField('email')}
+          onBlur={() => setFocusedField(null)}
         />
-      </div>
-      <div>
-        <label className="text-[11px] font-semibold text-gray-500 uppercase tracking-wide mb-1 block">Password</label>
-        <input
+
+        {/* Password Field */}
+        <InputGroup 
+          label="Password"
           type="password"
+          placeholder="••••••••"
           value={loginData.password}
           onChange={(e) => setLoginData({ ...loginData, password: e.target.value })}
-          required
-          className="bg-[#0a0a0c] border border-white/10 text-white rounded-xl py-2.5 px-3 focus:border-[#8B2FC9] focus:ring-[#8B2FC9]/20 outline-none w-full"
-          placeholder="••••••••"
+          icon={Lock}
+          isFocused={focusedField === 'password'}
+          onFocus={() => setFocusedField('password')}
+          onBlur={() => setFocusedField(null)}
         />
       </div>
 
-      <div className="flex items-center justify-between">
-        <label className="flex items-center">
-          <input type="checkbox" className="rounded border-white/10 bg-[#0a0a0c] text-[#8B2FC9] focus:ring-[#8B2FC9]/20" />
-          <span className="ml-2 text-sm text-gray-400">Remember me</span>
+      <div className="flex items-center justify-between pt-1">
+        <label className="flex items-center gap-2 cursor-pointer group select-none">
+          <input 
+            type="checkbox" 
+            checked={rememberMe}
+            onChange={(e) => setRememberMe(e.target.checked)}
+            className="w-4 h-4 rounded border-gray-300 text-[var(--brand-primary)] focus:ring-[var(--brand-primary)]" 
+          />
+          <span className="text-sm text-gray-500 group-hover:text-gray-700">Remember me</span>
         </label>
-        <button type="button" 
-        onClick={ () => {navigate('/forgot-password')}}
-        className="text-sm text-[#8B2FC9] hover:text-white transition-colors font-medium">
+        <button type="button" onClick={() => navigate('/forgot-password')} className="text-sm font-semibold text-[var(--brand-primary)] hover:underline">
           Forgot password?
         </button>
       </div>
@@ -41,27 +56,50 @@ const LoginForm = ({ loginData, setLoginData, handleLogin, isSigningIn, onSwitch
       <button
         type="submit"
         disabled={isSigningIn}
-        className="bg-[#8B2FC9] hover:bg-[#7a25b3] text-white font-bold rounded-xl py-3 shadow-[0_4px_14px_0_rgba(139,47,201,0.39)] w-full disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
+        className="w-full bg-[var(--brand-primary)] hover:bg-[var(--brand-primary-hover)] text-white font-bold rounded-xl py-3.5 text-sm shadow-lg shadow-[var(--brand-primary)]/30 hover:shadow-xl hover:-translate-y-0.5 transition-all disabled:opacity-50"
       >
-        {isSigningIn ? "Signing in..." : "Sign In"}
+        <div className="flex items-center justify-center gap-2">
+          {isSigningIn ? "Signing In..." : <>Sign In <ArrowRight size={16} /></>}
+        </div>
       </button>
 
-      <div className="my-8 flex items-center">
-        <div className="flex-1 border-t border-white/10"></div>
-        <span className="px-4 text-sm text-gray-500">OR</span>
-        <div className="flex-1 border-t border-white/10"></div>
-      </div>
-
-      <div className="text-center">
-        <p className="text-gray-400 text-sm">
-          Don't have an account?{" "}
-          <button type="button" onClick={onSwitchToSignup} className="text-[#8B2FC9] hover:text-white font-bold transition-colors ml-1">
-            Sign up
-          </button>
-        </p>
+      <div className="text-center pt-2">
+        <p className="text-xs text-gray-500">Don't have an account? <button type="button" onClick={onSwitchToSignup} className="font-bold text-[#192630] hover:text-[var(--brand-primary)] ml-1">Sign up</button></p>
       </div>
     </form>
   );
 };
+
+// --- Paste the InputGroup component from Step 1 here ---
+const InputGroup = ({ label, icon: Icon, isFocused, onFocus, onBlur, ...props }) => (
+  <div className="space-y-1.5">
+    <label className="text-[11px] font-bold text-gray-500 uppercase tracking-wider pl-1 block">
+      {label}
+    </label>
+    <div className="relative group">
+      <input
+        {...props}
+        onFocus={onFocus}
+        onBlur={onBlur}
+        className={`
+          w-full font-medium rounded-xl py-2.5 pl-10 pr-4 
+          border outline-none text-sm transition-all duration-200 
+          placeholder:text-gray-400
+          ${isFocused 
+            ? 'bg-white border-[var(--brand-primary)] ring-4 ring-[var(--brand-primary-soft)] text-[#192630]' 
+            : 'bg-gray-50 border-gray-200 text-gray-900 hover:border-gray-300 hover:bg-gray-100'}
+        `}
+      />
+      <div 
+        className={`
+          absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none z-10 transition-colors duration-200
+          ${isFocused ? 'text-[var(--brand-primary)]' : 'text-gray-400'}
+        `}
+      >
+        <Icon size={18} />
+      </div>
+    </div>
+  </div>
+);
 
 export default LoginForm;

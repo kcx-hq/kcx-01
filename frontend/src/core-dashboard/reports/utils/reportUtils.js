@@ -18,10 +18,12 @@ export const formatPeriod = (dateString) => {
 
 export const getColorClasses = (color) => {
   const colors = {
-    blue: "bg-blue-500/10 border-blue-500/30 text-blue-400",
-    green: "bg-green-500/10 border-green-500/30 text-green-400",
-    yellow: "bg-yellow-500/10 border-yellow-500/30 text-yellow-400",
-    purple: "bg-purple-500/10 border-purple-500/30 text-purple-400",
+    blue: "bg-sky-50 border-sky-200 text-sky-700",
+    green: "bg-emerald-50 border-emerald-200 text-emerald-700",
+    amber: "bg-amber-50 border-amber-200 text-amber-700",
+    teal: "bg-teal-50 border-teal-200 text-teal-700",
+    purple: "bg-emerald-50 border-emerald-200 text-emerald-700",
+    yellow: "bg-amber-50 border-amber-200 text-amber-700",
   };
-  return colors[color] || colors.blue;
+  return colors[color] || colors.green;
 };
