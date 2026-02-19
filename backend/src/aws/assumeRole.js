@@ -24,6 +24,9 @@ export default async function assumeRole(options = {}) {
     } = process.env;
 
 
+
+    
+
     const region = options.region || AWS_REGION;
     const roleArn = options.roleArn || AWS_ASSUME_ROLE_ARN;
     const roleSessionName =
