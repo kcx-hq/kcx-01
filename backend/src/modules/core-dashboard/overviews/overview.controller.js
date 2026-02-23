@@ -42,10 +42,12 @@ function getUploadIdsFromRequest(req) {
 
 export const getOverview = async (req, res) => {
   try {
+    const parsedBudget = Number(req.query.budget || req.body?.budget || 0);
     const filters = {
       provider: req.query.provider || 'All',
       service: req.query.service || 'All',
-      region: req.query.region || 'All'
+      region: req.query.region || 'All',
+      budget: Number.isFinite(parsedBudget) && parsedBudget > 0 ? parsedBudget : 0,
     };
 
     // ✅ same approach as cost-analysis: uploadid from request

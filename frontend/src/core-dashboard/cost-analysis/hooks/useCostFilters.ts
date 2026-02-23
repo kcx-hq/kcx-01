@@ -1,10 +1,42 @@
 import { useEffect, useState } from "react";
 import { useDashboardStore } from "../../../store/Dashboard.store";
+import {
+  CostAnalysisApiClient,
+  CostAnalysisCaps,
+  CostAnalysisFilterOptions,
+  defaultCostAnalysisFilterOptions,
+  isObjectRecord,
+} from "../types";
 
-export function useCostFilters({ api, caps }) {
-  const [filterOptions, setFilterOptions] = useState({});
+interface UseCostFiltersArgs {
+  api: CostAnalysisApiClient | null | undefined;
+  caps: CostAnalysisCaps | null | undefined;
+}
 
-  const uploadIds = useDashboardStore((s) => s.uploadIds);
+interface UseCostFiltersResult {
+  filterOptions: CostAnalysisFilterOptions;
+}
+
+const getPayload = (response: unknown): CostAnalysisFilterOptions | null => {
+  if (!isObjectRecord(response)) return null;
+
+  const envelopeData = response.data;
+  if (isObjectRecord(envelopeData)) {
+    return envelopeData as CostAnalysisFilterOptions;
+  }
+
+  return response as CostAnalysisFilterOptions;
+};
+
+const hasNotSupportedCode = (error: unknown): boolean =>
+  isObjectRecord(error) && error.code === "NOT_SUPPORTED";
+
+export function useCostFilters({ api, caps }: UseCostFiltersArgs): UseCostFiltersResult {
+  const [filterOptions, setFilterOptions] = useState<CostAnalysisFilterOptions>(
+    defaultCostAnalysisFilterOptions
+  );
+
+  const uploadIds = useDashboardStore((state) => state.uploadIds);
   const uploadIdsKey = (Array.isArray(uploadIds) ? uploadIds.join(",") : "") || "";
 
   useEffect(() => {
@@ -12,19 +44,25 @@ export function useCostFilters({ api, caps }) {
 
     let mounted = true;
 
-    const fetchFilters = async () => {
+    const fetchFilters = async (): Promise<void> => {
       try {
-        const res = await api.call("costAnalysis", "costFilters");
-        const payload = res?.data ?? res;
-        if (mounted && payload) setFilterOptions(payload);
-      } catch (e) {
-        if (e?.code !== "NOT_SUPPORTED") {
-          console.error("Failed to fetch filter options:", e);
+        const response = await api.call("costAnalysis", "costFilters");
+        const payload = getPayload(response);
+        if (mounted && payload) {
+          setFilterOptions({
+            ...defaultCostAnalysisFilterOptions,
+            ...payload,
+          });
+        }
+      } catch (fetchError: unknown) {
+        if (!hasNotSupportedCode(fetchError)) {
+          console.error("Failed to fetch filter options:", fetchError);
         }
       }
     };
 
-    fetchFilters();
+    void fetchFilters();
+
     return () => {
       mounted = false;
     };

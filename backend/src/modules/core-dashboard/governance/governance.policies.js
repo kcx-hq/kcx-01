@@ -9,6 +9,7 @@ import { Op } from 'sequelize';
 import { getDateRange } from '../../../common/utils/date.helpers.js';
 import { formatCurrency } from '../../../common/utils/cost.helpers.js';
 import { FINOPS_CONSTANTS } from '../../../common/constants/finops.constants.js';
+import { costSharePercentage, roundTo } from '../../../common/utils/cost.calculations.js';
 
 /**
  * Helpers
@@ -24,7 +25,7 @@ const emptyOwnership = () => ({
 
   ownedCost: formatCurrency(0),
   unownedCost: formatCurrency(0),
-  ownershipPercent: formatCurrency(0, 2),
+  ownershipPercent: formatPercent(0, 2),
 
   unownedResources: []
 });
@@ -192,7 +193,7 @@ export async function checkTagCompliance(params = {}) {
         resourceName: r.resourceName,
         missingTags: missing,
         cost: formatCurrency(r.totalCost),
-        costValue: Number((r.totalCost || 0).toFixed(2))
+        costValue: roundTo(r.totalCost || 0, 2)
       });
     }
   }
@@ -201,29 +202,30 @@ export async function checkTagCompliance(params = {}) {
   const totalCost = taggedCostNum + untaggedCostNum;
 
   // ✅ percent by COUNT (resource compliance)
-  const countCompliancePercentNum = totalCount > 0 ? (taggedCount / totalCount) * 100 : 0;
+  const countCompliancePercentNum = costSharePercentage(taggedCount, totalCount);
 
   // ✅ percent by COST (spend compliance)
-  const costCompliancePercentNum = totalCost > 0 ? (taggedCostNum / totalCost) * 100 : 0;
+  const costCompliancePercentNum = costSharePercentage(taggedCostNum, totalCost);
 
   // ✅ explicit tagged/untagged percents by COST (matches your API/UI)
-  const taggedPercentNum = totalCost > 0 ? (taggedCostNum / totalCost) * 100 : 0;
-  const untaggedPercentNum = totalCost > 0 ? (untaggedCostNum / totalCost) * 100 : 0;
+  const taggedPercentNum = costSharePercentage(taggedCostNum, totalCost);
+  const untaggedPercentNum = costSharePercentage(untaggedCostNum, totalCost);
 
   missingTags.sort((a, b) => (b.costValue || 0) - (a.costValue || 0));
 
   return {
     // ✅ what your simplified API expects
-    taggedCost: Number(taggedCostNum.toFixed(2)),
-    untaggedCost: Number(untaggedCostNum.toFixed(2)),
-    taggedPercent: Number(taggedPercentNum.toFixed(2)),
-    untaggedPercent: Number(untaggedPercentNum.toFixed(2)),
+    taggedCost: roundTo(taggedCostNum, 2),
+    untaggedCost: roundTo(untaggedCostNum, 2),
+    taggedPercent: roundTo(taggedPercentNum, 2),
+    untaggedPercent: roundTo(untaggedPercentNum, 2),
 
     // extra (optional)
     taggedCount,
     untaggedCount,
-    countCompliancePercent: Number(countCompliancePercentNum.toFixed(2)),
-    costCompliancePercent: Number(costCompliancePercentNum.toFixed(2)),
+    countCompliancePercent: roundTo(countCompliancePercentNum, 2),
+    costCompliancePercent: roundTo(costCompliancePercentNum, 2),
+    compliancePercentValue: roundTo(costCompliancePercentNum, 2),
 
     // formatted (optional)
     taggedCostFormatted: formatCurrency(taggedCostNum),
@@ -234,7 +236,7 @@ export async function checkTagCompliance(params = {}) {
     costCompliancePercentFormatted: formatPercent(costCompliancePercentNum),
 
     isCompliant:
-      Number(countCompliancePercentNum.toFixed(2)) >=
+      roundTo(countCompliancePercentNum, 2) >=
       Number(FINOPS_CONSTANTS?.MIN_TAG_COMPLIANCE_PERCENT || 0),
 
     missingTags: missingTags.slice(0, 100).map(({ costValue, ...rest }) => rest)
@@ -321,14 +323,14 @@ export async function checkOwnershipGaps(params = {}) {
         resourceName: r.resourceName,
         serviceName: r.serviceName,
         cost: formatCurrency(r.totalCost),
-        costValue: Number((r.totalCost || 0).toFixed(2))
+        costValue: roundTo(r.totalCost || 0, 2)
       });
     }
   }
 
   const totalCount = ownedCount + unownedCount;
   const totalCost = ownedCostNum + unownedCostNum;
-  const ownershipPercentNum = totalCount > 0 ? (ownedCount / totalCount) * 100 : 0;
+  const ownershipPercentNum = costSharePercentage(ownedCount, totalCount);
 
   unownedResources.sort((a, b) => (b.costValue || 0) - (a.costValue || 0));
 
@@ -336,13 +338,13 @@ export async function checkOwnershipGaps(params = {}) {
     ownedCount,
     unownedCount,
 
-    ownedCostValue: Number(ownedCostNum.toFixed(2)),
-    unownedCostValue: Number(unownedCostNum.toFixed(2)),
-    ownershipPercentValue: Number(ownershipPercentNum.toFixed(2)),
+    ownedCostValue: roundTo(ownedCostNum, 2),
+    unownedCostValue: roundTo(unownedCostNum, 2),
+    ownershipPercentValue: roundTo(ownershipPercentNum, 2),
 
     ownedCost: formatCurrency(ownedCostNum),
     unownedCost: formatCurrency(unownedCostNum),
-    ownershipPercent: formatCurrency(ownershipPercentNum, 2),
+    ownershipPercent: formatPercent(ownershipPercentNum, 2),
 
     unownedResources: unownedResources
       .slice(0, 100)
@@ -367,8 +369,8 @@ export async function generateGovernanceSummary(params = {}) {
   const overallScoreNum = (tagScore + ownershipScore) / 2;
 
   return {
-    overallScoreValue: Number(overallScoreNum.toFixed(2)),
-    overallScore: formatCurrency(overallScoreNum, 2),
+    overallScoreValue: roundTo(overallScoreNum, 2),
+    overallScore: formatPercent(overallScoreNum, 2),
 
     tagCompliance,
     ownershipGaps,
@@ -419,8 +421,6 @@ export async function getAccountsWithOwnership(params = {}) {
       endDate,
       uploadIds
     });
-
-    console.log(costData)
 
     if (!Array.isArray(costData) || costData.length === 0) {
       costData = await costsService.getCostDataWithResources({
@@ -514,9 +514,9 @@ export async function getAccountsWithOwnership(params = {}) {
         accountId: acc.accountId,
         accountName: acc.accountName,
         provider: acc.provider,
-        cost: parseFloat((acc.cost || 0).toFixed(2)),
+        cost: roundTo(acc.cost || 0, 2),
         topService,
-        percentage: totalSpend > 0 ? parseFloat(((acc.cost / totalSpend) * 100).toFixed(2)) : 0,
+        percentage: roundTo(costSharePercentage(acc.cost || 0, totalSpend), 2),
         owner: acc.owner || null,
         ownershipStatus: acc.owner ? 'Assigned (inferred)' : 'No owner tag detected'
       };
@@ -561,7 +561,7 @@ export async function getAccountsWithOwnership(params = {}) {
     const spendWithOwner = accounts.filter((a) => a.owner).reduce((s, a) => s + (a.cost || 0), 0);
     const spendWithoutOwner = accounts.filter((a) => !a.owner).reduce((s, a) => s + (a.cost || 0), 0);
     const total = accounts.reduce((s, a) => s + (a.cost || 0), 0);
-    const spendUnattributedPercent = total > 0 ? (spendWithoutOwner / total) * 100 : 0;
+    const spendUnattributedPercent = costSharePercentage(spendWithoutOwner, total);
 
     return {
       accounts,
@@ -569,10 +569,10 @@ export async function getAccountsWithOwnership(params = {}) {
         totalAccounts: accounts.length,
         accountsWithOwner,
         accountsWithoutOwner,
-        spendWithOwner: parseFloat(spendWithOwner.toFixed(2)),
-        spendWithoutOwner: parseFloat(spendWithoutOwner.toFixed(2)),
-        spendUnattributedPercent: parseFloat(spendUnattributedPercent.toFixed(1)),
-        totalSpend: parseFloat(total.toFixed(2))
+        spendWithOwner: roundTo(spendWithOwner, 2),
+        spendWithoutOwner: roundTo(spendWithoutOwner, 2),
+        spendUnattributedPercent: roundTo(spendUnattributedPercent, 1),
+        totalSpend: roundTo(total, 2)
       },
       providers: Array.from(providerSet).sort()
     };

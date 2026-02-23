@@ -11,6 +11,10 @@
 import { BillingUsageFact, CloudAccount, Service, Region } from "../../../models/index.js";
 import Sequelize from "../../../config/db.config.js";
 import { Op } from "sequelize";
+import {
+  costSharePercentage,
+  roundTo,
+} from "../../../common/utils/cost.calculations.js";
 
 /**
  * Resolve filter names to IDs for WHERE clause filtering
@@ -314,14 +318,14 @@ export async function getTagCompliance(options = {}) {
   });
 
   const totalCost = taggedCost + untaggedCost;
-  const taggedPercent = totalCost > 0 ? (taggedCost / totalCost) * 100 : 0;
-  const untaggedPercent = totalCost > 0 ? (untaggedCost / totalCost) * 100 : 0;
+  const taggedPercent = costSharePercentage(taggedCost, totalCost);
+  const untaggedPercent = costSharePercentage(untaggedCost, totalCost);
 
   return {
-    taggedCost: parseFloat(taggedCost.toFixed(2)),
-    untaggedCost: parseFloat(untaggedCost.toFixed(2)),
-    taggedPercent: parseFloat(taggedPercent.toFixed(2)),
-    untaggedPercent: parseFloat(untaggedPercent.toFixed(2)),
+    taggedCost: roundTo(taggedCost, 2),
+    untaggedCost: roundTo(untaggedCost, 2),
+    taggedPercent: roundTo(taggedPercent, 2),
+    untaggedPercent: roundTo(untaggedPercent, 2),
   };
 }
 
@@ -387,17 +391,17 @@ export async function getEnvironmentBreakdown(options = {}) {
   });
 
   const totalCost = prodCost + nonProdCost + unknownCost;
-  const prodPercent = totalCost > 0 ? (prodCost / totalCost) * 100 : 0;
-  const nonProdPercent = totalCost > 0 ? (nonProdCost / totalCost) * 100 : 0;
-  const unknownPercent = totalCost > 0 ? (unknownCost / totalCost) * 100 : 0;
+  const prodPercent = costSharePercentage(prodCost, totalCost);
+  const nonProdPercent = costSharePercentage(nonProdCost, totalCost);
+  const unknownPercent = costSharePercentage(unknownCost, totalCost);
 
   return {
-    prodCost: parseFloat(prodCost.toFixed(2)),
-    nonProdCost: parseFloat(nonProdCost.toFixed(2)),
-    unknownCost: parseFloat(unknownCost.toFixed(2)),
-    prodPercent: parseFloat(prodPercent.toFixed(2)),
-    nonProdPercent: parseFloat(nonProdPercent.toFixed(2)),
-    unknownPercent: parseFloat(unknownPercent.toFixed(2)),
+    prodCost: roundTo(prodCost, 2),
+    nonProdCost: roundTo(nonProdCost, 2),
+    unknownCost: roundTo(unknownCost, 2),
+    prodPercent: roundTo(prodPercent, 2),
+    nonProdPercent: roundTo(nonProdPercent, 2),
+    unknownPercent: roundTo(unknownPercent, 2),
   };
 }
 
@@ -435,6 +439,6 @@ export async function getMonthlySpend(options = {}) {
   });
 
   return Object.entries(monthlyMap)
-    .map(([month, cost]) => ({ month, cost: parseFloat(cost.toFixed(2)) }))
+    .map(([month, cost]) => ({ month, cost: roundTo(cost, 2) }))
     .sort((a, b) => a.month.localeCompare(b.month));
 }

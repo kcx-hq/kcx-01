@@ -11,6 +11,7 @@ import { Resource, Service, Region } from '../../../models/index.js';
 import { getDateRange } from '../../../common/utils/date.helpers.js';
 import { formatCurrency } from '../../../common/utils/cost.helpers.js';
 import { FINOPS_CONSTANTS } from '../../../common/constants/finops.constants.js';
+import { costSharePercentage, roundTo } from '../../../common/utils/cost.calculations.js';
 
 /**
  * ✅ SAME APPROACH AS COST-ANALYSIS:
@@ -154,8 +155,8 @@ function detectIdleResourcesFromData(costData, filters) {
         // Calculate percentages
         const serviceSpend = serviceSpendMap.get(resource.serviceName) || 0;
         const regionSpend = regionSpendMap.get(resource.regionName) || 0;
-        const serviceSpendPercent = serviceSpend > 0 ? (resource.totalCost / serviceSpend) * 100 : 0;
-        const regionSpendPercent = regionSpend > 0 ? (resource.totalCost / regionSpend) * 100 : 0;
+        const serviceSpendPercent = costSharePercentage(resource.totalCost, serviceSpend);
+        const regionSpendPercent = costSharePercentage(resource.totalCost, regionSpend);
 
         // Generate why flagged message
         const whyFlagged =
@@ -188,7 +189,7 @@ function detectIdleResourcesFromData(costData, filters) {
         const sortedHistory = resource.costHistory
           .sort((a, b) => b.month.localeCompare(a.month))
           .slice(0, 4)
-          .map((h) => parseFloat(h.cost.toFixed(2)));
+          .map((h) => roundTo(h.cost, 2));
 
         idleResources.push({
           id: resource.resourceId,
@@ -197,7 +198,7 @@ function detectIdleResourcesFromData(costData, filters) {
           status: daysDiff >= 60 ? 'Abandoned' : 'Idle',
           daysIdle: daysDiff,
           utilization: '<1%',
-          savings: parseFloat((resource.totalCost * 0.9).toFixed(2)),
+          savings: roundTo(resource.totalCost * 0.9, 2),
           risk: risk,
           lastActivity: new Date(resource.lastActivity).toISOString().split('T')[0],
           region: resource.regionName,
@@ -209,8 +210,8 @@ function detectIdleResourcesFromData(costData, filters) {
           whyFlagged: whyFlagged,
           confidence: confidence,
           utilizationSignal: utilizationSignal,
-          serviceSpendPercent: parseFloat(serviceSpendPercent.toFixed(2)),
-          regionSpendPercent: parseFloat(regionSpendPercent.toFixed(2)),
+          serviceSpendPercent: roundTo(serviceSpendPercent, 2),
+          regionSpendPercent: roundTo(regionSpendPercent, 2),
           owner: owner,
           typicalResolutionPaths: typicalResolutionPaths,
           // Additional fields for compatibility
@@ -285,11 +286,12 @@ export async function detectUnderutilizedServices(params = {}) {
   const underutilized = [];
   serviceMap.forEach((service) => {
     service.avgCost = service.totalCost / service.recordCount;
-    const costRatio = (service.totalCost / avgServiceCost) * 100;
+    const costRatio = costSharePercentage(service.totalCost, avgServiceCost);
 
     if (costRatio < threshold && service.totalCost > 0) {
       underutilized.push({
         serviceName: service.serviceName,
+        currentCostValue: roundTo(service.totalCost, 2),
         currentCost: formatCurrency(service.totalCost),
         avgCostPerRecord: formatCurrency(service.avgCost),
         potentialSavings: formatCurrency(service.totalCost * 0.3), // Assume 30% savings with right-sizing
@@ -298,7 +300,9 @@ export async function detectUnderutilizedServices(params = {}) {
     }
   });
 
-  return underutilized.sort((a, b) => parseFloat(b.currentCost) - parseFloat(a.currentCost));
+  return underutilized
+    .sort((a, b) => (b.currentCostValue || 0) - (a.currentCostValue || 0))
+    .map(({ currentCostValue, ...rest }) => rest);
 }
 
 /**
@@ -396,7 +400,7 @@ export async function getRightSizingRecommendations(params = {}) {
           return sum + Math.pow(cost - avg, 2);
         }, 0) / resource.costs.length;
       const stdDev = Math.sqrt(variance);
-      coefficientOfVariation = avg > 0 ? (stdDev / avg) * 100 : 100;
+      coefficientOfVariation = avg > 0 ? costSharePercentage(stdDev, avg) : 100;
     } else {
       // Single data point - assume low variation
       coefficientOfVariation = 5;
@@ -500,11 +504,11 @@ export async function getRightSizingRecommendations(params = {}) {
         recommendations.push({
           id: `rs-${resource.resourceId}`,
           currentInstance: currentInstance,
-          currentCPU: parseFloat(estimatedCPU.toFixed(1)),
-          currentCost: parseFloat(currentCost.toFixed(2)),
+          currentCPU: roundTo(estimatedCPU, 1),
+          currentCost: roundTo(currentCost, 2),
           recommendedInstance: recommendedInstance,
-          recommendedCost: parseFloat(recommendedCost.toFixed(2)),
-          savings: parseFloat(savings.toFixed(2)),
+          recommendedCost: roundTo(recommendedCost, 2),
+          savings: roundTo(savings, 2),
           riskLevel: estimatedCPU < 15 ? 'Low' : 'Medium',
           resourceId: resource.resourceId,
           region: resource.regionName,
@@ -556,11 +560,11 @@ export async function getRightSizingRecommendations(params = {}) {
         recommendations.push({
           id: `rs-service-${serviceGroup.serviceName}-${serviceGroup.regionName}`,
           currentInstance: currentInstance,
-          currentCPU: parseFloat(estimatedCPU.toFixed(1)),
-          currentCost: parseFloat(serviceGroup.totalCost.toFixed(2)),
+          currentCPU: roundTo(estimatedCPU, 1),
+          currentCost: roundTo(serviceGroup.totalCost, 2),
           recommendedInstance: recommendedInstance,
-          recommendedCost: parseFloat(recommendedCost.toFixed(2)),
-          savings: parseFloat(savings.toFixed(2)),
+          recommendedCost: roundTo(recommendedCost, 2),
+          savings: roundTo(savings, 2),
           riskLevel: 'Medium',
           resourceId: `service-${serviceGroup.serviceName}`,
           region: serviceGroup.regionName,
@@ -664,7 +668,7 @@ export async function detectCommitmentGaps(params = {}) {
     }
   });
 
-  const onDemandPercentage = totalComputeSpend > 0 ? (onDemandSpend / totalComputeSpend) * 100 : 0;
+  const onDemandPercentage = costSharePercentage(onDemandSpend, totalComputeSpend);
 
   // More realistic thresholds: lower spend threshold, check for any compute spend
   const hasComputeSpend = totalComputeSpend > 0;
@@ -686,10 +690,10 @@ export async function detectCommitmentGaps(params = {}) {
   }
 
   return {
-    onDemandPercentage: parseFloat(onDemandPercentage.toFixed(1)),
-    totalComputeSpend: parseFloat(totalComputeSpend.toFixed(2)),
+    onDemandPercentage: roundTo(onDemandPercentage, 1),
+    totalComputeSpend: roundTo(totalComputeSpend, 2),
     recommendation: recommendation,
-    potentialSavings: parseFloat(potentialSavings.toFixed(2)),
+    potentialSavings: roundTo(potentialSavings, 2),
     predictableWorkload: predictableWorkload,
     workloadPattern: hasComputeSpend
       ? predictableWorkload

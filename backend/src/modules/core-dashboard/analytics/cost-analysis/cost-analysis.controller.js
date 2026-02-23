@@ -13,7 +13,16 @@ import {
 } from "./cost-analysis.service.js";
 
 // Whitelist allowed grouping columns for security
-const ALLOWED_GROUPS = ["ServiceName", "RegionName", "ProviderName"];
+const ALLOWED_GROUPS = [
+  "ServiceName",
+  "RegionName",
+  "ProviderName",
+  "Account",
+  "Team",
+  "App",
+  "Env",
+  "CostCategory",
+];
 
 /**
  * Normalize uploadIds from body or query
@@ -53,9 +62,24 @@ export const getCostAnalysis = async (req, res) => {
       provider: source.provider || "All",
       service: source.service || "All",
       region: source.region || "All",
+      account: source.account || "All",
+      subAccount: source.subAccount || "All",
+      app: source.app || "All",
+      team: source.team || "All",
+      env: source.env || "All",
+      costCategory: source.costCategory || "All",
+      tagKey: source.tagKey || "",
+      tagValue: source.tagValue || "",
+      timeRange: source.timeRange || "30d",
+      granularity: source.granularity || "daily",
+      compareTo: source.compareTo || "previous_period",
+      costBasis: source.costBasis || "actual",
+      startDate: source.startDate || null,
+      endDate: source.endDate || null,
+      groupBy: source.groupBy || "ServiceName",
     };
 
-    let groupBy = source.groupBy || "ServiceName";
+    let groupBy = filters.groupBy || "ServiceName";
     if (!ALLOWED_GROUPS.includes(groupBy)) {
       groupBy = "ServiceName";
     }

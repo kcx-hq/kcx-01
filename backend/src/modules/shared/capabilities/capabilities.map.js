@@ -433,4 +433,90 @@ export const CAPABILITIES_MAP = {
       },
     },
   },
+
+  /**
+   * CLIENT-J
+   * Uses: /api/client-j/dashboard/<module>
+   * Note: key can be client UUID when available; "client-j" works as a fallback mapper key.
+   */
+  "client-j": {
+    clientId: "client-j",
+    dashboard: "/client-j/dashboard",
+    apiBase: "/api/client-j/dashboard",
+    modules: {
+      health: {
+        enabled: true,
+        endpoints: {
+          ping: { method: "GET", path: "/" },
+        },
+      },
+      filters: {
+        enabled: true,
+        endpoints: {
+          filters: { method: "GET", path: "/filters" },
+        },
+      },
+      executiveOverview: {
+        enabled: true,
+        endpoints: {
+          summary: { method: "GET", path: "/executive-overview" },
+        },
+      },
+      dataExplorer: {
+        enabled: true,
+        endpoints: {
+          explorer: { method: "GET", path: "/data-explorer" },
+          exportCsv: { method: "GET", path: "/data-explorer/export-csv" },
+        },
+      },
+      spendIntelligence: {
+        enabled: true,
+        endpoints: {
+          analysis: { method: "GET", path: "/spend-intelligence" },
+        },
+      },
+      allocationChargeback: {
+        enabled: true,
+        endpoints: {
+          summary: { method: "GET", path: "/allocation-chargeback" },
+        },
+      },
+      optimizationResources: {
+        enabled: true,
+        endpoints: {
+          recommendations: { method: "GET", path: "/optimization-resources" },
+        },
+      },
+      commitmentsRates: {
+        enabled: true,
+        endpoints: {
+          commitments: { method: "GET", path: "/commitments-rates" },
+        },
+      },
+      forecastingBudgets: {
+        enabled: true,
+        endpoints: {
+          forecasting: { method: "GET", path: "/forecasting-budgets" },
+        },
+      },
+      unitEconomics: {
+        enabled: true,
+        endpoints: {
+          summary: { method: "GET", path: "/unit-economics" },
+        },
+      },
+      governanceDataHealth: {
+        enabled: true,
+        endpoints: {
+          governance: { method: "GET", path: "/governance-data-health" },
+        },
+      },
+      reports: {
+        enabled: true,
+        endpoints: {
+          reports: { method: "GET", path: "/reports" },
+        },
+      },
+    },
+  },
 };

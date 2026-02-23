@@ -10,6 +10,7 @@
 import * as rules from './optimization.rules.js';
 import { formatCurrency } from '../../../common/utils/cost.helpers.js';
 import { FINOPS_CONSTANTS } from '../../../common/constants/finops.constants.js';
+import { roundTo } from '../../../common/utils/cost.calculations.js';
 
 /**
  * Helper: normalize uploadIds from request
@@ -119,7 +120,7 @@ export const optimizationService = {
     // Create opportunities from idle resources
     idleByType.forEach((group, type) => {
       if (group.totalSavings > 0) {
-        const savings = parseFloat(group.totalSavings.toFixed(2));
+        const savings = roundTo(group.totalSavings, 2);
         const priority =
           savings > 4 ? 'HIGH IMPACT' : savings > 2 ? 'MEDIUM IMPACT' : 'LOW IMPACT';
 
@@ -162,7 +163,7 @@ export const optimizationService = {
         id: 'right-size-compute',
         priority: rightSizingSavings > 2 ? 'MEDIUM IMPACT' : 'LOW IMPACT',
         title: 'Right-Size Compute Resources',
-        savings: parseFloat(rightSizingSavings.toFixed(2)),
+        savings: roundTo(rightSizingSavings, 2),
         confidence: 'High',
         regions: regions,
         description: 'Instances running at low utilization can be downsized',

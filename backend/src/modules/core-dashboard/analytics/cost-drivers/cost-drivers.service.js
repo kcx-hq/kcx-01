@@ -5,6 +5,10 @@
  */
 
 import { costDriversRepository } from './cost-drivers.repository.js';
+import { costGrowthRate, roundTo } from '../../../../common/utils/cost.calculations.js';
+
+const pctChange = (curr, prev) =>
+  prev === 0 ? (curr > 0 ? Infinity : 0) : costGrowthRate(curr, prev);
 
 /**
  * Calculate cost drivers from time series data
@@ -85,9 +89,7 @@ export function calculateCostDrivers(timeSeriesResult, nameMap) {
     prev: group.prev,
     diff: group.curr - group.prev,
     pct:
-      group.prev === 0
-        ? (group.curr > 0 ? Infinity : 0)
-        : ((group.curr - group.prev) / group.prev) * 100,
+      pctChange(group.curr, group.prev),
     isNew: group.prev === 0 && group.curr > 0,
     isDeleted: group.curr === 0 && group.prev > 0,
     rows: group.rows
@@ -119,12 +121,12 @@ export function calculateCostDrivers(timeSeriesResult, nameMap) {
 
   return {
     overallStats: {
-      totalCurr,
-      totalPrev,
-      diff: totalDiff,
-      pct: totalPrev === 0 ? 0 : (totalDiff / totalPrev) * 100,
-      totalIncreases: increases.reduce((sum, r) => sum + r.diff, 0),
-      totalDecreases: Math.abs(decreases.reduce((sum, r) => sum + r.diff, 0))
+      totalCurr: roundTo(totalCurr, 2),
+      totalPrev: roundTo(totalPrev, 2),
+      diff: roundTo(totalDiff, 2),
+      pct: roundTo(totalPrev === 0 ? 0 : costGrowthRate(totalCurr, totalPrev), 2),
+      totalIncreases: roundTo(increases.reduce((sum, r) => sum + r.diff, 0), 2),
+      totalDecreases: roundTo(Math.abs(decreases.reduce((sum, r) => sum + r.diff, 0)), 2)
     },
     dynamics,
     increases,
@@ -332,9 +334,7 @@ export const costDriversService = {
           rows: stats.rows,
           diff: stats.curr - stats.prev,
           pct:
-            stats.prev === 0
-              ? (stats.curr > 0 ? Infinity : 0)
-              : ((stats.curr - stats.prev) / stats.prev) * 100,
+            pctChange(stats.curr, stats.prev),
           isNew: stats.prev === 0 && stats.curr > 0,
           isDeleted: stats.curr === 0 && stats.prev > 0
         }))
@@ -351,20 +351,20 @@ export const costDriversService = {
 
       // Calculate dynamics
       const dynamics = {
-        newSpend: allResults.filter(r => r.isNew).reduce((a, b) => a + b.diff, 0),
-        expansion: allResults.filter(r => !r.isNew && r.diff > 0).reduce((a, b) => a + b.diff, 0),
-        deleted: allResults.filter(r => r.isDeleted).reduce((a, b) => a + b.diff, 0),
-        optimization: allResults.filter(r => !r.isDeleted && r.diff < 0).reduce((a, b) => a + b.diff, 0)
+        newSpend: roundTo(allResults.filter(r => r.isNew).reduce((a, b) => a + b.diff, 0), 2),
+        expansion: roundTo(allResults.filter(r => !r.isNew && r.diff > 0).reduce((a, b) => a + b.diff, 0), 2),
+        deleted: roundTo(allResults.filter(r => r.isDeleted).reduce((a, b) => a + b.diff, 0), 2),
+        optimization: roundTo(allResults.filter(r => !r.isDeleted && r.diff < 0).reduce((a, b) => a + b.diff, 0), 2)
       };
 
       // Overall stats
       const overallStats = {
-        totalCurr,
-        totalPrev,
-        diff: totalCurr - totalPrev,
-        pct: totalPrev ? ((totalCurr - totalPrev) / totalPrev) * 100 : 0,
-        totalIncreases: increases.reduce((a, i) => a + i.diff, 0),
-        totalDecreases: decreases.reduce((a, i) => a + i.diff, 0)
+        totalCurr: roundTo(totalCurr, 2),
+        totalPrev: roundTo(totalPrev, 2),
+        diff: roundTo(totalCurr - totalPrev, 2),
+        pct: roundTo(totalPrev ? costGrowthRate(totalCurr, totalPrev) : 0, 2),
+        totalIncreases: roundTo(increases.reduce((a, i) => a + i.diff, 0), 2),
+        totalDecreases: roundTo(decreases.reduce((a, i) => a + i.diff, 0), 2)
       };
 
       // Extract unique services from the data for filter options
@@ -416,7 +416,7 @@ export const costDriversService = {
       .sort((a, b) => a[0].localeCompare(b[0]))
       .map(([date, val]) => ({
         date: date.slice(5), // Remove year for display
-        val: parseFloat(val || 0)
+        val: roundTo(val || 0, 2)
       }));
 
     // Calculate operations breakdown
@@ -428,7 +428,7 @@ export const costDriversService = {
     });
 
     const subDrivers = Object.entries(operationsMap)
-      .map(([name, value]) => ({ name, value: parseFloat(value || 0) }))
+      .map(([name, value]) => ({ name, value: roundTo(value || 0, 2) }))
       .sort((a, b) => b.value - a.value)
       .slice(0, 5);
 
@@ -447,12 +447,12 @@ export const costDriversService = {
     });
 
     const topResources = Object.values(resourceMap)
-      .map(r => ({ ...r, cost: parseFloat(r.cost || 0) }))
+      .map(r => ({ ...r, cost: roundTo(r.cost || 0, 2) }))
       .sort((a, b) => b.cost - a.cost)
       .slice(0, 20);
 
     // Calculate annualized impact based on actual period
-    const annualizedImpact = driver.diff * (365 / period);
+    const annualizedImpact = roundTo(driver.diff * (365 / period), 2);
 
     // Generate insight
     const insightText = getSmartInsight(driver.name, subDrivers);

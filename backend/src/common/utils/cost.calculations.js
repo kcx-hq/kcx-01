@@ -15,6 +15,13 @@ const toNum = (v, fallback = 0) => {
 };
 
 /**
+ * Round numeric value to fixed decimal places.
+ */
+export function roundTo(value, decimals = 2) {
+  return Number(toNum(value, 0).toFixed(decimals));
+}
+
+/**
  * Savings = List_Spend - Effective_Spend
  */
 export function savings(listSpend, effectiveSpend) {
@@ -60,6 +67,13 @@ export function monthOverMonthPercentage(currentMonthSpend, previousMonthSpend) 
   const prev = toNum(previousMonthSpend, 0);
   if (!prev || prev <= 0) return 0;
   return (monthOverMonthChange(currentMonthSpend, previousMonthSpend) / prev) * 100;
+}
+
+/**
+ * Period_Over_Period_Percentage = ((Current_Period_Spend - Previous_Period_Spend) / Previous_Period_Spend) * 100
+ */
+export function periodOverPeriodPercentage(currentPeriodSpend, previousPeriodSpend) {
+  return monthOverMonthPercentage(currentPeriodSpend, previousPeriodSpend);
 }
 
 /**
@@ -214,6 +228,56 @@ export function sharedCostAllocation(teamUsage, totalUsage, sharedCost) {
  */
 export function isHighCostLowUsageFlag(costPerUnit, percentile75) {
   return toNum(costPerUnit, 0) > toNum(percentile75, 0);
+}
+
+/**
+ * Anomaly_Threshold = Mean + (Sigma * StdDev)
+ */
+export function anomalyThreshold(mean, stdDev, sigma = 2) {
+  return toNum(mean, 0) + toNum(sigma, 2) * toNum(stdDev, 0);
+}
+
+/**
+ * Inclusive_Day_Count = (End_Date - Start_Date) + 1
+ */
+export function inclusiveDayCount(startDate, endDate) {
+  if (!startDate || !endDate) return 0;
+  const start = new Date(startDate);
+  const end = new Date(endDate);
+  if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) return 0;
+
+  const startUtc = Date.UTC(start.getUTCFullYear(), start.getUTCMonth(), start.getUTCDate());
+  const endUtc = Date.UTC(end.getUTCFullYear(), end.getUTCMonth(), end.getUTCDate());
+  if (endUtc < startUtc) return 0;
+
+  const msPerDay = 24 * 60 * 60 * 1000;
+  return Math.floor((endUtc - startUtc) / msPerDay) + 1;
+}
+
+/**
+ * Average_Daily_Spend_From_Period = Total_Spend / Inclusive_Day_Count
+ * Falls back to fallbackDays when period dates are not available.
+ */
+export function averageDailyFromPeriod(totalSpend, startDate, endDate, fallbackDays = 1) {
+  const days = inclusiveDayCount(startDate, endDate) || Math.max(1, toNum(fallbackDays, 1));
+  return dailyAverageSpend(totalSpend, days);
+}
+
+/**
+ * Split_Period_Trend_Percentage:
+ *  1) Split daily totals into previous half and current half.
+ *  2) Trend% = ((CurrentHalf - PreviousHalf) / PreviousHalf) * 100
+ */
+export function splitPeriodTrendPercentage(dailyTotals = []) {
+  if (!Array.isArray(dailyTotals) || dailyTotals.length === 0) return 0;
+
+  const values = dailyTotals.map((v) => toNum(v, 0));
+  const mid = Math.floor(values.length / 2);
+  const previous = mid > 0 ? values.slice(0, mid).reduce((a, b) => a + b, 0) : 0;
+  const current = values.slice(mid).reduce((a, b) => a + b, 0);
+
+  if (!previous || previous <= 0) return 0;
+  return ((current - previous) / previous) * 100;
 }
 
 /**

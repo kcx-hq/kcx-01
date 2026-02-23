@@ -1,6 +1,11 @@
 import { Loader2 } from "lucide-react";
+import { OverviewStatusType } from "../types";
 
-const OverviewStates = ({ type }) => {
+interface OverviewStatesProps {
+  type: OverviewStatusType;
+}
+
+const OverviewStates = ({ type }: OverviewStatesProps) => {
   const accent = "var(--brand-secondary, #007758)";
 
   if (type === "loading") {

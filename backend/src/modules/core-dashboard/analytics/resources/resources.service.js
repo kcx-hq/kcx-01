@@ -1,3 +1,5 @@
+import { roundTo } from '../../../../common/utils/cost.calculations.js';
+
 export const buildResourceInventory = (rows) => {
   const resourceMap = {};
 
@@ -61,7 +63,7 @@ export const buildResourceInventory = (rows) => {
       name: r.name,
       service: r.service,
       region: r.region,
-      totalCost: parseFloat(r.totalCost.toFixed(2)),
+      totalCost: roundTo(r.totalCost, 2),
       status,
       trend,
       tags: r.tags,
@@ -91,6 +93,11 @@ export const buildResourceInventory = (rows) => {
       .filter((i) => i.status === 'Spiking')
       .reduce((sum, i) => sum + i.totalCost, 0),
   };
+
+  stats.totalCost = roundTo(stats.totalCost, 2);
+  stats.zombieCost = roundTo(stats.zombieCost, 2);
+  stats.untaggedCost = roundTo(stats.untaggedCost, 2);
+  stats.spikingCost = roundTo(stats.spikingCost, 2);
 
   return {
     inventory: inventory.sort((a, b) => b.totalCost - a.totalCost),

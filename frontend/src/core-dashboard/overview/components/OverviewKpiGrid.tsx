@@ -1,8 +1,65 @@
 // src/components/dashboard/OverviewKpi.jsx
 import React, { useMemo, useCallback } from "react";
 import { useAuthStore } from "../../../store/Authstore";
-import { DollarSign, MapPin, Server, TrendingUp, Cloud, Tag, FileX } from "lucide-react";
+import { DollarSign, MapPin, Server, TrendingUp, Cloud, Tag, FileX, LucideIcon } from "lucide-react";
 import KpiGrid from "../../common/widgets/KpiGrid";
+import { BillingPeriod, NameValueMetric } from "../types";
+
+type TrendType = "up" | "down" | "neutral";
+
+interface InsightMetric {
+  label: string;
+  value: string;
+}
+
+interface InsightData {
+  title: string;
+  description: string;
+  metrics: InsightMetric[];
+  breakdown: InsightMetric[];
+  recommendation?: string;
+}
+
+interface KpiCardConfig {
+  id: string;
+  delay: number;
+  title: string;
+  value: string;
+  icon: LucideIcon;
+  color: string;
+  subValue?: string | null;
+  contextLabel?: string | null;
+  showChangeTooltip?: boolean;
+  trendType?: TrendType;
+}
+
+interface OverviewKpiContext {
+  spend: number;
+  topRegion: NameValueMetric;
+  topService: NameValueMetric;
+  spendChangePercent: number;
+  topProvider: NameValueMetric;
+  untaggedCost: number;
+  missingMetadataCost: number;
+  billingPeriod: BillingPeriod | null;
+  topRegionPercent: number;
+  topServicePercent: number;
+  formatCurrency: (value: number) => string;
+  formatPercent: (value: number) => string;
+}
+
+interface OverviewKpiProps {
+  spend?: number;
+  topRegion?: NameValueMetric;
+  topService?: NameValueMetric;
+  spendChangePercent?: number;
+  topProvider?: NameValueMetric;
+  untaggedCost?: number;
+  missingMetadataCost?: number;
+  billingPeriod?: BillingPeriod | null;
+  topRegionPercent?: number;
+  topServicePercent?: number;
+}
 
 const OverviewKpi = ({
   spend = 0,
@@ -15,14 +72,14 @@ const OverviewKpi = ({
   billingPeriod = null,
   topRegionPercent = 0,
   topServicePercent = 0,
-}) => {
+}: OverviewKpiProps) => {
   const { user } = useAuthStore();
 
   // NOTE: locked should be true when user is NOT premium
   const locked = !user?.is_premium;
 
   const formatCurrency = useCallback(
-    (val) =>
+    (val: number) =>
       new Intl.NumberFormat("en-US", {
         style: "currency",
         currency: "USD",
@@ -31,14 +88,14 @@ const OverviewKpi = ({
     []
   );
 
-  const formatPercent = useCallback((val) => {
+  const formatPercent = useCallback((val: number) => {
     const n = Number(val || 0);
     const sign = n >= 0 ? "+" : "";
     return `${sign}${n.toFixed(1)}%`;
   }, []);
 
   // context passed into getInsights
-  const ctx = useMemo(
+  const ctx = useMemo<OverviewKpiContext>(
     () => ({
       spend,
       topRegion,
@@ -69,7 +126,7 @@ const OverviewKpi = ({
     ]
   );
 
-  const cards = useMemo(
+  const cards = useMemo<KpiCardConfig[]>(
     () => [
       {
         id: "total-billed-cost",
@@ -114,7 +171,7 @@ const OverviewKpi = ({
     ]
   );
 
-  const extraCards = useMemo(() => {
+  const extraCards = useMemo<KpiCardConfig[]>(() => {
     const safeSpend = Number(spend || 0);
     const untaggedPct = safeSpend > 0 ? (Number(untaggedCost || 0) / safeSpend) * 100 : 0;
     const missingPct = safeSpend > 0 ? (Number(missingMetadataCost || 0) / safeSpend) * 100 : 0;
@@ -160,7 +217,7 @@ const OverviewKpi = ({
   }, [spend, untaggedCost, missingMetadataCost, spendChangePercent, topProvider, formatCurrency, formatPercent]);
 
   const getInsights = useCallback(
-    (cardId, ctx) => {
+    (cardId: string, ctx: OverviewKpiContext): InsightData | null => {
       const {
         spend,
         topRegion,
@@ -300,7 +357,7 @@ const OverviewKpi = ({
       getInsights={getInsights}
       ctx={ctx}
       columns="grid-cols-1 md:grid-cols-2 lg:grid-cols-3"
-      onCardClick={(id) => {
+      onCardClick={(id: string) => {
         // optional: analytics / logging
         // console.log("KPI clicked:", id);
       }}

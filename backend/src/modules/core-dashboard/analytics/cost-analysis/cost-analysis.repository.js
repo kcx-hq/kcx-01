@@ -294,34 +294,58 @@ export const costAnalysisRepository = {
         providers: ["All"],
         services: ["All"],
         regions: ["All"],
+        accounts: ["All"],
+        subAccounts: ["All"],
+        costCategories: ["All"],
+        apps: ["All"],
+        teams: ["All"],
+        envs: ["All"],
+        tagKeys: [],
       };
     }
 
     const where = { uploadid: { [Op.in]: safeIds } };
 
-    const [accountIds, serviceIds, regionIds] = await Promise.all([
-      BillingUsageFact.findAll({
-        where,
-        attributes: [[fn("DISTINCT", col("cloudaccountid")), "id"]],
-        raw: true,
-      }),
-      BillingUsageFact.findAll({
-        where,
-        attributes: [[fn("DISTINCT", col("serviceid")), "id"]],
-        raw: true,
-      }),
-      BillingUsageFact.findAll({
-        where,
-        attributes: [[fn("DISTINCT", col("regionid")), "id"]],
-        raw: true,
-      }),
-    ]);
+    const [accountIds, serviceIds, regionIds, subAccountsRaw, costCategoriesRaw, tagRows] =
+      await Promise.all([
+        BillingUsageFact.findAll({
+          where,
+          attributes: [[fn("DISTINCT", col("cloudaccountid")), "id"]],
+          raw: true,
+        }),
+        BillingUsageFact.findAll({
+          where,
+          attributes: [[fn("DISTINCT", col("serviceid")), "id"]],
+          raw: true,
+        }),
+        BillingUsageFact.findAll({
+          where,
+          attributes: [[fn("DISTINCT", col("regionid")), "id"]],
+          raw: true,
+        }),
+        BillingUsageFact.findAll({
+          where,
+          attributes: [[fn("DISTINCT", col("subaccountid")), "value"]],
+          raw: true,
+        }),
+        BillingUsageFact.findAll({
+          where,
+          attributes: [[fn("DISTINCT", col("chargecategory")), "value"]],
+          raw: true,
+        }),
+        BillingUsageFact.findAll({
+          where,
+          attributes: ["tags"],
+          limit: 2000,
+          raw: true,
+        }),
+      ]);
 
     const aIds = accountIds.map((r) => r.id).filter(Boolean);
     const sIds = serviceIds.map((r) => r.id).filter(Boolean);
     const rIds = regionIds.map((r) => r.id).filter(Boolean);
 
-    const [providerRows, serviceRows, regionRows] = await Promise.all([
+    const [providerRows, serviceRows, regionRows, accountRows] = await Promise.all([
       aIds.length
         ? CloudAccount.findAll({
             where: { id: { [Op.in]: aIds } },
@@ -343,15 +367,69 @@ export const costAnalysisRepository = {
             raw: true,
           })
         : [],
+      aIds.length
+        ? CloudAccount.findAll({
+            where: { id: { [Op.in]: aIds } },
+            attributes: ["billingaccountname", "billingaccountid"],
+            raw: true,
+          })
+        : [],
     ]);
 
     const toValues = (rows, key) =>
       ["All", ...new Set(rows.map((r) => r[key]).filter(Boolean))].sort();
 
+    const appSet = new Set();
+    const teamSet = new Set();
+    const envSet = new Set();
+    const tagKeySet = new Set();
+
+    const readTag = (tags, keys = []) => {
+      if (!tags || typeof tags !== "object") return null;
+      const lower = Object.keys(tags).reduce((acc, key) => {
+        acc[String(key).toLowerCase()] = tags[key];
+        return acc;
+      }, {});
+      for (const key of keys) {
+        const value = lower[String(key).toLowerCase()];
+        if (value !== undefined && value !== null && String(value).trim() !== "") {
+          return String(value).trim();
+        }
+      }
+      return null;
+    };
+
+    tagRows.forEach((row) => {
+      const tags = row?.tags && typeof row.tags === "object" ? row.tags : {};
+      Object.keys(tags).forEach((key) => tagKeySet.add(String(key)));
+      const app = readTag(tags, ["app", "application", "service"]);
+      const team = readTag(tags, ["team", "owner", "squad", "business_unit"]);
+      const env = readTag(tags, ["env", "environment", "stage"]);
+      if (app) appSet.add(app);
+      if (team) teamSet.add(team);
+      if (env) envSet.add(env);
+    });
+
+    const accountValues = [
+      "All",
+      ...new Set(
+        accountRows
+          .map((row) => row.billingaccountname || row.billingaccountid)
+          .filter(Boolean)
+      ),
+    ].sort();
+
     return {
       providers: toValues(providerRows, "providername"),
       services: toValues(serviceRows, "servicename"),
       regions: toValues(regionRows, "regionname"),
+      accounts: accountValues,
+      subAccounts: ["All", ...new Set(subAccountsRaw.map((row) => row.value).filter(Boolean))].sort(),
+      costCategories: ["All", ...new Set(costCategoriesRaw.map((row) => row.value).filter(Boolean))].sort(),
+      apps: ["All", ...[...appSet].sort()],
+      teams: ["All", ...[...teamSet].sort()],
+      envs: ["All", ...[...envSet].sort()],
+      tagKeys: [...tagKeySet].sort(),
     };
   },
 

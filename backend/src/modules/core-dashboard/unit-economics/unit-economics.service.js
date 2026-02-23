@@ -1,5 +1,9 @@
 import { unitEconomicsRepository } from "./unit-economics.repository.js";
 import { getDateRange } from "../../../common/utils/date.helpers.js";
+import {
+  costGrowthRate,
+  roundTo,
+} from "../../../common/utils/cost.calculations.js";
 
 const n = (v) => Number.parseFloat(v || 0) || 0;
 
@@ -45,9 +49,9 @@ export const unitEconomicsService = {
 
     const trend = Array.from(daily.values()).map(d => ({
       date: d.date,
-      cost: Number(d.cost.toFixed(2)),
-      quantity: Number(d.quantity.toFixed(2)),
-      unitPrice: d.quantity > 0 ? Number((d.cost / d.quantity).toFixed(6)) : 0
+      cost: roundTo(d.cost, 2),
+      quantity: roundTo(d.quantity, 2),
+      unitPrice: d.quantity > 0 ? roundTo(d.cost / d.quantity, 6) : 0
     }));
 
     /** ---- KPIs ---- */
@@ -68,22 +72,21 @@ export const unitEconomicsService = {
       curr.reduce((s, r) => s + r.cost, 0) /
       (curr.reduce((s, r) => s + r.quantity, 0) || 1);
 
-    const changePct =
-      baseUnit > 0 ? ((currUnit - baseUnit) / baseUnit) * 100 : 0;
+    const changePct = costGrowthRate(currUnit, baseUnit);
 
     return {
       kpis: {
-        totalCost: Number(totalCost.toFixed(2)),
-        totalQuantity: Number(totalQuantity.toFixed(2)),
-        avgUnitPrice: Number(avgUnitPrice.toFixed(6)),
-        unitPriceChangePct: Number(changePct.toFixed(2)),
+        totalCost: roundTo(totalCost, 2),
+        totalQuantity: roundTo(totalQuantity, 2),
+        avgUnitPrice: roundTo(avgUnitPrice, 6),
+        unitPriceChangePct: roundTo(changePct, 2),
         driftDetected: Math.abs(changePct) > 15
       },
       trend,
       drift: {
-        baselineUnitPrice: Number(baseUnit.toFixed(6)),
-        currentUnitPrice: Number(currUnit.toFixed(6)),
-        changePct: Number(changePct.toFixed(2)),
+        baselineUnitPrice: roundTo(baseUnit, 6),
+        currentUnitPrice: roundTo(currUnit, 6),
+        changePct: roundTo(changePct, 2),
         thresholdPct: 15,
         status:
           Math.abs(changePct) > 30

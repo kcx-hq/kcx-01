@@ -2,23 +2,25 @@ import * as aggregations from "./reports.aggregations.js";
 import {
   getDateRange,
   getBillingPeriodFromData,
-  calculatePeriodChange,
 } from "../../../common/utils/date.helpers.js";
 import {
-  calculatePercentage,
   formatCurrency,
-  calculateAverageDailySpend,
   calculateForecast,
-  addPercentagesToDistribution,
 } from "../../../common/utils/cost.helpers.js";
 import { FINOPS_CONSTANTS } from "../../../common/constants/finops.constants.js";
+import {
+  costSharePercentage,
+  dailyAverageSpend,
+  periodOverPeriodPercentage,
+  roundTo,
+} from "../../../common/utils/cost.calculations.js";
 
 const toNumber = (v, fallback = 0) => {
   const n = Number(v);
   return Number.isFinite(n) ? n : fallback;
 };
 
-const formatNumber = (v, decimals = 2) => Number(toNumber(v, 0).toFixed(decimals));
+const formatNumber = (v, decimals = 2) => roundTo(toNumber(v, 0), decimals);
 
 const emptySummary = () => ({
   totalSpend: formatCurrency(0),
@@ -116,21 +118,27 @@ export const reportsService = {
       uploadIds,
     });
 
-    const spendChangePercent = calculatePeriodChange(totalSpend, previousPeriodSpend);
+    const spendChangePercent = periodOverPeriodPercentage(totalSpend, previousPeriodSpend);
 
     const topService = topServices?.length ? topServices[0] : { name: "N/A", value: 0 };
     const topRegion = topRegions?.length ? topRegions[0] : { name: "N/A", value: 0 };
 
-    const topServicePercent = calculatePercentage(topService.value, totalSpend);
-    const topRegionPercent = calculatePercentage(topRegion.value, totalSpend);
+    const topServicePercent = costSharePercentage(topService.value, totalSpend);
+    const topRegionPercent = costSharePercentage(topRegion.value, totalSpend);
 
-    const avgDailySpend = calculateAverageDailySpend(totalSpend, dailyTrend.length || 1);
+    const avgDailySpend = dailyAverageSpend(totalSpend, dailyTrend.length || 1);
     const forecast = calculateForecast(totalSpend, FINOPS_CONSTANTS.FORECAST_MULTIPLIER);
 
     const billingPeriod = getBillingPeriodFromData(dailyTrend);
 
-    const servicesWithPercent = addPercentagesToDistribution(topServices, totalSpend);
-    const regionsWithPercent = addPercentagesToDistribution(topRegions, totalSpend);
+    const servicesWithPercent = topServices.map((item) => ({
+      ...item,
+      percentage: costSharePercentage(item.value, totalSpend),
+    }));
+    const regionsWithPercent = topRegions.map((item) => ({
+      ...item,
+      percentage: costSharePercentage(item.value, totalSpend),
+    }));
 
     return {
       totalSpend: formatCurrency(totalSpend),
@@ -188,7 +196,10 @@ export const reportsService = {
       aggregations.getTotalSpend({ filters: safeFilters, startDate, endDate, uploadIds }),
     ]);
 
-    return addPercentagesToDistribution(topServices, totalSpend);
+    return topServices.map((item) => ({
+      ...item,
+      percentage: costSharePercentage(item.value, totalSpend),
+    }));
   },
 
   async getTopRegions(params = {}) {
@@ -209,7 +220,10 @@ export const reportsService = {
       aggregations.getTotalSpend({ filters: safeFilters, startDate, endDate, uploadIds }),
     ]);
 
-    return addPercentagesToDistribution(topRegions, totalSpend);
+    return topRegions.map((item) => ({
+      ...item,
+      percentage: costSharePercentage(item.value, totalSpend),
+    }));
   },
 
   async getMonthlySpend(params = {}) {

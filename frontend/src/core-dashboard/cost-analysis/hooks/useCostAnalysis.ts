@@ -1,53 +1,103 @@
 import { useEffect, useRef, useState } from "react";
 import { useDashboardStore } from "../../../store/Dashboard.store";
+import {
+  CostAnalysisApiClient,
+  CostAnalysisApiData,
+  CostAnalysisCaps,
+  SpendAnalyticsFilters,
+  isObjectRecord,
+} from "../types";
 
-export function useCostAnalysis({ api, caps, filters, groupBy }) {
-  const [loading, setLoading] = useState(true);
-  const [isRefreshing, setIsRefreshing] = useState(false);
-  const [apiData, setApiData] = useState(null);
-  const [error, setError] = useState(null);
+interface UseCostAnalysisArgs {
+  api: CostAnalysisApiClient | null | undefined;
+  caps: CostAnalysisCaps | null | undefined;
+  filters: SpendAnalyticsFilters;
+}
 
-  const abortControllerRef = useRef(null);
-  const isInitialLoadRef = useRef(true);
+interface UseCostAnalysisResult {
+  loading: boolean;
+  isRefreshing: boolean;
+  apiData: CostAnalysisApiData | null;
+  error: string | null;
+}
 
-  const uploadIds = useDashboardStore((s) => s.uploadIds);
+const getPayload = (response: unknown): CostAnalysisApiData | null => {
+  if (!isObjectRecord(response)) return null;
+  const envelopeData = response.data;
+  if (isObjectRecord(envelopeData)) {
+    return envelopeData as CostAnalysisApiData;
+  }
+  return response as CostAnalysisApiData;
+};
+
+const hasNotSupportedCode = (error: unknown): boolean =>
+  isObjectRecord(error) && error.code === "NOT_SUPPORTED";
+
+const isAbortError = (error: unknown): boolean =>
+  isObjectRecord(error) && error.name === "AbortError";
+
+export function useCostAnalysis({
+  api,
+  caps,
+  filters,
+}: UseCostAnalysisArgs): UseCostAnalysisResult {
+  const [loading, setLoading] = useState<boolean>(true);
+  const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
+  const [apiData, setApiData] = useState<CostAnalysisApiData | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  const abortControllerRef = useRef<AbortController | null>(null);
+  const isInitialLoadRef = useRef<boolean>(true);
+
+  const uploadIds = useDashboardStore((state) => state.uploadIds);
   const uploadIdsKey = (Array.isArray(uploadIds) ? uploadIds.join(",") : "") || "";
-
-  const provider = filters?.provider ?? "";
-  const service = filters?.service ?? "";
-  const region = filters?.region ?? "";
 
   useEffect(() => {
     if (!api || !caps) return;
 
     if (abortControllerRef.current) abortControllerRef.current.abort();
+
     const abortController = new AbortController();
     abortControllerRef.current = abortController;
 
-    const run = async () => {
+    const run = async (): Promise<void> => {
       if (isInitialLoadRef.current) setLoading(true);
       else setIsRefreshing(true);
 
       try {
-        const params = {
-          provider: provider && provider !== "All" ? provider : undefined,
-          service: service && service !== "All" ? service : undefined,
-          region: region && region !== "All" ? region : undefined,
-          groupBy,
+        const params: Record<string, string | undefined> = {
+          provider: filters.provider,
+          service: filters.service,
+          region: filters.region,
+          account: filters.account,
+          subAccount: filters.subAccount,
+          app: filters.app,
+          team: filters.team,
+          env: filters.env,
+          costCategory: filters.costCategory,
+          tagKey: filters.tagKey || undefined,
+          tagValue: filters.tagValue || undefined,
+          timeRange: filters.timeRange,
+          granularity: filters.granularity,
+          compareTo: filters.compareTo,
+          costBasis: filters.costBasis,
+          groupBy: filters.groupBy,
+          startDate: filters.timeRange === "custom" ? filters.startDate || undefined : undefined,
+          endDate: filters.timeRange === "custom" ? filters.endDate || undefined : undefined,
         };
 
-        const res = await api.call("costAnalysis", "costAnalysis", { params });
+        const response = await api.call("costAnalysis", "costAnalysis", { params });
         if (abortController.signal.aborted) return;
 
-        const payload = res?.data ?? res;
+        const payload = getPayload(response);
         setApiData(payload);
         setError(null);
         isInitialLoadRef.current = false;
-      } catch (e) {
-        if (e?.code === "NOT_SUPPORTED") return;
-        if (e?.name !== "AbortError" && !abortController.signal.aborted) {
-          setError("Failed to load data.");
-          console.error("Cost analysis fetch error:", e);
+      } catch (fetchError: unknown) {
+        if (hasNotSupportedCode(fetchError)) return;
+        if (!isAbortError(fetchError) && !abortController.signal.aborted) {
+          setError("Failed to load spend analytics data.");
+          console.error("Cost analysis fetch error:", fetchError);
         }
       } finally {
         if (!abortController.signal.aborted) {
@@ -58,9 +108,10 @@ export function useCostAnalysis({ api, caps, filters, groupBy }) {
       }
     };
 
-    run();
+    void run();
+
     return () => abortController.abort();
-  }, [api, caps, provider, service, region, groupBy, uploadIdsKey]);
+  }, [api, caps, filters, uploadIdsKey]);
 
   return { loading, isRefreshing, apiData, error };
 }

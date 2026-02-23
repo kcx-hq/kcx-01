@@ -1,45 +1,36 @@
-// frontend/core/dashboards/overview/Overview.jsx
 import React, { useMemo, useState, useCallback } from "react";
 import { useDebounce } from "../../hooks/useDebounce";
-import { useAuthStore } from "../../store/Authstore";
 
 import OverviewView from "./OverviewView";
 import { normalizeOverviewData } from "./utils/normalizeOverviewData";
 import { useOverviewFilters } from "./hooks/useOverviewFilters";
 import { useOverviewData } from "./hooks/useOverviewData";
+import {
+  OverviewApiClient,
+  OverviewCaps,
+  OverviewFilterPatch,
+  OverviewFilters,
+  OverviewNormalizedData,
+} from "./types";
 
+interface OverviewProps {
+  onFilterChange?: (filters: OverviewFilterPatch) => void;
+  api: OverviewApiClient | null | undefined;
+  caps: OverviewCaps | null | undefined;
+}
 
+const defaultFilters: OverviewFilters = {
+  provider: "All",
+  service: "All",
+  region: "All",
+};
 
-const Overview = ({ onFilterChange, api, caps }) => {
-  const { user } = useAuthStore();
+const Overview = ({ onFilterChange, api, caps }: OverviewProps) => {
+  const [filters, setFilters] = useState<OverviewFilters>(defaultFilters);
+  const [forceRefreshKey, setForceRefreshKey] = useState<number>(0);
 
-  // Lock charts if user is NOT premium
-  const isLocked = !user?.is_premium;
-
-  // Local filters
-  const [filters, setFilters] = useState({
-    provider: "All",
-    service: "All",
-    region: "All",
-  });
-
-  // Chart limits
-  const [chartFilters, setChartFilters] = useState({
-    trendChart: { limit: 30 },
-    pieChart: { limit: 8 },
-    barChart: { limit: 8 },
-  });
-
-  // Used to force refresh after reset (even if debounce doesn't change)
-  const [forceRefreshKey, setForceRefreshKey] = useState(0);
-
-  // Debounce the filters (same behavior as your original)
-  const debouncedFilters = useDebounce(filters, 300);
-
-  // Fetch filter dropdown options
+  const debouncedFilters: OverviewFilters = useDebounce(filters, 300);
   const { filterOptions } = useOverviewFilters(api, caps);
-
-  // Fetch overview data (handles loading + filtering states + abort)
   const { overviewData, loading, isFiltering } = useOverviewData(
     api,
     caps,
@@ -47,21 +38,13 @@ const Overview = ({ onFilterChange, api, caps }) => {
     forceRefreshKey
   );
 
-  // Normalize backend payload for widgets
-  const extractedData = useMemo(
+  const extractedData = useMemo<OverviewNormalizedData>(
     () => normalizeOverviewData(overviewData),
     [overviewData]
   );
 
-  // Chart data slices
-  const filteredGroupedData = useMemo(() => {
-    const grouped = extractedData.groupedData;
-    return Array.isArray(grouped) ? grouped.slice(0, chartFilters.barChart.limit) : [];
-  }, [extractedData.groupedData, chartFilters.barChart.limit]);
-
-  // Handlers
   const handleFilterChange = useCallback(
-    (newFilters) => {
+    (newFilters: OverviewFilterPatch) => {
       setFilters((prev) => ({ ...prev, ...newFilters }));
       onFilterChange?.(newFilters);
     },
@@ -69,24 +52,13 @@ const Overview = ({ onFilterChange, api, caps }) => {
   );
 
   const handleReset = useCallback(() => {
-    const reset = { provider: "All", service: "All", region: "All" };
-    setFilters(reset);
-    onFilterChange?.(reset);
-    setForceRefreshKey((k) => k + 1);
+    setFilters(defaultFilters);
+    onFilterChange?.(defaultFilters);
+    setForceRefreshKey((key) => key + 1);
   }, [onFilterChange]);
-
-  const handleTrendChartLimitChange = useCallback((limit) => {
-    setChartFilters((prev) => ({ ...prev, trendChart: { limit } }));
-  }, []);
-
-  const handleBarChartLimitChange = useCallback((limit) => {
-    setChartFilters((prev) => ({ ...prev, barChart: { limit } }));
-  }, []);
 
   return (
     <OverviewView
-      api={api}
-      caps={caps}
       filters={filters}
       filterOptions={filterOptions}
       onFilterChange={handleFilterChange}
@@ -95,11 +67,6 @@ const Overview = ({ onFilterChange, api, caps }) => {
       isFiltering={isFiltering}
       overviewData={overviewData}
       extractedData={extractedData}
-      filteredGroupedData={filteredGroupedData}
-      chartFilters={chartFilters}
-      onTrendLimitChange={handleTrendChartLimitChange}
-      onBarLimitChange={handleBarChartLimitChange}
-      isLocked={isLocked}
     />
   );
 };

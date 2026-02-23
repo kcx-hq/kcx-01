@@ -5,6 +5,7 @@
  */
 
 import { dataQualityRepository } from './data-quality.repository.js';
+import { costSharePercentage, roundTo } from '../../../../common/utils/cost.calculations.js';
 
 /**
  * Format currency helper
@@ -151,11 +152,11 @@ export const dataQualityService = {
     // Calculate Quality Score
     let score = 100;
     const untaggedSpend = buckets.untagged.reduce((a, b) => a + (b._parsedCost || 0), 0);
-    const untaggedPct = totalSpend > 0 ? untaggedSpend / totalSpend : 0;
+    const untaggedPctPercent = costSharePercentage(untaggedSpend, totalSpend);
 
     // Score penalties
-    if (untaggedPct > 0.01) {
-      score -= Math.min(40, Math.ceil(untaggedPct * 100 * 0.5));
+    if (untaggedPctPercent > 1) {
+      score -= Math.min(40, Math.ceil(untaggedPctPercent * 0.5));
     }
     if (totalRows > 0 && buckets.missingMeta.length / totalRows > 0.05) {
       score -= 30;
@@ -171,7 +172,7 @@ export const dataQualityService = {
       .map(([key, count]) => ({
         key,
         count,
-        pct: (count / totalRows) * 100,
+        pct: costSharePercentage(count, totalRows),
       }))
       .sort((a, b) => b.count - a.count)
       .slice(0, 5);
@@ -181,7 +182,8 @@ export const dataQualityService = {
       .sort()
       .map((d) => {
         const day = dailyScores[d];
-        const dailyScore = Math.max(0, 100 - Math.round((day.bad / day.total) * 100));
+        const dailyBadPercent = costSharePercentage(day.bad, day.total);
+        const dailyScore = Math.max(0, 100 - Math.round(dailyBadPercent));
         return { date: d, score: dailyScore };
       });
 
@@ -190,7 +192,7 @@ export const dataQualityService = {
       .map(([name, val]) => ({
         name,
         count: val.count,
-        cost: val.cost,
+        cost: roundTo(val.cost, 2),
       }))
       .sort((a, b) => b.cost - a.cost)
       .slice(0, 5);
@@ -199,7 +201,7 @@ export const dataQualityService = {
     return {
       score,
       totalRows,
-      costAtRisk: untaggedSpend,
+      costAtRisk: roundTo(untaggedSpend, 2),
       buckets: {
         untagged: buckets.untagged,
         missingMeta: buckets.missingMeta,
