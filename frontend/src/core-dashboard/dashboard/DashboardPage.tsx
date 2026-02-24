@@ -29,6 +29,7 @@ import {
   Optimization,
   Reports,
   AccountsOwnership,
+  AllocationUnitEconomics,
 } from "./lazyViews";
 import VerticalSidebarConfig from "../verticalSidebar.config";
 
@@ -118,6 +119,7 @@ const DashboardPage = () => {
     if (route.isOptimization) return "Optimization";
     if (route.isReports) return "Reports";
     if (route.isAccounts) return "Account Ownership";
+    if (route.isAllocationUnitEconomics) return "Allocation & Unit Economics";
     return "Overview";
   }, [route]);
 
@@ -266,6 +268,16 @@ const DashboardPage = () => {
                     "Accounts and Ownership",
                     <KeepAlive isActive={route.isAccounts}>
                       <AccountsOwnership filters={memoizedFilters} api={api} caps={caps} />
+                    </KeepAlive>
+                  )
+                )}
+
+                {shouldRender(route.isAllocationUnitEconomics, "AllocationUnitEconomics") &&
+                (isModuleEnabled(caps, "unitEconomics") || isModuleEnabled(caps, "governance")) && (
+                  withBoundary(
+                    "Allocation & Unit Economics",
+                    <KeepAlive isActive={route.isAllocationUnitEconomics}>
+                      <AllocationUnitEconomics filters={memoizedFilters} api={api} caps={caps} />
                     </KeepAlive>
                   )
                 )}

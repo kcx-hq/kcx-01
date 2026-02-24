@@ -17,9 +17,16 @@ export const getUnitEconomicsSummary = async (req, res) => {
       return res.json({ success: true, data: {} });
     }
 
+    const filters = {
+      provider: req.query.provider || "All",
+      service: req.query.service || "All",
+      region: req.query.region || "All",
+    };
+
     const data = await unitEconomicsService.getSummary({
-      filters: {},
+      filters,
       period: req.query.period || null,
+      costBasis: req.query.costBasis || "actual",
       uploadIds
     });
 

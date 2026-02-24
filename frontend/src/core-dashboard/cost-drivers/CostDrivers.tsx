@@ -1,88 +1,98 @@
-import React, { useCallback, useMemo, useState } from 'react';
-import { useDebounce } from '../../hooks/useDebounce';
-import { useAuthStore } from '../../store/Authstore';
-
-import { useCostDriversData } from './hooks/useCostDriversData';
-import { useDriverDetails } from './hooks/useDriverDetails';
+import React, { useMemo } from 'react';
 import { CostDriversView } from './CostDriversView';
+import { useCostDriversControls, useCostDriversData, useDriverDetails } from './hooks';
+import type {
+  CostDriversApi,
+  CostDriversCaps,
+  CostDriversFilters,
+} from './types';
 
-export default function CostDrivers({ filters, api, caps }) {
-  const { user } = useAuthStore();
-  const isMasked = !user?.is_premium; // NOT premium => masked
+interface CostDriversProps {
+  filters: CostDriversFilters;
+  api: CostDriversApi;
+  caps: CostDriversCaps;
+}
 
-  const [period, setPeriod] = useState(30);
-  const [dimension] = useState('ServiceName');
-  const [minChange] = useState(0);
-  const [selectedDriver, setSelectedDriver] = useState(null);
-  const [sortListBy, setSortListBy] = useState('diff');
-  const [activeServiceFilter, setActiveServiceFilter] = useState('All');
-  const [showTreeMap, setShowTreeMap] = useState(false);
-
-  const debouncedFilters = useDebounce(filters, 400);
-  const debouncedPeriod = useDebounce(period, 400);
-  const debouncedDimension = useDebounce(dimension, 400);
-  const debouncedMinChange = useDebounce(minChange, 400);
+export default function CostDrivers({ filters, api, caps }: CostDriversProps) {
+  const {
+    controlsState,
+    activeKpiId,
+    selectedDriver,
+    activeTab,
+    period,
+    setActiveTab,
+    onControlsChange,
+    onResetControls,
+    onToggleKpi,
+    onOpenDriver,
+    onCloseDetails,
+  } = useCostDriversControls();
 
   const data = useCostDriversData({
     api,
     caps,
     filters,
     period,
-    dimension,
-    minChange,
-    debouncedFilters,
-    debouncedPeriod,
-    debouncedDimension,
-    debouncedMinChange,
+    dimension: controlsState.dimension,
+    minChange: controlsState.minChange,
+    rowLimit: controlsState.rowLimit,
+    timeRange: controlsState.timeRange,
+    compareTo: controlsState.compareTo,
+    costBasis: controlsState.costBasis,
+    startDate: controlsState.startDate || null,
+    endDate: controlsState.endDate || null,
+    previousStartDate: controlsState.previousStartDate || null,
+    previousEndDate: controlsState.previousEndDate || null,
   });
 
-  const filteredIncreases = useMemo(() => {
-    if (!activeServiceFilter || activeServiceFilter === 'All') return data.increases;
-    return data.increases.filter((x) => x?.name?.toLowerCase?.().includes(activeServiceFilter.toLowerCase()));
-  }, [data.increases, activeServiceFilter]);
-
-  const filteredDecreases = useMemo(() => {
-    if (!activeServiceFilter || activeServiceFilter === 'All') return data.decreases;
-    return data.decreases.filter((x) => x?.name?.toLowerCase?.().includes(activeServiceFilter.toLowerCase()));
-  }, [data.decreases, activeServiceFilter]);
-
-  const onSelectDriver = useCallback((driver, driverType) => {
-    setSelectedDriver({ ...driver, _driverType: driverType });
-  }, []);
-
-  const onBack = useCallback(() => setSelectedDriver(null), []);
+  const effectiveActiveTab = useMemo(
+    () => activeTab || data?.decomposition?.activeTab || controlsState.dimension || 'service',
+    [activeTab, data?.decomposition?.activeTab, controlsState.dimension],
+  );
 
   const details = useDriverDetails({
     api,
     caps,
     driver: selectedDriver,
     period,
+    filters,
+    timeRange: controlsState.timeRange,
+    compareTo: controlsState.compareTo,
+    costBasis: controlsState.costBasis,
+    startDate: controlsState.startDate || null,
+    endDate: controlsState.endDate || null,
+    previousStartDate: controlsState.previousStartDate || null,
+    previousEndDate: controlsState.previousEndDate || null,
   });
 
   return (
     <CostDriversView
       api={api}
       caps={caps}
-      filters={filters}
-      isMasked={isMasked}
-      period={period}
-      setPeriod={setPeriod}
-      dimension={dimension}
-      minChange={minChange}
+      loading={data.loading}
+      isRefreshing={data.isRefreshing}
+      errorMessage={data.errorMessage}
+      controlsState={controlsState}
+      onControlsChange={onControlsChange}
+      onResetControls={onResetControls}
+      kpiStrip={data.kpiStrip}
+      activeKpiId={activeKpiId}
+      onToggleKpi={onToggleKpi}
+      waterfall={data.waterfall}
+      trendComparison={data.trendComparison}
+      decomposition={data.decomposition}
+      activeTab={effectiveActiveTab}
+      onTabChange={setActiveTab}
+      onOpenDriver={onOpenDriver}
+      unexplainedVariance={data.unexplainedVariance}
+      attributionConfidence={data.attributionConfidence}
+      runMeta={data.runMeta}
+      trust={data.trust}
+      executiveInsights={data.executiveInsights}
       selectedDriver={selectedDriver}
-      setSelectedDriver={setSelectedDriver}
-      sortListBy={sortListBy}
-      setSortListBy={setSortListBy}
-      activeServiceFilter={activeServiceFilter}
-      setActiveServiceFilter={setActiveServiceFilter}
-      showTreeMap={showTreeMap}
-      setShowTreeMap={setShowTreeMap}
-      onSelectDriver={onSelectDriver}
-      onBack={onBack}
-      filteredIncreases={filteredIncreases}
-      filteredDecreases={filteredDecreases}
-      details={details}
-      {...data}
+      details={details.stats}
+      detailLoading={details.loading}
+      onCloseDetails={onCloseDetails}
     />
   );
 }

@@ -10,6 +10,8 @@ const DEF_BASIS = "actual";
 const DEF_GROUP = "ServiceName";
 const TOP_SERIES = 8;
 const TOP_N = 10;
+const TOP_RISK_ROWS = 20;
+const TOP_ANOMALY_HIGHLIGHTS = 3;
 const DAY_MS = 86400000;
 
 const GROUP_DIM = {
@@ -27,8 +29,6 @@ const asDate = (v) => {
   const d = v ? new Date(v) : null;
   return d && !Number.isNaN(d.getTime()) ? d : null;
 };
-const sDay = (d) => new Date(new Date(d).setHours(0, 0, 0, 0));
-const eDay = (d) => new Date(new Date(d).setHours(23, 59, 59, 999));
 const shiftDays = (d, n) => new Date(new Date(d).getTime() + n * DAY_MS);
 const shiftMonths = (d, n) => {
   const x = new Date(d);
@@ -36,8 +36,55 @@ const shiftMonths = (d, n) => {
   return x;
 };
 const dateKey = (d) => (asDate(d) ? new Date(d).toISOString().split("T")[0] : null);
-const daysInclusive = (a, b) =>
-  Math.max(1, Math.round((eDay(b).getTime() - sDay(a).getTime()) / DAY_MS) + 1);
+const compareDayKeys = (a, b) => {
+  if (a === b) return 0;
+  return a > b ? 1 : -1;
+};
+const todayKey = () => dateKey(new Date());
+
+const scopedLink = (path, scope = {}, patch = {}) => {
+  const params = new URLSearchParams();
+  const merged = { ...scope, ...patch };
+  for (const [key, value] of Object.entries(merged)) {
+    if (value === undefined || value === null) continue;
+    const text = String(value).trim();
+    if (!text) continue;
+    params.set(key, text);
+  }
+  const query = params.toString();
+  return query ? `${path}?${query}` : path;
+};
+
+const buildScopeParams = ({
+  filters = {},
+  range,
+  gran,
+  compareTo,
+  basis,
+  groupBy,
+  currentStartKey = null,
+  currentEndKey = null,
+}) => {
+  const params = {
+    timeRange: range,
+    granularity: gran,
+    compareTo,
+    costBasis: basis,
+    groupBy,
+  };
+  const keys = ["provider", "service", "region", "account", "subAccount", "app", "team", "env", "costCategory"];
+  keys.forEach((key) => {
+    const value = filters[key];
+    if (value && value !== "All") {
+      params[key] = String(value);
+    }
+  });
+  if (filters.tagKey) params.tagKey = String(filters.tagKey);
+  if (filters.tagValue) params.tagValue = String(filters.tagValue);
+  if (currentStartKey) params.startDate = currentStartKey;
+  if (currentEndKey) params.endDate = currentEndKey;
+  return params;
+};
 
 const normalizeUploadIds = (input = {}) => {
   if (Array.isArray(input.uploadIds)) return input.uploadIds.filter(Boolean);
@@ -93,28 +140,77 @@ const bucketDate = (date, gran) => {
   return d.toISOString().split("T")[0];
 };
 
-const rangeFromPreset = (preset, startDate, endDate, refDate) => {
-  const ref = asDate(refDate) || new Date();
-  const p = String(preset || DEF_RANGE).toLowerCase();
-  if (p === "custom" && asDate(startDate) && asDate(endDate)) return { start: sDay(startDate), end: eDay(endDate) };
-  if (p === "mtd") return { start: sDay(new Date(ref.getFullYear(), ref.getMonth(), 1)), end: eDay(ref) };
-  if (p === "qtd") {
-    const q = ref.getMonth() - (ref.getMonth() % 3);
-    return { start: sDay(new Date(ref.getFullYear(), q, 1)), end: eDay(ref) };
+const availableBillingDayKeys = (rows = []) => {
+  const today = todayKey();
+  const set = new Set();
+  for (const row of rows) {
+    const key = dateKey(row?.chargeperiodstart);
+    if (!key) continue;
+    if (today && compareDayKeys(key, today) > 0) continue;
+    set.add(key);
   }
-  const days = p === "7d" ? 7 : p === "90d" ? 90 : 30;
-  return { start: sDay(shiftDays(ref, -(days - 1))), end: eDay(ref) };
+  return [...set].sort(compareDayKeys);
 };
 
-const compareRange = (mode, start, end) => {
-  const m = String(mode || DEF_COMPARE).toLowerCase();
-  if (m === "none") return null;
-  if (m === "same_period_last_month") {
-    return { start: sDay(shiftMonths(start, -1)), end: eDay(shiftMonths(end, -1)), label: "Same period last month" };
+const pickCurrentWindowDayKeys = (dayKeys = [], preset, startDate, endDate) => {
+  if (!dayKeys.length) return [];
+  const p = String(preset || DEF_RANGE).toLowerCase();
+  const latest = dayKeys[dayKeys.length - 1];
+
+  if (p === "custom") {
+    const start = dateKey(startDate);
+    const end = dateKey(endDate);
+    if (!start || !end) return [];
+    const lower = compareDayKeys(start, end) <= 0 ? start : end;
+    const upper = compareDayKeys(start, end) <= 0 ? end : start;
+    return dayKeys.filter((k) => compareDayKeys(k, lower) >= 0 && compareDayKeys(k, upper) <= 0);
   }
-  const days = daysInclusive(start, end);
-  const prevEnd = eDay(shiftDays(start, -1));
-  return { start: sDay(shiftDays(prevEnd, -(days - 1))), end: prevEnd, label: "Previous period" };
+
+  if (p === "mtd") {
+    const monthPrefix = latest.slice(0, 7);
+    return dayKeys.filter((k) => k.startsWith(monthPrefix));
+  }
+
+  if (p === "qtd") {
+    const ref = asDate(latest);
+    if (!ref) return [];
+    const startMonth = ref.getUTCMonth() - (ref.getUTCMonth() % 3);
+    const quarterStart = dateKey(new Date(Date.UTC(ref.getUTCFullYear(), startMonth, 1)));
+    if (!quarterStart) return [];
+    return dayKeys.filter((k) => compareDayKeys(k, quarterStart) >= 0 && compareDayKeys(k, latest) <= 0);
+  }
+
+  const count = p === "7d" ? 7 : p === "90d" ? 90 : 30;
+  return dayKeys.slice(-count);
+};
+
+const pickPreviousWindowDayKeys = (dayKeys = [], currentKeys = [], mode = DEF_COMPARE) => {
+  if (!dayKeys.length || !currentKeys.length) return [];
+  const m = String(mode || DEF_COMPARE).toLowerCase();
+  if (m === "none") return [];
+
+  const currentFirst = currentKeys[0];
+  const currentIdx = dayKeys.findIndex((k) => k === currentFirst);
+  const desired = currentKeys.length;
+  if (currentIdx < 0 || desired <= 0) return [];
+
+  if (m === "same_period_last_month") {
+    const currentStartDate = asDate(currentKeys[0]);
+    const currentEndDate = asDate(currentKeys[currentKeys.length - 1]);
+    if (currentStartDate && currentEndDate) {
+      const shiftedStart = dateKey(shiftMonths(currentStartDate, -1));
+      const shiftedEnd = dateKey(shiftMonths(currentEndDate, -1));
+      if (shiftedStart && shiftedEnd) {
+        const lower = compareDayKeys(shiftedStart, shiftedEnd) <= 0 ? shiftedStart : shiftedEnd;
+        const upper = compareDayKeys(shiftedStart, shiftedEnd) <= 0 ? shiftedEnd : shiftedStart;
+        const candidate = dayKeys.filter((k) => compareDayKeys(k, lower) >= 0 && compareDayKeys(k, upper) <= 0);
+        if (candidate.length >= desired) return candidate.slice(-desired);
+      }
+    }
+  }
+
+  const prevStart = Math.max(0, currentIdx - desired);
+  return dayKeys.slice(prevStart, currentIdx);
 };
 
 const applyScopeFilters = (rows, filters = {}) => {
@@ -183,7 +279,12 @@ const buildSeries = (rows, gran, dim, basis, compareTotals = []) => {
     ? [...groupTotals.entries()].sort((a, b) => b[1] - a[1]).slice(0, TOP_SERIES).map(([k]) => k)
     : [];
   const buckets = [...totals.keys()].sort((a, b) => new Date(a) - new Date(b));
-  const compVals = [...compareTotals.entries()].sort((a, b) => new Date(a[0]) - new Date(b[0])).map((x) => Number(x[1] || 0));
+  const compValsRaw = [...compareTotals.entries()]
+    .sort((a, b) => new Date(a[0]) - new Date(b[0]))
+    .map((x) => Number(x[1] || 0));
+  const missing = Math.max(0, buckets.length - compValsRaw.length);
+  const compVals =
+    missing > 0 ? [...Array(missing).fill(0), ...compValsRaw] : compValsRaw.slice(-buckets.length);
 
   const series = buckets.map((b, idx) => {
     const row = { date: b, total: roundTo(totals.get(b) || 0, 2) };
@@ -211,8 +312,28 @@ const volatility = (vals = []) => {
   return (Math.sqrt(variance) / mean) * 100;
 };
 
-const detectAnoms = (series, rows, basis) => {
-  if (!series.length) return { threshold: 0, mean: 0, stdDev: 0, list: [], markers: [], impactTotal: 0 };
+const confidenceBucket = (confidence) => {
+  const c = String(confidence || "").toLowerCase();
+  if (c.includes("high")) return "high";
+  if (c.includes("medium")) return "medium";
+  return "low";
+};
+
+const pickAnomalyHighlights = (list = [], limit = TOP_ANOMALY_HIGHLIGHTS) => {
+  const high = list.filter((item) => confidenceBucket(item.confidence) === "high");
+  const medium = list.filter((item) => confidenceBucket(item.confidence) === "medium");
+  const low = list.filter((item) => confidenceBucket(item.confidence) === "low");
+  const picked = [];
+  picked.push(...high.slice(0, limit));
+  if (picked.length < limit) picked.push(...medium.slice(0, limit - picked.length));
+  if (picked.length < limit) picked.push(...low.slice(0, limit - picked.length));
+  return picked;
+};
+
+const detectAnoms = (series, rows, basis, scope = {}) => {
+  if (!series.length) {
+    return { threshold: 0, mean: 0, stdDev: 0, list: [], highlights: [], markers: [], impactTotal: 0 };
+  }
   const vals = series.map((x) => Number(x.total || 0));
   const mean = vals.reduce((s, v) => s + v, 0) / vals.length;
   const variance = vals.reduce((s, v) => s + (v - mean) ** 2, 0) / vals.length;
@@ -252,7 +373,7 @@ const detectAnoms = (series, rows, basis) => {
       baselineBefore: roundTo(Math.max(0, total - impact), 2),
       actualAfter: roundTo(total, 2),
       likelyDrivers: svc.slice(0, 2).map((x) => `${x.name} growth`),
-      billingExplorerLink: `/dashboard/data-explorer?date=${p.date}`,
+      billingExplorerLink: scopedLink("/dashboard/data-explorer", scope, { anomalyDate: p.date }),
     });
   }
   const sorted = list.sort((a, b) => b.impact - a.impact).slice(0, 10);
@@ -261,6 +382,7 @@ const detectAnoms = (series, rows, basis) => {
     mean: roundTo(mean, 2),
     stdDev: roundTo(stdDev, 2),
     list: sorted,
+    highlights: pickAnomalyHighlights(sorted),
     markers: sorted.map((x) => ({ date: x.detectedAt, impact: x.impact, confidence: x.confidence })),
     impactTotal: roundTo(impactTotal, 2),
   };
@@ -294,7 +416,7 @@ const buildForecast = (series, refDate, volScore) => {
   };
 };
 
-const breakdownWithDelta = (curRows, prevRows, dim, totalSpend, compareLabel, basis) => {
+const breakdownWithDelta = (curRows, prevRows, dim, totalSpend, compareLabel, basis, scope = {}) => {
   const cur = aggBy(curRows, dim, basis).slice(0, TOP_N);
   const prevMap = new Map(aggBy(prevRows, dim, basis).map((x) => [x.name, x.value]));
   return cur.map((r) => {
@@ -308,28 +430,41 @@ const breakdownWithDelta = (curRows, prevRows, dim, totalSpend, compareLabel, ba
       deltaValue: roundTo(deltaValue, 2),
       deltaPercent: roundTo(deltaPercent, 2),
       compareLabel,
-      drilldownLink: "/dashboard/data-explorer",
+      drilldownLink: scopedLink("/dashboard/data-explorer", scope, { [dim]: r.name }),
       pinFilter: { [dim]: r.name },
     };
   });
 };
 
 const riskMatrix = (rows, gran, basis) => {
-  const top = aggBy(rows, "service", basis).slice(0, 8);
+  const top = aggBy(rows, "service", basis).slice(0, TOP_RISK_ROWS);
   const total = top.reduce((s, x) => s + x.value, 0) || 1;
-  return top.map((svc) => {
-    const r = rows.filter((row) => dims(row).service === svc.name);
-    const m = new Map();
-    for (const row of r) {
-      const b = bucketDate(row?.chargeperiodstart, gran);
-      if (!b) continue;
-      m.set(b, (m.get(b) || 0) + rowCost(row, basis));
-    }
-    const vol = volatility([...m.values()]);
-    const share = (svc.value / total) * 100;
-    const lvl = share >= 20 && vol >= 25 ? "High" : share >= 12 || vol >= 18 ? "Medium" : "Low";
-    return { name: svc.name, spend: roundTo(svc.value, 2), spendShare: roundTo(share, 2), volatility: roundTo(vol, 2), riskLevel: lvl };
-  });
+  const priority = { High: 0, Medium: 1, Low: 2 };
+  return top
+    .map((svc) => {
+      const r = rows.filter((row) => dims(row).service === svc.name);
+      const m = new Map();
+      for (const row of r) {
+        const b = bucketDate(row?.chargeperiodstart, gran);
+        if (!b) continue;
+        m.set(b, (m.get(b) || 0) + rowCost(row, basis));
+      }
+      const vol = volatility([...m.values()]);
+      const share = (svc.value / total) * 100;
+      const lvl = share >= 20 && vol >= 25 ? "High" : share >= 12 || vol >= 18 ? "Medium" : "Low";
+      return {
+        name: svc.name,
+        spend: roundTo(svc.value, 2),
+        spendShare: roundTo(share, 2),
+        volatility: roundTo(vol, 2),
+        riskLevel: lvl,
+      };
+    })
+    .sort((a, b) => {
+      const diff = (priority[a.riskLevel] ?? 3) - (priority[b.riskLevel] ?? 3);
+      if (diff !== 0) return diff;
+      return b.spend - a.spend;
+    });
 };
 
 const pareto = (rows, basis) => {
@@ -367,7 +502,8 @@ const emptySpendAnalytics = () => ({
   kpiDeck: { totalSpend: 0, avgDailySpend: 0, peakDailySpend: 0, trendPercent: 0, volatilityScore: 0, topConcentrationShare: 0, anomalyImpact: 0, predictabilityScore: 0 },
   trend: { granularity: DEF_GRAN, compareLabel: "Previous period", activeKeys: [], series: [] },
   breakdown: { byProvider: [], byService: [], byRegion: [], byAccount: [], byTeam: [], byApp: [], byEnv: [], byCostCategory: [] },
-  anomalyDetection: { threshold: 0, mean: 0, stdDev: 0, list: [], markers: [], impactTotal: 0 },
+  topMovers: [],
+  anomalyDetection: { threshold: 0, mean: 0, stdDev: 0, list: [], highlights: [], markers: [], impactTotal: 0 },
   predictabilityRisk: { forecast: { projectedSpend: 0, lowerBound: 0, upperBound: 0, confidence: "Low", points: [] }, predictabilityScore: 0, volatilityScore: 0, riskMatrix: [] },
   concentrationPareto: { top10ServicesShare: 0, top3AccountsShare: 0, singleRegionShare: 0, topServices: [], topAccounts: [], topRegions: [] },
   drilldownPaths: { varianceDrivers: "/dashboard/cost-drivers", resourceInventory: "/dashboard/resources", billingExplorer: "/dashboard/data-explorer" },
@@ -411,19 +547,44 @@ export const generateCostAnalysis = async (filters = {}, groupByParam) => {
     };
   }
 
-  const refDate = scoped.map((r) => asDate(r?.chargeperiodstart)).filter(Boolean).sort((a, b) => b - a)[0];
-  const curRange = rangeFromPreset(range, filters.startDate, filters.endDate, refDate);
-  const cmpRange = compareRange(compareTo, curRange.start, curRange.end);
-  const curRows = scoped.filter((r) => {
-    const d = asDate(r?.chargeperiodstart);
-    return d && d >= curRange.start && d <= curRange.end;
+  const dayKeys = availableBillingDayKeys(scoped);
+  const currentDayKeys = pickCurrentWindowDayKeys(dayKeys, range, filters.startDate, filters.endDate);
+  if (!currentDayKeys.length) {
+    return {
+      kpis: { totalSpend: 0, avgDaily: 0, peakUsage: 0, peakDate: null, trend: 0, forecastTotal: 0, atRiskSpend: 0 },
+      chartData: [],
+      predictabilityChartData: [],
+      anomalies: [],
+      activeKeys: [],
+      drivers: [],
+      riskData: [],
+      breakdown: [],
+      spendAnalytics: emptySpendAnalytics(),
+      message: "No data found for selected date range.",
+    };
+  }
+  const previousDayKeys = pickPreviousWindowDayKeys(dayKeys, currentDayKeys, compareTo);
+  const currentDaySet = new Set(currentDayKeys);
+  const previousDaySet = new Set(previousDayKeys);
+  const curRows = scoped.filter((r) => currentDaySet.has(dateKey(r?.chargeperiodstart)));
+  const prevRows = scoped.filter((r) => previousDaySet.has(dateKey(r?.chargeperiodstart)));
+  const compareLabel =
+    compareTo === "none"
+      ? "No comparison"
+      : compareTo === "same_period_last_month"
+        ? "Same period last month"
+        : "Previous period";
+  const refDate = asDate(currentDayKeys[currentDayKeys.length - 1]) || new Date();
+  const scopeParams = buildScopeParams({
+    filters,
+    range,
+    gran,
+    compareTo,
+    basis,
+    groupBy,
+    currentStartKey: currentDayKeys[0] || null,
+    currentEndKey: currentDayKeys[currentDayKeys.length - 1] || null,
   });
-  const prevRows = cmpRange
-    ? scoped.filter((r) => {
-        const d = asDate(r?.chargeperiodstart);
-        return d && d >= cmpRange.start && d <= cmpRange.end;
-      })
-    : [];
 
   const prevBucketTotals = new Map();
   for (const r of prevRows) {
@@ -444,20 +605,20 @@ export const generateCostAnalysis = async (filters = {}, groupByParam) => {
   const avgDaily = roundTo(dailyAverageSpend(totalSpend, trend.series.length || 1), 2);
   const peak = trend.series.reduce((m, x) => (Number(x.total || 0) > Number(m.total || 0) ? x : m), { total: 0, date: null });
   const prevTotal = roundTo(prevRows.reduce((s, r) => s + rowCost(r, basis), 0), 2);
-  const trendPct = roundTo(costGrowthRate(totalSpend, prevTotal), 2);
-  const anoms = detectAnoms(trend.series, curRows, basis);
+  const trendPct = compareTo === "none" ? 0 : roundTo(costGrowthRate(totalSpend, prevTotal), 2);
+  const anoms = detectAnoms(trend.series, curRows, basis, scopeParams);
   const volScore = roundTo(volatility(trend.series.map((x) => Number(x.total || 0))), 2);
   const predictabilityScore = roundTo(Math.max(0, 100 - volScore * 1.5), 2);
   const forecast = buildForecast(trend.series, refDate, volScore);
 
-  const byService = breakdownWithDelta(curRows, prevRows, "service", totalSpend, cmpRange?.label || "Previous period", basis);
-  const byAccount = breakdownWithDelta(curRows, prevRows, "account", totalSpend, cmpRange?.label || "Previous period", basis);
-  const byProvider = breakdownWithDelta(curRows, prevRows, "provider", totalSpend, cmpRange?.label || "Previous period", basis);
-  const byRegion = breakdownWithDelta(curRows, prevRows, "region", totalSpend, cmpRange?.label || "Previous period", basis);
-  const byTeam = breakdownWithDelta(curRows, prevRows, "team", totalSpend, cmpRange?.label || "Previous period", basis);
-  const byApp = breakdownWithDelta(curRows, prevRows, "app", totalSpend, cmpRange?.label || "Previous period", basis);
-  const byEnv = breakdownWithDelta(curRows, prevRows, "env", totalSpend, cmpRange?.label || "Previous period", basis);
-  const byCostCategory = breakdownWithDelta(curRows, prevRows, "costCategory", totalSpend, cmpRange?.label || "Previous period", basis);
+  const byService = breakdownWithDelta(curRows, prevRows, "service", totalSpend, compareLabel, basis, scopeParams);
+  const byAccount = breakdownWithDelta(curRows, prevRows, "account", totalSpend, compareLabel, basis, scopeParams);
+  const byProvider = breakdownWithDelta(curRows, prevRows, "provider", totalSpend, compareLabel, basis, scopeParams);
+  const byRegion = breakdownWithDelta(curRows, prevRows, "region", totalSpend, compareLabel, basis, scopeParams);
+  const byTeam = breakdownWithDelta(curRows, prevRows, "team", totalSpend, compareLabel, basis, scopeParams);
+  const byApp = breakdownWithDelta(curRows, prevRows, "app", totalSpend, compareLabel, basis, scopeParams);
+  const byEnv = breakdownWithDelta(curRows, prevRows, "env", totalSpend, compareLabel, basis, scopeParams);
+  const byCostCategory = breakdownWithDelta(curRows, prevRows, "costCategory", totalSpend, compareLabel, basis, scopeParams);
   const concentrationShare = roundTo(Math.max(byService[0]?.sharePercent || 0, byAccount[0]?.sharePercent || 0), 2);
 
   const risks = riskMatrix(curRows, gran, basis);
@@ -476,8 +637,8 @@ export const generateCostAnalysis = async (filters = {}, groupByParam) => {
       compareTo,
       costBasis: basis,
       groupBy,
-      startDate: dateKey(curRange.start),
-      endDate: dateKey(curRange.end),
+      startDate: currentDayKeys[0] || null,
+      endDate: currentDayKeys[currentDayKeys.length - 1] || null,
       options: {
         timeRanges: ["7d", "30d", "90d", "mtd", "qtd", "custom"],
         granularities: ["daily", "weekly", "monthly"],
@@ -498,7 +659,7 @@ export const generateCostAnalysis = async (filters = {}, groupByParam) => {
     },
     trend: {
       granularity: gran,
-      compareLabel: cmpRange?.label || "Previous period",
+      compareLabel,
       activeKeys: trend.activeKeys,
       series: trend.series.map((x) => ({
         ...x,
@@ -507,13 +668,14 @@ export const generateCostAnalysis = async (filters = {}, groupByParam) => {
       })),
     },
     breakdown: { byProvider, byService, byRegion, byAccount, byTeam, byApp, byEnv, byCostCategory },
+    topMovers: drivers,
     anomalyDetection: anoms,
     predictabilityRisk: { forecast, predictabilityScore, volatilityScore: volScore, riskMatrix: risks },
     concentrationPareto: paretoBlock,
     drilldownPaths: {
-      varianceDrivers: "/dashboard/cost-drivers",
-      resourceInventory: "/dashboard/resources",
-      billingExplorer: "/dashboard/data-explorer",
+      varianceDrivers: scopedLink("/dashboard/cost-drivers", scopeParams),
+      resourceInventory: scopedLink("/dashboard/resources", scopeParams),
+      billingExplorer: scopedLink("/dashboard/data-explorer", scopeParams),
     },
   };
 

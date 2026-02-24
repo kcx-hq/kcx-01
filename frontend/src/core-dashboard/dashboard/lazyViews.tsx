@@ -15,3 +15,4 @@ export const DataQuality = lazy(() => import('../data-quality/DataQuality'));
 export const Optimization = lazy(() => import('../optimization/Optimization'));
 export const Reports = lazy(() => import('../reports/Reports'));
 export const AccountsOwnership = lazy(() => import('../accounts-ownership/AccountsOwnership'));
+export const AllocationUnitEconomics = lazy(() => import('../allocation-unit-economics/AllocationUnitEconomics'));

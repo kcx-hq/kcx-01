@@ -1,33 +1,22 @@
 import { costDriversService } from './cost-drivers.service.js';
 
-/**
- * Normalize upload IDs
- * Supports:
- *  - uploadid=uuid
- *  - uploadid[]=uuid1&uploadid[]=uuid2
- *  - uploadid="uuid1,uuid2"
- *  - uploadId / uploadIds (camelCase)
- */
 function normalizeUploadIds(input) {
   if (!input) return [];
 
   if (Array.isArray(input)) {
-    return input.map(String).map(v => v.trim()).filter(Boolean);
+    return input.map(String).map((value) => value.trim()).filter(Boolean);
   }
 
   if (typeof input === 'string') {
     return input
       .split(',')
-      .map(v => v.trim())
+      .map((value) => value.trim())
       .filter(Boolean);
   }
 
   return [];
 }
 
-/**
- * Read uploadIds from QUERY or BODY (GET / POST safe)
- */
 function extractUploadIds(req) {
   return normalizeUploadIds(
     req.query.uploadid ??
@@ -36,173 +25,154 @@ function extractUploadIds(req) {
       req.query.uploadIds ??
       req.body?.uploadid ??
       req.body?.uploadId ??
-      req.body?.uploadIds
+      req.body?.uploadIds,
   );
 }
 
-/**
- * GET /api/drivers/analysis
- * Cost Drivers Summary
- */
+const parseNumberOrDefault = (value, fallback) =>
+  Number.isFinite(Number(value)) ? Number(value) : fallback;
+
+const readFilters = (source = {}) => ({
+  provider: source.provider || 'All',
+  service: source.service || 'All',
+  region: source.region || 'All',
+  account: source.account || 'All',
+  subAccount: source.subAccount || 'All',
+  team: source.team || 'All',
+  app: source.app || 'All',
+  env: source.env || 'All',
+  costCategory: source.costCategory || 'All',
+  tagKey: source.tagKey || '',
+  tagValue: source.tagValue || '',
+  uploadId: source.uploadId || source.uploadid || null,
+});
+
 export const getCostDrivers = async (req, res) => {
   try {
     if (!req.user?.id) {
       return res.status(401).json({
         success: false,
         error: 'Authentication required',
-        message: 'Please log in to view cost drivers'
+        message: 'Please log in to view cost drivers',
       });
     }
 
-    const filters = {
-      provider: req.query.provider || 'All',
-      service: req.query.service || 'All',
-      region: req.query.region || 'All'
-    };
-
-    const period = Number.isFinite(+req.query.period)
-      ? parseInt(req.query.period, 10)
-      : 30;
-
-    const dimension = req.query.dimension || 'ServiceName';
-    const minChange = Number.isFinite(+req.query.minChange)
-      ? parseFloat(req.query.minChange)
-      : 0;
-
-    const activeServiceFilter = req.query.activeServiceFilter || 'All';
-
-    // ✅ Upload IDs from query OR body
     const uploadIds = extractUploadIds(req);
+    const query = req.query || {};
 
-    if (uploadIds.length === 0) {
-      return res.json({
-        success: true,
-        data: {
-          increases: [],
-          decreases: [],
-          overallStats: {
-            totalCurr: 0,
-            totalPrev: 0,
-            diff: 0,
-            pct: 0,
-            totalIncreases: 0,
-            totalDecreases: 0
-          },
-          dynamics: {
-            newSpend: 0,
-            expansion: 0,
-            deleted: 0,
-            optimization: 0
-          },
-          periods: {
-            current: null,
-            prev: null,
-            max: null
-          },
-          availableServices: [],
-          message: 'No upload selected. Please select a billing upload to analyze cost drivers.'
-        }
-      });
-    }
+    const filters = readFilters(query);
+    const period = parseNumberOrDefault(query.period, 30);
+    const minChange = parseNumberOrDefault(query.minChange, 0);
+    const rowLimit = parseNumberOrDefault(query.rowLimit, 100);
 
     const data = await costDriversService.getCostDrivers({
       filters,
       period,
-      dimension,
+      timeRange: query.timeRange || null,
+      compareTo: query.compareTo || null,
+      startDate: query.startDate || null,
+      endDate: query.endDate || null,
+      previousStartDate: query.previousStartDate || null,
+      previousEndDate: query.previousEndDate || null,
+      costBasis: query.costBasis || null,
+      dimension: query.dimension || 'service',
       minChange,
-      activeServiceFilter,
-      uploadIds
+      rowLimit,
+      activeServiceFilter: query.activeServiceFilter || 'All',
+      uploadIds,
     });
 
-    const safeData = data || {
-      increases: [],
-      decreases: [],
-      overallStats: {
-        totalCurr: 0,
-        totalPrev: 0,
-        diff: 0,
-        pct: 0,
-        totalIncreases: 0,
-        totalDecreases: 0
-      },
-      dynamics: { newSpend: 0, expansion: 0, deleted: 0, optimization: 0 },
-      periods: { current: null, prev: null, max: null },
-      availableServices: []
-    };
-
+    const safeData = data || {};
     if (
+      Array.isArray(safeData.increases) &&
+      Array.isArray(safeData.decreases) &&
       safeData.increases.length === 0 &&
-      safeData.decreases.length === 0
+      safeData.decreases.length === 0 &&
+      !safeData.message
     ) {
       safeData.message =
-        'No cost changes detected in the selected period. Try adjusting the time period or filters.';
+        'No cost changes detected in selected windows. Try another time range or compare mode.';
     }
 
     return res.json({
       success: true,
-      data: safeData
+      data: safeData,
     });
   } catch (error) {
     console.error('Error in getCostDrivers:', error);
     return res.status(500).json({
       success: false,
       error: 'Failed to analyze cost drivers',
-      message: error.message
+      message: error.message,
     });
   }
 };
 
-/**
- * POST /api/drivers/details
- * Detailed analysis for a single driver
- */
 export const getDriverDetails = async (req, res) => {
   try {
     if (!req.user?.id) {
       return res.status(401).json({
         success: false,
-        error: 'Authentication required'
+        error: 'Authentication required',
       });
     }
 
-    const { driver } = req.body;
-    const period = Number.isFinite(+req.body.period)
-      ? parseInt(req.body.period, 10)
-      : 30;
-
-    if (!driver) {
-      return res.status(400).json({
-        success: false,
-        error: 'Driver data is required'
-      });
-    }
-
-    // ✅ Upload IDs from body OR query
     const uploadIds = extractUploadIds(req);
-
-    if (uploadIds.length === 0) {
+    if (!uploadIds.length) {
       return res.status(400).json({
         success: false,
-        error: 'uploadid is required'
+        error: 'uploadid is required',
       });
     }
 
+    const body = req.body || {};
+    const query = req.query || {};
+    const merged = { ...query, ...body };
+    const filters = readFilters(merged.filters || merged);
+
+    const driver = body.driver || null;
+    const driverKey = body.driverKey || body.key || body.name || null;
+    const dimension =
+      body.dimension ||
+      body?.driver?.dimension ||
+      body?.driver?.detailsPayload?.dimension ||
+      query.dimension ||
+      'service';
+
+    if (!driver && !driverKey) {
+      return res.status(400).json({
+        success: false,
+        error: 'driver or driverKey is required',
+      });
+    }
+
+    const period = parseNumberOrDefault(body.period ?? query.period, 30);
     const data = await costDriversService.getDriverDetails({
       driver,
+      driverKey,
+      dimension,
       period,
-      uploadIds
+      timeRange: body.timeRange ?? query.timeRange ?? null,
+      compareTo: body.compareTo ?? query.compareTo ?? null,
+      startDate: body.startDate ?? query.startDate ?? null,
+      endDate: body.endDate ?? query.endDate ?? null,
+      previousStartDate: body.previousStartDate ?? query.previousStartDate ?? null,
+      previousEndDate: body.previousEndDate ?? query.previousEndDate ?? null,
+      costBasis: body.costBasis ?? query.costBasis ?? null,
+      filters,
+      uploadIds,
     });
 
     return res.json({
       success: true,
-      data
+      data,
     });
   } catch (error) {
     console.error('Error in getDriverDetails:', error);
     return res.status(500).json({
       success: false,
       error: 'Failed to get driver details',
-      message: error.message
+      message: error.message,
     });
   }
 };

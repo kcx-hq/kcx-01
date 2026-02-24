@@ -15,6 +15,7 @@ export function useDashboardRoute() {
     const isOptimization = path.includes('/optimization');
     const isReports = path.includes('/reports');
     const isAccounts = path.includes('/accounts');
+    const isAllocationUnitEconomics = path.includes('/allocation-unit-economics');
 
     const isOverview =
       !isDataExplorer &&
@@ -24,7 +25,8 @@ export function useDashboardRoute() {
       !isDataQuality &&
       !isOptimization &&
       !isReports &&
-      !isAccounts;
+      !isAccounts &&
+      !isAllocationUnitEconomics;
 
     return {
       pathname: path,
@@ -36,6 +38,7 @@ export function useDashboardRoute() {
       isOptimization,
       isReports,
       isAccounts,
+      isAllocationUnitEconomics,
       isOverview,
     };
   }, [location.pathname]);

@@ -70,6 +70,28 @@ export interface BreakdownRow {
   pinFilter: Record<string, string>;
 }
 
+export interface SpendAnomalyItem {
+  id: string;
+  detectedAt: string;
+  impact: number;
+  confidence: string;
+  serviceHint: string;
+  regionHint: string;
+  accountHint: string;
+  topContributors: Array<{ name: string; spend: number }>;
+  baselineBefore: number;
+  actualAfter: number;
+  likelyDrivers: string[];
+  billingExplorerLink: string;
+}
+
+export interface SpendTopMoverItem {
+  name: string;
+  deltaValue: number;
+  deltaPercent: number;
+  direction: "increase" | "decrease";
+}
+
 export interface SpendAnalyticsPayload {
   controls: {
     timeRange: TimeRangePreset | string;
@@ -113,26 +135,15 @@ export interface SpendAnalyticsPayload {
     byEnv: BreakdownRow[];
     byCostCategory: BreakdownRow[];
   };
+  topMovers?: SpendTopMoverItem[];
   anomalyDetection: {
     threshold: number;
     mean: number;
     stdDev: number;
     impactTotal: number;
     markers: Array<{ date: string; impact: number; confidence: string }>;
-    list: Array<{
-      id: string;
-      detectedAt: string;
-      impact: number;
-      confidence: string;
-      serviceHint: string;
-      regionHint: string;
-      accountHint: string;
-      topContributors: Array<{ name: string; spend: number }>;
-      baselineBefore: number;
-      actualAfter: number;
-      likelyDrivers: string[];
-      billingExplorerLink: string;
-    }>;
+    list: SpendAnomalyItem[];
+    highlights?: SpendAnomalyItem[];
   };
   predictabilityRisk: {
     forecast: {

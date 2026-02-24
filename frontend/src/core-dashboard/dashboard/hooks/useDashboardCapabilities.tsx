@@ -19,7 +19,8 @@ export function useDashboardCapabilities(caps) {
       isModuleEnabled(caps, 'resources') ||
       isModuleEnabled(caps, 'optimization') ||
       isModuleEnabled(caps, 'reports') ||
-      isModuleEnabled(caps, 'governance')
+      isModuleEnabled(caps, 'governance') ||
+      isModuleEnabled(caps, 'unitEconomics')
     );
   }, [caps]);
 

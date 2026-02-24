@@ -13,6 +13,7 @@ export function useKeepAliveRegistry(routeFlags) {
       ['Optimization', routeFlags.isOptimization],
       ['Reports', routeFlags.isReports],
       ['AccountsOwnership', routeFlags.isAccounts],
+      ['AllocationUnitEconomics', routeFlags.isAllocationUnitEconomics],
       ['Overview', routeFlags.isOverview],
     ];
 

@@ -1,6 +1,7 @@
 // src/components/sidebar/sidebarConfig.js
 import {
   BarChart3,
+  Calculator,
   TrendingUp,
   Gauge,
   Users,
@@ -77,6 +78,13 @@ const VerticalSidebarConfig = {
     {
       title: "FINANCE",
       items: [
+        {
+          to: "/dashboard/allocation-unit-economics",
+          label: "Allocation & Unit Economics",
+          icon: Calculator,
+          description: "Showback, chargeback, allocation coverage, and unit cost trends",
+          isPremium: true,
+        },
         {
           to: "/dashboard/accounts",
           label: "Accounts and Ownership",

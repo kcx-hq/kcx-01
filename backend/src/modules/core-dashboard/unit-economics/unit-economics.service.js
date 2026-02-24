@@ -6,10 +6,26 @@ import {
 } from "../../../common/utils/cost.calculations.js";
 
 const n = (v) => Number.parseFloat(v || 0) || 0;
+const sanitizeBasis = (value) => {
+  const basis = String(value || "actual").toLowerCase();
+  if (basis === "amortized" || basis === "net" || basis === "actual") return basis;
+  return "actual";
+};
+
+const rowCostByBasis = (row, basis) => {
+  const billed = n(row.billedcost);
+  const effective = n(row.effectivecost);
+  const contracted = n(row.contractedcost);
+
+  if (basis === "amortized") return effective || billed;
+  if (basis === "net") return contracted || effective || billed;
+  return billed || effective;
+};
 
 export const unitEconomicsService = {
-  async getSummary({ filters = {}, period = null, uploadIds = [] }) {
+  async getSummary({ filters = {}, period = null, costBasis = "actual", uploadIds = [] }) {
     const { startDate, endDate } = getDateRange(period);
+    const safeBasis = sanitizeBasis(costBasis);
 
     const rows = await unitEconomicsRepository.getFacts({
       filters,
@@ -37,7 +53,7 @@ export const unitEconomicsService = {
 
     for (const r of rows) {
       const date = String(r.chargeperiodstart).split("T")[0];
-      const cost = n(r.effectivecost ?? r.billedcost);
+      const cost = rowCostByBasis(r, safeBasis);
       const qty = n(r.consumedquantity);
 
       if (!daily.has(date)) {
@@ -80,7 +96,8 @@ export const unitEconomicsService = {
         totalQuantity: roundTo(totalQuantity, 2),
         avgUnitPrice: roundTo(avgUnitPrice, 6),
         unitPriceChangePct: roundTo(changePct, 2),
-        driftDetected: Math.abs(changePct) > 15
+        driftDetected: Math.abs(changePct) > 15,
+        costBasis: safeBasis,
       },
       trend,
       drift: {

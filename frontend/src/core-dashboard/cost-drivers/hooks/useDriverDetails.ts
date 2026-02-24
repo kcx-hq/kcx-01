@@ -1,22 +1,121 @@
 import { useEffect, useRef, useState } from 'react';
+import type {
+  CostDriverDetailPayload,
+  CostDriversApi,
+  CostDriversCaps,
+  CostDriversDecompositionRow,
+  CostDriversFilters,
+} from '../types';
 
-export function useDriverDetails({ api, caps, driver, period }) {
+const EMPTY_STATS: CostDriverDetailPayload = {
+  summary: null,
+  trend: [],
+  resourceBreakdown: [],
+  topSkuChanges: [],
+  links: {
+    billingExplorer: '/dashboard/data-explorer',
+    resourceExplorer: '/dashboard/resources',
+    optimization: '/dashboard/optimization',
+  },
+  actionPayload: null,
+
+  // Legacy aliases for older views.
+  trendData: [],
+  subDrivers: [],
+  topResources: [],
+  annualizedImpact: 0,
+  insightText: '',
+};
+
+const normalizeStats = (next: unknown): CostDriverDetailPayload => {
+  const payload = next && typeof next === 'object' ? next : {};
+
+  return {
+    ...EMPTY_STATS,
+    ...(payload as Partial<CostDriverDetailPayload>),
+    trendData: Array.isArray((payload as Partial<CostDriverDetailPayload>).trendData)
+      ? ((payload as Partial<CostDriverDetailPayload>).trendData as CostDriverDetailPayload['trendData'])
+      : [],
+    subDrivers: Array.isArray((payload as Partial<CostDriverDetailPayload>).subDrivers)
+      ? ((payload as Partial<CostDriverDetailPayload>).subDrivers as CostDriverDetailPayload['subDrivers'])
+      : [],
+    topResources: Array.isArray((payload as Partial<CostDriverDetailPayload>).topResources)
+      ? ((payload as Partial<CostDriverDetailPayload>).topResources as CostDriverDetailPayload['topResources'])
+      : [],
+    annualizedImpact: Number.isFinite(Number((payload as Partial<CostDriverDetailPayload>).annualizedImpact))
+      ? Number((payload as Partial<CostDriverDetailPayload>).annualizedImpact)
+      : 0,
+    insightText:
+      typeof (payload as Partial<CostDriverDetailPayload>).insightText === 'string'
+        ? String((payload as Partial<CostDriverDetailPayload>).insightText)
+        : '',
+  };
+};
+
+export function useDriverDetails({
+  api,
+  caps,
+  driver,
+  period,
+  filters = {},
+  timeRange = null,
+  compareTo = null,
+  costBasis = null,
+  startDate = null,
+  endDate = null,
+  previousStartDate = null,
+  previousEndDate = null,
+}: {
+  api?: CostDriversApi;
+  caps?: CostDriversCaps;
+  driver: CostDriversDecompositionRow | null;
+  period: number;
+  filters?: CostDriversFilters;
+  timeRange?: string | null;
+  compareTo?: string | null;
+  costBasis?: string | null;
+  startDate?: string | null;
+  endDate?: string | null;
+  previousStartDate?: string | null;
+  previousEndDate?: string | null;
+}) {
   const [loading, setLoading] = useState(false);
-  const [stats, setStats] = useState({
-    trendData: [],
-    subDrivers: [],
-    topResources: [],
-    annualizedImpact: 0,
-    insightText: '',
-  });
-
-  const cacheRef = useRef(new Map());
+  const [stats, setStats] = useState<CostDriverDetailPayload>(EMPTY_STATS);
+  const cacheRef = useRef<Map<string, CostDriverDetailPayload>>(new Map());
 
   useEffect(() => {
     const run = async () => {
-      if (!driver || !api || !caps) return;
+      if (!driver || !api || !caps?.modules?.costDrivers?.enabled) return;
 
-      const cacheKey = `${driver.id || driver.name}-${period}`;
+      const driverDimension: string =
+        driver?.dimension ||
+        driver?.evidencePayload?.dimension ||
+        driver?.detailsPayload?.dimension ||
+        'service';
+      const driverKey: string | null =
+        driver?.key ||
+        driver?.name ||
+        driver?.id ||
+        driver?.evidencePayload?.driverKey ||
+        driver?.detailsPayload?.driverKey ||
+        null;
+
+      if (!driverKey) return;
+
+      const cacheKey = JSON.stringify({
+        key: driverKey,
+        dimension: driverDimension,
+        period,
+        timeRange,
+        compareTo,
+        costBasis,
+        startDate,
+        endDate,
+        previousStartDate,
+        previousEndDate,
+        filters,
+      });
+
       const cached = cacheRef.current.get(cacheKey);
       if (cached) {
         setStats(cached);
@@ -25,21 +124,35 @@ export function useDriverDetails({ api, caps, driver, period }) {
 
       setLoading(true);
       try {
-        const data = await api.call('costDrivers', 'driverDetails', {
-          data: { driver, period },
-        });
+        const response = (await api.call('costDrivers', 'driverDetails', {
+          data: {
+            driver,
+            driverKey,
+            dimension: driverDimension,
+            period,
+            timeRange,
+            compareTo,
+            costBasis,
+            startDate,
+            endDate,
+            previousStartDate,
+            previousEndDate,
+            filters,
+          },
+        })) as { success?: boolean; data?: unknown };
 
-        const result =
-          (data?.success && data?.data) ? data.data :
-          (data?.data) ? data.data :
-          (data ?? stats);
+        const payload =
+          response && typeof response === 'object' && response.success && response.data
+            ? response.data
+            : response?.data || response || EMPTY_STATS;
 
-        setStats(result);
-        cacheRef.current.set(cacheKey, result);
-      } catch (err) {
+        const normalized = normalizeStats(payload);
+        setStats(normalized);
+        cacheRef.current.set(cacheKey, normalized);
+      } catch (error) {
+        const err = error as { code?: string };
         if (err?.code !== 'NOT_SUPPORTED') {
-          // eslint-disable-next-line no-console
-          console.error('Error fetching driver details:', err);
+          console.error('Error fetching driver details:', error);
         }
       } finally {
         setLoading(false);
@@ -48,7 +161,20 @@ export function useDriverDetails({ api, caps, driver, period }) {
 
     run();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [driver, period, api, caps]);
+  }, [
+    api,
+    caps,
+    driver,
+    period,
+    timeRange,
+    compareTo,
+    costBasis,
+    startDate,
+    endDate,
+    previousStartDate,
+    previousEndDate,
+    filters,
+  ]);
 
   return { loading, stats };
 }
