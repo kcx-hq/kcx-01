@@ -108,7 +108,7 @@ const DashboardClientDPage = () => {
     );
 
   return (
-    <div className="min-h-screen bg-[#0f0f11] text-white font-sans">
+    <div className="min-h-screen bg-[#f8faf9] text-slate-800 font-sans">
       <VerticalSidebar
         config={ClientDSidebarConfig}
         isLocked={false}

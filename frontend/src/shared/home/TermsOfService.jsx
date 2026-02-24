@@ -44,12 +44,12 @@ const TermsOfService = () => {
                 Early Access Notice
               </h2>
               <p className="mb-4">
-                K&amp;Co currently provides its platform in an early access stage.
+                KCX. currently provides its platform in an early access stage.
                 Features, functionality, and availability may change without prior
                 notice as the platform continues to evolve.
               </p>
               <p>
-                By accessing or using the K&amp;Co platform, you acknowledge that the
+                By accessing or using the KCX. platform, you acknowledge that the
                 service is provided in its current form and may be modified,
                 suspended, or discontinued at any time.
               </p>
@@ -60,7 +60,7 @@ const TermsOfService = () => {
                 Acceptance of Terms
               </h2>
               <p>
-                By creating an account or using the K&amp;Co platform, you agree to
+                By creating an account or using the KCX. platform, you agree to
                 these Terms of Use. If you do not agree, you should not access or use
                 the service.
               </p>
@@ -71,13 +71,13 @@ const TermsOfService = () => {
                 Use of the Platform
               </h2>
               <p className="mb-3">
-                You agree to use the K&amp;Co platform only for lawful and intended
+                You agree to use the KCX. platform only for lawful and intended
                 purposes. You must not:
               </p>
               <ul className="list-disc list-inside space-y-2 ml-4">
                 <li>Attempt to gain unauthorized access to the platform or its systems</li>
                 <li>Interfere with or disrupt the service or infrastructure</li>
-                <li>Misuse the platform in a manner that could harm K&amp;Co or other users</li>
+                <li>Misuse the platform in a manner that could harm KCX. or other users</li>
               </ul>
             </motion.section>
 
@@ -88,7 +88,7 @@ const TermsOfService = () => {
               <p>
                 You are responsible for maintaining the confidentiality of your
                 account credentials and for all activity that occurs under your
-                account. K&amp;Co is not responsible for any loss or damage resulting
+                account. KCX. is not responsible for any loss or damage resulting
                 from unauthorized access caused by your failure to protect your
                 credentials.
               </p>
@@ -99,7 +99,7 @@ const TermsOfService = () => {
                 Service Availability
               </h2>
               <p>
-                The K&amp;Co platform is provided on a best-effort basis. We do not
+                The KCX. platform is provided on a best-effort basis. We do not
                 guarantee uninterrupted access, continuous availability, or error-free
                 operation. Features may be added, modified, or removed as part of
                 ongoing development.
@@ -111,7 +111,7 @@ const TermsOfService = () => {
                 Termination
               </h2>
               <p>
-                K&amp;Co may suspend or terminate access to the platform at any time,
+                KCX. may suspend or terminate access to the platform at any time,
                 with or without notice, if these terms are violated or if continued
                 access may pose a risk to the platform or its users.
               </p>

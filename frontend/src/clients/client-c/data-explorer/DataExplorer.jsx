@@ -120,7 +120,7 @@ const DataExplorer = ({ filters = {}, api, caps, uploadId }) => {
             <button
               onClick={() => setPage((p) => Math.max(1, p - 1))}
               disabled={page === 1}
-              className="px-4 py-2 bg-gray-700 text-white rounded-lg disabled:opacity-50"
+              className="px-4 py-2 bg-gray-700 text-slate-800 rounded-lg disabled:opacity-50"
             >
               Previous
             </button>
@@ -132,7 +132,7 @@ const DataExplorer = ({ filters = {}, api, caps, uploadId }) => {
             <button
               onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
               disabled={page === totalPages}
-              className="px-4 py-2 bg-gray-700 text-white rounded-lg disabled:opacity-50"
+              className="px-4 py-2 bg-gray-700 text-slate-800 rounded-lg disabled:opacity-50"
             >
               Next
             </button>

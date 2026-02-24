@@ -14,7 +14,7 @@ const AccountsOwnershipView = ({
   summaryData,
   departmentData
 }) => {
-  const COLORS = ['#a02ff1', '#48bb78', '#f56565', '#ecc94b', '#4fd1c5', '#805ad5'];
+  const COLORS = ['#1EA88A', '#48bb78', '#f56565', '#ecc94b', '#4fd1c5', '#22c55e'];
 
   // Format currency
   const formatCurrency = (val) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(val);
@@ -24,7 +24,7 @@ const AccountsOwnershipView = ({
       <div className="animate-in fade-in zoom-in-95 duration-300 flex flex-col h-full">
         <div className="flex items-center justify-center h-full">
           <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#a02ff1] mx-auto mb-4"></div>
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#1EA88A] mx-auto mb-4"></div>
             <p className="text-gray-400">Loading accounts data...</p>
           </div>
         </div>
@@ -38,7 +38,7 @@ const AccountsOwnershipView = ({
       {/* CONTENT */}
       <div className="flex-1 overflow-y-auto relative min-h-0">
         {isFiltering && (
-          <div className="absolute top-4 right-4 z-50 flex items-center gap-2 bg-[#1a1b20]/90 backdrop-blur-md border border-[#a02ff1]/30 rounded-lg px-3 py-2 shadow-lg">
+          <div className="absolute top-4 right-4 z-50 flex items-center gap-2 bg-[#ffffff]/90 backdrop-blur-md border border-[#1EA88A]/30 rounded-lg px-3 py-2 shadow-lg">
             <span className="text-xs text-gray-300 font-medium">Filtering...</span>
           </div>
         )}
@@ -100,7 +100,7 @@ const AccountsOwnershipView = ({
                     <XAxis dataKey="name" stroke="#aaa" />
                     <YAxis stroke="#aaa" />
                     <Tooltip 
-                      contentStyle={{ backgroundColor: '#1a1b20', borderColor: '#333', color: 'white' }}
+                      contentStyle={{ backgroundColor: '#ffffff', borderColor: '#333', color: 'white' }}
                       itemStyle={{ color: 'white' }}
                       formatter={(value) => [formatCurrency(value), 'Cost']}
                     />

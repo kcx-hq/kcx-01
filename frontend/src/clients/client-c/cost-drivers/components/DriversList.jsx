@@ -47,14 +47,14 @@ const DriversList = ({ drivers, onDriverSelect, selectedDriver }) => {
                 key={index}
                 className={`p-4 rounded-lg border cursor-pointer transition-all ${
                   isSelected 
-                    ? 'border-[#a02ff1] bg-[#a02ff1]/10' 
+                    ? 'border-[#1EA88A] bg-[#1EA88A]/10' 
                     : 'border-gray-700 hover:border-gray-600 bg-gray-800/50'
                 }`}
                 onClick={() => onDriverSelect(driver)}
               >
                 <div className="flex justify-between items-start">
                   <div className="flex-1 min-w-0">
-                    <h3 className="font-medium text-white truncate">{driver.name}</h3>
+                    <h3 className="font-medium text-slate-800 truncate">{driver.name}</h3>
                     <p className="text-sm text-gray-400 mt-1">
                       {driver.description || 'Cost driver impact analysis'}
                     </p>
@@ -89,7 +89,7 @@ const DriversList = ({ drivers, onDriverSelect, selectedDriver }) => {
                   </div>
                   <div className="w-full bg-gray-700 rounded-full h-2">
                     <div
-                      className="bg-gradient-to-r from-purple-500 to-pink-500 h-2 rounded-full transition-all duration-300"
+                      className="bg-gradient-to-r from-emerald-500 to-emerald-500 h-2 rounded-full transition-all duration-300"
                       style={{
                         width: `${Math.min(driver.impactPercentage ? Math.abs(driver.impactPercentage) * 100 : 0, 100)}%`
                       }}

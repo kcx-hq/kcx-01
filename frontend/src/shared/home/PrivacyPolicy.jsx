@@ -45,7 +45,7 @@ const PrivacyPolicy = () => {
                 Early Access Privacy Notice
               </h2>
               <p>
-                This Privacy Policy applies to the K&amp;Co platform during its early
+                This Privacy Policy applies to the KCX. platform during its early
                 access phase. Our data practices may evolve as the platform grows, and
                 this policy may be updated accordingly.
               </p>
@@ -75,7 +75,7 @@ const PrivacyPolicy = () => {
               </h2>
               <p className="mb-3">We use collected information to:</p>
               <ul className="list-disc list-inside space-y-2 ml-4">
-                <li>Provide and manage access to the K&amp;Co platform</li>
+                <li>Provide and manage access to the KCX. platform</li>
                 <li>Authenticate users and maintain accounts</li>
                 <li>Improve platform functionality and user experience</li>
                 <li>Communicate important service-related updates</li>
@@ -87,7 +87,7 @@ const PrivacyPolicy = () => {
               <h2 className="text-2xl font-semibold text-[var(--text-primary)] mb-4">
                 Data Sharing
               </h2>
-              <p className="mb-3">K&amp;Co does not sell personal data.</p>
+              <p className="mb-3">KCX. does not sell personal data.</p>
               <p>
                 Information may be shared only with trusted third-party service
                 providers, such as cloud infrastructure or analytics providers,

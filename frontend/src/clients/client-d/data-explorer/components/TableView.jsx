@@ -42,9 +42,9 @@ const TableView = ({
   return (
     <div className="h-full overflow-auto scrollbar-thin scrollbar-thumb-gray-700">
       <table className="min-w-full border-collapse text-xs text-left">
-        <thead className="bg-[#1b1c22] text-gray-400 font-bold sticky top-0 z-20 shadow-lg">
+        <thead className="bg-[#eef5f2] text-gray-400 font-bold sticky top-0 z-20 shadow-lg">
           <tr>
-            <th className="px-4 py-3 sticky left-0 z-40 bg-[#1b1c22] border-b border-r border-white/10 w-[50px] text-center">
+            <th className="px-4 py-3 sticky left-0 z-40 bg-[#eef5f2] border-b border-r border-slate-200 w-[50px] text-center">
               <button
                 onClick={() =>
                   selectedIndices.size === tableDataToRender.length
@@ -57,7 +57,7 @@ const TableView = ({
                         )
                       )
                 }
-                className="text-gray-400 hover:text-white"
+                className="text-gray-400 hover:text-slate-800"
                 title="Select all on page"
               >
                 <Check size={14} />
@@ -68,9 +68,9 @@ const TableView = ({
               visibleColumns.map((col, idx) => (
                 <th
                   key={col}
-                  className={`px-4 py-3 border-b border-r border-white/10 whitespace-nowrap bg-[#1b1c22] hover:bg-white/5 cursor-pointer group select-none ${
+                  className={`px-4 py-3 border-b border-r border-slate-200 whitespace-nowrap bg-[#eef5f2] hover:bg-white/5 cursor-pointer group select-none ${
                     idx === 0
-                      ? "sticky left-[50px] z-30 shadow-[4px_0_10px_rgba(0,0,0,0.5)] border-r-[#a02ff1]/50"
+                      ? "sticky left-[50px] z-30 shadow-[4px_0_10px_rgba(0,0,0,0.5)] border-r-[#1EA88A]/50"
                       : ""
                   }`}
                   style={{
@@ -92,9 +92,9 @@ const TableView = ({
                     <div className="opacity-0 group-hover:opacity-100">
                       {sortConfig.key === col ? (
                         sortConfig.direction === "asc" ? (
-                          <ChevronUp size={12} className="text-[#a02ff1]" />
+                          <ChevronUp size={12} className="text-[#1EA88A]" />
                         ) : (
-                          <ChevronDown size={12} className="text-[#a02ff1]" />
+                          <ChevronDown size={12} className="text-[#1EA88A]" />
                         )
                       ) : (
                         <div className="h-3 w-3" />
@@ -104,7 +104,7 @@ const TableView = ({
                 </th>
               ))
             ) : (
-              <th colSpan={100} className="px-4 py-10 text-center text-gray-500 bg-[#1b1c22]">
+              <th colSpan={100} className="px-4 py-10 text-center text-gray-500 bg-[#eef5f2]">
                 <div className="flex flex-col items-center gap-2">
                   <AlertCircle size={22} className="text-gray-600" />
                   <span>No columns match “{searchTerm}”</span>
@@ -115,11 +115,11 @@ const TableView = ({
 
           {showFilterRow && (
             <tr className="bg-[#14151b]">
-              <th className="sticky left-0 z-40 bg-[#14151b] border-b border-r border-white/10"></th>
+              <th className="sticky left-0 z-40 bg-[#14151b] border-b border-r border-slate-200"></th>
               {visibleColumns.map((col, idx) => (
                 <th
                   key={`filter-${col}`}
-                  className={`p-1 border-b border-r border-white/10 bg-[#14151b] ${
+                  className={`p-1 border-b border-r border-slate-200 bg-[#14151b] ${
                     idx === 0 ? "sticky left-[50px] z-30" : ""
                   }`}
                 >
@@ -136,7 +136,7 @@ const TableView = ({
                         return next;
                       });
                     }}
-                    className="w-full px-2 py-1.5 bg-black/30 border border-white/10 rounded-lg text-[10px] text-white focus:outline-none focus:border-[#a02ff1]"
+                    className="w-full px-2 py-1.5 bg-white/90 border border-slate-200 rounded-lg text-[10px] text-slate-800 focus:outline-none focus:border-[#1EA88A]"
                   />
                 </th>
               ))}
@@ -166,9 +166,9 @@ const TableView = ({
           })}
         </tbody>
 
-        <tfoot className="sticky bottom-0 z-30 bg-[#1b1c22] border-t-2 border-[#a02ff1]/30 shadow-[0_-4px_10px_rgba(0,0,0,0.5)]">
+        <tfoot className="sticky bottom-0 z-30 bg-[#eef5f2] border-t-2 border-[#1EA88A]/30 shadow-[0_-4px_10px_rgba(0,0,0,0.5)]">
           <tr>
-            <td className="sticky left-0 z-40 bg-[#1b1c22] border-r border-white/10"></td>
+            <td className="sticky left-0 z-40 bg-[#eef5f2] border-r border-slate-200"></td>
             {visibleColumns.map((col, idx) => {
               const total = summaryData?.[col];
               const showTotal =
@@ -177,11 +177,11 @@ const TableView = ({
               return (
                 <td
                   key={col}
-                  className={`px-4 py-3 font-bold text-xs whitespace-nowrap border-r border-white/10 bg-[#1b1c22] ${
+                  className={`px-4 py-3 font-bold text-xs whitespace-nowrap border-r border-slate-200 bg-[#eef5f2] ${
                     idx === 0
-                      ? "sticky left-[50px] z-40 border-r-[#a02ff1]/50 text-[#a02ff1]"
-                      : "text-white"
-                  } ${showTotal ? "text-right text-[#a02ff1] font-mono" : ""}`}
+                      ? "sticky left-[50px] z-40 border-r-[#1EA88A]/50 text-[#1EA88A]"
+                      : "text-slate-800"
+                  } ${showTotal ? "text-right text-[#1EA88A] font-mono" : ""}`}
                 >
                   {idx === 0
                     ? "TOTALS"
@@ -199,7 +199,7 @@ const TableView = ({
       </table>
 
       {/* Pagination footer */}
-      <div className="px-5 py-3 border-t border-white/10 bg-[#121319] flex justify-between items-center text-xs text-gray-400">
+      <div className="px-5 py-3 border-t border-slate-200 bg-[#f3f7f5] flex justify-between items-center text-xs text-gray-400">
         <div className="flex items-center gap-3">
           <span>
             Page <span className="text-gray-200 font-bold">{currentPage}</span> of{" "}
@@ -208,7 +208,7 @@ const TableView = ({
           <select
             value={rowsPerPage}
             onChange={(e) => setRowsPerPage(Number(e.target.value))}
-            className="bg-[#0f0f11] border border-white/10 rounded-xl px-3 py-2 text-xs text-gray-300 focus:outline-none focus:border-[#a02ff1]"
+            className="bg-[#f8faf9] border border-slate-200 rounded-xl px-3 py-2 text-xs text-gray-300 focus:outline-none focus:border-[#1EA88A]"
             style={{ colorScheme: "dark" }}
           >
             <option value={50}>50 rows</option>

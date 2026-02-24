@@ -5,23 +5,23 @@ const KpiCard = ({ label, value, icon: Icon, iconColor, subValue, onClick, trend
   <div
     onClick={onClick}
     className={`
-      relative overflow-hidden rounded-xl bg-[#1a1b20] border border-white/5 p-4
+      relative overflow-hidden rounded-xl bg-[#ffffff] border border-slate-200 p-4
       transition-all duration-300 ease-out h-28 flex flex-col justify-between group
-      ${onClick ? "cursor-pointer hover:border-[#a02ff1]/30 hover:bg-[#1a1b20]/80 hover:shadow-[0_0_20px_rgba(160,47,241,0.15)] hover:scale-[1.02] hover:-translate-y-1" : ""}
+      ${onClick ? "cursor-pointer hover:border-[#1EA88A]/30 hover:bg-[#ffffff]/80 hover:shadow-[0_0_20px_rgba(30,168,138,0.15)] hover:scale-[1.02] hover:-translate-y-1" : ""}
     `}
   >
-    <div className={`absolute -right-4 -top-4 h-16 w-16 rounded-full ${iconColor.replace("text-", "bg-")}/10 blur-xl group-hover:bg-[#a02ff1]/20 transition-all duration-500`} />
+    <div className={`absolute -right-4 -top-4 h-16 w-16 rounded-full ${iconColor.replace("text-", "bg-")}/10 blur-xl group-hover:bg-[#1EA88A]/20 transition-all duration-500`} />
     <div className="flex justify-between items-start z-10">
       <span className="text-[10px] font-bold uppercase tracking-widest text-gray-500 group-hover:text-gray-300 transition-colors">
         {label}
       </span>
-      <div className={`p-1.5 rounded-lg bg-[#0f0f11] ${iconColor} group-hover:scale-110 transition-transform duration-300`}>
+      <div className={`p-1.5 rounded-lg bg-[#f8faf9] ${iconColor} group-hover:scale-110 transition-transform duration-300`}>
         <Icon size={16} />
       </div>
     </div>
 
     <div className="z-10">
-      <div className="text-2xl font-black text-white tracking-tight">
+      <div className="text-2xl font-black text-slate-800 tracking-tight">
         {typeof value === "number" ? formatCurrency(value) : value}
       </div>
 

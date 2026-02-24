@@ -30,7 +30,7 @@ const KCXGreenGray = () => {
                 K
               </div>
               <span className="text-xl font-bold tracking-tight text-slate-900">
-                KCX<span className="text-slate-400">.io</span>
+                KCX.<span className="text-slate-400">io</span>
               </span>
             </div>
 
@@ -86,7 +86,7 @@ const KCXGreenGray = () => {
 
           {/* Subtext (Gray Secondary) */}
           <p className="mt-6 text-xl text-slate-500 max-w-2xl mx-auto mb-10 leading-relaxed">
-            KCX connects to your cloud billing data to instantly identify waste, 
+            KCX. connects to your cloud billing data to instantly identify waste, 
             allocate costs to teams, and automate savings.
           </p>
 
@@ -256,7 +256,7 @@ const KCXGreenGray = () => {
           </div>
           
           <div className="pt-8 border-t border-slate-800 flex flex-col md:flex-row justify-between items-center gap-4 text-xs">
-            <p>© 2026 KCX Inc. All rights reserved.</p>
+            <p>© 2026 KCX. Inc. All rights reserved.</p>
             <div className="flex gap-6">
               <a href="#" className="hover:text-white transition-colors">Privacy Policy</a>
               <a href="#" className="hover:text-white transition-colors">Terms of Service</a>

@@ -65,7 +65,7 @@ const OverviewKpiGrid = ({ extractedData, locked = false }) => {
         title: "Total Spend",
         value: money(totalSpend),
         icon: DollarSign,
-        color: "text-[#a02ff1]",
+        color: "text-[#1EA88A]",
         contextLabel: billingLabel,
       },
       {

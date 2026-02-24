@@ -93,7 +93,7 @@ const About = () => {
             variants={fadeInUp}
             className="text-[var(--text-secondary)] text-lg leading-relaxed mb-6"
           >
-            K&amp;Co is a Cloud FinOps platform that helps engineering-led
+            KCX. is a Cloud FinOps platform that helps engineering-led
             companies understand, control, and optimize their cloud spend —
             without slowing down development.
           </motion.p>
@@ -156,7 +156,7 @@ const About = () => {
           />
         </motion.div>
 
-        {/* --- PART 3: THE K&Co. DIFFERENCE --- */}
+        {/* --- PART 3: THE KCX. DIFFERENCE --- */}
         <motion.div
           initial="hidden"
           whileInView="visible"

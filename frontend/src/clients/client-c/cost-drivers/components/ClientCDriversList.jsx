@@ -4,7 +4,7 @@ import { TrendingUp, TrendingDown, Minus, ChevronRight } from 'lucide-react';
 export function ClientCDriversList({ title, items, type, onSelect, sortBy }) {
   if (!items || items.length === 0) {
     return (
-      <div className="bg-[#1a1b20] border border-white/10 rounded-xl p-6">
+      <div className="bg-[#ffffff] border border-slate-200 rounded-xl p-6">
         <h3 className="text-sm font-bold text-gray-400 uppercase mb-4">{title}</h3>
         <div className="text-center py-8 text-gray-500">
           <p>No {type === 'inc' ? 'increases' : 'decreases'} found</p>
@@ -34,7 +34,7 @@ export function ClientCDriversList({ title, items, type, onSelect, sortBy }) {
   });
 
   return (
-    <div className="bg-[#1a1b20] border border-white/10 rounded-xl p-4">
+    <div className="bg-[#ffffff] border border-slate-200 rounded-xl p-4">
       <h3 className="text-sm font-bold text-gray-400 uppercase mb-4 flex items-center gap-2">
         {type === 'inc' ? (
           <TrendingUp size={14} className="text-red-400" />
@@ -49,11 +49,11 @@ export function ClientCDriversList({ title, items, type, onSelect, sortBy }) {
           <div
             key={index}
             onClick={() => onSelect(item, type)}
-            className="group p-3 bg-[#0f0f11] border border-white/5 rounded-lg hover:border-[#a02ff1]/30 hover:bg-[#a02ff1]/5 transition-all cursor-pointer"
+            className="group p-3 bg-[#f8faf9] border border-slate-200 rounded-lg hover:border-[#1EA88A]/30 hover:bg-[#1EA88A]/5 transition-all cursor-pointer"
           >
             <div className="flex justify-between items-start">
               <div className="flex-1 min-w-0">
-                <h4 className="text-sm font-medium text-white truncate group-hover:text-[#a02ff1] transition-colors">
+                <h4 className="text-sm font-medium text-slate-800 truncate group-hover:text-[#1EA88A] transition-colors">
                   {item.name}
                 </h4>
                 <p className="text-xs text-gray-400 mt-1 truncate">

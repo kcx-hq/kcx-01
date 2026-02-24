@@ -101,7 +101,7 @@ const Header = ({ title, anomalies = [], anomaliesCount = 0 }) => {
         {/* === LEFT: BREADCRUMBS & TITLE === */}
         <div className="flex flex-col justify-center min-w-0">
           <div className="hidden sm:flex items-center gap-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-0.5">
-            <span className="hover:text-[var(--brand-primary)] cursor-pointer transition-colors">KCX</span>
+            <span className="hover:text-[var(--brand-primary)] cursor-pointer transition-colors">KCX.</span>
             <span className="text-slate-300">/</span>
             <span className="text-slate-600">Dashboard</span>
           </div>

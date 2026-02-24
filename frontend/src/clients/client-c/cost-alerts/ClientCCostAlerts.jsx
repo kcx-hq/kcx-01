@@ -180,7 +180,7 @@ const ClientCCostAlerts = ({ api, caps }) => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64 bg-[#0f0f11] rounded-xl border border-white/5">
+      <div className="flex items-center justify-center h-64 bg-[#f8faf9] rounded-xl border border-slate-200">
         <div className="text-center text-gray-500">
           <Bell className="mx-auto mb-2 text-gray-500" size={32} />
           <p className="text-sm">Loading cost alerts...</p>
@@ -191,7 +191,7 @@ const ClientCCostAlerts = ({ api, caps }) => {
 
   if (error) {
     return (
-      <div className="flex items-center justify-center h-64 bg-[#0f0f11] rounded-xl border border-white/5">
+      <div className="flex items-center justify-center h-64 bg-[#f8faf9] rounded-xl border border-slate-200">
         <div className="text-center text-red-400 p-4">
           <AlertCircle className="mx-auto mb-2" size={32} />
           <p className="text-sm font-medium mb-1">Error Loading Data</p>
@@ -205,7 +205,7 @@ const ClientCCostAlerts = ({ api, caps }) => {
 
   if (extractedData.metadata.isEmptyState) {
     return (
-      <div className="flex items-center justify-center h-64 bg-[#0f0f11] rounded-xl border border-white/5">
+      <div className="flex items-center justify-center h-64 bg-[#f8faf9] rounded-xl border border-slate-200">
         <div className="text-center text-gray-500">
           <Bell className="mx-auto mb-2 text-gray-500" size={32} />
           <p className="text-sm">No cost alerts available</p>
@@ -218,12 +218,12 @@ const ClientCCostAlerts = ({ api, caps }) => {
   // Log the final extracted data for debugging
   console.log('Final extracted data:', extractedData);
 
-  const COLORS = ['#a02ff1', '#48bb78', '#f56565', '#ecc94b', '#4fd1c5', '#805ad5', '#ed8936', '#68d391', '#4c77b6', '#d53f8c'];
+  const COLORS = ['#1EA88A', '#48bb78', '#f56565', '#ecc94b', '#4fd1c5', '#22c55e', '#ed8936', '#68d391', '#4c77b6', '#10b981'];
 
   return (
     <div className="animate-in fade-in zoom-in-95 duration-300 flex flex-col h-full">
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-white">Cost Alerts</h1>
+        <h1 className="text-2xl font-bold text-slate-800">Cost Alerts</h1>
         <p className="text-sm text-gray-400">Monitor and manage your cost alerts and budget status</p>
       </div>
       
@@ -231,26 +231,26 @@ const ClientCCostAlerts = ({ api, caps }) => {
         <div className="space-y-6">
           {/* KPI CARDS */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <div className="bg-[#1a1b20]/60 backdrop-blur-md border border-white/5 p-5 rounded-2xl shadow-xl">
+            <div className="bg-[#ffffff]/60 backdrop-blur-md border border-slate-200 p-5 rounded-2xl shadow-xl">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-xs text-gray-400 font-semibold uppercase tracking-wider">Total Alerts</p>
-                  <p className="text-2xl font-bold text-white mt-1">
+                  <p className="text-2xl font-bold text-slate-800 mt-1">
                     {extractedData.alerts.alerts?.length || 0}
                   </p>
                 </div>
-                <div className="p-3 bg-[#a02ff1]/20 rounded-lg">
-                  <Bell className="text-[#a02ff1]" size={24} />
+                <div className="p-3 bg-[#1EA88A]/20 rounded-lg">
+                  <Bell className="text-[#1EA88A]" size={24} />
                 </div>
               </div>
               <p className="text-[10px] text-gray-500 mt-2">Active cost alerts</p>
             </div>
             
-            <div className="bg-[#1a1b20]/60 backdrop-blur-md border border-white/5 p-5 rounded-2xl shadow-xl">
+            <div className="bg-[#ffffff]/60 backdrop-blur-md border border-slate-200 p-5 rounded-2xl shadow-xl">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-xs text-gray-400 font-semibold uppercase tracking-wider">Critical</p>
-                  <p className="text-2xl font-bold text-white mt-1">
+                  <p className="text-2xl font-bold text-slate-800 mt-1">
                     {extractedData.alerts.alerts?.filter(alert => alert.severity === 'critical')?.length || 0}
                   </p>
                 </div>
@@ -261,11 +261,11 @@ const ClientCCostAlerts = ({ api, caps }) => {
               <p className="text-[10px] text-gray-500 mt-2">Critical severity alerts</p>
             </div>
             
-            <div className="bg-[#1a1b20]/60 backdrop-blur-md border border-white/5 p-5 rounded-2xl shadow-xl">
+            <div className="bg-[#ffffff]/60 backdrop-blur-md border border-slate-200 p-5 rounded-2xl shadow-xl">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-xs text-gray-400 font-semibold uppercase tracking-wider">Budgets</p>
-                  <p className="text-2xl font-bold text-white mt-1">
+                  <p className="text-2xl font-bold text-slate-800 mt-1">
                     {extractedData.budgetStatus.budgets?.length || 0}
                   </p>
                 </div>
@@ -276,11 +276,11 @@ const ClientCCostAlerts = ({ api, caps }) => {
               <p className="text-[10px] text-gray-500 mt-2">Active budgets</p>
             </div>
             
-            <div className="bg-[#1a1b20]/60 backdrop-blur-md border border-white/5 p-5 rounded-2xl shadow-xl">
+            <div className="bg-[#ffffff]/60 backdrop-blur-md border border-slate-200 p-5 rounded-2xl shadow-xl">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-xs text-gray-400 font-semibold uppercase tracking-wider">Over Budget</p>
-                  <p className="text-2xl font-bold text-white mt-1">
+                  <p className="text-2xl font-bold text-slate-800 mt-1">
                     {extractedData.budgetStatus.budgets?.filter(budget => budget.percentageUsed > 100)?.length || 0}
                   </p>
                 </div>
@@ -295,10 +295,10 @@ const ClientCCostAlerts = ({ api, caps }) => {
           {/* CHARTS */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Alert Distribution */}
-            <div className="bg-[#1a1b20]/60 backdrop-blur-md border border-white/5 rounded-2xl p-5 shadow-xl">
+            <div className="bg-[#ffffff]/60 backdrop-blur-md border border-slate-200 rounded-2xl p-5 shadow-xl">
               <div className="flex items-center gap-2 mb-4">
-                <PieChartIcon size={16} className="text-[#a02ff1]" />
-                <h3 className="text-sm font-bold text-white">Alert Distribution by Severity</h3>
+                <PieChartIcon size={16} className="text-[#1EA88A]" />
+                <h3 className="text-sm font-bold text-slate-800">Alert Distribution by Severity</h3>
               </div>
               <div className="h-80">
                 <ResponsiveContainer width="100%" height="100%">
@@ -335,7 +335,7 @@ const ClientCCostAlerts = ({ api, caps }) => {
                     </Pie>
                     <Tooltip 
                       contentStyle={{ 
-                        backgroundColor: '#1a1b20', 
+                        backgroundColor: '#ffffff', 
                         borderColor: '#374151',
                         borderRadius: '0.5rem',
                         color: 'white'
@@ -349,10 +349,10 @@ const ClientCCostAlerts = ({ api, caps }) => {
             </div>
 
             {/* Budget Status */}
-            <div className="bg-[#1a1b20]/60 backdrop-blur-md border border-white/5 rounded-2xl p-5 shadow-xl">
+            <div className="bg-[#ffffff]/60 backdrop-blur-md border border-slate-200 rounded-2xl p-5 shadow-xl">
               <div className="flex items-center gap-2 mb-4">
-                <DollarSign size={16} className="text-[#a02ff1]" />
-                <h3 className="text-sm font-bold text-white">Budget Status</h3>
+                <DollarSign size={16} className="text-[#1EA88A]" />
+                <h3 className="text-sm font-bold text-slate-800">Budget Status</h3>
               </div>
               <div className="h-80">
                 <ResponsiveContainer width="100%" height="100%">
@@ -377,7 +377,7 @@ const ClientCCostAlerts = ({ api, caps }) => {
                     />
                     <Tooltip 
                       contentStyle={{ 
-                        backgroundColor: '#1a1b20', 
+                        backgroundColor: '#ffffff', 
                         borderColor: '#374151',
                         borderRadius: '0.5rem',
                         color: 'white'
@@ -388,7 +388,7 @@ const ClientCCostAlerts = ({ api, caps }) => {
                     <Bar 
                       dataKey={(budget) => Math.min(budget.percentageUsed, 100)} 
                       name="Used" 
-                      fill="#a02ff1" 
+                      fill="#1EA88A" 
                       stackId="a" 
                     />
                     <Bar 
@@ -406,10 +406,10 @@ const ClientCCostAlerts = ({ api, caps }) => {
           {/* ALERTS AND BUDGET DETAILS */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Recent Alerts */}
-            <div className="bg-[#1a1b20]/60 backdrop-blur-md border border-white/5 rounded-2xl p-5 shadow-xl">
+            <div className="bg-[#ffffff]/60 backdrop-blur-md border border-slate-200 rounded-2xl p-5 shadow-xl">
               <div className="flex items-center gap-2 mb-4">
-                <AlertTriangle size={16} className="text-[#a02ff1]" />
-                <h3 className="text-sm font-bold text-white">Recent Alerts</h3>
+                <AlertTriangle size={16} className="text-[#1EA88A]" />
+                <h3 className="text-sm font-bold text-slate-800">Recent Alerts</h3>
               </div>
               <div className="overflow-x-auto">
                 <table className="min-w-full divide-y divide-gray-700">
@@ -451,10 +451,10 @@ const ClientCCostAlerts = ({ api, caps }) => {
             </div>
 
             {/* Budget Details */}
-            <div className="bg-[#1a1b20]/60 backdrop-blur-md border border-white/5 rounded-2xl p-5 shadow-xl">
+            <div className="bg-[#ffffff]/60 backdrop-blur-md border border-slate-200 rounded-2xl p-5 shadow-xl">
               <div className="flex items-center gap-2 mb-4">
-                <DollarSign size={16} className="text-[#a02ff1]" />
-                <h3 className="text-sm font-bold text-white">Budget Details</h3>
+                <DollarSign size={16} className="text-[#1EA88A]" />
+                <h3 className="text-sm font-bold text-slate-800">Budget Details</h3>
               </div>
               <div className="overflow-x-auto">
                 <table className="min-w-full divide-y divide-gray-700">

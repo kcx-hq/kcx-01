@@ -31,7 +31,7 @@ const ClientCDataQuality = ({ api, caps }) => {
   // Show error state
   if (hasErrors && !isLoading) {
     return (
-      <div className="flex items-center justify-center h-64 bg-[#0f0f11] rounded-xl border border-white/5">
+      <div className="flex items-center justify-center h-64 bg-[#f8faf9] rounded-xl border border-slate-200">
         <div className="text-center text-red-400 p-4">
           <AlertCircle className="mx-auto mb-2" size={32} />
           <p className="text-sm font-medium mb-1">Error Loading Data</p>
@@ -52,7 +52,7 @@ const ClientCDataQuality = ({ api, caps }) => {
   // Show empty state
   if (!isLoading && isEmptyState && !qualityData) {
     return (
-      <div className="flex items-center justify-center h-64 bg-[#0f0f11] rounded-xl border border-white/5">
+      <div className="flex items-center justify-center h-64 bg-[#f8faf9] rounded-xl border border-slate-200">
         <div className="text-center text-gray-500 p-4">
           <Calendar className="mx-auto mb-2" size={32} />
           <p className="text-sm font-medium mb-1">No Data Available</p>
@@ -68,9 +68,9 @@ const ClientCDataQuality = ({ api, caps }) => {
     <div className="flex flex-col h-full relative">
       {/* Loading overlay */}
       {(isLoading || (dataLoading && !qualityData)) && (
-        <div className="absolute inset-0 z-50 flex items-center justify-center bg-[#0f0f11]/90 backdrop-blur-sm rounded-xl border border-[#a02ff1]/30">
-          <div className="text-center bg-[#1a1b20] p-6 rounded-xl border border-white/10">
-            <Loader2 className="animate-spin text-[#a02ff1] mx-auto mb-3" size={32} />
+        <div className="absolute inset-0 z-50 flex items-center justify-center bg-[#f8faf9]/90 backdrop-blur-sm rounded-xl border border-[#1EA88A]/30">
+          <div className="text-center bg-[#ffffff] p-6 rounded-xl border border-slate-200">
+            <Loader2 className="animate-spin text-[#1EA88A] mx-auto mb-3" size={32} />
             <p className="text-sm text-gray-300 font-medium">Loading data quality analysis...</p>
             <p className="text-xs text-gray-500 mt-1">Fetching data from backend</p>
           </div>

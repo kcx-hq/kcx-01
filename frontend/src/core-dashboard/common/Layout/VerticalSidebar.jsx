@@ -1,7 +1,7 @@
 import React, { useRef, useState, useEffect } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Crown, Upload as UploadIcon } from "lucide-react";
+import { Crown, LayoutDashboard, Upload as UploadIcon } from "lucide-react";
 
 export default function VerticalSidebar({
   config,
@@ -19,6 +19,9 @@ export default function VerticalSidebar({
 
   // Config defaults
   const { brand, groups, features } = config;
+  const displayBrand = typeof brand?.name === "string" ? brand.name : "";
+  const hasTrailingDot = displayBrand.endsWith(".");
+  const brandBase = hasTrailingDot ? displayBrand.slice(0, -1) : displayBrand;
   const showTooltip = features?.tooltip ?? true;
   const showFooterUpload = features?.footerUpload ?? true;
   const MAX_UPLOADS = features?.maxUploads ?? 5;
@@ -191,23 +194,17 @@ export default function VerticalSidebar({
         }}
       >
         {/* Brand Area */}
-        <div className="h-[64px] px-0 lg:px-6 flex items-center justify-center lg:justify-start border-b border-[var(--border-dark)]">
-          <div className="flex items-center gap-3">
-            {/* Logo placeholder if no src */}
-            <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-[var(--brand-primary)] text-white font-bold shadow-lg shadow-[var(--brand-primary)]/20">
-                {brand.logoSrc ? (
-                    <img src={brand.logoSrc} alt="Logo" className="w-5 h-5 object-contain" />
-                ) : (
-                    "K"
-                )}
-            </div>
-            <div className="hidden lg:block">
-              <h1 className="text-base font-bold text-white tracking-tight leading-none">{brand.name}</h1>
-              {brand.subtitle && (
-                <p className="text-[10px] text-gray-400 font-medium tracking-wide mt-0.5">
-                  {brand.subtitle}
-                </p>
-              )}
+        <div className="h-[84px] px-2 lg:px-5 flex items-center justify-center lg:justify-start border-b border-[var(--brand-primary)]/60">
+          <div className="flex items-center gap-2" title={brand.name}>
+            <span className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-[var(--brand-primary)] border border-white/20 shadow-sm">
+              <LayoutDashboard size={16} className="text-white" />
+            </span>
+            <div className="hidden lg:block text-left">
+              <h1 className="text-lg lg:text-xl font-extrabold text-white tracking-[0.02em] leading-none">
+                {brandBase}
+                {hasTrailingDot && <span className="text-[var(--brand-primary)]">.</span>}
+              </h1>
+              <p className="mt-1 text-xs font-medium text-gray-400 tracking-[0.08em]">FinOps</p>
             </div>
           </div>
         </div>
@@ -221,6 +218,7 @@ export default function VerticalSidebar({
               </p>
               <div className="space-y-0.5">
                 {group.items.map((item) => (
+                  
                   <NavItem key={item.to} item={item} />
                 ))}
               </div>

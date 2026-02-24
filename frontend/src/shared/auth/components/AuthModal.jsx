@@ -197,7 +197,7 @@ const AuthModal = ({ isOpen, onClose, initialView = "login" }) => {
             <div className="mt-8 pt-6 border-t border-slate-100 flex justify-center">
               <div className="flex items-center gap-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
                 <ShieldCheck size={14} className="text-[var(--brand-primary)]" /> 
-                Secured by KCX
+                Secured by KCX.
               </div>
             </div>
 

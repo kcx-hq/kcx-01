@@ -35,7 +35,7 @@ const ClientCCostAlertsView = ({
   isEmptyState
 }) => {
   const [activeTab, setActiveTab] = useState('alerts');
-  const COLORS = ['#a02ff1', '#f56565', '#48bb78', '#ecc94b', '#4fd1c5', '#805ad5'];
+  const COLORS = ['#1EA88A', '#f56565', '#48bb78', '#ecc94b', '#4fd1c5', '#22c55e'];
 
   // Error state handling
   const hasErrors = !extractedData || extractedData.metadata.isEmptyState;
@@ -72,9 +72,9 @@ const ClientCCostAlertsView = ({
     <div className="animate-in fade-in zoom-in-95 duration-300 flex flex-col h-full">
       {/* FILTERS */}
       <div className="shrink-0 space-y-4 mb-4">
-        <div className="bg-[#1a1b20] border border-white/5 p-4 rounded-xl flex flex-wrap gap-4 items-center shadow-lg relative z-40">
+        <div className="bg-[#ffffff] border border-slate-200 p-4 rounded-xl flex flex-wrap gap-4 items-center shadow-lg relative z-40">
           <div className="flex items-center gap-2 text-sm text-gray-400 font-bold mr-2 uppercase tracking-wider">
-            <Filter size={16} className="text-[#a02ff1]" /> Filters
+            <Filter size={16} className="text-[#1EA88A]" /> Filters
           </div>
           
           <FilterBar
@@ -91,7 +91,7 @@ const ClientCCostAlertsView = ({
       </div>
 
       {/* TABS */}
-      <div className="flex gap-1 mb-6 bg-[#1a1b20]/60 backdrop-blur-md border border-white/5 rounded-xl p-1">
+      <div className="flex gap-1 mb-6 bg-[#ffffff]/60 backdrop-blur-md border border-slate-200 rounded-xl p-1">
         {tabs.map((tab) => {
           const Icon = tab.icon;
           return (
@@ -100,7 +100,7 @@ const ClientCCostAlertsView = ({
               onClick={() => setActiveTab(tab.id)}
               className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-lg text-sm font-medium transition-all duration-200 ${
                 activeTab === tab.id
-                  ? 'bg-[#a02ff1] text-white shadow-lg'
+                  ? 'bg-[#1EA88A] text-white shadow-lg'
                   : 'text-gray-400 hover:text-gray-300 hover:bg-white/5'
               }`}
             >
@@ -121,13 +121,13 @@ const ClientCCostAlertsView = ({
       {/* CONTENT */}
       <div className="flex-1 overflow-y-auto relative min-h-0">
         {isFiltering && alertsData && (
-          <div className="absolute top-4 right-4 z-50 flex items-center gap-2 bg-[#1a1b20]/90 backdrop-blur-md border border-[#a02ff1]/30 rounded-lg px-3 py-2 shadow-lg">
+          <div className="absolute top-4 right-4 z-50 flex items-center gap-2 bg-[#ffffff]/90 backdrop-blur-md border border-[#1EA88A]/30 rounded-lg px-3 py-2 shadow-lg">
             <span className="text-xs text-gray-300 font-medium">Filtering...</span>
           </div>
         )}
 
         {!alertsData || hasErrors ? (
-          <div className="flex items-center justify-center h-64 bg-[#0f0f11] rounded-xl border border-white/5">
+          <div className="flex items-center justify-center h-64 bg-[#f8faf9] rounded-xl border border-slate-200">
             <div className="text-center text-gray-500">
               <AlertCircle className="mx-auto mb-2 text-gray-500" size={32} />
               <p className="text-sm">No cost alerts data available</p>
@@ -141,21 +141,21 @@ const ClientCCostAlertsView = ({
               <div className="space-y-6">
                 {/* ALERTS SUMMARY CARDS */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                  <div className="bg-[#1a1b20]/60 backdrop-blur-md border border-white/5 p-5 rounded-2xl shadow-xl">
+                  <div className="bg-[#ffffff]/60 backdrop-blur-md border border-slate-200 p-5 rounded-2xl shadow-xl">
                     <div className="flex items-center justify-between">
                       <div>
                         <p className="text-xs text-gray-400 font-semibold uppercase tracking-wider">Total Alerts</p>
-                        <p className="text-2xl font-bold text-white mt-1">
+                        <p className="text-2xl font-bold text-slate-800 mt-1">
                           {extractedData.alerts?.length || 0}
                         </p>
                       </div>
-                      <div className="p-3 bg-[#a02ff1]/20 rounded-lg">
-                        <Bell className="text-[#a02ff1]" size={24} />
+                      <div className="p-3 bg-[#1EA88A]/20 rounded-lg">
+                        <Bell className="text-[#1EA88A]" size={24} />
                       </div>
                     </div>
                   </div>
                   
-                  <div className="bg-[#1a1b20]/60 backdrop-blur-md border border-white/5 p-5 rounded-2xl shadow-xl">
+                  <div className="bg-[#ffffff]/60 backdrop-blur-md border border-slate-200 p-5 rounded-2xl shadow-xl">
                     <div className="flex items-center justify-between">
                       <div>
                         <p className="text-xs text-gray-400 font-semibold uppercase tracking-wider">Critical</p>
@@ -169,7 +169,7 @@ const ClientCCostAlertsView = ({
                     </div>
                   </div>
                   
-                  <div className="bg-[#1a1b20]/60 backdrop-blur-md border border-white/5 p-5 rounded-2xl shadow-xl">
+                  <div className="bg-[#ffffff]/60 backdrop-blur-md border border-slate-200 p-5 rounded-2xl shadow-xl">
                     <div className="flex items-center justify-between">
                       <div>
                         <p className="text-xs text-gray-400 font-semibold uppercase tracking-wider">High Severity</p>
@@ -183,7 +183,7 @@ const ClientCCostAlertsView = ({
                     </div>
                   </div>
                   
-                  <div className="bg-[#1a1b20]/60 backdrop-blur-md border border-white/5 p-5 rounded-2xl shadow-xl">
+                  <div className="bg-[#ffffff]/60 backdrop-blur-md border border-slate-200 p-5 rounded-2xl shadow-xl">
                     <div className="flex items-center justify-between">
                       <div>
                         <p className="text-xs text-gray-400 font-semibold uppercase tracking-wider">Active</p>
@@ -201,10 +201,10 @@ const ClientCCostAlertsView = ({
                 {/* SEVERITY DISTRIBUTION */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                   {/* CHART - R - charts will be changed latter */}
-                  <div className="bg-[#1a1b20]/60 backdrop-blur-md border border-white/5 rounded-2xl p-5 shadow-xl">
+                  <div className="bg-[#ffffff]/60 backdrop-blur-md border border-slate-200 rounded-2xl p-5 shadow-xl">
                     <div className="flex items-center gap-2 mb-4">
-                      <AlertTriangle size={16} className="text-[#a02ff1]" />
-                      <h3 className="text-sm font-bold text-white">Alert Severity Distribution</h3>
+                      <AlertTriangle size={16} className="text-[#1EA88A]" />
+                      <h3 className="text-sm font-bold text-slate-800">Alert Severity Distribution</h3>
                     </div>
                     <div className="h-64">
                       <ResponsiveContainer width="100%" height="100%">
@@ -231,10 +231,10 @@ const ClientCCostAlertsView = ({
                   </div>
 
                   {/* STATUS DISTRIBUTION */}
-                  <div className="bg-[#1a1b20]/60 backdrop-blur-md border border-white/5 rounded-2xl p-5 shadow-xl">
+                  <div className="bg-[#ffffff]/60 backdrop-blur-md border border-slate-200 rounded-2xl p-5 shadow-xl">
                     <div className="flex items-center gap-2 mb-4">
-                      <CheckCircle size={16} className="text-[#a02ff1]" />
-                      <h3 className="text-sm font-bold text-white">Alert Status Distribution</h3>
+                      <CheckCircle size={16} className="text-[#1EA88A]" />
+                      <h3 className="text-sm font-bold text-slate-800">Alert Status Distribution</h3>
                     </div>
                     <div className="h-64">
                       <ResponsiveContainer width="100%" height="100%">
@@ -244,13 +244,13 @@ const ClientCCostAlertsView = ({
                           <YAxis stroke="#9ca3af" />
                           <Tooltip 
                             contentStyle={{ 
-                              backgroundColor: '#1a1b20', 
+                              backgroundColor: '#ffffff', 
                               borderColor: '#374151',
                               borderRadius: '0.5rem',
                               color: 'white'
                             }}
                           />
-                          <Bar dataKey="count" fill="#a02ff1" />
+                          <Bar dataKey="count" fill="#1EA88A" />
                         </BarChart>
                       </ResponsiveContainer>
                     </div>
@@ -258,10 +258,10 @@ const ClientCCostAlertsView = ({
                 </div>
 
                 {/* ALERTS TABLE */}
-                <div className="bg-[#1a1b20]/60 backdrop-blur-md border border-white/5 rounded-2xl p-5 shadow-xl">
+                <div className="bg-[#ffffff]/60 backdrop-blur-md border border-slate-200 rounded-2xl p-5 shadow-xl">
                   <div className="flex items-center gap-2 mb-4">
-                    <Bell size={16} className="text-[#a02ff1]" />
-                    <h3 className="text-sm font-bold text-white">Recent Alerts</h3>
+                    <Bell size={16} className="text-[#1EA88A]" />
+                    <h3 className="text-sm font-bold text-slate-800">Recent Alerts</h3>
                   </div>
                   <div className="overflow-x-auto">
                     <table className="min-w-full divide-y divide-gray-700">
@@ -313,21 +313,21 @@ const ClientCCostAlertsView = ({
               <div className="space-y-6">
                 {/* BUDGET SUMMARY CARDS */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                  <div className="bg-[#1a1b20]/60 backdrop-blur-md border border-white/5 p-5 rounded-2xl shadow-xl">
+                  <div className="bg-[#ffffff]/60 backdrop-blur-md border border-slate-200 p-5 rounded-2xl shadow-xl">
                     <div className="flex items-center justify-between">
                       <div>
                         <p className="text-xs text-gray-400 font-semibold uppercase tracking-wider">Total Budgets</p>
-                        <p className="text-2xl font-bold text-white mt-1">
+                        <p className="text-2xl font-bold text-slate-800 mt-1">
                           {extractedData.budgetStatus?.length || 0}
                         </p>
                       </div>
-                      <div className="p-3 bg-[#a02ff1]/20 rounded-lg">
-                        <DollarSign className="text-[#a02ff1]" size={24} />
+                      <div className="p-3 bg-[#1EA88A]/20 rounded-lg">
+                        <DollarSign className="text-[#1EA88A]" size={24} />
                       </div>
                     </div>
                   </div>
                   
-                  <div className="bg-[#1a1b20]/60 backdrop-blur-md border border-white/5 p-5 rounded-2xl shadow-xl">
+                  <div className="bg-[#ffffff]/60 backdrop-blur-md border border-slate-200 p-5 rounded-2xl shadow-xl">
                     <div className="flex items-center justify-between">
                       <div>
                         <p className="text-xs text-gray-400 font-semibold uppercase tracking-wider">Over Budget</p>
@@ -341,7 +341,7 @@ const ClientCCostAlertsView = ({
                     </div>
                   </div>
                   
-                  <div className="bg-[#1a1b20]/60 backdrop-blur-md border border-white/5 p-5 rounded-2xl shadow-xl">
+                  <div className="bg-[#ffffff]/60 backdrop-blur-md border border-slate-200 p-5 rounded-2xl shadow-xl">
                     <div className="flex items-center justify-between">
                       <div>
                         <p className="text-xs text-gray-400 font-semibold uppercase tracking-wider">On Track</p>
@@ -355,7 +355,7 @@ const ClientCCostAlertsView = ({
                     </div>
                   </div>
                   
-                  <div className="bg-[#1a1b20]/60 backdrop-blur-md border border-white/5 p-5 rounded-2xl shadow-xl">
+                  <div className="bg-[#ffffff]/60 backdrop-blur-md border border-slate-200 p-5 rounded-2xl shadow-xl">
                     <div className="flex items-center justify-between">
                       <div>
                         <p className="text-xs text-gray-400 font-semibold uppercase tracking-wider">Near Limit</p>
@@ -371,10 +371,10 @@ const ClientCCostAlertsView = ({
                 </div>
 
                 {/* BUDGET STATUS TABLE */}
-                <div className="bg-[#1a1b20]/60 backdrop-blur-md border border-white/5 rounded-2xl p-5 shadow-xl">
+                <div className="bg-[#ffffff]/60 backdrop-blur-md border border-slate-200 rounded-2xl p-5 shadow-xl">
                   <div className="flex items-center gap-2 mb-4">
-                    <DollarSign size={16} className="text-[#a02ff1]" />
-                    <h3 className="text-sm font-bold text-white">Budget Status</h3>
+                    <DollarSign size={16} className="text-[#1EA88A]" />
+                    <h3 className="text-sm font-bold text-slate-800">Budget Status</h3>
                   </div>
                   <div className="overflow-x-auto">
                     <table className="min-w-full divide-y divide-gray-700">
@@ -435,10 +435,10 @@ const ClientCCostAlertsView = ({
             {activeTab === 'overview' && (
               <div className="space-y-6">
                 {/* OVERVIEW SUMMARY */}
-                <div className="bg-[#1a1b20]/60 backdrop-blur-md border border-white/5 rounded-2xl p-5 shadow-xl">
+                <div className="bg-[#ffffff]/60 backdrop-blur-md border border-slate-200 rounded-2xl p-5 shadow-xl">
                   <div className="flex items-center gap-2 mb-4">
-                    <TrendingUp size={16} className="text-[#a02ff1]" />
-                    <h3 className="text-sm font-bold text-white">Cost Alerts Overview</h3>
+                    <TrendingUp size={16} className="text-[#1EA88A]" />
+                    <h3 className="text-sm font-bold text-slate-800">Cost Alerts Overview</h3>
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
@@ -446,7 +446,7 @@ const ClientCCostAlertsView = ({
                       <div className="space-y-2">
                         <div className="flex justify-between">
                           <span className="text-sm text-gray-300">Total Alerts</span>
-                          <span className="text-sm font-bold text-white">{extractedData.alerts?.length || 0}</span>
+                          <span className="text-sm font-bold text-slate-800">{extractedData.alerts?.length || 0}</span>
                         </div>
                         <div className="flex justify-between">
                           <span className="text-sm text-gray-300">Critical Alerts</span>
@@ -467,7 +467,7 @@ const ClientCCostAlertsView = ({
                       <div className="space-y-2">
                         <div className="flex justify-between">
                           <span className="text-sm text-gray-300">Total Budgets</span>
-                          <span className="text-sm font-bold text-white">{extractedData.budgetStatus?.length || 0}</span>
+                          <span className="text-sm font-bold text-slate-800">{extractedData.budgetStatus?.length || 0}</span>
                         </div>
                         <div className="flex justify-between">
                           <span className="text-sm text-gray-300">Over Budget</span>

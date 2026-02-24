@@ -1,6 +1,6 @@
 import React, { memo } from "react";
 
-// KCX Brand Primary
+// KCX. Brand Primary
 const BRAND_EMERALD = "#007758";
 
 const TableRow = memo(

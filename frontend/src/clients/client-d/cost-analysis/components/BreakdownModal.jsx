@@ -7,10 +7,10 @@ const BreakdownModal = ({ isOpen, onClose, data }) => {
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-      <div className="bg-[#1a1b20] border border-white/10 rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden">
-        <div className="p-4 border-b border-white/5 flex justify-between items-center bg-[#0f0f11]/50">
-          <h3 className="text-lg font-bold text-white">Spend Breakdown</h3>
-          <button onClick={onClose} className="text-gray-400 hover:text-white">
+      <div className="bg-[#ffffff] border border-slate-200 rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden">
+        <div className="p-4 border-b border-slate-200 flex justify-between items-center bg-[#f8faf9]/50">
+          <h3 className="text-lg font-bold text-slate-800">Spend Breakdown</h3>
+          <button onClick={onClose} className="text-gray-400 hover:text-slate-800">
             <X size={20} />
           </button>
         </div>
@@ -22,7 +22,7 @@ const BreakdownModal = ({ isOpen, onClose, data }) => {
               return (
                 <div
                   key={idx}
-                  className="flex justify-between items-center p-3 bg-[#0f0f11] rounded-xl border border-white/5 hover:border-[#a02ff1]/30 transition-colors"
+                  className="flex justify-between items-center p-3 bg-[#f8faf9] rounded-xl border border-slate-200 hover:border-[#1EA88A]/30 transition-colors"
                 >
                   <span
                     className={`text-sm font-medium truncate max-w-[200px] flex items-center gap-2 ${
@@ -33,17 +33,17 @@ const BreakdownModal = ({ isOpen, onClose, data }) => {
                     {isUnallocated && <AlertCircle size={12} className="text-yellow-500" />}
                     {item.name}
                   </span>
-                  <span className="text-sm font-mono font-bold text-[#a02ff1]">{formatCurrency(item.value)}</span>
+                  <span className="text-sm font-mono font-bold text-[#1EA88A]">{formatCurrency(item.value)}</span>
                 </div>
               );
             })}
           </div>
         </div>
 
-        <div className="p-4 border-t border-white/5 bg-[#0f0f11]/50 flex justify-end">
+        <div className="p-4 border-t border-slate-200 bg-[#f8faf9]/50 flex justify-end">
           <button
             onClick={onClose}
-            className="bg-[#a02ff1] hover:bg-[#8b25d1] text-white px-6 py-2 rounded-lg text-sm font-bold shadow-[0_0_15px_rgba(160,47,241,0.3)]"
+            className="bg-[#1EA88A] hover:bg-[#188f76] text-white px-6 py-2 rounded-lg text-sm font-bold shadow-[0_0_15px_rgba(30,168,138,0.3)]"
           >
             Close
           </button>

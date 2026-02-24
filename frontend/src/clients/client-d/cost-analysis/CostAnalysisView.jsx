@@ -48,7 +48,7 @@ const CostAnalysisView = ({
         label: "Total Spend",
         value: kpis.totalSpend,
         icon: DollarSign,
-        iconColor: "text-[#a02ff1]",
+        iconColor: "text-[#1EA88A]",
         premium: false,
         onClick: () => setActiveModal("breakdown"),
       },
@@ -93,10 +93,10 @@ const CostAnalysisView = ({
       {activeTab === "overview" && (
         <div className="space-y-4 pt-4">
           {/* HERO HEADER */}
-          <div className="rounded-2xl border border-white/10 bg-gradient-to-b from-[#171820] to-[#121319] p-5 shadow-2xl">
+          <div className="rounded-2xl border border-slate-200 bg-gradient-to-b from-[#eff6f3] to-[#f3f7f5] p-5 shadow-2xl">
             <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
               <div className="min-w-0">
-                <div className="text-white font-extrabold text-lg tracking-tight">
+                <div className="text-slate-800 font-extrabold text-lg tracking-tight">
                   Cost Analysis
                 </div>
                 <div className="text-xs text-gray-400 mt-1">
@@ -104,23 +104,23 @@ const CostAnalysisView = ({
                 </div>
 
                 <div className="mt-3 flex flex-wrap items-center gap-2 text-[11px]">
-                  <span className="px-2 py-1 rounded-lg bg-white/5 border border-white/10 text-gray-300">
+                  <span className="px-2 py-1 rounded-lg bg-white/5 border border-slate-200 text-gray-300">
                     Total:{" "}
-                    <span className="text-white font-semibold">
+                    <span className="text-slate-800 font-semibold">
                       {formatCurrency(kpis.totalSpend)}
                     </span>
                   </span>
 
-                  <span className="px-2 py-1 rounded-lg bg-white/5 border border-white/10 text-gray-300">
+                  <span className="px-2 py-1 rounded-lg bg-white/5 border border-slate-200 text-gray-300">
                     Avg/Day:{" "}
-                    <span className="text-white font-semibold">
+                    <span className="text-slate-800 font-semibold">
                       {isLocked ? "Premium" : formatCurrency(kpis.avgDaily)}
                     </span>
                   </span>
 
-                  <span className="px-2 py-1 rounded-lg bg-white/5 border border-white/10 text-gray-300">
+                  <span className="px-2 py-1 rounded-lg bg-white/5 border border-slate-200 text-gray-300">
                     Momentum:{" "}
-                    <span className="text-white font-semibold">
+                    <span className="text-slate-800 font-semibold">
                       {momentumLabel}
                     </span>
                   </span>
@@ -130,7 +130,7 @@ const CostAnalysisView = ({
               <div className="flex items-center gap-2 shrink-0">
                 <button
                   onClick={() => setActiveModal("breakdown")}
-                  className="px-4 py-2 rounded-xl bg-[#a02ff1]/10 hover:bg-[#a02ff1]/20 border border-[#a02ff1]/30 text-[#a02ff1] text-xs font-extrabold transition flex items-center gap-2"
+                  className="px-4 py-2 rounded-xl bg-[#1EA88A]/10 hover:bg-[#1EA88A]/20 border border-[#1EA88A]/30 text-[#1EA88A] text-xs font-extrabold transition flex items-center gap-2"
                 >
                   <Info size={14} />
                   View Breakdown
@@ -140,7 +140,7 @@ const CostAnalysisView = ({
           </div>
 
           {/* KPIs */}
-          <div className="rounded-2xl border border-white/10 bg-[#121319] p-4 shadow-2xl">
+          <div className="rounded-2xl border border-slate-200 bg-[#f3f7f5] p-4 shadow-2xl">
             <div className="text-[10px] uppercase tracking-widest text-gray-500 font-bold mb-3">
               Key metrics
             </div>
@@ -163,7 +163,7 @@ const CostAnalysisView = ({
 
                 return isLocked ? (
                   <div key={c.label} className="relative">
-                    <div className="absolute inset-0 bg-[#0f0f11]/80 backdrop-blur-sm z-50 pointer-events-auto flex items-center justify-center rounded-xl">
+                    <div className="absolute inset-0 bg-[#f8faf9]/80 backdrop-blur-sm z-50 pointer-events-auto flex items-center justify-center rounded-xl">
                       <div className="text-center p-2">
                         <Crown
                           size={14}
@@ -202,10 +202,10 @@ const CostAnalysisView = ({
           </div>
 
           {/* ✅ CHART SECTION (RESTORED + FIXED HEIGHT) */}
-          <div className="bg-[#121319] border border-white/10 rounded-2xl p-4 shadow-2xl relative">
+          <div className="bg-[#f3f7f5] border border-slate-200 rounded-2xl p-4 shadow-2xl relative">
             <div className="flex items-center justify-between gap-3 mb-3">
               <div>
-                <div className="text-white font-bold">Spend Behavior</div>
+                <div className="text-slate-800 font-bold">Spend Behavior</div>
                 <div className="text-xs text-gray-500">
                   Daily trend (Total + top services)
                 </div>
@@ -260,23 +260,23 @@ const CostAnalysisView = ({
               />
             </div>
 
-            <div className="bg-[#121319] border border-white/10 rounded-2xl p-4 shadow-2xl">
+            <div className="bg-[#f3f7f5] border border-slate-200 rounded-2xl p-4 shadow-2xl">
               <div className="flex items-center justify-between mb-3">
-                <div className="text-white font-bold">Insights</div>
+                <div className="text-slate-800 font-bold">Insights</div>
                 <button
                   onClick={() => setActiveModal("trend")}
-                  className="text-xs text-[#a02ff1] hover:underline"
+                  className="text-xs text-[#1EA88A] hover:underline"
                 >
                   Details
                 </button>
               </div>
 
               <div className="space-y-3">
-                <div className="bg-white/5 border border-white/10 rounded-xl p-3">
+                <div className="bg-white/5 border border-slate-200 rounded-xl p-3">
                   <div className="text-[10px] uppercase tracking-widest text-gray-500 font-bold">
                     Peak
                   </div>
-                  <div className="text-sm text-white font-semibold mt-1">
+                  <div className="text-sm text-slate-800 font-semibold mt-1">
                     {isLocked ? "Premium" : formatCurrency(kpis.peakUsage)}
                   </div>
                   <div className="text-xs text-gray-500 mt-1">
@@ -286,11 +286,11 @@ const CostAnalysisView = ({
                   </div>
                 </div>
 
-                <div className="bg-white/5 border border-white/10 rounded-xl p-3">
+                <div className="bg-white/5 border border-slate-200 rounded-xl p-3">
                   <div className="text-[10px] uppercase tracking-widest text-gray-500 font-bold">
                     Momentum
                   </div>
-                  <div className="text-sm text-white font-semibold mt-1">
+                  <div className="text-sm text-slate-800 font-semibold mt-1">
                     {kpis.trend
                       ? `${kpis.trend > 0 ? "+" : ""}${kpis.trend.toFixed(1)}%`
                       : "0%"}
@@ -302,7 +302,7 @@ const CostAnalysisView = ({
 
                 <button
                   onClick={() => setActiveModal("breakdown")}
-                  className="w-full px-4 py-2 rounded-xl bg-[#a02ff1]/10 hover:bg-[#a02ff1]/20 border border-[#a02ff1]/30 text-[#a02ff1] text-xs font-extrabold transition"
+                  className="w-full px-4 py-2 rounded-xl bg-[#1EA88A]/10 hover:bg-[#1EA88A]/20 border border-[#1EA88A]/30 text-[#1EA88A] text-xs font-extrabold transition"
                 >
                   Open Full Breakdown
                 </button>

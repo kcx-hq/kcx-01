@@ -7,7 +7,7 @@ import { formatCurrency } from "../../../core-dashboard/accounts-ownership/utils
 
 function Chip({ label, value, tone = "neutral" }) {
   const tones = {
-    neutral: "bg-white/5 border-white/10 text-gray-200",
+    neutral: "bg-white/5 border-slate-200 text-gray-200",
     good: "bg-emerald-500/10 border-emerald-500/20 text-emerald-200",
     warn: "bg-yellow-500/10 border-yellow-500/20 text-yellow-200",
     bad: "bg-red-500/10 border-red-500/20 text-red-200",
@@ -29,7 +29,7 @@ function MissingTagsTable({ rows, sortBy, sortOrder, onSortChange }) {
 
   return (
     <table className="min-w-full text-xs">
-      <thead className="sticky top-0 bg-[#25262b] text-gray-400 font-bold z-10">
+      <thead className="sticky top-0 bg-[#e7f2ed] text-gray-400 font-bold z-10">
         <tr>
           <th className="px-4 py-3 text-left cursor-pointer" onClick={() => onSortChange("resourceId")}>
             Resource{sortIcon("resourceId")}
@@ -46,7 +46,7 @@ function MissingTagsTable({ rows, sortBy, sortOrder, onSortChange }) {
 
       <tbody>
         {rows.map((r) => (
-          <tr key={r.resourceId} className="border-b border-white/5 hover:bg-white/5">
+          <tr key={r.resourceId} className="border-b border-slate-200 hover:bg-white/5">
             <td className="px-4 py-3 font-mono text-gray-200">{r.resourceId}</td>
             <td className="px-4 py-3 text-gray-300">{r.resourceName ?? "—"}</td>
             <td className="px-4 py-3">
@@ -61,7 +61,7 @@ function MissingTagsTable({ rows, sortBy, sortOrder, onSortChange }) {
                 ))}
               </div>
             </td>
-            <td className="px-4 py-3 text-right font-mono text-[#a02ff1]">
+            <td className="px-4 py-3 text-right font-mono text-[#1EA88A]">
               {formatCurrency(r.cost || 0)}
             </td>
           </tr>
@@ -107,21 +107,21 @@ export function AccountsOwnershipView({
   }, [coverage?.taggedCost, coverage?.untaggedCost]);
 
   return (
-    <div className="p-6 space-y-5 min-h-screen bg-[#0f0f11] text-white font-sans animate-in fade-in duration-500 relative">
+    <div className="p-6 space-y-5 min-h-screen bg-[#f8faf9] text-slate-800 font-sans animate-in fade-in duration-500 relative">
       {/* subtle filtering indicator */}
       {isFiltering && hasData && (
-        <div className="absolute top-4 right-4 z-50 flex items-center gap-2 bg-[#1a1b20] border border-[#a02ff1]/30 rounded-lg px-3 py-2 shadow-lg">
-          <Loader2 size={16} className="text-[#a02ff1] animate-spin" />
+        <div className="absolute top-4 right-4 z-50 flex items-center gap-2 bg-[#ffffff] border border-[#1EA88A]/30 rounded-lg px-3 py-2 shadow-lg">
+          <Loader2 size={16} className="text-[#1EA88A] animate-spin" />
           <p className="text-gray-400 text-xs">Updating...</p>
         </div>
       )}
 
       {/* HERO */}
-      <div className="rounded-[28px] border border-white/10 bg-gradient-to-b from-[#171820] to-[#0f0f11] shadow-2xl overflow-hidden">
-        <div className="p-6 border-b border-white/10 flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
+      <div className="rounded-[28px] border border-slate-200 bg-gradient-to-b from-[#eff6f3] to-[#f8faf9] shadow-2xl overflow-hidden">
+        <div className="p-6 border-b border-slate-200 flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
           <div>
             <h1 className="text-2xl font-extrabold flex items-center gap-2">
-              <Tags className="text-[#a02ff1]" size={22} />
+              <Tags className="text-[#1EA88A]" size={22} />
               Tag Coverage
             </h1>
             <p className="text-gray-400 text-sm mt-1">
@@ -154,7 +154,7 @@ export function AccountsOwnershipView({
 
           <button
             onClick={onExport}
-            className="shrink-0 flex items-center gap-2 px-4 py-2 rounded-xl bg-[#a02ff1]/10 hover:bg-[#a02ff1]/20 border border-[#a02ff1]/30 text-[#a02ff1] text-xs font-extrabold transition"
+            className="shrink-0 flex items-center gap-2 px-4 py-2 rounded-xl bg-[#1EA88A]/10 hover:bg-[#1EA88A]/20 border border-[#1EA88A]/30 text-[#1EA88A] text-xs font-extrabold transition"
           >
             <Download size={14} /> Export CSV
           </button>
@@ -178,12 +178,12 @@ export function AccountsOwnershipView({
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             placeholder="Search resource id, name, tag, cost..."
-            className="w-full md:w-[420px] px-4 py-2 rounded-xl bg-[#1a1b20] border border-white/10 text-xs text-white focus:outline-none focus:border-[#a02ff1]"
+            className="w-full md:w-[420px] px-4 py-2 rounded-xl bg-[#ffffff] border border-slate-200 text-xs text-slate-800 focus:outline-none focus:border-[#1EA88A]"
           />
           <select
             value={filterProvider}
             onChange={(e) => onFilterProviderChange(e.target.value)}
-            className="px-3 py-2 rounded-xl bg-[#1a1b20] border border-white/10 text-xs text-gray-200 outline-none"
+            className="px-3 py-2 rounded-xl bg-[#ffffff] border border-slate-200 text-xs text-gray-200 outline-none"
             style={{ colorScheme: "dark" }}
           >
             <option value="All">All providers</option>
@@ -199,7 +199,7 @@ export function AccountsOwnershipView({
       </div>
 
       {/* TABLE */}
-      <div className="bg-[#1a1b20] border border-white/10 rounded-2xl shadow-2xl overflow-hidden">
+      <div className="bg-[#ffffff] border border-slate-200 rounded-2xl shadow-2xl overflow-hidden">
         <div className="max-h-[560px] overflow-auto relative">
           {isPremiumMasked ? (
             <PremiumGate mode="wrap">

@@ -1,6 +1,6 @@
 /* styles.css */
 
-/* Define color variables based on the K&Co logo */
+/* Define brand color variables */
 :root {
   --color-primary: #8A2BE2; /* Vibrant purple from the icon */
   --color-primary-hover: #9B4FEE; /* Lighter purple for hover states */

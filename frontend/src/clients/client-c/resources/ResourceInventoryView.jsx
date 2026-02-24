@@ -81,16 +81,16 @@ const ResourceInventoryView = ({
 
   // Colors for charts
   const COLORS = {
-    services: ['#a02ff1', '#48bb78', '#f56565', '#ecc94b', '#4fd1c5', '#805ad5'],
-    status: ['#10b981', '#ef4444', '#f59e0b', '#8b5cf6'], // Active, Zombie, Spiking, New
-    departments: ['#a02ff1', '#ec4899', '#8b5cf6', '#06b6d4', '#10b981', '#f59e0b']
+    services: ['#1EA88A', '#48bb78', '#f56565', '#ecc94b', '#4fd1c5', '#22c55e'],
+    status: ['#10b981', '#ef4444', '#f59e0b', '#22c55e'], // Active, Zombie, Spiking, New
+    departments: ['#1EA88A', '#34d399', '#22c55e', '#06b6d4', '#10b981', '#f59e0b']
   };
 
   // Render loading state
   if (loading || isFiltering) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="flex items-center space-x-2 text-white">
+        <div className="flex items-center space-x-2 text-slate-800">
           <Loader2 className="w-6 h-6 animate-spin" />
           <span>Loading resource inventory data...</span>
         </div>
@@ -109,7 +109,7 @@ const ResourceInventoryView = ({
         <p className="text-red-300 mt-2 text-sm">{error}</p>
         <button 
           onClick={() => window.location.reload()}
-          className="mt-4 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm transition-colors"
+          className="mt-4 px-4 py-2 bg-red-600 hover:bg-red-700 text-slate-800 rounded-lg text-sm transition-colors"
         >
           Retry
         </button>
@@ -128,7 +128,7 @@ const ResourceInventoryView = ({
         </p>
         <button 
           onClick={onReset}
-          className="mt-6 px-6 py-2 bg-[#a02ff1] hover:bg-[#8b2bd4] text-white rounded-lg transition-colors"
+          className="mt-6 px-6 py-2 bg-[#1EA88A] hover:bg-[#188f76] text-white rounded-lg transition-colors"
         >
           Reset Filters
         </button>
@@ -150,10 +150,10 @@ const ResourceInventoryView = ({
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium text-gray-400">Total Resources</CardTitle>
-            <Server className="w-4 h-4 text-purple-500" />
+            <Server className="w-4 h-4 text-emerald-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-white">
+            <div className="text-2xl font-bold text-slate-800">
               {stats.total || inventory.length}
             </div>
             <p className="text-xs text-gray-400 mt-1">
@@ -195,10 +195,10 @@ const ResourceInventoryView = ({
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium text-gray-400">Spiking</CardTitle>
-            <TrendingUp className="w-4 h-4 text-purple-500" />
+            <TrendingUp className="w-4 h-4 text-emerald-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-purple-400">
+            <div className="text-2xl font-bold text-emerald-400">
               {stats.spikingCount || 0}
             </div>
             <p className="text-xs text-gray-400 mt-1">
@@ -226,13 +226,13 @@ const ResourceInventoryView = ({
                     <YAxis stroke="#aaa" />
                     <Tooltip 
                       contentStyle={{ 
-                        backgroundColor: '#1a1b20', 
+                        backgroundColor: '#ffffff', 
                         borderColor: '#333', 
                         color: 'white',
                         borderRadius: '8px'
                       }}
                     />
-                    <Bar dataKey="value" fill="#ec4899" />
+                    <Bar dataKey="value" fill="#34d399" />
                   </BarChart>
                 </ResponsiveContainer>
               </div>
@@ -256,13 +256,13 @@ const ResourceInventoryView = ({
                     <YAxis stroke="#aaa" />
                     <Tooltip 
                       contentStyle={{ 
-                        backgroundColor: '#1a1b20', 
+                        backgroundColor: '#ffffff', 
                         borderColor: '#333', 
                         color: 'white',
                         borderRadius: '8px'
                       }}
                     />
-                    <Bar dataKey="value" fill="#a02ff1" />
+                    <Bar dataKey="value" fill="#1EA88A" />
                   </BarChart>
                 </ResponsiveContainer>
               </div>
@@ -300,7 +300,7 @@ const ResourceInventoryView = ({
                       <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
                         resource.status === 'Active' ? 'bg-green-800 text-green-100' : 
                         resource.status === 'Zombie' ? 'bg-orange-800 text-orange-100' :
-                        resource.status === 'Spiking' ? 'bg-purple-800 text-purple-100' :
+                        resource.status === 'Spiking' ? 'bg-emerald-800 text-emerald-100' :
                         resource.status === 'New' ? 'bg-blue-800 text-blue-100' : 'bg-gray-800 text-gray-100'
                       }`}>
                         {resource.status}

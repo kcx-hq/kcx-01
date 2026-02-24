@@ -20,7 +20,7 @@ export const FLOW = [
     field: "client.company",
     type: "text",
     mode: "strict",
-    help: "KCX",
+    help: "KCX.",
     validationPolicy: { kind: "identity" },
     acknowledgements: ["Perfect — saved.", "Got it.", "Thanks!"],
   },

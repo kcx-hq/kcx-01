@@ -140,7 +140,7 @@ const ClientCProjectTracking = ({ api, caps }) => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64 bg-[#0f0f11] rounded-xl border border-white/5">
+      <div className="flex items-center justify-center h-64 bg-[#f8faf9] rounded-xl border border-slate-200">
         <div className="text-center text-gray-500">
           <FolderOpen className="mx-auto mb-2 text-gray-500" size={32} />
           <p className="text-sm">Loading project tracking...</p>
@@ -151,7 +151,7 @@ const ClientCProjectTracking = ({ api, caps }) => {
 
   if (error) {
     return (
-      <div className="flex items-center justify-center h-64 bg-[#0f0f11] rounded-xl border border-white/5">
+      <div className="flex items-center justify-center h-64 bg-[#f8faf9] rounded-xl border border-slate-200">
         <div className="text-center text-red-400 p-4">
           <AlertCircle className="mx-auto mb-2" size={32} />
           <p className="text-sm font-medium mb-1">Error Loading Data</p>
@@ -165,7 +165,7 @@ const ClientCProjectTracking = ({ api, caps }) => {
 
   if (extractedData.metadata.isEmptyState) {
     return (
-      <div className="flex items-center justify-center h-64 bg-[#0f0f11] rounded-xl border border-white/5">
+      <div className="flex items-center justify-center h-64 bg-[#f8faf9] rounded-xl border border-slate-200">
         <div className="text-center text-gray-500">
           <FolderOpen className="mx-auto mb-2 text-gray-500" size={32} />
           <p className="text-sm">No project tracking data available</p>
@@ -175,12 +175,12 @@ const ClientCProjectTracking = ({ api, caps }) => {
     );
   }
 
-  const COLORS = ['#a02ff1', '#48bb78', '#f56565', '#ecc94b', '#4fd1c5', '#805ad5', '#ed8936', '#68d391', '#4c77b6', '#d53f8c'];
+  const COLORS = ['#1EA88A', '#48bb78', '#f56565', '#ecc94b', '#4fd1c5', '#22c55e', '#ed8936', '#68d391', '#4c77b6', '#10b981'];
 
   return (
     <div className="animate-in fade-in zoom-in-95 duration-300 flex flex-col h-full">
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-white">Project Tracking</h1>
+        <h1 className="text-2xl font-bold text-slate-800">Project Tracking</h1>
         <p className="text-sm text-gray-400">Monitor and track your project costs and burn rates</p>
       </div>
       
@@ -188,26 +188,26 @@ const ClientCProjectTracking = ({ api, caps }) => {
         <div className="space-y-6">
           {/* KPI CARDS */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <div className="bg-[#1a1b20]/60 backdrop-blur-md border border-white/5 p-5 rounded-2xl shadow-xl">
+            <div className="bg-[#ffffff]/60 backdrop-blur-md border border-slate-200 p-5 rounded-2xl shadow-xl">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-xs text-gray-400 font-semibold uppercase tracking-wider">Total Cost</p>
-                  <p className="text-2xl font-bold text-white mt-1">
+                  <p className="text-2xl font-bold text-slate-800 mt-1">
                     ${extractedData.overview.totalCost?.toFixed(2) || 0}
                   </p>
                 </div>
-                <div className="p-3 bg-[#a02ff1]/20 rounded-lg">
-                  <DollarSign className="text-[#a02ff1]" size={24} />
+                <div className="p-3 bg-[#1EA88A]/20 rounded-lg">
+                  <DollarSign className="text-[#1EA88A]" size={24} />
                 </div>
               </div>
               <p className="text-[10px] text-gray-500 mt-2">Overall project spending</p>
             </div>
             
-            <div className="bg-[#1a1b20]/60 backdrop-blur-md border border-white/5 p-5 rounded-2xl shadow-xl">
+            <div className="bg-[#ffffff]/60 backdrop-blur-md border border-slate-200 p-5 rounded-2xl shadow-xl">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-xs text-gray-400 font-semibold uppercase tracking-wider">Active Projects</p>
-                  <p className="text-2xl font-bold text-white mt-1">
+                  <p className="text-2xl font-bold text-slate-800 mt-1">
                     {extractedData.overview.projects?.length || 0}
                   </p>
                 </div>
@@ -218,11 +218,11 @@ const ClientCProjectTracking = ({ api, caps }) => {
               <p className="text-[10px] text-gray-500 mt-2">Projects being tracked</p>
             </div>
             
-            <div className="bg-[#1a1b20]/60 backdrop-blur-md border border-white/5 p-5 rounded-2xl shadow-xl">
+            <div className="bg-[#ffffff]/60 backdrop-blur-md border border-slate-200 p-5 rounded-2xl shadow-xl">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-xs text-gray-400 font-semibold uppercase tracking-wider">Avg Daily Cost</p>
-                  <p className="text-lg font-bold text-white mt-1">
+                  <p className="text-lg font-bold text-slate-800 mt-1">
                     ${extractedData.overview.projects?.reduce((sum, proj) => sum + (proj.avgDailyCost || 0), 0) / (extractedData.overview.projects?.length || 1) || 0}
                   </p>
                 </div>
@@ -233,19 +233,19 @@ const ClientCProjectTracking = ({ api, caps }) => {
               <p className="text-[10px] text-gray-500 mt-2">Average daily spending</p>
             </div>
             
-            <div className="bg-[#1a1b20]/60 backdrop-blur-md border border-white/5 p-5 rounded-2xl shadow-xl">
+            <div className="bg-[#ffffff]/60 backdrop-blur-md border border-slate-200 p-5 rounded-2xl shadow-xl">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-xs text-gray-400 font-semibold uppercase tracking-wider">Top Project</p>
-                  <p className="text-lg font-bold text-white mt-1 truncate max-w-[120px]">
+                  <p className="text-lg font-bold text-slate-800 mt-1 truncate max-w-[120px]">
                     {extractedData.overview.projects?.[0]?.name || 'N/A'}
                   </p>
-                  <p className="text-sm text-white">
+                  <p className="text-sm text-slate-800">
                     ${extractedData.overview.projects?.[0]?.totalCost?.toFixed(2) || 0}
                   </p>
                 </div>
-                <div className="p-3 bg-purple-500/20 rounded-lg">
-                  <BarChartIcon className="text-purple-400" size={24} />
+                <div className="p-3 bg-emerald-500/20 rounded-lg">
+                  <BarChartIcon className="text-emerald-400" size={24} />
                 </div>
               </div>
               <p className="text-[10px] text-gray-500 mt-2">Highest spending project</p>
@@ -255,10 +255,10 @@ const ClientCProjectTracking = ({ api, caps }) => {
           {/* CHARTS */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Project Cost Distribution */}
-            {/* <div className="bg-[#1a1b20]/60 backdrop-blur-md border border-white/5 rounded-2xl p-5 shadow-xl">
+            {/* <div className="bg-[#ffffff]/60 backdrop-blur-md border border-slate-200 rounded-2xl p-5 shadow-xl">
               <div className="flex items-center gap-2 mb-4">
-                <PieChartIcon size={16} className="text-[#a02ff1]" />
-                <h3 className="text-sm font-bold text-white">Project Cost Distribution</h3>
+                <PieChartIcon size={16} className="text-[#1EA88A]" />
+                <h3 className="text-sm font-bold text-slate-800">Project Cost Distribution</h3>
               </div>
               <div className="h-80">
                 <ResponsiveContainer width="100%" height="100%">
@@ -279,7 +279,7 @@ const ClientCProjectTracking = ({ api, caps }) => {
                     </Pie>
                     <Tooltip 
                       contentStyle={{ 
-                        backgroundColor: '#1a1b20', 
+                        backgroundColor: '#ffffff', 
                         borderColor: '#374151',
                         borderRadius: '0.5rem',
                         color: 'white'
@@ -293,10 +293,10 @@ const ClientCProjectTracking = ({ api, caps }) => {
             </div> */}
 
             {/* Burn Rate */}
-            {/* <div className="bg-[#1a1b20]/60 backdrop-blur-md border border-white/5 rounded-2xl p-5 shadow-xl">
+            {/* <div className="bg-[#ffffff]/60 backdrop-blur-md border border-slate-200 rounded-2xl p-5 shadow-xl">
               <div className="flex items-center gap-2 mb-4">
-                <TrendingUp size={16} className="text-[#a02ff1]" />
-                <h3 className="text-sm font-bold text-white">Daily Burn Rate</h3>
+                <TrendingUp size={16} className="text-[#1EA88A]" />
+                <h3 className="text-sm font-bold text-slate-800">Daily Burn Rate</h3>
               </div>
               <div className="h-80">
                 <ResponsiveContainer width="100%" height="100%">
@@ -318,7 +318,7 @@ const ClientCProjectTracking = ({ api, caps }) => {
                     />
                     <Tooltip 
                       contentStyle={{ 
-                        backgroundColor: '#1a1b20', 
+                        backgroundColor: '#ffffff', 
                         borderColor: '#374151',
                         borderRadius: '0.5rem',
                         color: 'white'
@@ -329,8 +329,8 @@ const ClientCProjectTracking = ({ api, caps }) => {
                     <Area 
                       type="monotone" 
                       dataKey="cost" 
-                      stroke="#a02ff1" 
-                      fill="#a02ff1" 
+                      stroke="#1EA88A" 
+                      fill="#1EA88A" 
                       fillOpacity={0.3}
                       strokeWidth={2}
                     />
@@ -343,10 +343,10 @@ const ClientCProjectTracking = ({ api, caps }) => {
           {/* PROJECT DETAILS */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Project List */}
-            <div className="bg-[#1a1b20]/60 backdrop-blur-md border border-white/5 rounded-2xl p-5 shadow-xl">
+            <div className="bg-[#ffffff]/60 backdrop-blur-md border border-slate-200 rounded-2xl p-5 shadow-xl">
               <div className="flex items-center gap-2 mb-4">
-                <FolderOpen size={16} className="text-[#a02ff1]" />
-                <h3 className="text-sm font-bold text-white">Project Details</h3>
+                <FolderOpen size={16} className="text-[#1EA88A]" />
+                <h3 className="text-sm font-bold text-slate-800">Project Details</h3>
               </div>
               <div className="overflow-x-auto">
                 <table className="min-w-full divide-y divide-gray-700">
@@ -373,10 +373,10 @@ const ClientCProjectTracking = ({ api, caps }) => {
             </div>
 
             {/* Budget Comparison */}
-            <div className="bg-[#1a1b20]/60 backdrop-blur-md border border-white/5 rounded-2xl p-5 shadow-xl">
+            <div className="bg-[#ffffff]/60 backdrop-blur-md border border-slate-200 rounded-2xl p-5 shadow-xl">
               <div className="flex items-center gap-2 mb-4">
-                <DollarSign size={16} className="text-[#a02ff1]" />
-                <h3 className="text-sm font-bold text-white">Budget Comparison</h3>
+                <DollarSign size={16} className="text-[#1EA88A]" />
+                <h3 className="text-sm font-bold text-slate-800">Budget Comparison</h3>
               </div>
               <div className="overflow-x-auto">
                 <table className="min-w-full divide-y divide-gray-700">

@@ -28,7 +28,7 @@ const SpendBehaviorCard = ({
   const CustomTooltip = ({ active, payload, label }) => {
     if (active && payload && payload.length) {
       return (
-        <div className="bg-[#0f0f11]/90 backdrop-blur-xl border border-white/10 p-3 rounded-lg shadow-2xl">
+        <div className="bg-[#f8faf9]/90 backdrop-blur-xl border border-slate-200 p-3 rounded-lg shadow-2xl">
           <p className="text-[10px] font-bold text-gray-400 mb-2 uppercase tracking-wider">
             {formatDate(label)}
           </p>
@@ -36,7 +36,7 @@ const SpendBehaviorCard = ({
             <div key={idx} className="flex items-center gap-2 text-xs mb-1">
               <div className="w-2 h-2 rounded-full" style={{ backgroundColor: entry.color }} />
               <span className="text-gray-300 font-medium">{entry.name}:</span>
-              <span className="text-white font-mono font-bold ml-auto pl-4">{formatCurrency(entry.value)}</span>
+              <span className="text-slate-800 font-mono font-bold ml-auto pl-4">{formatCurrency(entry.value)}</span>
             </div>
           ))}
         </div>
@@ -59,13 +59,13 @@ const SpendBehaviorCard = ({
       <div className="flex justify-between items-center mb-4">
         <h2 className="font-bold text-sm text-gray-300">Spend Behavior</h2>
 
-        <div className="flex gap-1 bg-[#0f0f11] p-1 rounded-lg border border-white/5">
+        <div className="flex gap-1 bg-[#f8faf9] p-1 rounded-lg border border-slate-200">
           {["area", "bar", "line"].map((t) => {
             const isPremiumChart = isLocked && (t === "bar" || t === "line");
             return (
               <div key={t} className="relative">
                 {isPremiumChart && (
-                  <div className="absolute inset-0 bg-[#0f0f11]/80 backdrop-blur-sm z-50 pointer-events-auto flex items-center justify-center rounded-md">
+                  <div className="absolute inset-0 bg-[#f8faf9]/80 backdrop-blur-sm z-50 pointer-events-auto flex items-center justify-center rounded-md">
                     <Crown size={10} className="text-yellow-400" />
                   </div>
                 )}
@@ -74,7 +74,7 @@ const SpendBehaviorCard = ({
                   disabled={isPremiumChart}
                   className={`p-1.5 rounded-md transition-all relative ${
                     isPremiumChart ? "opacity-50 cursor-not-allowed pointer-events-none" : ""
-                  } ${chartType === t ? "bg-[#a02ff1] text-white shadow" : "text-gray-500 hover:text-white"}`}
+                  } ${chartType === t ? "bg-[#1EA88A] text-white shadow" : "text-gray-500 hover:text-slate-800"}`}
                 >
                   <BarChart3 size={14} className={t === "line" ? "rotate-90" : ""} />
                 </button>

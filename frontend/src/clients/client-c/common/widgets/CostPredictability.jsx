@@ -51,8 +51,8 @@ const CompactKPI = ({
     className={`
       relative group flex items-center gap-4 p-3 rounded-xl border transition-all duration-300 w-full text-left
       ${isActive 
-        ? `bg-[#1a1b20] border-${color} shadow-[0_0_20px_rgba(0,0,0,0.3)] scale-[1.02]` 
-        : "bg-[#0f0f11] border-white/5 hover:bg-[#1a1b20] hover:border-white/10"
+        ? `bg-[#ffffff] border-${color} shadow-[0_0_20px_rgba(0,0,0,0.3)] scale-[1.02]` 
+        : "bg-[#f8faf9] border-slate-200 hover:bg-[#ffffff] hover:border-slate-200"
       }
     `}
   >
@@ -70,7 +70,7 @@ const CompactKPI = ({
         {title}
       </p>
       <div className="flex items-baseline gap-2">
-        <span className={`text-lg font-black tracking-tight ${isActive ? "text-white" : "text-gray-300"}`}>
+        <span className={`text-lg font-black tracking-tight ${isActive ? "text-slate-800" : "text-gray-300"}`}>
           {value || "$0"}
         </span>
         {trend && (
@@ -147,12 +147,12 @@ const CostPredictability = ({
 
       {/* --- ROW 2: CHART AREA --- */}
       {/* Forced height to ensure graph appears */}
-      <div className="h-[450px] bg-[#1a1b20] border border-white/5 rounded-2xl p-4 flex flex-col shadow-2xl relative overflow-hidden">
+      <div className="h-[450px] bg-[#ffffff] border border-slate-200 rounded-2xl p-4 flex flex-col shadow-2xl relative overflow-hidden">
         
         {/* Header */}
         <div className="flex justify-between items-start mb-4 z-10 shrink-0">
           <div>
-            <h3 className="text-white font-bold flex items-center gap-2">
+            <h3 className="text-slate-800 font-bold flex items-center gap-2">
               {activeView === 'score' && <><Target size={16} className={`text-${scoreTailwind}`} /> Overall Stability Analysis</>}
               {activeView === 'forecast' && <><TrendingUp size={16} className="text-cyan-400" /> AI Spending Projection</>}
               {activeView === 'variance' && <><AlertCircle size={16} className="text-rose-400" /> Anomaly Detection</>}
@@ -164,8 +164,8 @@ const CostPredictability = ({
             </p>
           </div>
 
-          <div className="flex gap-4 text-[10px] font-bold bg-[#0f0f11]/50 p-2 rounded-lg border border-white/5">
-            <div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-[#a02ff1]"></div>Actual</div>
+          <div className="flex gap-4 text-[10px] font-bold bg-[#f8faf9]/50 p-2 rounded-lg border border-slate-200">
+            <div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-[#1EA88A]"></div>Actual</div>
             <div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full border border-cyan-400"></div>Forecast</div>
             {activeView === 'variance' && (
               <div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-rose-500"></div>Anomaly</div>
@@ -184,9 +184,9 @@ const CostPredictability = ({
             <ResponsiveContainer width="100%" height="100%">
               <ComposedChart data={viewData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
                 <defs>
-                  <linearGradient id="purpleGradient" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#a02ff1" stopOpacity={0.4} />
-                    <stop offset="95%" stopColor="#a02ff1" stopOpacity={0} />
+                  <linearGradient id="greenGradient" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#1EA88A" stopOpacity={0.4} />
+                    <stop offset="95%" stopColor="#1EA88A" stopOpacity={0} />
                   </linearGradient>
                   <pattern id="hatch" patternUnits="userSpaceOnUse" width="4" height="4" rotation={45}>
                      <path d="M-1,1 l2,-2 M0,4 l4,-4 M3,5 l2,-2" stroke="#22d3ee" strokeWidth="1" opacity={0.3} />
@@ -220,12 +220,12 @@ const CostPredictability = ({
                     if (active && payload && payload.length) {
                       const data = payload[0].payload;
                       return (
-                        <div className="bg-[#0f0f11]/95 backdrop-blur border border-white/10 p-3 rounded-xl shadow-[0_0_30px_rgba(0,0,0,0.5)]">
+                        <div className="bg-[#f8faf9]/95 backdrop-blur border border-slate-200 p-3 rounded-xl shadow-[0_0_30px_rgba(0,0,0,0.5)]">
                           <p className="text-[10px] font-bold text-gray-500 uppercase mb-2">{formatDate(label)}</p>
                           {data.actual !== null && (
                             <div className="flex justify-between items-center gap-4 mb-1">
                               <span className="text-xs text-gray-300">Actual Spend</span>
-                              <span className="text-sm font-bold font-mono text-white">{formatCurrency(data.actual)}</span>
+                              <span className="text-sm font-bold font-mono text-slate-800">{formatCurrency(data.actual)}</span>
                             </div>
                           )}
                           {data.forecast !== null && (
@@ -235,7 +235,7 @@ const CostPredictability = ({
                             </div>
                           )}
                           {data.range && (
-                             <div className="mt-2 pt-2 border-t border-white/10 text-[10px] text-gray-500">
+                             <div className="mt-2 pt-2 border-t border-slate-200 text-[10px] text-gray-500">
                                 Confidence: {formatCurrency(data.range[0])} - {formatCurrency(data.range[1])}
                              </div>
                           )}
@@ -249,10 +249,10 @@ const CostPredictability = ({
                 <Area
                   type="monotone"
                   dataKey="actual"
-                  stroke="#a02ff1"
+                  stroke="#1EA88A"
                   strokeWidth={3}
-                  fill="url(#purpleGradient)"
-                  activeDot={{ r: 6, fill: "#fff", stroke: "#a02ff1" }}
+                  fill="url(#greenGradient)"
+                  activeDot={{ r: 6, fill: "#fff", stroke: "#1EA88A" }}
                   animationDuration={1000}
                 />
                 <Area
@@ -295,12 +295,12 @@ const CostPredictability = ({
       </div>
 
       {/* --- ROW 3: INSIGHTS STRIP --- */}
-      <div className="shrink-0 flex items-center gap-3 p-3 rounded-xl bg-gradient-to-r from-[#a02ff1]/10 to-transparent border border-[#a02ff1]/20">
-        <div className="p-2 rounded-lg bg-[#a02ff1]/20 text-[#a02ff1]">
+      <div className="shrink-0 flex items-center gap-3 p-3 rounded-xl bg-gradient-to-r from-[#1EA88A]/10 to-transparent border border-[#1EA88A]/20">
+        <div className="p-2 rounded-lg bg-[#1EA88A]/20 text-[#1EA88A]">
             <Zap size={16} />
         </div>
         <div className="flex-1">
-            <h4 className="text-xs font-bold text-white">AI Analysis</h4>
+            <h4 className="text-xs font-bold text-slate-800">AI Analysis</h4>
             <p className="text-[11px] text-gray-400">
                 {score > 80 
                  ? "Spending is highly predictable. No major interventions required." 

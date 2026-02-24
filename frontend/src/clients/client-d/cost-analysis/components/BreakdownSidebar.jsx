@@ -39,7 +39,7 @@ const BreakdownSidebar = ({
               />
               <div className="flex flex-col min-w-0">
                 <span
-                  className={`text-xs font-medium truncate transition-colors group-hover:text-white ${
+                  className={`text-xs font-medium truncate transition-colors group-hover:text-slate-800 ${
                     isUnallocated ? "text-gray-500 italic" : "text-gray-300"
                   }`}
                   title={name}
@@ -52,7 +52,7 @@ const BreakdownSidebar = ({
               </div>
             </div>
 
-            <span className="text-xs font-bold text-white font-mono">
+            <span className="text-xs font-bold text-slate-800 font-mono">
               {formatCurrency(b.value)}
             </span>
           </div>
@@ -62,14 +62,14 @@ const BreakdownSidebar = ({
   );
 
   return (
-    <div className="flex-1 bg-[#1a1b20] border border-white/5 rounded-2xl p-4 overflow-hidden flex flex-col shadow-xl relative">
-      <div className="flex justify-between items-center mb-3 pb-2 border-b border-white/5">
+    <div className="flex-1 bg-[#ffffff] border border-slate-200 rounded-2xl p-4 overflow-hidden flex flex-col shadow-xl relative">
+      <div className="flex justify-between items-center mb-3 pb-2 border-b border-slate-200">
         <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
           Breakdown
         </span>
         <button
           disabled
-          className="text-[#a02ff1] text-[10px] font-bold hover:underline opacity-50 pointer-events-none"
+          className="text-[#1EA88A] text-[10px] font-bold hover:underline opacity-50 pointer-events-none"
         >
           RESET
         </button>

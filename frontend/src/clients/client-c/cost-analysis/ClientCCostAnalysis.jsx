@@ -179,7 +179,7 @@ const ClientCCostAnalysis = ({ api, caps }) => {
   if (hasErrors && !isLoading) {
     
     return (
-      <div className="flex items-center justify-center h-64 bg-[#0f0f11] rounded-xl border border-white/5">
+      <div className="flex items-center justify-center h-64 bg-[#f8faf9] rounded-xl border border-slate-200">
         <div className="text-center text-red-400 p-4">
           <AlertCircle className="mx-auto mb-2" size={32} />
           <p className="text-sm font-medium mb-1">Error Loading Data</p>
@@ -201,7 +201,7 @@ const ClientCCostAnalysis = ({ api, caps }) => {
   if (!isLoading && isEmptyState && !costAnalysisData) {
     
     return (
-      <div className="flex items-center justify-center h-64 bg-[#0f0f11] rounded-xl border border-white/5">
+      <div className="flex items-center justify-center h-64 bg-[#f8faf9] rounded-xl border border-slate-200">
         <div className="text-center text-gray-500 p-4">
           <Calendar className="mx-auto mb-2" size={32} />
           <p className="text-sm font-medium mb-1">No Data Available</p>
@@ -211,7 +211,7 @@ const ClientCCostAnalysis = ({ api, caps }) => {
           <div className="flex gap-2 justify-center">
             <button 
               onClick={handleReset}
-              className="px-3 py-1 bg-[#a02ff1]/20 hover:bg-[#a02ff1]/30 text-[#a02ff1] rounded text-xs"
+              className="px-3 py-1 bg-[#1EA88A]/20 hover:bg-[#1EA88A]/30 text-[#1EA88A] rounded text-xs"
             >
               Reset Filters
             </button>
@@ -233,9 +233,9 @@ const ClientCCostAnalysis = ({ api, caps }) => {
     <div className="flex flex-col h-full relative">
       {/* Initial Loading overlay - ONLY show on first load */}
       {(dataLoading && !costAnalysisData) && (
-        <div className="absolute inset-0 z-50 flex items-center justify-center bg-[#0f0f11]/90 backdrop-blur-sm rounded-xl border border-[#a02ff1]/30">
-          <div className="text-center bg-[#1a1b20] p-6 rounded-xl border border-white/10">
-            <Loader2 className="animate-spin text-[#a02ff1] mx-auto mb-3" size={32} />
+        <div className="absolute inset-0 z-50 flex items-center justify-center bg-[#f8faf9]/90 backdrop-blur-sm rounded-xl border border-[#1EA88A]/30">
+          <div className="text-center bg-[#ffffff] p-6 rounded-xl border border-slate-200">
+            <Loader2 className="animate-spin text-[#1EA88A] mx-auto mb-3" size={32} />
             <p className="text-sm text-gray-300 font-medium">Loading cost analysis...</p>
             <p className="text-xs text-gray-500 mt-1">Fetching data from backend</p>
           </div>

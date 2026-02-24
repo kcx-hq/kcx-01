@@ -7,6 +7,6 @@
   <path d="M20 32 L38 18" stroke="#000000" stroke-width="3" stroke-linecap="round"/>
   <path d="M20 32 L38 46" stroke="#000000" stroke-width="3" stroke-linecap="round"/>
   
-  <!-- K&Co text in white -->
-  <text x="75" y="42" font-family="Arial, sans-serif" font-size="28" font-weight="bold" fill="white">K&Co.</text>
+  <!-- KCX. text in white -->
+  <text x="75" y="42" font-family="Arial, sans-serif" font-size="28" font-weight="bold" fill="white">KCX.</text>
 </svg>

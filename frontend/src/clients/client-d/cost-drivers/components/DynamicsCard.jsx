@@ -18,7 +18,7 @@ export function DynamicsCard({
   dynamics,
 }) {
   return (
-    <div className="bg-[#1a1b20] border border-white/10 rounded-2xl p-4 shadow-lg">
+    <div className="bg-[#ffffff] border border-slate-200 rounded-2xl p-4 shadow-lg">
       <div className="flex justify-between items-center mb-3">
         <h3 className="text-xs font-bold text-gray-400 uppercase flex items-center gap-2">
           {showTreeMap ? <LayoutGrid size={12} /> : <BarChart2 size={12} />}
@@ -30,8 +30,8 @@ export function DynamicsCard({
           className={[
             "p-1.5 rounded-lg transition-all border",
             showTreeMap
-              ? "bg-[#a02ff1] text-white border-[#a02ff1]"
-              : "bg-black/40 hover:bg-black/60 text-gray-400 hover:text-gray-200 border-white/10",
+              ? "bg-[#1EA88A] text-white border-[#1EA88A]"
+              : "bg-white/95 hover:bg-black/60 text-gray-400 hover:text-gray-200 border-slate-200",
           ].join(" ")}
           title="Toggle View"
         >
@@ -49,7 +49,7 @@ export function DynamicsCard({
                 fill: item.diff > 0 ? "#ef4444" : "#10b981",
               }))}
               dataKey="value"
-              stroke="#1a1b20"
+              stroke="#ffffff"
               fill="#8884d8"
             />
           </ResponsiveContainer>
@@ -68,12 +68,12 @@ export function DynamicsCard({
 
 function Metric({ label, icon, tone, value }) {
   return (
-    <div className="bg-black/20 p-3 rounded-xl border border-white/5">
+    <div className="bg-emerald-50 p-3 rounded-xl border border-slate-200">
       <div className={`flex items-center gap-1.5 ${tone} mb-1`}>
         {icon}
         <span className="text-[9px] font-bold uppercase">{label}</span>
       </div>
-      <span className="text-sm font-mono font-bold text-white">{value}</span>
+      <span className="text-sm font-mono font-bold text-slate-800">{value}</span>
     </div>
   );
 }

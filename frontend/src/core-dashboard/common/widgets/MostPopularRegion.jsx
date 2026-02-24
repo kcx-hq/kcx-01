@@ -1,7 +1,7 @@
 import React, { useMemo } from "react";
 import { Globe, Map, Sparkles, MoveRight } from "lucide-react";
 
-// KCX Primary Theme Emerald
+// KCX. Primary Theme Emerald
 const BRAND_EMERALD = "#007758";
 const BRAND_SOFT = "rgba(0, 119, 88, 0.05)";
 

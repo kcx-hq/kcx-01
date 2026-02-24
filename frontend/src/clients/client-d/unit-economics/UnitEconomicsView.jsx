@@ -14,17 +14,17 @@ import { fmtCurrency, fmtNumber, fmtPct, fmtDateShort, driftTone } from "./utils
  * - Non premium can see totals, but drift details + sku breakdown is gated.
  */
 const Tile = ({ label, value, sub }) => (
-  <div className="rounded-2xl border border-white/10 bg-[#121319] p-4 shadow-2xl">
+  <div className="rounded-2xl border border-slate-200 bg-[#f3f7f5] p-4 shadow-2xl">
     <div className="text-[10px] uppercase tracking-widest text-gray-500 font-bold">{label}</div>
-    <div className="text-xl font-extrabold text-white mt-1">{value}</div>
+    <div className="text-xl font-extrabold text-slate-800 mt-1">{value}</div>
     {sub ? <div className="text-xs text-gray-500 mt-1">{sub}</div> : null}
   </div>
 );
 
 const Row = ({ left, right }) => (
-  <div className="flex items-center justify-between py-2 border-b border-white/10 last:border-b-0">
+  <div className="flex items-center justify-between py-2 border-b border-slate-200 last:border-b-0">
     <div className="text-xs text-gray-400">{left}</div>
-    <div className="text-xs text-white font-semibold">{right}</div>
+    <div className="text-xs text-slate-800 font-semibold">{right}</div>
   </div>
 );
 
@@ -53,14 +53,14 @@ export default function UnitEconomicsView({
   const hasDrift = !!kpis?.driftDetected;
 
   return (
-    <div className="p-6 space-y-6 min-h-screen bg-[#0f0f11] text-white font-sans animate-in fade-in duration-500">
+    <div className="p-6 space-y-6 min-h-screen bg-[#f8faf9] text-slate-800 font-sans animate-in fade-in duration-500">
       {/* HERO */}
-      <div className="rounded-[28px] border border-white/10 bg-gradient-to-b from-[#171820] to-[#0f0f11] shadow-[0_0_80px_rgba(0,0,0,0.55)] overflow-hidden">
-        <div className="p-6 md:p-7 border-b border-white/10">
+      <div className="rounded-[28px] border border-slate-200 bg-gradient-to-b from-[#eff6f3] to-[#f8faf9] shadow-[0_0_80px_rgba(0,0,0,0.55)] overflow-hidden">
+        <div className="p-6 md:p-7 border-b border-slate-200">
           <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
             <div>
               <div className="text-2xl font-extrabold tracking-tight flex items-center gap-2">
-                <Layers className="text-[#a02ff1]" size={22} />
+                <Layers className="text-[#1EA88A]" size={22} />
                 Unit Economics
               </div>
               <div className="text-sm text-gray-400 mt-1">
@@ -79,8 +79,8 @@ export default function UnitEconomicsView({
                   </span>
                 )}
 
-                <span className="px-3 py-1.5 rounded-xl border border-white/10 bg-white/5 text-xs text-gray-300">
-                  Unit price change: <span className="text-white font-semibold">{fmtPct(kpis?.unitPriceChangePct || 0, 2)}</span>
+                <span className="px-3 py-1.5 rounded-xl border border-slate-200 bg-white/5 text-xs text-gray-300">
+                  Unit price change: <span className="text-slate-800 font-semibold">{fmtPct(kpis?.unitPriceChangePct || 0, 2)}</span>
                 </span>
               </div>
             </div>
@@ -89,7 +89,7 @@ export default function UnitEconomicsView({
             <div className="w-full lg:max-w-[440px]">
               {isLocked ? (
                 <PremiumGate variant="card">
-                  <div className="rounded-2xl border border-white/10 bg-[#121319] p-4">
+                  <div className="rounded-2xl border border-slate-200 bg-[#f3f7f5] p-4">
                     <div className="text-xs font-extrabold">Drift Details</div>
                     <div className="text-xs text-gray-500 mt-1">
                       Unlock baseline vs current unit price, thresholds, and actions.
@@ -97,7 +97,7 @@ export default function UnitEconomicsView({
                   </div>
                 </PremiumGate>
               ) : (
-                <div className="rounded-2xl border border-white/10 bg-[#121319] p-4 shadow-2xl">
+                <div className="rounded-2xl border border-slate-200 bg-[#f3f7f5] p-4 shadow-2xl">
                   <div className="flex items-center justify-between">
                     <div className="text-xs font-extrabold">Drift Details</div>
                     <span className={`text-[10px] px-2 py-1 rounded-lg border ${driftBadgeClass}`}>
@@ -135,10 +135,10 @@ export default function UnitEconomicsView({
       </div>
 
       {/* TREND */}
-      <div className="rounded-2xl border border-white/10 bg-[#121319] shadow-2xl overflow-hidden">
-        <div className="px-4 py-3 border-b border-white/10 bg-black/20">
+      <div className="rounded-2xl border border-slate-200 bg-[#f3f7f5] shadow-2xl overflow-hidden">
+        <div className="px-4 py-3 border-b border-slate-200 bg-emerald-50">
           <div className="text-xs font-extrabold tracking-wide text-gray-200 flex items-center gap-2">
-            <TrendingUp size={14} className="text-[#a02ff1]" />
+            <TrendingUp size={14} className="text-[#1EA88A]" />
             Trend
             <span className="text-[10px] text-gray-500 font-bold">(date / unit price / qty / cost)</span>
           </div>
@@ -149,17 +149,17 @@ export default function UnitEconomicsView({
             trend.map((t, idx) => (
               <div
                 key={`${t?.date || idx}`}
-                className="flex items-center justify-between gap-4 px-3 py-2 rounded-xl bg-white/5 border border-white/10"
+                className="flex items-center justify-between gap-4 px-3 py-2 rounded-xl bg-white/5 border border-slate-200"
               >
-                <div className="text-xs text-white font-semibold">{fmtDateShort(t?.date)}</div>
+                <div className="text-xs text-slate-800 font-semibold">{fmtDateShort(t?.date)}</div>
                 <div className="text-xs text-gray-300 font-mono">
-                  unitPrice: <span className="text-white">{fmtNumber(t?.unitPrice || 0, 6)}</span>
+                  unitPrice: <span className="text-slate-800">{fmtNumber(t?.unitPrice || 0, 6)}</span>
                 </div>
                 <div className="text-xs text-gray-300 font-mono">
-                  qty: <span className="text-white">{fmtNumber(t?.quantity || 0, 2)}</span>
+                  qty: <span className="text-slate-800">{fmtNumber(t?.quantity || 0, 2)}</span>
                 </div>
                 <div className="text-xs text-gray-300 font-mono">
-                  cost: <span className="text-white">{fmtCurrency(t?.cost || 0)}</span>
+                  cost: <span className="text-slate-800">{fmtCurrency(t?.cost || 0)}</span>
                 </div>
               </div>
             ))
@@ -170,8 +170,8 @@ export default function UnitEconomicsView({
       </div>
 
       {/* SKU EFFICIENCY */}
-      <div className="rounded-2xl border border-white/10 bg-[#121319] shadow-2xl overflow-hidden">
-        <div className="px-4 py-3 border-b border-white/10 bg-black/20 flex items-center justify-between gap-3">
+      <div className="rounded-2xl border border-slate-200 bg-[#f3f7f5] shadow-2xl overflow-hidden">
+        <div className="px-4 py-3 border-b border-slate-200 bg-emerald-50 flex items-center justify-between gap-3">
           <div className="text-xs font-extrabold tracking-wide text-gray-200">SKU Efficiency</div>
 
           <div className="relative w-full max-w-[360px]">
@@ -183,7 +183,7 @@ export default function UnitEconomicsView({
                     value={skuSearch}
                     readOnly
                     placeholder="Search SKU (Premium)"
-                    className="w-full pl-9 pr-3 py-2 rounded-xl bg-[#1a1b20] border border-white/10 text-xs text-gray-300"
+                    className="w-full pl-9 pr-3 py-2 rounded-xl bg-[#ffffff] border border-slate-200 text-xs text-gray-300"
                   />
                 </div>
               </PremiumGate>
@@ -194,7 +194,7 @@ export default function UnitEconomicsView({
                   value={skuSearch}
                   onChange={(e) => setSkuSearch(e.target.value)}
                   placeholder="Search SKU..."
-                  className="w-full pl-9 pr-3 py-2 rounded-xl bg-[#1a1b20] border border-white/10 focus:border-[#a02ff1]/60 outline-none text-xs text-gray-200"
+                  className="w-full pl-9 pr-3 py-2 rounded-xl bg-[#ffffff] border border-slate-200 focus:border-[#1EA88A]/60 outline-none text-xs text-gray-200"
                 />
               </div>
             )}
@@ -217,7 +217,7 @@ function SkuTable({ skuEfficiency }) {
   return (
     <div className="p-4 overflow-auto">
       <div className="min-w-[900px]">
-        <div className="grid grid-cols-12 gap-2 px-3 py-2 text-[10px] uppercase tracking-widest text-gray-500 font-bold border-b border-white/10">
+        <div className="grid grid-cols-12 gap-2 px-3 py-2 text-[10px] uppercase tracking-widest text-gray-500 font-bold border-b border-slate-200">
           <div className="col-span-4">SKU</div>
           <div className="col-span-2 text-right">Cost</div>
           <div className="col-span-2 text-right">Quantity</div>
@@ -236,9 +236,9 @@ function SkuTable({ skuEfficiency }) {
               return (
                 <div
                   key={`${s?.sku || idx}`}
-                  className="grid grid-cols-12 gap-2 px-3 py-3 rounded-xl bg-white/5 border border-white/10"
+                  className="grid grid-cols-12 gap-2 px-3 py-3 rounded-xl bg-white/5 border border-slate-200"
                 >
-                  <div className="col-span-4 text-xs text-white font-semibold truncate">
+                  <div className="col-span-4 text-xs text-slate-800 font-semibold truncate">
                     {s?.sku || "—"}
                   </div>
                   <div className="col-span-2 text-right text-xs text-gray-200 font-mono">
@@ -256,7 +256,7 @@ function SkuTable({ skuEfficiency }) {
                         Yes
                       </span>
                     ) : (
-                      <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-1 rounded-lg border border-white/10 bg-white/5 text-gray-300">
+                      <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-1 rounded-lg border border-slate-200 bg-white/5 text-gray-300">
                         No
                       </span>
                     )}

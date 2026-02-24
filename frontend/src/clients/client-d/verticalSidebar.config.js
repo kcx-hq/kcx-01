@@ -13,7 +13,6 @@ import {
 
 const ClientDSidebarConfig = {
   brand: {
-    logoSrc: "/k&cologo.svg", // change per client if needed
     name: "Client D",
     subtitle: "Dashboard",
   },

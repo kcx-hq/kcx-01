@@ -35,7 +35,7 @@ const UnitEconomics = ({ filters = {}, api, caps }) => {
 
   if (loading) {
     return (
-      <div className="flex h-96 items-center justify-center text-[#a02ff1]">
+      <div className="flex h-96 items-center justify-center text-[#1EA88A]">
         <Loader2 className="animate-spin" size={48} />
       </div>
     );
@@ -43,7 +43,7 @@ const UnitEconomics = ({ filters = {}, api, caps }) => {
 
   if (error) {
     return (
-      <div className="p-6 min-h-screen bg-[#0f0f11] text-white">
+      <div className="p-6 min-h-screen bg-[#f8faf9] text-slate-800">
         <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-4 flex items-center gap-2">
           <AlertCircle className="text-red-400" size={18} />
           <span className="text-red-300 text-sm">{error}</span>

@@ -13,9 +13,7 @@ import {
 
 const VerticalSidebarConfig = {
   brand: {
-    logoSrc: "/k&cologo.svg",
-    name: "K&Co.",
-    subtitle: "FINOPS OS v2.4",
+    name: "KCX."
   },
 
   features: {

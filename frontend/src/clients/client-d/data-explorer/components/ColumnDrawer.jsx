@@ -20,24 +20,24 @@ const ColumnsDrawer = ({ open, onClose, allColumns, hiddenColumns, toggleColumn,
             animate={{ x: 0 }}
             exit={{ x: "110%" }}
             transition={{ type: "spring", damping: 26, stiffness: 230 }}
-            className="fixed right-0 top-0 bottom-0 w-[420px] max-w-[90vw] bg-[#121319] border-l border-white/10 z-[70] shadow-2xl flex flex-col"
+            className="fixed right-0 top-0 bottom-0 w-[420px] max-w-[90vw] bg-[#f3f7f5] border-l border-slate-200 z-[70] shadow-2xl flex flex-col"
           >
-            <div className="p-4 border-b border-white/10 flex items-center justify-between bg-[#171820]">
+            <div className="p-4 border-b border-slate-200 flex items-center justify-between bg-[#eff6f3]">
               <div>
-                <div className="text-white font-bold text-base">Columns</div>
+                <div className="text-slate-800 font-bold text-base">Columns</div>
                 <div className="text-[11px] text-gray-500">
                   Toggle visibility (search applies if you typed in “Search columns”)
                 </div>
               </div>
               <button
                 onClick={onClose}
-                className="p-2 rounded-lg hover:bg-white/5 text-gray-400 hover:text-white"
+                className="p-2 rounded-lg hover:bg-white/5 text-gray-400 hover:text-slate-800"
               >
                 <X size={18} />
               </button>
             </div>
 
-            <div className="p-3 border-b border-white/5">
+            <div className="p-3 border-b border-slate-200">
               <div className="text-[10px] text-gray-500">
                 Showing:{" "}
                 <span className="text-gray-300 font-semibold">
@@ -59,14 +59,14 @@ const ColumnsDrawer = ({ open, onClose, allColumns, hiddenColumns, toggleColumn,
                     <button
                       key={col}
                       onClick={() => toggleColumn(col)}
-                      className="w-full flex items-center justify-between gap-3 px-3 py-2 rounded-lg hover:bg-white/5 border border-white/5 hover:border-white/10 transition"
+                      className="w-full flex items-center justify-between gap-3 px-3 py-2 rounded-lg hover:bg-white/5 border border-slate-200 hover:border-slate-200 transition"
                     >
                       <span className="text-xs text-gray-200 truncate">{col}</span>
                       <span
                         className={`text-[10px] px-2 py-1 rounded-md border ${
                           visible
                             ? "text-emerald-300 border-emerald-300/30 bg-emerald-300/10"
-                            : "text-gray-400 border-white/10 bg-white/5"
+                            : "text-gray-400 border-slate-200 bg-white/5"
                         }`}
                       >
                         {visible ? "Visible" : "Hidden"}
@@ -76,10 +76,10 @@ const ColumnsDrawer = ({ open, onClose, allColumns, hiddenColumns, toggleColumn,
                 })}
             </div>
 
-            <div className="p-3 border-t border-white/10 bg-[#171820]">
+            <div className="p-3 border-t border-slate-200 bg-[#eff6f3]">
               <button
                 onClick={() => hiddenColumns.forEach((c) => toggleColumn(c))}
-                className="w-full py-2 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-xs font-semibold text-gray-200"
+                className="w-full py-2 rounded-lg bg-white/5 hover:bg-white/10 border border-slate-200 text-xs font-semibold text-gray-200"
               >
                 Show all columns
               </button>

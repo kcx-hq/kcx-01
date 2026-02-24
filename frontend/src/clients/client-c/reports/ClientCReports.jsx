@@ -185,7 +185,7 @@ const ClientCReports = ({ api, caps }) => {
           "Commitment coverage analysis",
         ],
         description: "Analysis of optimization efforts and potential cost savings",
-        color: "purple",
+        color: "emerald",
       },
       {
         id: "department-cost-allocation",
@@ -321,7 +321,7 @@ const ClientCReports = ({ api, caps }) => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64 bg-[#0f0f11] rounded-xl border border-white/5">
+      <div className="flex items-center justify-center h-64 bg-[#f8faf9] rounded-xl border border-slate-200">
         <div className="text-center text-gray-500">
           <FileText className="mx-auto mb-2 text-gray-500" size={32} />
           <p className="text-sm">Loading reports...</p>
@@ -332,7 +332,7 @@ const ClientCReports = ({ api, caps }) => {
 
   if (error) {
     return (
-      <div className="flex items-center justify-center h-64 bg-[#0f0f11] rounded-xl border border-white/5">
+      <div className="flex items-center justify-center h-64 bg-[#f8faf9] rounded-xl border border-slate-200">
         <div className="text-center text-red-400 p-4">
           <AlertCircle className="mx-auto mb-2" size={32} />
           <p className="text-sm font-medium mb-1">Error Loading Data</p>
@@ -347,7 +347,7 @@ const ClientCReports = ({ api, caps }) => {
   const getColorClasses = (color) => {
     const colorMap = {
       blue: 'bg-blue-500/20 text-blue-400 border border-blue-500/30',
-      purple: 'bg-purple-500/20 text-purple-400 border border-purple-500/30',
+      emerald: 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30',
       green: 'bg-green-500/20 text-green-400 border border-green-500/30',
       orange: 'bg-orange-500/20 text-orange-400 border border-orange-500/30',
       red: 'bg-red-500/20 text-red-400 border border-red-500/30',
@@ -360,8 +360,8 @@ const ClientCReports = ({ api, caps }) => {
   return (
     <div className="animate-in fade-in zoom-in-95 duration-300 flex flex-col h-full">
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-white flex items-center gap-2">
-          <FileText size={24} className="text-[#a02ff1]" />
+        <h1 className="text-2xl font-bold text-slate-800 flex items-center gap-2">
+          <FileText size={24} className="text-[#1EA88A]" />
           Executive Reports
         </h1>
         <p className="text-sm text-gray-400 mt-1">Download PDF reports for leadership and stakeholders</p>
@@ -396,7 +396,7 @@ const ClientCReports = ({ api, caps }) => {
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: index * 0.1 }}
-                  className="relative bg-[#1a1b20]/60 backdrop-blur-md border border-white/5 rounded-xl p-6 transition-all hover:border-[#a02ff1]/30"
+                  className="relative bg-[#ffffff]/60 backdrop-blur-md border border-slate-200 rounded-xl p-6 transition-all hover:border-[#1EA88A]/30"
                 >
                   <div className="flex items-start justify-between mb-4">
                     <div className="flex items-start gap-4 flex-1">
@@ -406,7 +406,7 @@ const ClientCReports = ({ api, caps }) => {
 
                       <div className="flex-1">
                         <div className="flex items-center gap-3 mb-2">
-                          <h3 className="text-lg font-bold text-white">{report.title}</h3>
+                          <h3 className="text-lg font-bold text-slate-800">{report.title}</h3>
                           <span className="px-2 py-1 bg-white/5 rounded text-xs text-gray-400">
                             {report.frequency}
                           </span>
@@ -419,12 +419,12 @@ const ClientCReports = ({ api, caps }) => {
                           <span>Period: {report.period}</span>
                         </div>
 
-                        <div className="bg-[#0f0f11] rounded-lg p-4 border border-white/5">
+                        <div className="bg-[#f8faf9] rounded-lg p-4 border border-slate-200">
                           <div className="text-xs text-gray-500 mb-2 font-bold uppercase">Includes</div>
                           <ul className="space-y-1.5">
                             {report.includes.map((item, idx) => (
                               <li key={idx} className="text-sm text-gray-300 flex items-start gap-2">
-                                <span className="text-[#a02ff1] mt-1">•</span>
+                                <span className="text-[#1EA88A] mt-1">•</span>
                                 <span>{item}</span>
                               </li>
                             ))}
@@ -434,11 +434,11 @@ const ClientCReports = ({ api, caps }) => {
                     </div>
                   </div>
 
-                  <div className="flex items-center justify-end pt-4 border-t border-white/5">
+                  <div className="flex items-center justify-end pt-4 border-t border-slate-200">
                     <button
                       onClick={() => onDownloadReport(report.id)}
                       disabled={downloading}
-                      className="px-6 py-2 bg-[#a02ff1] hover:bg-[#8e25d9] disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg text-sm font-medium transition-colors flex items-center gap-2"
+                      className="px-6 py-2 bg-[#1EA88A] hover:bg-[#188f76] disabled:opacity-50 disabled:cursor-not-allowed text-slate-800 rounded-lg text-sm font-medium transition-colors flex items-center gap-2"
                     >
                       {downloading ? (
                         <>
@@ -459,9 +459,9 @@ const ClientCReports = ({ api, caps }) => {
           </div>
 
           {/* Coming Soon Reports */}
-          <div className="mt-12 pt-8 border-t border-white/10">
+          <div className="mt-12 pt-8 border-t border-slate-200">
             <div className="mb-6">
-              <h2 className="text-xl font-bold text-white flex items-center gap-2">
+              <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2">
                 <TrendingUp size={20} className="text-gray-400" />
                 Other Reports
                 <span className="px-3 py-1 bg-yellow-500/20 text-yellow-400 border border-yellow-500/30 rounded-full text-xs font-bold">
@@ -505,7 +505,7 @@ const ClientCReports = ({ api, caps }) => {
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: index * 0.1 }}
-                    className="bg-[#1a1b20]/30 backdrop-blur-md border border-white/5 rounded-xl p-5 opacity-60"
+                    className="bg-[#ffffff]/30 backdrop-blur-md border border-slate-200 rounded-xl p-5 opacity-60"
                   >
                     <div className="flex items-start gap-4">
                       <div className={`p-3 rounded-lg ${getColorClasses(r.color)} opacity-50`}>

@@ -2,7 +2,7 @@ import React, { useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronDown, X, Lock, Sparkles, Activity, Info } from "lucide-react";
 
-// KCX Primary Theme Color
+// KCX. Primary Theme Color
 const BRAND_PRIMARY = "#007758";
 const BRAND_SOFT = "rgba(0, 119, 88, 0.1)";
 

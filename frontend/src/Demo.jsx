@@ -32,7 +32,7 @@ const KCXEnterprise = () => {
                 <div className="w-9 h-9 bg-slate-900 rounded-lg flex items-center justify-center text-white font-bold shadow-lg group-hover:bg-emerald-600 transition-colors">
                   K
                 </div>
-                <span className="text-xl font-bold tracking-tight text-slate-900">KCX<span className="text-emerald-600">.io</span></span>
+                <span className="text-xl font-bold tracking-tight text-slate-900">KCX.<span className="text-emerald-600">io</span></span>
               </a>
 
               {/* Desktop Nav Links */}
@@ -118,7 +118,7 @@ const KCXEnterprise = () => {
 
           {/* Subtext */}
           <p className="mt-6 text-xl text-slate-500 max-w-2xl mx-auto mb-10 leading-relaxed">
-            KCX gives you total visibility into your AWS and Azure spend. 
+            KCX. gives you total visibility into your AWS and Azure spend. 
             Detect anomalies, automate savings, and empower engineers to ship without breaking the budget.
           </p>
 
@@ -241,7 +241,7 @@ const KCXEnterprise = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center max-w-3xl mx-auto mb-16">
             <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-4">Everything you need to master your bill</h2>
-            <p className="text-xl text-slate-500">KCX connects directly to your cloud provider billing API to provide real-time insights.</p>
+            <p className="text-xl text-slate-500">KCX. connects directly to your cloud provider billing API to provide real-time insights.</p>
           </div>
 
           <div className="grid md:grid-cols-3 gap-8">
@@ -307,7 +307,7 @@ const KCXEnterprise = () => {
              <div className="col-span-2 md:col-span-1">
                <div className="text-xl font-bold text-white mb-4">KCX.io</div>
                <p className="text-sm opacity-60">Vadodara, India</p>
-               <p className="text-sm opacity-60">© 2026 KCX Inc.</p>
+               <p className="text-sm opacity-60">© 2026 KCX. Inc.</p>
              </div>
              <div>
                <h4 className="text-white font-bold mb-4">Product</h4>

@@ -318,7 +318,7 @@ const Hero = ({
                       </span>
                       {/* theme updated */}
                       <span className="text-[var(--brand-primary)] font-medium flex items-center gap-1.5">
-                        See how K&amp;Co works
+                        See how it works
                       </span>
                     </p>
                   </motion.div>
@@ -365,7 +365,7 @@ const Hero = ({
                   <div className="w-3 h-3 rounded-full bg-black/10 border border-black/15"></div>
                 </div>
                 <div className="text-[10px] font-mono text-[var(--text-disabled)] uppercase tracking-widest">
-                  K&amp;Co FinOps Platform
+                  FinOps Platform
                 </div>
               </div>
 
@@ -500,7 +500,7 @@ const Hero = ({
                 <ProviderIcon bottom="4%" left="4%" icon="/gcp.svg" color="#4285f4" delay={1} />
                 <ProviderIcon bottom="4%" right="4%" icon="/oracle.svg" color="#f80000" delay={1.5} />
 
-                {/* MAIN CENTRAL LOGO */}
+                {/* MAIN CENTRAL MARK */}
                 <div className="absolute inset-0 flex items-center justify-center">
                   <motion.div
                     initial={{ scale: 0.8, opacity: 0 }}
@@ -530,7 +530,7 @@ const Hero = ({
                       style={{ width: "150px", height: "150px", left: "-59px", top: "-59px" }}
                     />
 
-                    {/* LOGO CONTAINER */}
+                    {/* CENTER CONTAINER */}
                     <motion.div
                       animate={{ rotateY: [0, 5, 0, -5, 0] }}
                       transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
@@ -544,19 +544,19 @@ const Hero = ({
                         className="absolute left-0 right-0 h-8 bg-gradient-to-b from-transparent via-[var(--brand-primary)]/18 to-transparent pointer-events-none z-0"
                       />
 
-                      <motion.img
-                        src="/k&coicon.svg"
-                        alt="K&Co Logo"
-                        className="w-16 h-16 object-contain relative z-20"
+                      <motion.span
+                        className="text-2xl font-bold text-[var(--text-primary)] relative z-20 font-mono tracking-wider"
                         animate={{
-                          filter: [
-                            "drop-shadow(0 0 12px rgba(0,198,147,0.25)) brightness(1.05)",
-                            "drop-shadow(0 0 18px rgba(0,198,147,0.40)) brightness(1.08)",
-                            "drop-shadow(0 0 12px rgba(0,198,147,0.25)) brightness(1.05)",
+                          textShadow: [
+                            "0 0 12px rgba(0,198,147,0.25)",
+                            "0 0 18px rgba(0,198,147,0.40)",
+                            "0 0 12px rgba(0,198,147,0.25)",
                           ],
                         }}
                         transition={{ duration: 3, repeat: Infinity }}
-                      />
+                      >
+                        KCX.
+                      </motion.span>
 
                       {/* Glass shine */}
                       <motion.div
@@ -598,21 +598,6 @@ const Hero = ({
 
                 {/* Bottom branding */}
                 <div className="absolute bottom-6 left-0 right-0 text-center">
-                  <motion.div
-                    className="text-2xl font-bold text-[var(--text-primary)] mb-4 font-mono tracking-wider"
-                    animate={{
-                      opacity: [0.75, 1, 0.75],
-                      textShadow: [
-                        "0 0 8px rgba(0,198,147,0.18)",
-                        "0 0 16px rgba(0,198,147,0.28)",
-                        "0 0 8px rgba(0,198,147,0.18)",
-                      ],
-                    }}
-                    transition={{ duration: 3, repeat: Infinity }}
-                  >
-                    K&amp;Co.
-                  </motion.div>
-
                   <div className="flex items-center justify-center gap-6 mb-3">
                     <PillarIcon icon={Cloud} tone="green" delay={0} />
                     <PillarIcon icon={DollarSign} tone="yellow" delay={0.8} />

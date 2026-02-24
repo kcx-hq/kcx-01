@@ -212,7 +212,7 @@ export default function Chatbot({ onClose, autoFocus = true }) {
               <div className="absolute bottom-0 right-0 w-3 h-3 bg-emerald-400 border-2 border-white rounded-full"></div>
             </div>
             <div>
-              <h3 className="font-bold text-slate-800 text-sm">KCX Assistant</h3>
+              <h3 className="font-bold text-slate-800 text-sm">KCX. Assistant</h3>
               <p className="text-[10px] text-slate-500 font-medium uppercase tracking-wider">Online</p>
             </div>
           </div>
@@ -364,7 +364,7 @@ export default function Chatbot({ onClose, autoFocus = true }) {
           </div>
           
           <div className="text-center mt-2">
-            <span className="text-[10px] text-slate-300 font-medium">Powered by KCX AI</span>
+            <span className="text-[10px] text-slate-300 font-medium">Powered by KCX. AI</span>
           </div>
 
         </div>

@@ -269,7 +269,7 @@ const CostPredictability = ({ chartData = [], anomalies = [], kpis = {} }) => {
           <Sparkles size={18} className="animate-pulse" />
         </div>
         <div className="flex-1">
-          <h4 className="text-xs font-black text-slate-800 uppercase tracking-widest">KCX AI Analysis</h4>
+          <h4 className="text-xs font-black text-slate-800 uppercase tracking-widest">KCX. AI Analysis</h4>
           <p className="text-[11px] font-bold text-slate-500 mt-0.5 leading-relaxed">
             {score > 80
               ? "Infrastructure spending remains within predictable thresholds. Cloud unit efficiency is optimized."

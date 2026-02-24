@@ -64,7 +64,7 @@ export function CostDriversView(props) {
     return (
       <div className="p-10 text-center text-gray-500 flex items-center justify-center min-h-screen">
         <div className="flex flex-col items-center gap-4">
-          <Loader2 className="animate-spin text-[#a02ff1]" size={32} />
+          <Loader2 className="animate-spin text-[#1EA88A]" size={32} />
           <span>Analyzing cost drivers...</span>
         </div>
       </div>
@@ -75,7 +75,7 @@ export function CostDriversView(props) {
     !errorMessage && (increases?.length ?? 0) === 0 && (decreases?.length ?? 0) === 0;
 
   return (
-    <div className="min-h-screen bg-[#0f0f11] text-white font-sans">
+    <div className="min-h-screen bg-[#f8faf9] text-slate-800 font-sans">
       <AnimatePresence mode="wait">
         {!selectedDriver ? (
           <motion.div
@@ -86,7 +86,7 @@ export function CostDriversView(props) {
             className="p-4 space-y-4"
           >
             {/* Sticky header */}
-            <div className="sticky top-0 z-40 -mx-4 px-4 pt-3 pb-3 bg-[#0f0f11]/85 backdrop-blur border-b border-white/10">
+            <div className="sticky top-0 z-40 -mx-4 px-4 pt-3 pb-3 bg-[#f8faf9]/85 backdrop-blur border-b border-slate-200">
               <CostDriversHeader
                 isMasked={isMasked}
                 period={period}
@@ -106,9 +106,9 @@ export function CostDriversView(props) {
             {/* Refreshing badge */}
             {isRefreshing && (
               <div className="flex justify-end">
-                <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-[#a02ff1]/20 border border-[#a02ff1]/30 rounded-lg backdrop-blur-sm">
-                  <Loader2 className="text-[#a02ff1] animate-spin" size={14} />
-                  <span className="text-[#a02ff1] text-xs font-medium">Updating...</span>
+                <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-[#1EA88A]/20 border border-[#1EA88A]/30 rounded-lg backdrop-blur-sm">
+                  <Loader2 className="text-[#1EA88A] animate-spin" size={14} />
+                  <span className="text-[#1EA88A] text-xs font-medium">Updating...</span>
                 </div>
               </div>
             )}
@@ -162,7 +162,7 @@ export function CostDriversView(props) {
             {/* Small footer note */}
             {periods?.prev && periods?.current && (
               <div className="text-[10px] text-gray-500 flex items-center gap-2 pt-2">
-                <TrendingUp size={12} className="text-[#a02ff1]" />
+                <TrendingUp size={12} className="text-[#1EA88A]" />
                 Comparing <span className="text-gray-300 font-semibold">{formatDate(periods.prev)}</span>{" "}
                 → <span className="text-gray-300 font-semibold">{formatDate(periods.current)}</span>
               </div>

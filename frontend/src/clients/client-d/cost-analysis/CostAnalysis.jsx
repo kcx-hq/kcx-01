@@ -70,7 +70,7 @@ const CostAnalysis = ({ api, caps }) => {
   const breakdown = useMemo(() => (apiData?.breakdown || []).map(b => ({ ...b, value: parseFloat(b.value) })), [apiData]);
 
   return (
-    <div className="flex flex-col h-full bg-[#0f0f11] text-white overflow-hidden relative font-sans selection:bg-[#a02ff1]/30">
+    <div className="flex flex-col h-full bg-[#f8faf9] text-slate-800 overflow-hidden relative font-sans selection:bg-[#1EA88A]/30">
       
 
       {/* CONTROLS */}
@@ -82,16 +82,16 @@ const CostAnalysis = ({ api, caps }) => {
       <div className="flex-1 overflow-y-auto px-6 pb-6 min-h-0 relative z-0 scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
         {/* Full loader only initial */}
         {loading && !apiData && (
-          <div className="absolute inset-0 z-50 flex items-center justify-center bg-[#0f0f11]/60 backdrop-blur-[2px]">
-            <Loader2 className="animate-spin text-[#a02ff1]" size={32} />
+          <div className="absolute inset-0 z-50 flex items-center justify-center bg-[#f8faf9]/60 backdrop-blur-[2px]">
+            <Loader2 className="animate-spin text-[#1EA88A]" size={32} />
           </div>
         )}
 
         {/* Subtle updating */}
         {isRefreshing && apiData && (
-          <div className="absolute top-4 right-4 z-50 flex items-center gap-2 px-3 py-1.5 bg-[#a02ff1]/20 border border-[#a02ff1]/30 rounded-lg backdrop-blur-sm">
-            <Loader2 className="text-[#a02ff1] animate-spin" size={14} />
-            <span className="text-[#a02ff1] text-xs font-medium">Updating...</span>
+          <div className="absolute top-4 right-4 z-50 flex items-center gap-2 px-3 py-1.5 bg-[#1EA88A]/20 border border-[#1EA88A]/30 rounded-lg backdrop-blur-sm">
+            <Loader2 className="text-[#1EA88A] animate-spin" size={14} />
+            <span className="text-[#1EA88A] text-xs font-medium">Updating...</span>
           </div>
         )}
 

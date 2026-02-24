@@ -48,7 +48,7 @@ export function useReportsDefinitions(reportData, isLocked) {
         period: formatPeriod(period),
         includes: ["Tagged vs Untagged", "Prod vs Non-Prod", "Unknown allocation"],
         description: "Tagging and environment allocation health.",
-        color: "purple",
+        color: "green",
         isLocked,
       },
     ];

@@ -57,13 +57,13 @@ const DataExplorerView = (props) => {
   }, [api, caps, filters, currentPage, rowsPerPage, sortConfig]);
 
   return (
-    <div className="w-full h-[calc(100vh-140px)] rounded-2xl border border-white/10 bg-[#0f0f11] shadow-2xl overflow-hidden relative">
+    <div className="w-full h-[calc(100vh-140px)] rounded-2xl border border-slate-200 bg-[#f8faf9] shadow-2xl overflow-hidden relative">
       <HeaderBar {...props} onExportCsv={onExportCsv} />
 
       {/* BODY */}
-      <div className="h-[calc(100%-230px)] bg-[#0f0f11] relative">
+      <div className="h-[calc(100%-230px)] bg-[#f8faf9] relative">
         <div className="h-full p-4">
-          <div className="h-full rounded-2xl border border-white/10 bg-[#121319] overflow-hidden">
+          <div className="h-full rounded-2xl border border-slate-200 bg-[#f3f7f5] overflow-hidden">
             {viewMode === "table" ? (
               <TableView {...props} totalPages={totalPages} />
             ) : (

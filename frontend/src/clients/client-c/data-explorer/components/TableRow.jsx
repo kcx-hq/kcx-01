@@ -67,7 +67,7 @@ const TableRow = ({
     <tr
       className={`${rowHeightClass} ${
         isSelected
-          ? "bg-[#a02ff1]/20 border-l-4 border-[#a02ff1]"
+          ? "bg-[#1EA88A]/20 border-l-4 border-[#1EA88A]"
           : "hover:bg-white/5"
       } transition-colors cursor-pointer`}
       onClick={(e) => {
@@ -82,7 +82,7 @@ const TableRow = ({
           type="checkbox"
           checked={isSelected}
           onChange={() => handleRowSelect(rowIndex)}
-          className="rounded border-gray-600 bg-gray-800 text-[#a02ff1] focus:ring-[#a02ff1]"
+          className="rounded border-gray-600 bg-gray-800 text-[#1EA88A] focus:ring-[#1EA88A]"
         />
       </td>
 
@@ -114,7 +114,7 @@ const TableRow = ({
             {/* Data bar */}
             {showDataBars && numericValue !== null && (
               <div
-                className="absolute left-0 top-0 bottom-0 bg-[#a02ff1]/10 rounded-r"
+                className="absolute left-0 top-0 bottom-0 bg-[#1EA88A]/10 rounded-r"
                 style={{ width: `${percentage}%` }}
               />
             )}

@@ -371,7 +371,7 @@ const DataExplorerView = ({
                   <div className="text-center p-10 bg-slate-50 rounded-[2.5rem] border border-slate-200 border-dashed">
                       <Crown size={48} className="mx-auto text-amber-500 mb-4" />
                       <h4 className="text-lg font-black text-slate-800 mb-2">Pivot Intelligence is Locked</h4>
-                      <p className="text-sm text-slate-500 font-medium">Upgrade to KCX Premium to unlock multi-dimensional data grouping and drill-down analysis.</p>
+                      <p className="text-sm text-slate-500 font-medium">Upgrade to KCX. Premium to unlock multi-dimensional data grouping and drill-down analysis.</p>
                   </div>
                 </PremiumGate>
               </div>

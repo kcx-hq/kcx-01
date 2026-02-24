@@ -255,17 +255,17 @@ const VerticalSidebar = ({ onCsvSelected, caps = {} }) => {
         return (
             <div className="space-y-2">
               <div className="grid grid-cols-2 gap-2">
-                <div className="bg-[#0f0f11] border border-white/10 rounded p-2">
+                <div className="bg-[#f8faf9] border border-slate-200 rounded p-2">
                   <div className="text-[8px] text-gray-500 mb-1">Total Spend</div>
-                  <div className="text-xs font-bold text-white">$125k</div>
+                  <div className="text-xs font-bold text-slate-800">$125k</div>
                 </div>
-                <div className="bg-[#0f0f11] border border-white/10 rounded p-2">
+                <div className="bg-[#f8faf9] border border-slate-200 rounded p-2">
                   <div className="text-[8px] text-gray-500 mb-1">Forecast</div>
-                  <div className="text-xs font-bold text-[#a02ff1]">+12%</div>
+                  <div className="text-xs font-bold text-[#1EA88A]">+12%</div>
                 </div>
               </div>
               <div className="flex items-center gap-2 text-[8px] text-gray-400 mt-2">
-                 <div className="w-1.5 h-1.5 rounded-full bg-[#a02ff1]"></div>
+                 <div className="w-1.5 h-1.5 rounded-full bg-[#1EA88A]"></div>
                  <span>Real-time Metrics</span>
               </div>
             </div>
@@ -273,9 +273,9 @@ const VerticalSidebar = ({ onCsvSelected, caps = {} }) => {
     }
     return (
         <div className="space-y-2">
-           <div className="bg-[#0f0f11] border border-white/10 rounded p-2">
+           <div className="bg-[#f8faf9] border border-slate-200 rounded p-2">
               <div className="text-[8px] text-gray-500 mb-1">Active View</div>
-              <div className="text-xs font-bold text-white">{item.label}</div>
+              <div className="text-xs font-bold text-slate-800">{item.label}</div>
            </div>
            <div className="flex items-center gap-2 text-[8px] text-gray-400">
                <div className="w-1.5 h-1.5 rounded-full bg-blue-500"></div>
@@ -317,12 +317,12 @@ const VerticalSidebar = ({ onCsvSelected, caps = {} }) => {
         className={({ isActive }) => `
           group flex items-center justify-center lg:justify-between gap-0 lg:gap-3 px-2 lg:px-3 py-2.5 lg:py-2 mb-1 rounded-lg transition-all duration-200 border border-transparent
           ${isActive 
-            ? "bg-[#a02ff1]/10 text-[#a02ff1] border-[#a02ff1]/20 shadow-[0_0_15px_rgba(160,47,241,0.1)]" 
-            : "text-gray-400 hover:bg-white/5 hover:text-white"}
+            ? "bg-[#1EA88A]/10 text-[#1EA88A] border-[#1EA88A]/20 shadow-[0_0_15px_rgba(30,168,138,0.1)]" 
+            : "text-gray-400 hover:bg-white/5 hover:text-slate-800"}
         `}
       >
         <div className="flex items-center gap-0 lg:gap-3">
-          <item.icon size={20} className="lg:w-4 lg:h-4 group-[.active]:text-[#a02ff1] group-hover:text-white transition-colors" />
+          <item.icon size={20} className="lg:w-4 lg:h-4 group-[.active]:text-[#1EA88A] group-hover:text-slate-800 transition-colors" />
           <span className="hidden lg:inline text-sm font-medium">{item.label}</span>
         </div>
         {isPremium && item.isPremium && (
@@ -349,34 +349,33 @@ const VerticalSidebar = ({ onCsvSelected, caps = {} }) => {
             onMouseLeave={() => { isHoveringTooltipRef.current = false; setHoveredItem(null); }}
           >
              {/* Tooltip UI Card */}
-             <div className="bg-[#1a1b20] border border-[#a02ff1]/40 rounded-xl shadow-2xl overflow-hidden backdrop-blur-xl w-[280px] ring-1 ring-[#a02ff1]/20">
-                <div className="bg-gradient-to-r from-[#25262b] to-[#1f2025] border-b border-[#a02ff1]/20 px-4 py-2.5 flex items-center justify-between">
+             <div className="bg-[#ffffff] border border-[#1EA88A]/40 rounded-xl shadow-2xl overflow-hidden backdrop-blur-xl w-[280px] ring-1 ring-[#1EA88A]/20">
+                <div className="bg-gradient-to-r from-[#e7f2ed] to-[#eef5f2] border-b border-[#1EA88A]/20 px-4 py-2.5 flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                        <hoveredItem.icon size={14} className="text-[#a02ff1]" />
-                        <span className="text-xs font-bold text-white">{hoveredItem.label}</span>
+                        <hoveredItem.icon size={14} className="text-[#1EA88A]" />
+                        <span className="text-xs font-bold text-slate-800">{hoveredItem.label}</span>
                     </div>
                 </div>
-                <div className="p-4 bg-[#0f0f11]">
+                <div className="p-4 bg-[#f8faf9]">
                     <PreviewContent item={hoveredItem} />
                 </div>
-                <div className="px-4 py-2 bg-[#1a1b20]">
+                <div className="px-4 py-2 bg-[#ffffff]">
                     <p className="text-[10px] text-gray-400 leading-relaxed">{hoveredItem.description}</p>
                 </div>
-                <div className="absolute left-0 top-1/2 -translate-x-1 -translate-y-1/2 w-3 h-3 bg-[#1a1b20] border-l border-b border-[#a02ff1]/40 rotate-45"></div>
+                <div className="absolute left-0 top-1/2 -translate-x-1 -translate-y-1/2 w-3 h-3 bg-[#ffffff] border-l border-b border-[#1EA88A]/40 rotate-45"></div>
              </div>
           </motion.div>
         )}
       </AnimatePresence>
 
       {/* Main Sidebar */}
-      <div className="fixed top-0 left-0 h-screen w-[72px] lg:w-[240px] bg-[#0f0f11] border-r border-white/5 z-50 flex flex-col transition-all duration-300">
+      <div className="fixed top-0 left-0 h-screen w-[72px] lg:w-[240px] bg-[#f8faf9] border-r border-slate-200 z-50 flex flex-col transition-all duration-300">
          
-         {/* Logo */}
-         <div className="px-2 lg:px-5 py-6 mb-2 flex items-center justify-center lg:justify-start gap-3">
-           <img src="/k&cologo.svg" alt="Logo" className="w-10 h-10 object-contain" />
-           <div className="hidden lg:block">
-             <h1 className="text-base font-bold text-white">K&Co.</h1>
-             <p className="text-[10px] text-gray-500 font-mono">FINOPS OS v2.4</p>
+         {/* Brand */}
+         <div className="px-2 lg:px-5 py-6 mb-2 flex items-center justify-center lg:justify-start">
+           <div className="text-center lg:text-left">
+             <h1 className="text-sm lg:text-base font-bold text-slate-800">KCX.</h1>
+             <p className="hidden lg:block text-[10px] text-gray-500 font-mono">FINOPS OS v2.4</p>
            </div>
          </div>
 
@@ -395,18 +394,18 @@ const VerticalSidebar = ({ onCsvSelected, caps = {} }) => {
          </div>
 
          {/* Upload / Footer */}
-         <div className="p-3 mt-auto bg-[#0f0f11] border-t border-white/5 space-y-3">
+         <div className="p-3 mt-auto bg-[#f8faf9] border-t border-slate-200 space-y-3">
             <input ref={fileInputRef} type="file" accept=".csv" onChange={handleFileChange} className="hidden" />
             
             {/* Upload Box */}
             <div onClick={openFilePicker} className={`
                 group relative border border-dashed rounded-lg p-3 transition-all cursor-pointer
-                ${uploadCount >= MAX_UPLOADS ? "border-red-500/50 bg-red-500/5" : "border-gray-700 hover:border-[#a02ff1] bg-[#1a1b20]/50 hover:bg-[#a02ff1]/5"}
+                ${uploadCount >= MAX_UPLOADS ? "border-red-500/50 bg-red-500/5" : "border-gray-700 hover:border-[#1EA88A] bg-[#ffffff]/50 hover:bg-[#1EA88A]/5"}
             `}>
                <div className="flex flex-col items-center gap-2">
                  <div className="flex items-center gap-2">
                     <Crown size={16} className="text-yellow-500" />
-                    <span className="hidden lg:inline text-xs font-semibold text-white">
+                    <span className="hidden lg:inline text-xs font-semibold text-slate-800">
                       Upload More (Pro)
                     </span>
                  </div>
@@ -417,7 +416,7 @@ const VerticalSidebar = ({ onCsvSelected, caps = {} }) => {
                     </span>
                  </p>
                </div>
-               {selectedFileName && <p className="text-[10px] text-white mt-1 truncate text-center">{selectedFileName}</p>}
+               {selectedFileName && <p className="text-[10px] text-slate-800 mt-1 truncate text-center">{selectedFileName}</p>}
             </div>
 
             {/* Error Display */}
@@ -433,7 +432,7 @@ const VerticalSidebar = ({ onCsvSelected, caps = {} }) => {
               onClick={handleProcessUpload}
               disabled={!selectedFile || uploading || uploadCount >= MAX_UPLOADS}
               className={`w-full py-2.5 rounded-lg flex items-center justify-center gap-2 text-xs font-bold transition-all
-                ${selectedFile && !uploading && uploadCount < MAX_UPLOADS ? "bg-[#a02ff1] text-white hover:bg-[#8e25d9]" : "bg-gray-800 text-gray-600 cursor-not-allowed"}
+                ${selectedFile && !uploading && uploadCount < MAX_UPLOADS ? "bg-[#1EA88A] text-white hover:bg-[#188f76]" : "bg-gray-800 text-gray-600 cursor-not-allowed"}
               `}
             >
               {uploading ? <Loader2 className="animate-spin" size={14} /> : <Play size={14} />}

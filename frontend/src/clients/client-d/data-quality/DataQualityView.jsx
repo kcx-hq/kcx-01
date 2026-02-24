@@ -13,8 +13,8 @@ import IssueInspector from "../../../core-dashboard/data-quality/components/Issu
 import { formatCurrency } from "./utils/formatCurrency.js";
 
 const Panel = ({ title, children, right }) => (
-  <div className="rounded-2xl border border-white/10 bg-[#121319] shadow-2xl overflow-hidden">
-    <div className="px-4 py-3 border-b border-white/10 bg-black/20 flex items-center justify-between">
+  <div className="rounded-2xl border border-slate-200 bg-[#f3f7f5] shadow-2xl overflow-hidden">
+    <div className="px-4 py-3 border-b border-slate-200 bg-emerald-50 flex items-center justify-between">
       <div className="text-xs font-extrabold tracking-wide text-gray-200">{title}</div>
       {right}
     </div>
@@ -23,9 +23,9 @@ const Panel = ({ title, children, right }) => (
 );
 
 const StatChip = ({ label, value, sub }) => (
-  <div className="px-3 py-2 rounded-2xl bg-white/5 border border-white/10">
+  <div className="px-3 py-2 rounded-2xl bg-white/5 border border-slate-200">
     <div className="text-[10px] uppercase tracking-widest text-gray-500 font-bold">{label}</div>
-    <div className="text-sm text-white font-semibold mt-0.5">{value}</div>
+    <div className="text-sm text-slate-800 font-semibold mt-0.5">{value}</div>
     {sub ? <div className="text-[11px] text-gray-500 mt-1">{sub}</div> : null}
   </div>
 );
@@ -113,10 +113,10 @@ const DataQualityView = ({
   }, [stats?.trendData]);
 
   return (
-    <div className="p-4 md:p-6 space-y-6 min-h-screen bg-[#0f0f11] text-white font-sans animate-in fade-in duration-500">
+    <div className="p-4 md:p-6 space-y-6 min-h-screen bg-[#f8faf9] text-slate-800 font-sans animate-in fade-in duration-500">
       {/* HERO */}
-      <div className="rounded-[28px] border border-white/10 bg-gradient-to-b from-[#171820] to-[#0f0f11] shadow-[0_0_80px_rgba(0,0,0,0.55)] overflow-hidden">
-        <div className="p-6 md:p-7 border-b border-white/10">
+      <div className="rounded-[28px] border border-slate-200 bg-gradient-to-b from-[#eff6f3] to-[#f8faf9] shadow-[0_0_80px_rgba(0,0,0,0.55)] overflow-hidden">
+        <div className="p-6 md:p-7 border-b border-slate-200">
           <div className="flex flex-col xl:flex-row xl:items-start xl:justify-between gap-6">
             <div>
               <div className="text-2xl font-extrabold tracking-tight">Data Quality</div>
@@ -165,16 +165,16 @@ const DataQualityView = ({
               worstTagDims.map((t) => (
                 <div
                   key={t.key}
-                  className="rounded-xl bg-white/5 border border-white/10 p-3 flex items-center justify-between gap-3"
+                  className="rounded-xl bg-white/5 border border-slate-200 p-3 flex items-center justify-between gap-3"
                 >
                   <div className="min-w-0">
-                    <div className="text-sm font-semibold text-white truncate">{t.key}</div>
+                    <div className="text-sm font-semibold text-slate-800 truncate">{t.key}</div>
                     <div className="text-xs text-gray-500 mt-0.5">
                       Missing: {t.missingCount} • Missing cost: {formatCurrency(t.missingCost)}
                     </div>
                   </div>
                   <div className="shrink-0 text-right">
-                    <div className="text-sm font-extrabold text-white">{t.pctPresent.toFixed(2)}%</div>
+                    <div className="text-sm font-extrabold text-slate-800">{t.pctPresent.toFixed(2)}%</div>
                     <div className="text-[10px] uppercase tracking-widest text-gray-500 font-bold">
                       present
                     </div>
@@ -193,10 +193,10 @@ const DataQualityView = ({
               offenders.map((o) => (
                 <div
                   key={o.name}
-                  className="rounded-xl bg-white/5 border border-white/10 p-3 flex items-center justify-between gap-3"
+                  className="rounded-xl bg-white/5 border border-slate-200 p-3 flex items-center justify-between gap-3"
                 >
                   <div className="min-w-0">
-                    <div className="text-sm font-semibold text-white truncate">{o.name}</div>
+                    <div className="text-sm font-semibold text-slate-800 truncate">{o.name}</div>
                     <div className="text-xs text-gray-500 mt-0.5">
                       {o.count} rows • Cost: {formatCurrency(o.cost)}
                     </div>
@@ -208,11 +208,11 @@ const DataQualityView = ({
           </div>
 
           {trend?.date ? (
-            <div className="mt-4 rounded-xl bg-black/20 border border-white/10 p-3">
+            <div className="mt-4 rounded-xl bg-emerald-50 border border-slate-200 p-3">
               <div className="text-[10px] uppercase tracking-widest text-gray-500 font-bold">
                 Trend Snapshot
               </div>
-              <div className="text-sm text-white font-semibold mt-1">
+              <div className="text-sm text-slate-800 font-semibold mt-1">
                 {trend.score}% on {trend.date}
               </div>
               <div className="text-xs text-gray-500 mt-1">
@@ -224,11 +224,11 @@ const DataQualityView = ({
 
         <Panel title="What To Fix First">
           <div className="space-y-3 text-sm text-gray-300">
-            <div className="rounded-xl bg-white/5 border border-white/10 p-3">
+            <div className="rounded-xl bg-white/5 border border-slate-200 p-3">
               <div className="text-[10px] uppercase tracking-widest text-gray-500 font-bold">
                 Priority
               </div>
-              <div className="mt-1 font-semibold text-white">
+              <div className="mt-1 font-semibold text-slate-800">
                 Standardize tag keys (avoid duplicates like <span className="text-gray-200">org</span> vs{" "}
                 <span className="text-gray-200"> org</span>)
               </div>
@@ -237,11 +237,11 @@ const DataQualityView = ({
               </div>
             </div>
 
-            <div className="rounded-xl bg-white/5 border border-white/10 p-3">
+            <div className="rounded-xl bg-white/5 border border-slate-200 p-3">
               <div className="text-[10px] uppercase tracking-widest text-gray-500 font-bold">
                 Governance
               </div>
-              <div className="mt-1 font-semibold text-white">
+              <div className="mt-1 font-semibold text-slate-800">
                 Enforce required tags: <span className="text-gray-200">Owner</span>,{" "}
                 <span className="text-gray-200">Project</span>,{" "}
                 <span className="text-gray-200">CostCenter</span>
@@ -256,8 +256,8 @@ const DataQualityView = ({
 
       {/* WORKBENCH (table) */}
       <div className="grid grid-cols-1 xl:grid-cols-4 gap-4">
-        <div className="xl:col-span-3 rounded-2xl border border-white/10 bg-[#1a1b20] shadow-2xl overflow-hidden flex flex-col min-h-[560px]">
-          <div className="border-b border-white/10 bg-black/20">
+        <div className="xl:col-span-3 rounded-2xl border border-slate-200 bg-[#ffffff] shadow-2xl overflow-hidden flex flex-col min-h-[560px]">
+          <div className="border-b border-slate-200 bg-emerald-50">
             <Tabs stats={stats} activeTab={activeTab} onTabChange={onTabChange} isLocked={isLocked} />
           </div>
 
@@ -309,21 +309,21 @@ const DataQualityView = ({
         <div className="xl:col-span-1">
           <Panel title="Session">
             <div className="space-y-3">
-              <div className="rounded-xl bg-white/5 border border-white/10 p-3">
+              <div className="rounded-xl bg-white/5 border border-slate-200 p-3">
                 <div className="text-[10px] uppercase tracking-widest text-gray-500 font-bold">
                   Current Tab
                 </div>
-                <div className="text-sm font-semibold mt-1 text-white">{activeTab}</div>
+                <div className="text-sm font-semibold mt-1 text-slate-800">{activeTab}</div>
                 {isPremiumTab && (
                   <div className="text-xs text-gray-400 mt-2">Premium diagnostics tab.</div>
                 )}
               </div>
 
-              <div className="rounded-xl bg-white/5 border border-white/10 p-3">
+              <div className="rounded-xl bg-white/5 border border-slate-200 p-3">
                 <div className="text-[10px] uppercase tracking-widest text-gray-500 font-bold">
                   Pagination
                 </div>
-                <div className="text-sm text-white font-semibold mt-1">
+                <div className="text-sm text-slate-800 font-semibold mt-1">
                   Page {currentPage} of {totalPages || 1}
                 </div>
                 <div className="text-xs text-gray-400 mt-1">
@@ -331,7 +331,7 @@ const DataQualityView = ({
                 </div>
               </div>
 
-              <div className="rounded-xl bg-white/5 border border-white/10 p-3">
+              <div className="rounded-xl bg-white/5 border border-slate-200 p-3">
                 <div className="text-[10px] uppercase tracking-widest text-gray-500 font-bold">
                   Access
                 </div>

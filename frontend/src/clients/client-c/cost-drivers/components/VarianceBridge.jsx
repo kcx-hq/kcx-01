@@ -69,7 +69,7 @@ const VarianceBridge = ({ data }) => {
               />
               <Tooltip
                 contentStyle={{ 
-                  backgroundColor: '#1a1b20', 
+                  backgroundColor: '#ffffff', 
                   borderColor: '#333', 
                   color: 'white',
                   borderRadius: '8px'
@@ -79,7 +79,7 @@ const VarianceBridge = ({ data }) => {
               />
               <Bar
                 dataKey="value"
-                fill="#a02ff1"
+                fill="#1EA88A"
                 radius={[4, 4, 0, 0]}
                 name="Variance"
               />
@@ -104,7 +104,7 @@ const VarianceBridge = ({ data }) => {
           
           <div className="bg-gray-800 p-4 rounded-lg">
             <h4 className="text-sm font-medium text-gray-400 mb-2">Net Change</h4>
-            <p className="text-xl font-bold text-white">
+            <p className="text-xl font-bold text-slate-800">
               {formatCurrency(
                 data.increases.reduce((sum, inc) => sum + (inc.absoluteChange || inc.change || 0), 0) -
                 data.decreases.reduce((sum, dec) => sum + (dec.absoluteChange || dec.change || 0), 0)

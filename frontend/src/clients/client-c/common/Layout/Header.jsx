@@ -93,26 +93,26 @@ const Header = ({ title, anomalies = [], anomaliesCount = 0 }) => {
   return (
     <>
       {/* HEIGHT: h-[64px], LEFT: Responsive */}
-    <header className="fixed top-0 left-[72px] lg:left-[240px] right-0 h-[64px] bg-[#0f0f11]/90 backdrop-blur-md border-b border-white/5 z-[80] flex items-center px-4 lg:px-6 justify-between transition-all duration-300">
+    <header className="fixed top-0 left-[72px] lg:left-[240px] right-0 h-[64px] bg-[#f8faf9]/90 backdrop-blur-md border-b border-slate-200 z-[80] flex items-center px-4 lg:px-6 justify-between transition-all duration-300">
       
       {/* Left: Title */}
       <div className="flex flex-col justify-center">
         <div className="flex items-center gap-2 text-[10px] text-gray-500 font-medium uppercase tracking-wider mb-0.5">
-          <span className="hover:text-[#a02ff1] cursor-pointer">K&Co.</span>
+          <span className="hover:text-[#1EA88A] cursor-pointer">KCX.</span>
           <span>/</span>
-          <span className="text-[#a02ff1]">Dashboard</span>
+          <span className="text-[#1EA88A]">Dashboard</span>
         </div>
-        <h1 className="text-lg font-bold text-white tracking-tight">{title}</h1>
+        <h1 className="text-lg font-bold text-slate-800 tracking-tight">{title}</h1>
       </div>
 
       {/* Center: Search */}
       <div className="hidden md:flex flex-1 justify-center px-8">
         <div className="relative w-full max-w-sm group/search">
-          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 group-focus-within/search:text-[#a02ff1] transition-colors" />
+          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 group-focus-within/search:text-[#1EA88A] transition-colors" />
           <input 
             type="text" 
             placeholder="Search..." 
-            className="w-full bg-[#1a1b20]/50 border border-white/10 rounded-lg pl-9 pr-4 py-2 text-xs text-white outline-none focus:bg-[#0f0f11] focus:border-[#a02ff1] transition-all"
+            className="w-full bg-[#ffffff]/50 border border-slate-200 rounded-lg pl-9 pr-4 py-2 text-xs text-slate-800 outline-none focus:bg-[#f8faf9] focus:border-[#1EA88A] transition-all"
           />
         </div>
       </div>
@@ -146,22 +146,22 @@ const Header = ({ title, anomalies = [], anomaliesCount = 0 }) => {
         
 
         {/* User Profile */}
-        <div className="pl-2 border-l border-white/10 ml-1 relative" ref={profileMenuRef}>
+        <div className="pl-2 border-l border-slate-200 ml-1 relative" ref={profileMenuRef}>
           <button 
             onClick={() => setShowProfileMenu(!showProfileMenu)}
             className="group flex items-center gap-2 p-1 rounded-full hover:bg-white/5 transition-all"
           >
-            <div className="w-7 h-7 rounded-full bg-gradient-to-tr from-[#a02ff1] to-[#60a5fa] flex items-center justify-center text-white font-bold text-xs shadow-lg ring-1 ring-[#0f0f11]">
+            <div className="w-7 h-7 rounded-full bg-gradient-to-tr from-[#1EA88A] to-[#60a5fa] flex items-center justify-center text-slate-800 font-bold text-xs shadow-lg ring-1 ring-[#f8faf9]">
                 {user?.full_name ? user.full_name.charAt(0).toUpperCase() : (user?.email ? user.email.charAt(0).toUpperCase() : 'KC')}
             </div>
             
             <div className="hidden sm:block text-left">
-                <div className="text-xs font-bold text-white group-hover:text-[#a02ff1] transition-colors">
+                <div className="text-xs font-bold text-slate-800 group-hover:text-[#1EA88A] transition-colors">
                   {user?.full_name || user?.email || 'Client Admin'}
                 </div>
             </div>
             
-            <ChevronDown size={12} className={`text-gray-500 group-hover:text-white transition-colors ${showProfileMenu ? 'rotate-180' : ''}`} />
+            <ChevronDown size={12} className={`text-gray-500 group-hover:text-slate-800 transition-colors ${showProfileMenu ? 'rotate-180' : ''}`} />
           </button>
 
           {/* Profile Dropdown Menu */}
@@ -176,16 +176,16 @@ const Header = ({ title, anomalies = [], anomaliesCount = 0 }) => {
                   ease: [0.4, 0, 0.2, 1],
                   opacity: { duration: 0.1 }
                 }}
-                className="absolute right-0 top-full mt-2 w-56 bg-[#1a1b20] border border-white/10 rounded-lg shadow-2xl z-50 overflow-hidden will-change-transform"
+                className="absolute right-0 top-full mt-2 w-56 bg-[#ffffff] border border-slate-200 rounded-lg shadow-2xl z-50 overflow-hidden will-change-transform"
               >
                 {/* User Info */}
-                <div className="p-3 border-b border-white/10">
+                <div className="p-3 border-b border-slate-200">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-[#a02ff1] to-[#60a5fa] flex items-center justify-center text-white font-bold text-sm shadow-lg">
+                    <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-[#1EA88A] to-[#60a5fa] flex items-center justify-center text-slate-800 font-bold text-sm shadow-lg">
                       {user?.full_name ? user.full_name.charAt(0).toUpperCase() : (user?.email ? user.email.charAt(0).toUpperCase() : 'KC')}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <div className="text-sm font-bold text-white truncate">
+                      <div className="text-sm font-bold text-slate-800 truncate">
                         {user?.full_name || user?.email || 'Client Admin'}
                       </div>
                       <div className="text-xs text-gray-400 truncate">
@@ -231,11 +231,11 @@ const Header = ({ title, anomalies = [], anomaliesCount = 0 }) => {
         onClick={() => handleDialogToggle(false)}
       >
         <div 
-          className="bg-[#1a1b20] border border-white/10 rounded-2xl shadow-2xl max-w-2xl w-full max-h-[80vh] overflow-hidden"
+          className="bg-[#ffffff] border border-slate-200 rounded-2xl shadow-2xl max-w-2xl w-full max-h-[80vh] overflow-hidden"
           onClick={(e) => e.stopPropagation()}
         >
           {/* Dialog Header */}
-          <div className="p-5 border-b border-white/5 flex items-center justify-between">
+          <div className="p-5 border-b border-slate-200 flex items-center justify-between">
             <div className="flex items-center gap-3">
               {hasAnomalies ? (
                 <>
@@ -243,7 +243,7 @@ const Header = ({ title, anomalies = [], anomaliesCount = 0 }) => {
                     <AlertTriangle size={20} className="text-amber-400" />
                   </div>
                   <div>
-                    <h2 className="text-lg font-bold text-white">Anomalies Detected</h2>
+                    <h2 className="text-lg font-bold text-slate-800">Anomalies Detected</h2>
                     <p className="text-xs text-gray-400 mt-0.5">{anomaliesCount} cost anomalies found requiring attention</p>
                   </div>
                 </>
@@ -253,7 +253,7 @@ const Header = ({ title, anomalies = [], anomaliesCount = 0 }) => {
                     <CheckCircle2 size={20} className="text-green-400" />
                   </div>
                   <div>
-                    <h2 className="text-lg font-bold text-white">Smooth Operations</h2>
+                    <h2 className="text-lg font-bold text-slate-800">Smooth Operations</h2>
                     <p className="text-xs text-gray-400 mt-0.5">No cost leakage detected. All costs are within expected ranges.</p>
                   </div>
                 </>
@@ -261,7 +261,7 @@ const Header = ({ title, anomalies = [], anomaliesCount = 0 }) => {
             </div>
             <button
               onClick={() => handleDialogToggle(false)}
-              className="p-1.5 rounded-lg hover:bg-white/5 text-gray-400 hover:text-white transition-colors"
+              className="p-1.5 rounded-lg hover:bg-white/5 text-gray-400 hover:text-slate-800 transition-colors"
             >
               <X size={18} />
             </button>
@@ -278,11 +278,11 @@ const Header = ({ title, anomalies = [], anomaliesCount = 0 }) => {
                   {anomalies.slice(0, visibleAnomaliesCount).map((item, index) => (
                     <div 
                       key={index}
-                      className="bg-[#0f0f11]/50 border border-white/5 rounded-lg p-3 hover:bg-[#0f0f11] transition-colors"
+                      className="bg-[#f8faf9]/50 border border-slate-200 rounded-lg p-3 hover:bg-[#f8faf9] transition-colors"
                     >
                       <div className="flex items-start justify-between gap-3">
                         <div className="flex-1 min-w-0">
-                          <p className="text-sm font-semibold text-white truncate" title={item.ServiceName || 'Unknown Service'}>
+                          <p className="text-sm font-semibold text-slate-800 truncate" title={item.ServiceName || 'Unknown Service'}>
                             {item.ServiceName || 'Unknown Service'}
                           </p>
                           <p className="text-xs text-gray-400 mt-1 truncate" title={`${item.ProviderName || 'N/A'} • ${item.RegionName || 'N/A'}`}>
@@ -312,7 +312,7 @@ const Header = ({ title, anomalies = [], anomaliesCount = 0 }) => {
                   <div className="flex justify-center pt-3">
                     <button
                       onClick={() => setVisibleAnomaliesCount(anomalies.length)}
-                      className="px-4 py-2 bg-[#0f0f11] border border-white/10 hover:border-[#a02ff1]/50 rounded-lg text-xs font-semibold text-gray-300 hover:text-[#a02ff1] transition-all"
+                      className="px-4 py-2 bg-[#f8faf9] border border-slate-200 hover:border-[#1EA88A]/50 rounded-lg text-xs font-semibold text-gray-300 hover:text-[#1EA88A] transition-all"
                     >
                       Load More ({anomalies.length - visibleAnomaliesCount} remaining)
                     </button>
@@ -321,7 +321,7 @@ const Header = ({ title, anomalies = [], anomaliesCount = 0 }) => {
                   <div className="flex justify-center pt-3">
                     <button
                       onClick={() => setVisibleAnomaliesCount(5)}
-                      className="px-4 py-2 bg-[#0f0f11] border border-white/10 hover:border-[#a02ff1]/50 rounded-lg text-xs font-semibold text-gray-300 hover:text-[#a02ff1] transition-all"
+                      className="px-4 py-2 bg-[#f8faf9] border border-slate-200 hover:border-[#1EA88A]/50 rounded-lg text-xs font-semibold text-gray-300 hover:text-[#1EA88A] transition-all"
                     >
                       Show Less
                     </button>
@@ -331,7 +331,7 @@ const Header = ({ title, anomalies = [], anomaliesCount = 0 }) => {
             ) : (
               <div className="text-center py-8">
                 <CheckCircle2 size={48} className="text-green-400 mx-auto mb-4" />
-                <p className="text-lg font-semibold text-white mb-2">All Systems Operating Smoothly</p>
+                <p className="text-lg font-semibold text-slate-800 mb-2">All Systems Operating Smoothly</p>
                 <p className="text-sm text-gray-400">
                   Your cost management is optimal. No anomalies or cost leakage detected in the current dataset.
                 </p>
@@ -357,22 +357,22 @@ const Header = ({ title, anomalies = [], anomaliesCount = 0 }) => {
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0.95, opacity: 0 }}
             onClick={(e) => e.stopPropagation()}
-            className="bg-[#1a1b20] border border-white/10 rounded-2xl shadow-2xl max-w-md w-full overflow-hidden"
+            className="bg-[#ffffff] border border-slate-200 rounded-2xl shadow-2xl max-w-md w-full overflow-hidden"
           >
             {/* Modal Header */}
-            <div className="p-5 border-b border-white/10 flex items-center justify-between">
+            <div className="p-5 border-b border-slate-200 flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-[#a02ff1]/10 ring-1 ring-[#a02ff1]/20">
-                  <User size={20} className="text-[#a02ff1]" />
+                <div className="p-2 rounded-lg bg-[#1EA88A]/10 ring-1 ring-[#1EA88A]/20">
+                  <User size={20} className="text-[#1EA88A]" />
                 </div>
                 <div>
-                  <h2 className="text-lg font-bold text-white">Profile Settings</h2>
+                  <h2 className="text-lg font-bold text-slate-800">Profile Settings</h2>
                   <p className="text-xs text-gray-400 mt-0.5">Update your profile information</p>
                 </div>
               </div>
               <button
                 onClick={() => setShowProfileSettings(false)}
-                className="p-1.5 rounded-lg hover:bg-white/5 text-gray-400 hover:text-white transition-colors"
+                className="p-1.5 rounded-lg hover:bg-white/5 text-gray-400 hover:text-slate-800 transition-colors"
               >
                 <X size={18} />
               </button>
@@ -388,7 +388,7 @@ const Header = ({ title, anomalies = [], anomaliesCount = 0 }) => {
                   type="text"
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
-                  className="w-full bg-[#0f0f11] border border-white/10 rounded-lg px-4 py-3 text-sm text-white focus:outline-none focus:border-[#a02ff1] transition-all"
+                  className="w-full bg-[#f8faf9] border border-slate-200 rounded-lg px-4 py-3 text-sm text-slate-800 focus:outline-none focus:border-[#1EA88A] transition-all"
                   placeholder="Enter your full name"
                   required
                 />
@@ -402,7 +402,7 @@ const Header = ({ title, anomalies = [], anomaliesCount = 0 }) => {
                   type="email"
                   value={user?.email || ''}
                   disabled
-                  className="w-full bg-[#0f0f11]/50 border border-white/5 rounded-lg px-4 py-3 text-sm text-gray-500 cursor-not-allowed"
+                  className="w-full bg-[#f8faf9]/50 border border-slate-200 rounded-lg px-4 py-3 text-sm text-gray-500 cursor-not-allowed"
                 />
                 <p className="text-[10px] text-gray-500 mt-1">Email cannot be changed</p>
               </div>
@@ -418,14 +418,14 @@ const Header = ({ title, anomalies = [], anomaliesCount = 0 }) => {
                 <button
                   type="button"
                   onClick={() => setShowProfileSettings(false)}
-                  className="flex-1 px-4 py-2.5 bg-white/5 border border-white/10 rounded-lg text-sm font-semibold text-gray-300 hover:bg-white/10 transition-colors"
+                  className="flex-1 px-4 py-2.5 bg-white/5 border border-slate-200 rounded-lg text-sm font-semibold text-gray-300 hover:bg-white/10 transition-colors"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={isUpdating}
-                  className="flex-1 px-4 py-2.5 bg-[#a02ff1] hover:bg-[#8e25d9] rounded-lg text-sm font-semibold text-white transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex-1 px-4 py-2.5 bg-[#1EA88A] hover:bg-[#188f76] rounded-lg text-sm font-semibold text-slate-800 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {isUpdating ? 'Updating...' : 'Save Changes'}
                 </button>

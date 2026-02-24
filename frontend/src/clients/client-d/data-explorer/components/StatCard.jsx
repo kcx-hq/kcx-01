@@ -4,7 +4,7 @@ import { Crown } from "lucide-react";
 
 const StatCard = ({ icon: Icon, label, value, locked }) => {
   return (
-    <div className="relative bg-[#1a1b20]/70 border border-white/10 rounded-xl px-4 py-3 overflow-hidden">
+    <div className="relative bg-[#ffffff]/70 border border-slate-200 rounded-xl px-4 py-3 overflow-hidden">
       {locked && (
         <div className="absolute inset-0 bg-black/55 backdrop-blur-[2px] z-10 flex items-center justify-center">
           <Crown size={16} className="text-yellow-400" />
@@ -12,15 +12,15 @@ const StatCard = ({ icon: Icon, label, value, locked }) => {
       )}
 
       <div className={`flex items-center gap-3 ${locked ? "opacity-50" : ""}`}>
-        <div className="p-2 rounded-lg bg-white/5 border border-white/10">
-          <Icon size={16} className="text-[#a02ff1]" />
+        <div className="p-2 rounded-lg bg-white/5 border border-slate-200">
+          <Icon size={16} className="text-[#1EA88A]" />
         </div>
         <div className="min-w-0">
           <div className="text-[10px] uppercase tracking-widest text-gray-500 font-bold truncate">
             {label}
           </div>
           <div
-            className="text-sm font-mono font-bold text-white truncate"
+            className="text-sm font-mono font-bold text-slate-800 truncate"
             title={String(value)}
           >
             {value}

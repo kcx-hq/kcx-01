@@ -134,7 +134,7 @@ const ClientCDepartmentCost = ({ api, caps }) => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64 bg-[#0f0f11] rounded-xl border border-white/5">
+      <div className="flex items-center justify-center h-64 bg-[#f8faf9] rounded-xl border border-slate-200">
         <div className="text-center text-gray-500">
           <DollarSign className="mx-auto mb-2 text-gray-500" size={32} />
           <p className="text-sm">Loading department cost analysis...</p>
@@ -145,7 +145,7 @@ const ClientCDepartmentCost = ({ api, caps }) => {
 
   if (error) {
     return (
-      <div className="flex items-center justify-center h-64 bg-[#0f0f11] rounded-xl border border-white/5">
+      <div className="flex items-center justify-center h-64 bg-[#f8faf9] rounded-xl border border-slate-200">
         <div className="text-center text-red-400 p-4">
           <DollarSign className="mx-auto mb-2" size={32} />
           <p className="text-sm font-medium mb-1">Error Loading Data</p>
@@ -159,7 +159,7 @@ const ClientCDepartmentCost = ({ api, caps }) => {
 
   if (extractedData.metadata.isEmptyState) {
     return (
-      <div className="flex items-center justify-center h-64 bg-[#0f0f11] rounded-xl border border-white/5">
+      <div className="flex items-center justify-center h-64 bg-[#f8faf9] rounded-xl border border-slate-200">
         <div className="text-center text-gray-500">
           <DollarSign className="mx-auto mb-2 text-gray-500" size={32} />
           <p className="text-sm">No department cost analysis available</p>
@@ -169,7 +169,7 @@ const ClientCDepartmentCost = ({ api, caps }) => {
     );
   }
 
-  const COLORS = ['#a02ff1', '#48bb78', '#f56565', '#ecc94b', '#4fd1c5', '#805ad5', '#ed8936', '#68d391', '#4c77b6', '#d53f8c'];
+  const COLORS = ['#1EA88A', '#48bb78', '#f56565', '#ecc94b', '#4fd1c5', '#22c55e', '#ed8936', '#68d391', '#4c77b6', '#10b981'];
 
   return (
     <div className="animate-in fade-in zoom-in-95 duration-300 flex flex-col h-full">
@@ -177,26 +177,26 @@ const ClientCDepartmentCost = ({ api, caps }) => {
         <div className="space-y-6">
           {/* KPI CARDS */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <div className="bg-[#1a1b20]/60 backdrop-blur-md border border-white/5 p-5 rounded-2xl shadow-xl">
+            <div className="bg-[#ffffff]/60 backdrop-blur-md border border-slate-200 p-5 rounded-2xl shadow-xl">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-xs text-gray-400 font-semibold uppercase tracking-wider">Total Cost</p>
-                  <p className="text-2xl font-bold text-white mt-1">
+                  <p className="text-2xl font-bold text-slate-800 mt-1">
                     ${extractedData.overview.totalCost?.toLocaleString() || 0}
                   </p>
                 </div>
-                <div className="p-3 bg-[#a02ff1]/20 rounded-lg">
-                  <DollarSign className="text-[#a02ff1]" size={24} />
+                <div className="p-3 bg-[#1EA88A]/20 rounded-lg">
+                  <DollarSign className="text-[#1EA88A]" size={24} />
                 </div>
               </div>
               <p className="text-[10px] text-gray-500 mt-2">Overall department spending</p>
             </div>
             
-            <div className="bg-[#1a1b20]/60 backdrop-blur-md border border-white/5 p-5 rounded-2xl shadow-xl">
+            <div className="bg-[#ffffff]/60 backdrop-blur-md border border-slate-200 p-5 rounded-2xl shadow-xl">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-xs text-gray-400 font-semibold uppercase tracking-wider">Departments</p>
-                  <p className="text-2xl font-bold text-white mt-1">
+                  <p className="text-2xl font-bold text-slate-800 mt-1">
                     {extractedData.overview.departments?.length || 0}
                   </p>
                 </div>
@@ -207,11 +207,11 @@ const ClientCDepartmentCost = ({ api, caps }) => {
               <p className="text-[10px] text-gray-500 mt-2">Active cost centers</p>
             </div>
             
-            <div className="bg-[#1a1b20]/60 backdrop-blur-md border border-white/5 p-5 rounded-2xl shadow-xl">
+            <div className="bg-[#ffffff]/60 backdrop-blur-md border border-slate-200 p-5 rounded-2xl shadow-xl">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-xs text-gray-400 font-semibold uppercase tracking-wider">Avg/Department</p>
-                  <p className="text-2xl font-bold text-white mt-1">
+                  <p className="text-2xl font-bold text-slate-800 mt-1">
                     ${extractedData.overview.departments?.length > 0 
                       ? Math.round(extractedData.overview.totalCost / extractedData.overview.departments.length).toLocaleString() 
                       : 0}
@@ -224,19 +224,19 @@ const ClientCDepartmentCost = ({ api, caps }) => {
               <p className="text-[10px] text-gray-500 mt-2">Average cost per department</p>
             </div>
             
-            <div className="bg-[#1a1b20]/60 backdrop-blur-md border border-white/5 p-5 rounded-2xl shadow-xl">
+            <div className="bg-[#ffffff]/60 backdrop-blur-md border border-slate-200 p-5 rounded-2xl shadow-xl">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-xs text-gray-400 font-semibold uppercase tracking-wider">Top Dept</p>
-                  <p className="text-lg font-bold text-white mt-1 truncate max-w-[120px]">
+                  <p className="text-lg font-bold text-slate-800 mt-1 truncate max-w-[120px]">
                     {extractedData.overview.departments?.[0]?.name || 'N/A'}
                   </p>
-                  <p className="text-sm text-white">
+                  <p className="text-sm text-slate-800">
                     ${extractedData.overview.departments?.[0]?.totalCost?.toLocaleString() || 0}
                   </p>
                 </div>
-                <div className="p-3 bg-purple-500/20 rounded-lg">
-                  <BarChartIcon className="text-purple-400" size={24} />
+                <div className="p-3 bg-emerald-500/20 rounded-lg">
+                  <BarChartIcon className="text-emerald-400" size={24} />
                 </div>
               </div>
               <p className="text-[10px] text-gray-500 mt-2">Highest spending department</p>
@@ -246,10 +246,10 @@ const ClientCDepartmentCost = ({ api, caps }) => {
           {/* CHARTS */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Department Cost Distribution */}
-            <div className="bg-[#1a1b20]/60 backdrop-blur-md border border-white/5 rounded-2xl p-5 shadow-xl">
+            <div className="bg-[#ffffff]/60 backdrop-blur-md border border-slate-200 rounded-2xl p-5 shadow-xl">
               <div className="flex items-center gap-2 mb-4">
-                <PieChartIcon size={16} className="text-[#a02ff1]" />
-                <h3 className="text-sm font-bold text-white">Department Cost Distribution</h3>
+                <PieChartIcon size={16} className="text-[#1EA88A]" />
+                <h3 className="text-sm font-bold text-slate-800">Department Cost Distribution</h3>
               </div>
               <div className="h-80">
                 <ResponsiveContainer width="100%" height="100%">
@@ -270,7 +270,7 @@ const ClientCDepartmentCost = ({ api, caps }) => {
                     </Pie>
                     <Tooltip 
                       contentStyle={{ 
-                        backgroundColor: '#1a1b20', 
+                        backgroundColor: '#ffffff', 
                         borderColor: '#374151',
                         borderRadius: '0.5rem',
                         color: 'white'
@@ -284,10 +284,10 @@ const ClientCDepartmentCost = ({ api, caps }) => {
             </div>
 
             {/* Cost Trend Over Time */}
-            <div className="bg-[#1a1b20]/60 backdrop-blur-md border border-white/5 rounded-2xl p-5 shadow-xl">
+            <div className="bg-[#ffffff]/60 backdrop-blur-md border border-slate-200 rounded-2xl p-5 shadow-xl">
               <div className="flex items-center gap-2 mb-4">
-                <TrendingUp size={16} className="text-[#a02ff1]" />
-                <h3 className="text-sm font-bold text-white">Cost Trend</h3>
+                <TrendingUp size={16} className="text-[#1EA88A]" />
+                <h3 className="text-sm font-bold text-slate-800">Cost Trend</h3>
               </div>
               <div className="h-80">
                 <ResponsiveContainer width="100%" height="100%">
@@ -309,7 +309,7 @@ const ClientCDepartmentCost = ({ api, caps }) => {
                     />
                     <Tooltip 
                       contentStyle={{ 
-                        backgroundColor: '#1a1b20', 
+                        backgroundColor: '#ffffff', 
                         borderColor: '#374151',
                         borderRadius: '0.5rem',
                         color: 'white'
@@ -320,8 +320,8 @@ const ClientCDepartmentCost = ({ api, caps }) => {
                     <Area 
                       type="monotone" 
                       dataKey="cost" 
-                      stroke="#a02ff1" 
-                      fill="#a02ff1" 
+                      stroke="#1EA88A" 
+                      fill="#1EA88A" 
                       fillOpacity={0.3}
                       strokeWidth={2}
                     />
@@ -334,10 +334,10 @@ const ClientCDepartmentCost = ({ api, caps }) => {
           {/* SERVICE BREAKDOWN */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Top Services by Department */}
-            <div className="bg-[#1a1b20]/60 backdrop-blur-md border border-white/5 rounded-2xl p-5 shadow-xl">
+            <div className="bg-[#ffffff]/60 backdrop-blur-md border border-slate-200 rounded-2xl p-5 shadow-xl">
               <div className="flex items-center gap-2 mb-4">
-                <BarChartIcon size={16} className="text-[#a02ff1]" />
-                <h3 className="text-sm font-bold text-white">Top Services by Cost</h3>
+                <BarChartIcon size={16} className="text-[#1EA88A]" />
+                <h3 className="text-sm font-bold text-slate-800">Top Services by Cost</h3>
               </div>
               <div className="overflow-x-auto">
                 <table className="min-w-full divide-y divide-gray-700">
@@ -366,10 +366,10 @@ const ClientCDepartmentCost = ({ api, caps }) => {
             </div>
 
             {/* Top Resources by Department */}
-            <div className="bg-[#1a1b20]/60 backdrop-blur-md border border-white/5 rounded-2xl p-5 shadow-xl">
+            <div className="bg-[#ffffff]/60 backdrop-blur-md border border-slate-200 rounded-2xl p-5 shadow-xl">
               <div className="flex items-center gap-2 mb-4">
-                <BarChartIcon size={16} className="text-[#a02ff1]" />
-                <h3 className="text-sm font-bold text-white">Top Resources by Cost</h3>
+                <BarChartIcon size={16} className="text-[#1EA88A]" />
+                <h3 className="text-sm font-bold text-slate-800">Top Resources by Cost</h3>
               </div>
               <div className="overflow-x-auto">
                 <table className="min-w-full divide-y divide-gray-700">

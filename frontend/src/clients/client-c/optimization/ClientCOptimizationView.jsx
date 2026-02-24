@@ -24,7 +24,7 @@ import FilterBar from "../common/widgets/FilterBar.jsx";
 const OpportunitiesTab = ({ opportunities, onSelectInsight, title = "Opportunities" }) => {
   if (!opportunities || opportunities.length === 0) {
     return (
-      <div className="bg-[#1a1b20]/60 backdrop-blur-md border border-white/5 rounded-2xl p-6">
+      <div className="bg-[#ffffff]/60 backdrop-blur-md border border-slate-200 rounded-2xl p-6">
         <p className="text-gray-500 text-center py-8">No {title.toLowerCase()} found</p>
       </div>
     );
@@ -35,11 +35,11 @@ const OpportunitiesTab = ({ opportunities, onSelectInsight, title = "Opportuniti
       {opportunities.slice(0, 10).map((opportunity, index) => (
         <div 
           key={index} 
-          className="bg-[#1a1b20]/60 backdrop-blur-md border border-white/5 rounded-xl p-4 hover:border-[#a02ff1]/50 transition-colors"
+          className="bg-[#ffffff]/60 backdrop-blur-md border border-slate-200 rounded-xl p-4 hover:border-[#1EA88A]/50 transition-colors"
         >
           <div className="flex justify-between items-start">
             <div>
-              <h4 className="font-medium text-white">{opportunity.title || opportunity.name || opportunity.description}</h4>
+              <h4 className="font-medium text-slate-800">{opportunity.title || opportunity.name || opportunity.description}</h4>
               <p className="text-sm text-gray-400 mt-1">{opportunity.description || opportunity.summary || 'No description available'}</p>
             </div>
             <div className="text-right">
@@ -72,7 +72,7 @@ const OpportunitiesTab = ({ opportunities, onSelectInsight, title = "Opportuniti
 // Tabs component
 const Tabs = ({ activeTab, onChange, tabs }) => {
   return (
-    <div className="flex flex-wrap gap-2 bg-[#1a1b20]/40 rounded-xl p-1 mb-6">
+    <div className="flex flex-wrap gap-2 bg-[#ffffff]/40 rounded-xl p-1 mb-6">
       {tabs.map((tab) => {
         const Icon = tab.icon;
         return (
@@ -81,8 +81,8 @@ const Tabs = ({ activeTab, onChange, tabs }) => {
             onClick={() => onChange(tab.id)}
             className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
               activeTab === tab.id
-                ? 'bg-[#a02ff1] text-white shadow-lg'
-                : 'text-gray-400 hover:text-white hover:bg-white/10'
+                ? 'bg-[#1EA88A] text-white shadow-lg'
+                : 'text-gray-400 hover:text-slate-800 hover:bg-white/10'
             }`}
           >
             <Icon size={16} />
@@ -129,13 +129,13 @@ const ClientCOptimizationView = ({
       {/* CONTENT */}
       <div className="flex-1 overflow-y-auto relative min-h-0">
         {isFiltering && optimizationData && (
-          <div className="absolute top-4 right-4 z-50 flex items-center gap-2 bg-[#1a1b20]/90 backdrop-blur-md border border-[#a02ff1]/30 rounded-lg px-3 py-2 shadow-lg">
+          <div className="absolute top-4 right-4 z-50 flex items-center gap-2 bg-[#ffffff]/90 backdrop-blur-md border border-[#1EA88A]/30 rounded-lg px-3 py-2 shadow-lg">
             <span className="text-xs text-gray-300 font-medium">Filtering...</span>
           </div>
         )}
 
         {!optimizationData || isEmptyState ? (
-          <div className="flex items-center justify-center h-64 bg-[#0f0f11] rounded-xl border border-white/5">
+          <div className="flex items-center justify-center h-64 bg-[#f8faf9] rounded-xl border border-slate-200">
             <div className="text-center text-gray-500">
               <Calendar className="mx-auto mb-2 text-gray-500" size={32} />
               <p className="text-sm">No optimization data available</p>
@@ -147,8 +147,8 @@ const ClientCOptimizationView = ({
             {/* Header */}
             <div className="flex items-center justify-between">
               <div>
-                <h1 className="text-2xl font-bold text-white flex items-center gap-2">
-                  <Sparkles size={24} className="text-[#a02ff1]" />
+                <h1 className="text-2xl font-bold text-slate-800 flex items-center gap-2">
+                  <Sparkles size={24} className="text-[#1EA88A]" />
                   Optimization Insights
                 </h1>
                 <p className="text-sm text-gray-400 mt-1 italic">

@@ -35,7 +35,7 @@ const KpiCard = ({
       transition={{ delay: delay * 0.1 }}
       whileHover={{ y: -5 }}
       onClick={onClick}
-      className="bg-[#1a1b20]/60 backdrop-blur-md border border-white/5 p-3 rounded-xl shadow-lg relative overflow-hidden group min-h-[100px] cursor-pointer hover:border-[#a02ff1]/30 transition-all"
+      className="bg-[#ffffff]/60 backdrop-blur-md border border-slate-200 p-3 rounded-xl shadow-lg relative overflow-hidden group min-h-[100px] cursor-pointer hover:border-[#1EA88A]/30 transition-all"
     >
       <div className={`absolute -top-10 -right-10 p-16 ${color} bg-opacity-5 blur-[40px] rounded-full`} />
 
@@ -49,7 +49,7 @@ const KpiCard = ({
           {subValue && (
             <div className="relative">
               <span
-                className="text-[9px] bg-white/5 px-1.5 py-0.5 rounded text-gray-400 border border-white/5 font-mono cursor-help"
+                className="text-[9px] bg-white/5 px-1.5 py-0.5 rounded text-gray-400 border border-slate-200 font-mono cursor-help"
                 onMouseEnter={() => showChangeTooltip && setShowTooltip(true)}
                 onMouseLeave={() => setShowTooltip(false)}
               >
@@ -57,7 +57,7 @@ const KpiCard = ({
               </span>
 
               {showTooltip && showChangeTooltip && (
-                <div className="absolute right-0 top-full mt-1 w-48 bg-[#1a1b20] border border-white/10 rounded-lg p-2 shadow-xl z-50">
+                <div className="absolute right-0 top-full mt-1 w-48 bg-[#ffffff] border border-slate-200 rounded-lg p-2 shadow-xl z-50">
                   <p className="text-[10px] text-gray-300">
                     Compared to previous billing period
                   </p>
@@ -72,7 +72,7 @@ const KpiCard = ({
           <div className="text-gray-500 text-[9px] font-bold uppercase tracking-widest truncate">
             {title}
           </div>
-          <div className="text-xl font-bold text-white mt-0.5 truncate">
+          <div className="text-xl font-bold text-slate-800 mt-0.5 truncate">
             {value}
           </div>
 
@@ -212,7 +212,7 @@ const KpiGrid = ({
       title: 'Total Billed Cost',
       value: formatCurrency(spend),
       icon: DollarSign,
-      color: 'text-[#a02ff1]',
+      color: 'text-[#1EA88A]',
       subValue:
         spendChangePercent !== 0 ? formatPercent(spendChangePercent) : null,
       showChangeTooltip: true,
@@ -231,7 +231,7 @@ const KpiGrid = ({
       title: 'Top Cost Service',
       value: topService?.name || 'N/A',
       icon: Server,
-      color: 'text-[#a02ff1]',
+      color: 'text-[#1EA88A]',
       delay: 0.2
     },
     {
@@ -290,7 +290,7 @@ const KpiGrid = ({
       <div className="flex justify-center">
         <button
           onClick={() => setShowMoreCards(!showMoreCards)}
-          className="flex items-center gap-2 px-4 py-2 bg-[#1a1b20]/60 border border-white/5 rounded-lg text-gray-400 hover:text-white"
+          className="flex items-center gap-2 px-4 py-2 bg-[#ffffff]/60 border border-slate-200 rounded-lg text-gray-400 hover:text-slate-800"
         >
           {showMoreCards ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
           {showMoreCards ? 'Show Less' : 'Show More Insights'}
@@ -299,15 +299,15 @@ const KpiGrid = ({
 
       {/* MODAL */}
       {selectedCard && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 bg-white backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <div
-            className={`bg-[#1a1b20] border border-white/10 rounded-2xl shadow-2xl w-full
+            className={`bg-[#ffffff] border border-slate-200 rounded-2xl shadow-2xl w-full
               ${selectedCard.isCompact ? 'max-w-md' : 'max-w-2xl'}
             `}
           >
             <div className="p-6">
               <div className="flex justify-between items-start mb-4">
-                <h3 className="text-xl font-bold text-white">
+                <h3 className="text-xl font-bold text-slate-800">
                   {selectedCard.title}
                 </h3>
                 <button
@@ -326,7 +326,7 @@ const KpiGrid = ({
                 {selectedCard.metrics.map((m, i) => (
                   <div key={i} className="bg-white/5 p-4 rounded-lg">
                     <div className="text-gray-500 text-sm">{m.label}</div>
-                    <div className="text-white font-semibold mt-1">
+                    <div className="text-slate-800 font-semibold mt-1">
                       {m.value}
                     </div>
                   </div>

@@ -10,15 +10,8 @@ const Footer = () => {
           
           {/* Column 1: Brand */}
           <div className="md:col-span-1">
-            <a href="#" className="flex items-center gap-2 mb-6">
-              <img
-                src="/k&cologo.svg"
-                alt="K&Co Logo"
-                className="w-10 h-10 object-contain"
-              />
-              <span className="text-xl font-bold text-[var(--text-on-dark)]">
-                K&amp;Co.
-              </span>
+            <a href="#" className="inline-flex items-center mb-6">
+              <span className="text-xl font-bold text-[var(--text-on-dark)]">KCX.</span>
             </a>
 
             <p className="text-[var(--text-on-dark-muted)] text-sm mb-6">
@@ -74,7 +67,7 @@ const Footer = () => {
               Company
             </h4>
             <ul className="space-y-4 text-sm text-[var(--text-on-dark-muted)]">
-              {["About K&Co", "Case Studies", "Careers", "Contact"].map(
+              {["About KCX.", "Case Studies", "Careers", "Contact"].map(
                 (label) => (
                   <li key={label}>
                     <a
@@ -134,7 +127,7 @@ const Footer = () => {
 
         {/* Bottom Bar */}
         <div className="pt-8 border-t border-[var(--border-dark)] flex flex-col items-center gap-4 text-xs text-[var(--text-on-dark-muted)]">
-          <p>&copy; 2025 K&amp;Co. All Rights Reserved.</p>
+          <p>&copy; 2025 KCX. All Rights Reserved.</p>
           <span>Vadodara, India</span>
         </div>
       </div>

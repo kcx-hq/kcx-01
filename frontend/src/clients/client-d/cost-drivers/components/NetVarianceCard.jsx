@@ -7,10 +7,10 @@ export function NetVarianceCard({ overallStats }) {
   const isUp = (overallStats?.diff ?? 0) > 0;
 
   return (
-    <div className="bg-[#1a1b20] border border-white/10 rounded-2xl p-4 shadow-lg">
+    <div className="bg-[#ffffff] border border-slate-200 rounded-2xl p-4 shadow-lg">
       <div className="flex items-center justify-between mb-3">
         <h3 className="text-xs font-bold text-gray-400 uppercase flex items-center gap-2">
-          <Activity size={14} className="text-[#a02ff1]" /> Net Variance
+          <Activity size={14} className="text-[#1EA88A]" /> Net Variance
         </h3>
 
         <span

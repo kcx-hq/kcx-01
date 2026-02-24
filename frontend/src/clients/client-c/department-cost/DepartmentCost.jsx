@@ -65,7 +65,7 @@ const DepartmentCost = ({ filters, api, caps, uploadId }) => {
     }
   }, [filters, api, caps, uploadId]);
 
-  const COLORS = ['#a02ff1', '#48bb78', '#f56565', '#ecc94b', '#4fd1c5', '#805ad5'];
+  const COLORS = ['#1EA88A', '#48bb78', '#f56565', '#ecc94b', '#4fd1c5', '#22c55e'];
 
   return (
     <div className="space-y-6">
@@ -123,12 +123,12 @@ const DepartmentCost = ({ filters, api, caps, uploadId }) => {
                 <XAxis dataKey="date" stroke="#aaa" />
                 <YAxis stroke="#aaa" />
                 <Tooltip 
-                  contentStyle={{ backgroundColor: '#1a1b20', borderColor: '#333', color: 'white' }}
+                  contentStyle={{ backgroundColor: '#ffffff', borderColor: '#333', color: 'white' }}
                   itemStyle={{ color: 'white' }}
                   formatter={(value) => [`$${value.toLocaleString()}`, 'Cost']}
                 />
                 <Legend />
-                <Line type="monotone" dataKey="totalCost" stroke="#a02ff1" strokeWidth={2} dot={{ r: 4 }} name="Total Cost" />
+                <Line type="monotone" dataKey="totalCost" stroke="#1EA88A" strokeWidth={2} dot={{ r: 4 }} name="Total Cost" />
               </LineChart>
             </ResponsiveContainer>
           </CardContent>
@@ -173,12 +173,12 @@ const DepartmentCost = ({ filters, api, caps, uploadId }) => {
               <XAxis dataKey="name" stroke="#aaa" />
               <YAxis stroke="#aaa" />
               <Tooltip 
-                contentStyle={{ backgroundColor: '#1a1b20', borderColor: '#333', color: 'white' }}
+                contentStyle={{ backgroundColor: '#ffffff', borderColor: '#333', color: 'white' }}
                 itemStyle={{ color: 'white' }}
                 formatter={(value) => [`$${value.toLocaleString()}`, 'Cost']}
               />
               <Legend />
-              <Bar dataKey="cost" fill="#a02ff1" name="Cost" />
+              <Bar dataKey="cost" fill="#1EA88A" name="Cost" />
             </BarChart>
           </ResponsiveContainer>
         </CardContent>
