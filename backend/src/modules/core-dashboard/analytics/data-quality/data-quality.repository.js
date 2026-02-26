@@ -120,4 +120,35 @@ export const dataQualityRepository = {
       };
     });
   },
+
+  /**
+   * Get distinct account ids for selected uploads.
+   * Used for ingestion completeness and coverage checks.
+   */
+  async getDistinctAccountIdsForUploads(options = {}) {
+    const { uploadIds = [], provider = 'All' } = options;
+    if (!Array.isArray(uploadIds) || uploadIds.length === 0) return [];
+
+    const include = [
+      {
+        model: CloudAccount,
+        as: 'cloudAccount',
+        required: provider !== 'All',
+        attributes: [],
+        ...(provider !== 'All' ? { where: { providername: provider } } : {}),
+      },
+    ];
+
+    const rows = await BillingUsageFact.findAll({
+      where: { uploadid: { [Op.in]: uploadIds } },
+      attributes: ['cloudaccountid'],
+      include,
+      group: ['BillingUsageFact.cloudaccountid'],
+      raw: true,
+    });
+
+    return rows
+      .map((row) => row.cloudaccountid)
+      .filter(Boolean);
+  },
 };

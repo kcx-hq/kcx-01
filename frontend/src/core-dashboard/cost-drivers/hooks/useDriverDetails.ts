@@ -14,7 +14,7 @@ const EMPTY_STATS: CostDriverDetailPayload = {
   topSkuChanges: [],
   links: {
     billingExplorer: '/dashboard/data-explorer',
-    resourceExplorer: '/dashboard/resources',
+    resourceExplorer: '/dashboard/data-explorer',
     optimization: '/dashboard/optimization',
   },
   actionPayload: null,

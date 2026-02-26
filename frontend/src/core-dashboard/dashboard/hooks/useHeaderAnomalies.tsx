@@ -7,20 +7,34 @@ export function useHeaderAnomalies({ api, caps, filters, route }) {
   useEffect(() => {
     if (!api || !caps) return;
     if (route.isDataExplorer || route.isReports) return;
-    if (!hasEndpoint(caps, 'overview', 'anomalies')) return;
 
     const fetchAnomalies = async () => {
       try {
-        const data = await api.call('overview', 'anomalies', {
-          params: {
-            provider: filters.provider !== 'All' ? filters.provider : undefined,
-            service: filters.service !== 'All' ? filters.service : undefined,
-            region: filters.region !== 'All' ? filters.region : undefined,
-            uploadId: filters.uploadId,
-          },
-        });
+        const params = {
+          provider: filters.provider !== 'All' ? filters.provider : undefined,
+          service: filters.service !== 'All' ? filters.service : undefined,
+          region: filters.region !== 'All' ? filters.region : undefined,
+          uploadId: filters.uploadId,
+        };
 
-        if (data?.data) setAnomaliesData(data.data);
+        if (hasEndpoint(caps, 'alertsIncidents', 'summary')) {
+          const alertsData = await api.call('alertsIncidents', 'summary', {
+            params: { ...params, view: "header" },
+          });
+          const header = alertsData?.data?.headerAnomalies;
+          if (header) {
+            setAnomaliesData({
+              list: Array.isArray(header.list) ? header.list : [],
+              count: Number(header.count || 0),
+            });
+            return;
+          }
+        }
+
+        if (hasEndpoint(caps, 'overview', 'anomalies')) {
+          const overviewData = await api.call('overview', 'anomalies', { params });
+          if (overviewData?.data) setAnomaliesData(overviewData.data);
+        }
       } catch (error) {
         if (error?.code === 'NOT_SUPPORTED') return;
         console.error('Failed to fetch anomalies:', error);

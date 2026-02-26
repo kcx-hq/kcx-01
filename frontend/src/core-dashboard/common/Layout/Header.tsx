@@ -1,7 +1,7 @@
 // src/components/Header.jsx
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, Download, ChevronDown, CheckCircle2, AlertTriangle, X, LogOut, User, Settings, ShieldCheck } from 'lucide-react';
+import { ChevronDown, CheckCircle2, AlertTriangle, X, LogOut, Settings, ShieldCheck } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuthStore } from '../../../store/Authstore';
 import { useDashboardStore } from '../../../store/Dashboard.store';
@@ -144,8 +144,6 @@ const Header = ({ title, anomalies = [], anomaliesCount = 0 }) => {
             {title}
           </h1>
         </div>
-        <h1 className="text-lg font-bold text-white tracking-tight">{title}</h1>
-
       <div className="hidden md:flex flex-1 justify-center px-4">
         <AnimatePresence mode="wait">
           {activeSource.chips.length ? (
@@ -210,9 +208,7 @@ const Header = ({ title, anomalies = [], anomaliesCount = 0 }) => {
 
       {/* Right: Actions */}
       <div className="flex items-center gap-3">
-        
-        {/* Status Indicators */}
-        <div className="flex items-center gap-2">
+        <div className="relative flex items-center gap-2" ref={profileMenuRef}>
           {hasAnomalies ? (
             <button
               onClick={() => handleDialogToggle(true)}
@@ -224,66 +220,66 @@ const Header = ({ title, anomalies = [], anomaliesCount = 0 }) => {
                 {anomaliesCount}
               </span>
             </button>
-          ) : (
-            <button
-              onClick={() => setShowProfileMenu(!showProfileMenu)}
-              className="flex items-center gap-3 p-1 pl-2 hover:bg-slate-50 rounded-full transition-all border border-transparent hover:border-slate-100"
-            >
-              <div className="hidden sm:block text-right">
-                <div className="text-xs font-bold text-[#192630]">
-                  {user?.full_name || "Admin User"}
-                </div>
-                <div className="text-[10px] text-slate-500 font-medium">
-                  {user?.role || "Viewer"}
-                </div>
-              </div>
-              
-              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#192630] to-[#2C3E50] flex items-center justify-center text-white text-xs font-bold shadow-md ring-2 ring-white">
-                {user?.full_name ? user.full_name.charAt(0).toUpperCase() : "U"}
-              </div>
-              
-              <ChevronDown size={14} className="text-slate-400 mr-1" />
-            </button>
+          ) : null}
 
-          )}
-            <AnimatePresence>
-              {showProfileMenu && (
-                <motion.div
-                  initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                  exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                  className="absolute right-0 top-full mt-2 w-60 bg-white border border-slate-100 rounded-xl shadow-xl shadow-slate-200/50 overflow-hidden z-[110]"
-                >
-                  <div className="p-4 border-b border-slate-50 bg-slate-50/50">
-                    <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Signed in as</p>
-                    <p className="text-sm font-semibold text-[#192630] truncate">{user?.email}</p>
-                  </div>
-                  
-                  <div className="p-1.5">
-                    <button 
-                      onClick={() => { setShowProfileMenu(false); setShowProfileSettings(true); }}
-                      className="w-full flex items-center gap-3 px-3 py-2 text-sm text-slate-600 hover:text-[#192630] hover:bg-slate-50 rounded-lg transition-colors"
-                    >
-                      <Settings size={16} /> Account Settings
-                    </button>
-                    <button className="w-full flex items-center gap-3 px-3 py-2 text-sm text-slate-600 hover:text-[#192630] hover:bg-slate-50 rounded-lg transition-colors">
-                      <ShieldCheck size={16} /> Security & Privacy
-                    </button>
-                  </div>
+          <button
+            onClick={() => setShowProfileMenu(!showProfileMenu)}
+            className="flex items-center gap-3 p-1 pl-2 hover:bg-slate-50 rounded-full transition-all border border-transparent hover:border-slate-100"
+          >
+            <div className="hidden sm:block text-right">
+              <div className="text-xs font-bold text-[#192630]">
+                {user?.full_name || "Admin User"}
+              </div>
+              <div className="text-[10px] text-slate-500 font-medium">
+                {user?.role || "Viewer"}
+              </div>
+            </div>
 
-                  <div className="border-t border-slate-50 p-1.5">
-                    <button 
-                      onClick={handleLogout}
-                      className="w-full flex items-center gap-3 px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                    >
-                      <LogOut size={16} /> Sign Out
-                    </button>
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
+            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#192630] to-[#2C3E50] flex items-center justify-center text-white text-xs font-bold shadow-md ring-2 ring-white">
+              {user?.full_name ? user.full_name.charAt(0).toUpperCase() : "U"}
+            </div>
+
+            <ChevronDown size={14} className="text-slate-400 mr-1" />
+          </button>
+
+          <AnimatePresence>
+            {showProfileMenu && (
+              <motion.div
+                initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                className="absolute right-0 top-full mt-2 w-60 bg-white border border-slate-100 rounded-xl shadow-xl shadow-slate-200/50 overflow-hidden z-[110]"
+              >
+                <div className="p-4 border-b border-slate-50 bg-slate-50/50">
+                  <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Signed in as</p>
+                  <p className="text-sm font-semibold text-[#192630] truncate">{user?.email}</p>
+                </div>
+
+                <div className="p-1.5">
+                  <button
+                    onClick={() => { setShowProfileMenu(false); setShowProfileSettings(true); }}
+                    className="w-full flex items-center gap-3 px-3 py-2 text-sm text-slate-600 hover:text-[#192630] hover:bg-slate-50 rounded-lg transition-colors"
+                  >
+                    <Settings size={16} /> Account Settings
+                  </button>
+                  <button className="w-full flex items-center gap-3 px-3 py-2 text-sm text-slate-600 hover:text-[#192630] hover:bg-slate-50 rounded-lg transition-colors">
+                    <ShieldCheck size={16} /> Security & Privacy
+                  </button>
+                </div>
+
+                <div className="border-t border-slate-50 p-1.5">
+                  <button
+                    onClick={handleLogout}
+                    className="w-full flex items-center gap-3 px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                  >
+                    <LogOut size={16} /> Sign Out
+                  </button>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
+      </div>
       </header>
 
       <AnimatePresence>
@@ -350,6 +346,19 @@ const Header = ({ title, anomalies = [], anomaliesCount = 0 }) => {
                   </div>
                 )}
               </div>
+              {hasAnomalies ? (
+                <div className="border-t border-slate-100 bg-slate-50/60 px-6 py-4 flex justify-end">
+                  <button
+                    onClick={() => {
+                      handleDialogToggle(false);
+                      navigate("/dashboard/alerts-incidents");
+                    }}
+                    className="inline-flex items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm font-semibold text-emerald-700 hover:bg-emerald-100 transition-colors"
+                  >
+                    Open Alerts & Incidents
+                  </button>
+                </div>
+              ) : null}
             </motion.div>
           </motion.div>
         )}

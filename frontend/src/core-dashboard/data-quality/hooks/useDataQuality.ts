@@ -5,6 +5,7 @@ const EMPTY_STATS = {
   score: 100,
   totalRows: 0,
   costAtRisk: 0,
+  governance: null,
   buckets: {
     untagged: [],
     missingMeta: [],

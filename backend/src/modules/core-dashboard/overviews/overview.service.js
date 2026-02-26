@@ -719,7 +719,7 @@ export const dashboardService = {
         count: null,
         impactValue: unallocatedSpendValue,
         metricPercent: unallocatedSpendPercent,
-        ctaLink: '/dashboard/accounts',
+        ctaLink: '/dashboard/allocation-unit-economics',
       },
       {
         key: 'commitment',

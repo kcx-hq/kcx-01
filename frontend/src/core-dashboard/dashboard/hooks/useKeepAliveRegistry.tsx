@@ -8,11 +8,11 @@ export function useKeepAliveRegistry(routeFlags) {
       ['DataExplorer', routeFlags.isDataExplorer],
       ['CostAnalysis', routeFlags.isCostAnalysis],
       ['CostDrivers', routeFlags.isCostDrivers],
-      ['ResourceInventory', routeFlags.isResources],
       ['DataQuality', routeFlags.isDataQuality],
+      ['ForecastingBudgets', routeFlags.isForecastingBudgets],
+      ['AlertsIncidents', routeFlags.isAlertsIncidents],
       ['Optimization', routeFlags.isOptimization],
       ['Reports', routeFlags.isReports],
-      ['AccountsOwnership', routeFlags.isAccounts],
       ['AllocationUnitEconomics', routeFlags.isAllocationUnitEconomics],
       ['Overview', routeFlags.isOverview],
     ];

@@ -506,7 +506,7 @@ const emptySpendAnalytics = () => ({
   anomalyDetection: { threshold: 0, mean: 0, stdDev: 0, list: [], highlights: [], markers: [], impactTotal: 0 },
   predictabilityRisk: { forecast: { projectedSpend: 0, lowerBound: 0, upperBound: 0, confidence: "Low", points: [] }, predictabilityScore: 0, volatilityScore: 0, riskMatrix: [] },
   concentrationPareto: { top10ServicesShare: 0, top3AccountsShare: 0, singleRegionShare: 0, topServices: [], topAccounts: [], topRegions: [] },
-  drilldownPaths: { varianceDrivers: "/dashboard/cost-drivers", resourceInventory: "/dashboard/resources", billingExplorer: "/dashboard/data-explorer" },
+  drilldownPaths: { varianceDrivers: "/dashboard/cost-drivers", resourceInventory: "/dashboard/data-explorer", billingExplorer: "/dashboard/data-explorer" },
 });
 
 export const generateCostAnalysis = async (filters = {}, groupByParam) => {
@@ -674,7 +674,7 @@ export const generateCostAnalysis = async (filters = {}, groupByParam) => {
     concentrationPareto: paretoBlock,
     drilldownPaths: {
       varianceDrivers: scopedLink("/dashboard/cost-drivers", scopeParams),
-      resourceInventory: scopedLink("/dashboard/resources", scopeParams),
+      resourceInventory: scopedLink("/dashboard/data-explorer", scopeParams),
       billingExplorer: scopedLink("/dashboard/data-explorer", scopeParams),
     },
   };

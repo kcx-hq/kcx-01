@@ -6,6 +6,8 @@ import optimizationRoutes from './optimization/optimization.routes.js';
 import governanceRoutes from './governance/governance.routes.js';
 import analyticsRoutes from './analytics/analytics.routes.js';
 import unitEconomicsRoutes from './unit-economics/unit-economics.routes.js';
+import forecastingBudgetsRoutes from './forecasting-budgets/forecasting-budgets.routes.js';
+import alertsIncidentsRoutes from './alerts-incidents/alerts-incidents.routes.js';
 
 const router = express.Router();
 router.use(decodeUser);
@@ -16,5 +18,7 @@ router.use('/optimization', optimizationRoutes);
 router.use('/governance', governanceRoutes);
 router.use('/analytics', analyticsRoutes);
 router.use('/unit-economics' , unitEconomicsRoutes)
+router.use('/forecasting-budgets', forecastingBudgetsRoutes);
+router.use('/alerts-incidents', alertsIncidentsRoutes);
 
 export default router;

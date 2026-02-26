@@ -24,11 +24,11 @@ import {
   DataExplorer,
   CostAnalysis,
   CostDrivers,
-  ResourceInventory,
   DataQuality,
+  ForecastingBudgets,
+  AlertsIncidents,
   Optimization,
   Reports,
-  AccountsOwnership,
   AllocationUnitEconomics,
 } from "./lazyViews";
 import VerticalSidebarConfig from "../verticalSidebar.config";
@@ -114,11 +114,11 @@ const DashboardPage = () => {
     if (route.isDataExplorer) return "Data Explorer";
     if (route.isCostAnalysis) return "Cost Analysis";
     if (route.isCostDrivers) return "Cost Drivers";
-    if (route.isResources) return "Resource Inventory";
-    if (route.isDataQuality) return "Data Quality";
+    if (route.isDataQuality) return "Governance & Data Quality";
+    if (route.isForecastingBudgets) return "Forecasting & Budgets";
+    if (route.isAlertsIncidents) return "Alerts & Incidents";
     if (route.isOptimization) return "Optimization";
     if (route.isReports) return "Reports";
-    if (route.isAccounts) return "Account Ownership";
     if (route.isAllocationUnitEconomics) return "Allocation & Unit Economics";
     return "Overview";
   }, [route]);
@@ -222,22 +222,32 @@ const DashboardPage = () => {
                   )
                 )}
 
-                {shouldRender(route.isResources, "ResourceInventory") &&
-                isModuleEnabled(caps, "resources") && (
-                  withBoundary(
-                    "Resources",
-                    <KeepAlive isActive={route.isResources}>
-                      <ResourceInventory filters={memoizedFilters} api={api} caps={caps} />
-                    </KeepAlive>
-                  )
-                )}
-
                 {shouldRender(route.isDataQuality, "DataQuality") &&
                 isModuleEnabled(caps, "dataQuality") && (
                   withBoundary(
                     "Data Quality",
                     <KeepAlive isActive={route.isDataQuality}>
                       <DataQuality filters={memoizedFilters} api={api} caps={caps} />
+                    </KeepAlive>
+                  )
+                )}
+
+                {shouldRender(route.isForecastingBudgets, "ForecastingBudgets") &&
+                isModuleEnabled(caps, "forecastingBudgets") && (
+                  withBoundary(
+                    "Forecasting & Budgets",
+                    <KeepAlive isActive={route.isForecastingBudgets}>
+                      <ForecastingBudgets filters={memoizedFilters} api={api} caps={caps} />
+                    </KeepAlive>
+                  )
+                )}
+
+                {shouldRender(route.isAlertsIncidents, "AlertsIncidents") &&
+                isModuleEnabled(caps, "alertsIncidents") && (
+                  withBoundary(
+                    "Alerts & Incidents",
+                    <KeepAlive isActive={route.isAlertsIncidents}>
+                      <AlertsIncidents filters={memoizedFilters} api={api} caps={caps} />
                     </KeepAlive>
                   )
                 )}
@@ -258,16 +268,6 @@ const DashboardPage = () => {
                     "Reports",
                     <KeepAlive isActive={route.isReports}>
                       <Reports filters={memoizedFilters} api={api} caps={caps} />
-                    </KeepAlive>
-                  )
-                )}
-
-                {shouldRender(route.isAccounts, "AccountsOwnership") &&
-                isModuleEnabled(caps, "governance") && (
-                  withBoundary(
-                    "Accounts and Ownership",
-                    <KeepAlive isActive={route.isAccounts}>
-                      <AccountsOwnership filters={memoizedFilters} api={api} caps={caps} />
                     </KeepAlive>
                   )
                 )}

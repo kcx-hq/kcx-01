@@ -1434,7 +1434,7 @@ const buildDeepLinks = ({ dimension, key, filters, controls }) => {
 
   return {
     billingExplorer: `/dashboard/data-explorer${suffix}`,
-    resourceExplorer: `/dashboard/resources${suffix}`,
+    resourceExplorer: `/dashboard/data-explorer${suffix}`,
     optimization: `/dashboard/optimization${suffix}`,
   };
 };
@@ -1984,7 +1984,7 @@ export const costDriversService = {
         insightText: '',
         links: {
           billingExplorer: '/dashboard/data-explorer',
-          resourceExplorer: '/dashboard/resources',
+          resourceExplorer: '/dashboard/data-explorer',
           optimization: '/dashboard/optimization',
         },
         actionPayload: null,
@@ -2006,7 +2006,7 @@ export const costDriversService = {
         insightText: '',
         links: {
           billingExplorer: '/dashboard/data-explorer',
-          resourceExplorer: '/dashboard/resources',
+          resourceExplorer: '/dashboard/data-explorer',
           optimization: '/dashboard/optimization',
         },
         actionPayload: null,

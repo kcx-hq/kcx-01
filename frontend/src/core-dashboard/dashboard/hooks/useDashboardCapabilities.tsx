@@ -16,7 +16,8 @@ export function useDashboardCapabilities(caps) {
       isModuleEnabled(caps, 'costAnalysis') ||
       isModuleEnabled(caps, 'costDrivers') ||
       isModuleEnabled(caps, 'dataQuality') ||
-      isModuleEnabled(caps, 'resources') ||
+      isModuleEnabled(caps, 'forecastingBudgets') ||
+      isModuleEnabled(caps, 'alertsIncidents') ||
       isModuleEnabled(caps, 'optimization') ||
       isModuleEnabled(caps, 'reports') ||
       isModuleEnabled(caps, 'governance') ||

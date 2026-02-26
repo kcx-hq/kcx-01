@@ -10,22 +10,22 @@ export function useDashboardRoute() {
     const isDataExplorer = path.includes('/data-explorer');
     const isCostAnalysis = path.includes('/cost-analysis');
     const isCostDrivers = path.includes('/cost-drivers');
-    const isResources = path.includes('/resources');
     const isDataQuality = path.includes('/data-quality');
+    const isForecastingBudgets = path.includes('/forecasting-budgets');
+    const isAlertsIncidents = path.includes('/alerts-incidents');
     const isOptimization = path.includes('/optimization');
     const isReports = path.includes('/reports');
-    const isAccounts = path.includes('/accounts');
     const isAllocationUnitEconomics = path.includes('/allocation-unit-economics');
 
     const isOverview =
       !isDataExplorer &&
       !isCostAnalysis &&
       !isCostDrivers &&
-      !isResources &&
       !isDataQuality &&
+      !isForecastingBudgets &&
+      !isAlertsIncidents &&
       !isOptimization &&
       !isReports &&
-      !isAccounts &&
       !isAllocationUnitEconomics;
 
     return {
@@ -33,11 +33,11 @@ export function useDashboardRoute() {
       isDataExplorer,
       isCostAnalysis,
       isCostDrivers,
-      isResources,
       isDataQuality,
+      isForecastingBudgets,
+      isAlertsIncidents,
       isOptimization,
       isReports,
-      isAccounts,
       isAllocationUnitEconomics,
       isOverview,
     };

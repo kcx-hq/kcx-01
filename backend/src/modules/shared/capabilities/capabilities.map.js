@@ -146,6 +146,26 @@ export const CAPABILITIES_MAP = {
           },
         },
       },
+
+      forecastingBudgets: {
+        enabled: true,
+        endpoints: {
+          summary: {
+            method: "GET",
+            path: "/forecasting-budgets/summary",
+          },
+        },
+      },
+
+      alertsIncidents: {
+        enabled: true,
+        endpoints: {
+          summary: {
+            method: "GET",
+            path: "/alerts-incidents/summary",
+          },
+        },
+      },
     },
   },
 
