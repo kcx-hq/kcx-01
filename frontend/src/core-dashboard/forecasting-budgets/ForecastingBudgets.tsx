@@ -16,7 +16,7 @@ const INITIAL_CONTROLS: ForecastingControls = {
 };
 
 export default function ForecastingBudgets({ filters, api, caps }: ForecastingBudgetsProps) {
-  if (!api || !caps?.modules?.forecastingBudgets?.enabled) return null;
+  const isEnabled = Boolean(api && caps?.modules?.forecastingBudgets?.enabled);
 
   const [controls, setControls] = useState<ForecastingControls>(INITIAL_CONTROLS);
   const { loading, refreshing, error, data } = useForecastingBudgetsData({
@@ -28,6 +28,8 @@ export default function ForecastingBudgets({ filters, api, caps }: ForecastingBu
 
   const handleControlsChange = (patch: Partial<ForecastingControls>) =>
     setControls((prev) => ({ ...prev, ...patch }));
+
+  if (!isEnabled) return null;
 
   return (
     <ForecastingBudgetsView
@@ -41,4 +43,3 @@ export default function ForecastingBudgets({ filters, api, caps }: ForecastingBu
     />
   );
 }
-

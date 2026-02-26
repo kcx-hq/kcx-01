@@ -23,6 +23,7 @@ import { guardAggregationIntegrity } from "./validation/aggregation.guard.js";
 import { validatePeriodAlignment } from "./validation/period-alignment.guard.js";
 import { toAllocationDto } from "./dto/allocation.dto.js";
 import { toUnitEconomicsDto } from "./dto/unit-economics.dto.js";
+import { buildAllocationUnitEconomicsViewModel } from "./presentation/allocation-unit-economics.viewmodel.js";
 
 const n = (v) => Number.parseFloat(v || 0) || 0;
 const isObject = (v) => v && typeof v === "object" && !Array.isArray(v);
@@ -286,6 +287,15 @@ export const unitEconomicsService = {
     const compareMode = normalizeCompareMode(compareTo);
     const previousWindow = resolvePreviousWindow(currentWindow, compareMode);
     const safeBasis = sanitizeBasis(costBasis);
+    const attachViewModel = (payload) => ({
+      ...payload,
+      viewModel: buildAllocationUnitEconomicsViewModel({
+        payload,
+        period,
+        costBasis: safeBasis,
+        compareMode,
+      }),
+    });
     const queryStartDate =
       currentWindow && previousWindow
         ? new Date(
@@ -311,7 +321,7 @@ export const unitEconomicsService = {
     });
 
     if (!rows.length || !currentWindow) {
-      return {
+      return attachViewModel({
         kpis: {
           totalCost: 0,
           totalQuantity: 0,
@@ -419,7 +429,7 @@ export const unitEconomicsService = {
           aggregationIntegrity: { valid: true, difference: 0, totalCost: 0, rowTotal: 0 },
           periodAlignment: { aligned: true, costWindow: { startDate: null, endDate: null }, volumeWindow: { startDate: null, endDate: null } },
         },
-      };
+      });
     }
 
     const currentRows = rows.filter((row) => inRange(row.chargeperiodstart, currentWindow));
@@ -873,7 +883,7 @@ export const unitEconomicsService = {
       breakEven,
     });
 
-    return {
+    return attachViewModel({
       kpis: {
         totalCost: roundTo(totalCost, 2),
         totalQuantity: roundTo(totalQuantity, 2),
@@ -958,6 +968,6 @@ export const unitEconomicsService = {
         aggregationIntegrity,
         periodAlignment,
       },
-    };
+    });
   }
 };

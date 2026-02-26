@@ -22,7 +22,11 @@ export const useDataQuality = ({ filters, api, caps }) => {
   const [stats, setStats] = useState(null);
 
   useEffect(() => {
-    if (!api || !caps) return;
+    if (!api || !caps) {
+      setLoading(false);
+      setStats(EMPTY_STATS);
+      return;
+    }
 
     let isMounted = true;
 

@@ -16,10 +16,8 @@ const INITIAL_CONTROLS: AllocationUnitEconomicsControls = {
 };
 
 export default function AllocationUnitEconomics({ filters, api, caps }: AllocationUnitEconomicsProps) {
-  if (!api || !caps) return null;
-
   const modules = (caps as { modules?: Record<string, { enabled?: boolean }> }).modules || {};
-  if (!modules.unitEconomics?.enabled && !modules.governance?.enabled) return null;
+  const isEnabled = Boolean(api && caps && (modules.unitEconomics?.enabled || modules.governance?.enabled));
 
   const [controls, setControls] = useState<AllocationUnitEconomicsControls>(INITIAL_CONTROLS);
   const { loading, error, model } = useAllocationUnitEconomicsData({
@@ -31,6 +29,8 @@ export default function AllocationUnitEconomics({ filters, api, caps }: Allocati
 
   const onControlsChange = (patch: Partial<AllocationUnitEconomicsControls>) =>
     setControls((prev) => ({ ...prev, ...patch }));
+
+  if (!isEnabled) return null;
 
   return (
     <AllocationUnitEconomicsView
