@@ -1,8 +1,15 @@
 export { default as GlobalControlsSection } from './GlobalControlsSection';
+export { default as AllocationModuleSection } from './AllocationModuleSection';
+export { default as UnitEconomicsModuleSection } from './UnitEconomicsModuleSection';
+export { default as AllocationOverviewSection } from './AllocationOverviewSection';
 export { default as CoverageKpisSection } from './CoverageKpisSection';
 export { default as ShowbackTableSection } from './ShowbackTableSection';
 export { default as SharedPoolSection } from './SharedPoolSection';
+export { default as SharedPoolTransparencySection } from './SharedPoolTransparencySection';
+export { default as UnallocatedIntegritySection } from './UnallocatedIntegritySection';
 export { default as UnitTrendSection } from './UnitTrendSection';
+export { default as UnitBenchmarkSection } from './UnitBenchmarkSection';
+export { default as MarginOverlaySection } from './MarginOverlaySection';
 export { default as VarianceSection } from './VarianceSection';
 export { default as OwnershipHeatmapSection } from './OwnershipHeatmapSection';
 export { default as ExportSection } from './ExportSection';

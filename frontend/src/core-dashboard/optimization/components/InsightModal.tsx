@@ -34,7 +34,47 @@ export function InsightModal({ selectedInsight, onClose }) {
               </button>
             </div>
 
-            {selectedInsight.type === "rightsizing" ? (
+            {selectedInsight?.priorityScore !== undefined ? (
+              <div className="space-y-4">
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                  <div className="rounded-lg border border-[var(--border-light)] bg-[var(--bg-surface)] p-4">
+                    <div className="mb-2 text-xs text-[var(--text-muted)]">Monthly Impact</div>
+                    <div className="text-2xl font-bold text-emerald-700">
+                      {formatCurrency(selectedInsight.monthlyImpact || 0)}
+                    </div>
+                  </div>
+                  <div className="rounded-lg border border-[var(--border-light)] bg-[var(--bg-surface)] p-4">
+                    <div className="mb-2 text-xs text-[var(--text-muted)]">Priority Score</div>
+                    <div className="text-2xl font-bold text-[var(--text-primary)]">
+                      {Number(selectedInsight.priorityScore || 0).toFixed(4)}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="rounded-lg border border-[var(--border-light)] bg-[var(--bg-surface)] p-4">
+                  <div className="mb-2 text-xs font-bold uppercase text-[var(--text-muted)]">Execution Context</div>
+                  <ul className="space-y-1 text-sm text-[var(--text-secondary)]">
+                    <li>- Owner: {selectedInsight.ownerTeam || "Unassigned"}</li>
+                    <li>- Product: {selectedInsight.ownerProduct || "Unmapped"}</li>
+                    <li>- Stage: {selectedInsight.stage || "identified"}</li>
+                    <li>- Confidence: {selectedInsight.confidence || "N/A"}</li>
+                    <li>- Effort: {selectedInsight.effort || "N/A"} | Risk: {selectedInsight.risk || "N/A"}</li>
+                    <li>- ETA: {selectedInsight.etaDate || "N/A"} | Blocked by: {selectedInsight.blockedBy || "None"}</li>
+                  </ul>
+                </div>
+
+                <div className="rounded-lg border border-[var(--border-light)] bg-[var(--bg-surface)] p-4">
+                  <div className="mb-2 text-xs font-bold uppercase text-[var(--text-muted)]">Verification Plan</div>
+                  <ul className="space-y-1 text-sm text-[var(--text-secondary)]">
+                    <li>- Claimed: {formatCurrency(selectedInsight.claimedSavings || 0)}</li>
+                    <li>- Verified: {formatCurrency(selectedInsight.verifiedSavings || 0)}</li>
+                    <li>- Delta: {formatCurrency(selectedInsight.verificationDelta || 0)}</li>
+                    <li>- Baseline: 14d pre-change | Compare: 14d post-change</li>
+                    <li>- Volume normalization required where unit metric exists</li>
+                  </ul>
+                </div>
+              </div>
+            ) : selectedInsight.type === "rightsizing" ? (
               <div className="space-y-4">
                 <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                   <div className="rounded-lg border border-[var(--border-light)] bg-[var(--bg-surface)] p-4">

@@ -7,7 +7,7 @@ export default function Optimization({ filters: parentFilters = {}, api, caps })
   const { user } = useAuthStore();
   const isMasked = !user?.is_premium; // NOT premium => masked
 
-  const [activeTab, setActiveTab] = useState("opportunities");
+  const [activeTab, setActiveTab] = useState("overview");
   const [expandedItems, setExpandedItems] = useState({});
   const [selectedInsight, setSelectedInsight] = useState(null);
   const [selectedResource, setSelectedResource] = useState(null);

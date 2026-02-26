@@ -113,13 +113,12 @@ export async function ingestS3File({
     for (const row of mappedRowsForDims) {
       const dimensionIds = resolveDimensionIdsFromMaps(row, maps);
 
+      // Keep ingestion permissive: only core dimensions are mandatory.
+      // Optional dimensions (resource, sku, commitment discount) can be null.
       if (
         !dimensionIds.regionid ||
         !dimensionIds.cloudaccountid ||
-        !dimensionIds.commitmentdiscountid ||
-        !dimensionIds.resourceid ||
-        !dimensionIds.serviceid ||
-        !dimensionIds.skuid
+        !dimensionIds.serviceid
       ) continue;
 
       await pushFact(uploadId, row, dimensionIds);

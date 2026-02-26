@@ -108,8 +108,7 @@ const SignupForm = ({
                 `}
               >
                 <option value="" disabled>Select Role</option>
-                <option value="USER">Engineer</option>
-                <option value="FINANCE">Finance</option>
+                <option value="USER">User</option>               
                 <option value="ADMIN">Admin</option>
               </select>
               

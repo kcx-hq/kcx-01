@@ -1,7 +1,7 @@
 // src/components/Header.jsx
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, Download, ChevronDown, CheckCircle2, AlertTriangle, X, LogOut, User } from 'lucide-react';
+import { Search, Download, ChevronDown, CheckCircle2, AlertTriangle, X, LogOut, User, Settings, ShieldCheck } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuthStore } from '../../../store/Authstore';
 import { useDashboardStore } from '../../../store/Dashboard.store';
@@ -21,6 +21,13 @@ const Header = ({ title, anomalies = [], anomaliesCount = 0 }) => {
   const [isUpdating, setIsUpdating] = useState(false);
   const [updateError, setUpdateError] = useState("");
   const profileMenuRef = useRef(null);
+  const sourceChipPalette = [
+    'bg-emerald-50 border-emerald-200 text-emerald-800',
+    'bg-cyan-50 border-cyan-200 text-cyan-800',
+    'bg-blue-50 border-blue-200 text-blue-800',
+    'bg-amber-50 border-amber-200 text-amber-800',
+    'bg-lime-50 border-lime-200 text-lime-800',
+  ];
 
   const hasAnomalies = anomaliesCount > 0;
   const formatCurrency = (val) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(val);
@@ -153,13 +160,13 @@ const Header = ({ title, anomalies = [], anomaliesCount = 0 }) => {
             >
               <motion.div
                 aria-hidden
-                className="pointer-events-none absolute inset-0 bg-gradient-to-r from-transparent via-[#a02ff1]/10 to-transparent"
+                className="pointer-events-none absolute inset-0 bg-gradient-to-r from-transparent via-[#007758]/10 to-transparent"
                 animate={{ opacity: [0.1, 0.28, 0.1] }}
                 transition={{ duration: 3.2, repeat: Infinity, ease: 'easeInOut' }}
               />
               <p className="relative text-[10px] uppercase tracking-wider text-gray-500 font-semibold flex items-center gap-1.5">
                 <motion.span
-                  className="inline-block w-1.5 h-1.5 rounded-full bg-[#a02ff1]"
+                  className="inline-block w-1.5 h-1.5 rounded-full bg-[#007758]"
                   animate={{ scale: [1, 1.2, 1], opacity: [0.6, 1, 0.6] }}
                   transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
                 />
@@ -173,20 +180,23 @@ const Header = ({ title, anomalies = [], anomaliesCount = 0 }) => {
                 className="relative mt-0.5 flex items-center gap-1.5 min-w-0"
                 title={activeSource.fullText}
               >
-                {activeSource.chips.map((name, idx) => (
-                  <motion.span
-                    key={`${name}-${idx}`}
-                    initial={{ opacity: 0, y: 3 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.15, delay: idx * 0.04 }}
-                    className="inline-flex items-center max-w-[120px] px-2 py-0.5 rounded-full border border-white/10 bg-black/20 text-[11px] text-gray-200 font-medium truncate"
-                    title={name}
-                  >
-                    {name}
-                  </motion.span>
-                ))}
+                {activeSource.chips.map((name, idx) => {
+                  const chipClass = sourceChipPalette[idx % sourceChipPalette.length];
+                  return (
+                    <motion.span
+                      key={`${name}-${idx}`}
+                      initial={{ opacity: 0, y: 3 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.15, delay: idx * 0.04 }}
+                      className={`inline-flex items-center max-w-[140px] px-2 py-0.5 rounded-full border text-[11px] font-semibold truncate ${chipClass}`}
+                      title={name}
+                    >
+                      {name}
+                    </motion.span>
+                  );
+                })}
                 {activeSource.remainingCount > 0 ? (
-                  <span className="inline-flex items-center px-2 py-0.5 rounded-full border border-[#a02ff1]/30 bg-[#a02ff1]/10 text-[11px] text-[#d5b3f7] font-semibold whitespace-nowrap">
+                  <span className="inline-flex items-center px-2 py-0.5 rounded-full border border-[#007758]/30 bg-[#007758]/10 text-[11px] text-emerald-700 font-semibold whitespace-nowrap">
                     +{activeSource.remainingCount} more
                   </span>
                 ) : null}

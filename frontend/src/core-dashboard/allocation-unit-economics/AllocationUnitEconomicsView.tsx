@@ -1,14 +1,9 @@
-import React from 'react';
+import React, { useState } from 'react';
 import type { AllocationUnitEconomicsControls, AllocationUnitEconomicsViewModel } from './types';
 import {
-  CoverageKpisSection,
-  ExportSection,
+  AllocationModuleSection,
   GlobalControlsSection,
-  OwnershipHeatmapSection,
-  SharedPoolSection,
-  ShowbackTableSection,
-  UnitTrendSection,
-  VarianceSection,
+  UnitEconomicsModuleSection,
 } from './components/sections';
 
 interface AllocationUnitEconomicsViewProps {
@@ -19,6 +14,21 @@ interface AllocationUnitEconomicsViewProps {
   model: AllocationUnitEconomicsViewModel;
 }
 
+type ModuleKey = 'allocation' | 'unit_economics';
+
+const MODULES: Array<{ key: ModuleKey; label: string; description: string }> = [
+  {
+    key: 'allocation',
+    label: 'Allocation',
+    description: 'Ownership mapping, showback/chargeback, and shared pool transparency.',
+  },
+  {
+    key: 'unit_economics',
+    label: 'Unit Economics',
+    description: 'Per-unit performance and efficiency based on final allocated cost.',
+  },
+];
+
 export default function AllocationUnitEconomicsView({
   loading,
   error,
@@ -26,6 +36,8 @@ export default function AllocationUnitEconomicsView({
   onControlsChange,
   model,
 }: AllocationUnitEconomicsViewProps) {
+  const [activeModule, setActiveModule] = useState<ModuleKey>('allocation');
+
   if (loading) {
     return (
       <div className="rounded-2xl border border-slate-200 bg-white px-4 py-10 text-center text-sm font-semibold text-slate-600">
@@ -33,6 +45,8 @@ export default function AllocationUnitEconomicsView({
       </div>
     );
   }
+
+  const kpiContextLabel = `${model.periodLabel} | ${model.kpis.comparisonLabel}`;
 
   return (
     <div className="space-y-4">
@@ -50,21 +64,37 @@ export default function AllocationUnitEconomicsView({
         </p>
       </div>
 
-      <CoverageKpisSection coverage={model.coverage} />
-
-      <div className="grid grid-cols-1 gap-4 xl:grid-cols-[1.7fr_1fr] xl:items-start">
-        <div className="min-w-0">
-          <ShowbackTableSection rows={model.showbackRows} />
+      <section className="rounded-2xl border border-slate-200 bg-white p-3 shadow-sm">
+        <div className="flex flex-wrap items-center gap-2">
+          {MODULES.map((module) => {
+            const active = module.key === activeModule;
+            return (
+              <button
+                key={module.key}
+                type="button"
+                onClick={() => setActiveModule(module.key)}
+                className={[
+                  'rounded-lg border px-3 py-1.5 text-xs font-black uppercase tracking-wider transition',
+                  active
+                    ? 'border-emerald-300 bg-emerald-50 text-emerald-700 shadow-sm'
+                    : 'border-slate-200 bg-slate-50 text-slate-600 hover:border-emerald-200 hover:bg-emerald-50/40',
+                ].join(' ')}
+              >
+                {module.label}
+              </button>
+            );
+          })}
         </div>
-        <div className="min-w-0">
-          <SharedPoolSection model={model.sharedPool} />
-        </div>
-      </div>
+        <p className="mt-2 text-xs font-semibold text-slate-600">
+          {MODULES.find((module) => module.key === activeModule)?.description}
+        </p>
+      </section>
 
-      <UnitTrendSection model={model.kpis} />
-      <VarianceSection teamRows={model.teamVariance} productRows={model.productVariance} />
-      <OwnershipHeatmapSection cells={model.heatmap} />
-      <ExportSection rows={model.exportRows} />
+      {activeModule === 'allocation' ? (
+        <AllocationModuleSection controls={controls} model={model} kpiContextLabel={kpiContextLabel} />
+      ) : (
+        <UnitEconomicsModuleSection model={model} />
+      )}
 
       <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
         <h3 className="mb-2 text-sm font-black uppercase tracking-wider text-slate-800">Governance Notes</h3>

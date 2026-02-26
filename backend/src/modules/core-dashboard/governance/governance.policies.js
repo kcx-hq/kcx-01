@@ -4,7 +4,7 @@
  */
 
 import { costsService } from '../analytics/cost-analysis/cost-analysis.service.js';
-import { BillingUsageFact, CloudAccount } from '../../../models/index.js';
+import { BillingUsageFact, CloudAccount, Service, Region } from '../../../models/index.js';
 import { Op } from 'sequelize';
 import { getDateRange } from '../../../common/utils/date.helpers.js';
 import { formatCurrency } from '../../../common/utils/cost.helpers.js';
@@ -48,6 +48,59 @@ const getOwnerFromTags = (tags = {}) => {
     t['productowner'] ||
     null
   );
+};
+
+const getScopedMaxChargePeriodStart = async ({ filters = {}, uploadIds = [] } = {}) => {
+  const ids = Array.isArray(uploadIds)
+    ? uploadIds.map(String).map((x) => x.trim()).filter(Boolean)
+    : [];
+
+  if (!ids.length) return null;
+
+  const provider = filters.provider || 'All';
+  const service = filters.service || 'All';
+  const region = filters.region || 'All';
+
+  const include = [
+    {
+      model: CloudAccount,
+      as: 'cloudAccount',
+      required: provider !== 'All',
+      attributes: [],
+      ...(provider !== 'All' ? { where: { providername: provider } } : {}),
+    },
+    {
+      model: Service,
+      as: 'service',
+      required: service !== 'All',
+      attributes: [],
+      ...(service !== 'All' ? { where: { servicename: service } } : {}),
+    },
+    {
+      model: Region,
+      as: 'region',
+      required: region !== 'All',
+      attributes: [],
+      ...(region !== 'All' ? { where: { regionname: region } } : {}),
+    },
+  ];
+
+  const maxDate = await BillingUsageFact.max('chargeperiodstart', {
+    where: {
+      uploadid: { [Op.in]: ids },
+    },
+    include,
+    raw: true,
+  });
+
+  return maxDate || null;
+};
+
+const getScopedDateRange = async ({ filters = {}, period = null, uploadIds = [] } = {}) => {
+  const referenceDate = period
+    ? await getScopedMaxChargePeriodStart({ filters, uploadIds })
+    : null;
+  return getDateRange(period, referenceDate);
 };
 
 /**
@@ -99,7 +152,7 @@ const emptyTagCompliance = () => ({
 // ---------- UPDATED FUNCTION ----------
 export async function checkTagCompliance(params = {}) {
   const { filters = {}, period = null, uploadIds = [] } = params;
-  const { startDate, endDate } = getDateRange(period);
+  const { startDate, endDate } = await getScopedDateRange({ filters, period, uploadIds });
 
   if (!Array.isArray(uploadIds) || uploadIds.length === 0) return emptyTagCompliance();
 
@@ -251,7 +304,7 @@ export async function checkTagCompliance(params = {}) {
  */
 export async function checkOwnershipGaps(params = {}) {
   const { filters = {}, period = null , uploadIds = [] } = params;
-  const { startDate, endDate } = getDateRange(period);
+  const { startDate, endDate } = await getScopedDateRange({ filters, period, uploadIds });
 
   if (!uploadIds || uploadIds.length === 0) return emptyOwnership();
 
@@ -413,7 +466,7 @@ export async function getAccountsWithOwnership(params = {}) {
       };
     }
 
-    const { startDate, endDate } = getDateRange(period);
+    const { startDate, endDate } = await getScopedDateRange({ filters, period, uploadIds });
 
     let costData = await costsService.getCostData({
       filters,

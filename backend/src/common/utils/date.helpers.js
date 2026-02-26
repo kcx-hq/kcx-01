@@ -4,22 +4,32 @@
  */
 
 /**
- * Get date range for cost queries
- * @param {string} period - 'month', 'week', 'year', or custom days
- * @returns {Object} { startDate, endDate }
+ * Get date range for cost queries.
+ * If referenceDate is provided, rolling windows are anchored to that date (billing-file max date).
+ * @param {string|null} period - e.g. 'month', 'week', 'year', 'last30days', '30d'
+ * @param {Date|string|null} referenceDate - Optional anchor date from dataset
+ * @returns {{ startDate: Date|null, endDate: Date|null }}
  */
-export function getDateRange(period = null) {
+export function getDateRange(period = null, referenceDate = null) {
   if (!period) return { startDate: null, endDate: null };
-  const endDate = new Date();
-  endDate.setHours(23, 59, 59, 999); // End of today
-  
-  let startDate = new Date();
-  
-  switch (period) {
+
+  const anchor = referenceDate ? new Date(referenceDate) : new Date();
+  const safeAnchor = Number.isNaN(anchor.getTime()) ? new Date() : anchor;
+
+  const endDate = new Date(safeAnchor);
+  endDate.setHours(23, 59, 59, 999);
+
+  let startDate = new Date(safeAnchor);
+  const normalized = String(period).trim().toLowerCase();
+
+  switch (normalized) {
     case 'week':
+    case 'last7days':
+    case '7d':
       startDate.setDate(startDate.getDate() - 7);
       break;
     case 'month':
+    case 'mtd':
       startDate = new Date(startDate.getFullYear(), startDate.getMonth(), 1);
       break;
     case 'year':
@@ -31,18 +41,23 @@ export function getDateRange(period = null) {
     case 'last90days':
       startDate.setDate(startDate.getDate() - 90);
       break;
-    default:
-      // Assume it's a number of days
-      const days = parseInt(period, 10);
-      if (!isNaN(days)) {
+    case 'qtd': {
+      const quarterStartMonth = startDate.getMonth() - (startDate.getMonth() % 3);
+      startDate = new Date(startDate.getFullYear(), quarterStartMonth, 1);
+      break;
+    }
+    default: {
+      // Supports values like '30', '30d', etc.
+      const days = parseInt(normalized, 10);
+      if (!Number.isNaN(days)) {
         startDate.setDate(startDate.getDate() - days);
       } else {
-        startDate.setDate(startDate.getDate() - 30); // Default to 30 days
+        startDate.setDate(startDate.getDate() - 30);
       }
+    }
   }
-  
-  startDate.setHours(0, 0, 0, 0); // Start of day
-  
+
+  startDate.setHours(0, 0, 0, 0);
   return { startDate, endDate };
 }
 

@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { buildParamsFromFilters } from "../utils/helpers";
+import { buildActionCenterModel } from "../utils/actionCenterModel";
 
 export function useOptimizationData({ api, caps, parentFilters }) {
   const [optimizationData, setOptimizationData] = useState(null);
@@ -31,11 +32,55 @@ export function useOptimizationData({ api, caps, parentFilters }) {
       const canOpp = enabled && !!mod?.endpoints?.opportunities;
       const canIdle = enabled && !!mod?.endpoints?.idleResources;
       const canRight = enabled && !!mod?.endpoints?.rightSizing;
+      const canCommit = enabled && !!mod?.endpoints?.commitments;
+      const canTracker = enabled && !!mod?.endpoints?.tracker;
+      const canActionCenter = enabled && !!mod?.endpoints?.actionCenter;
 
-      const [oppRes, idleRes, rightRes] = await Promise.all([
+      if (canActionCenter) {
+        const actionCenterRes = await api.call("optimization", "actionCenter", { params });
+        if (abortControllerRef.current?.signal.aborted) return;
+
+        const payloadCandidate = actionCenterRes?.data ?? actionCenterRes ?? {};
+        const payload = payloadCandidate?.data ?? payloadCandidate;
+        const model = payload?.model ?? null;
+        const opportunities = Array.isArray(payload?.opportunities) ? payload.opportunities : [];
+        const idleResources = Array.isArray(payload?.idleResources) ? payload.idleResources : [];
+        const rightSizingRecs = Array.isArray(payload?.rightSizingRecommendations)
+          ? payload.rightSizingRecommendations
+          : [];
+        const trackerItems = Array.isArray(payload?.trackerItems) ? payload.trackerItems : [];
+        const commitmentGap =
+          payload?.commitmentGap && typeof payload.commitmentGap === "object"
+            ? payload.commitmentGap
+            : null;
+
+        setOptimizationData({
+          opportunities,
+          idleResources,
+          rightSizingRecs,
+          commitmentGap,
+          trackerItems,
+          actionCenterModel:
+            model ||
+            buildActionCenterModel({
+              opportunities,
+              idleResources,
+              rightSizingRecs,
+              commitmentGap,
+              trackerItems,
+            }),
+          totalPotentialSavings: opportunities.reduce((sum, opp) => sum + (opp.savings || 0), 0),
+        });
+
+        return;
+      }
+
+      const [oppRes, idleRes, rightRes, commitmentRes, trackerRes] = await Promise.all([
         canOpp ? api.call("optimization", "opportunities", { params }) : Promise.resolve(null),
         canIdle ? api.call("optimization", "idleResources", { params }) : Promise.resolve(null),
         canRight ? api.call("optimization", "rightSizing", { params }) : Promise.resolve(null),
+        canCommit ? api.call("optimization", "commitments", { params }) : Promise.resolve(null),
+        canTracker ? api.call("optimization", "tracker", { params }) : Promise.resolve(null),
       ]);
 
       if (abortControllerRef.current?.signal.aborted) return;
@@ -43,15 +88,30 @@ export function useOptimizationData({ api, caps, parentFilters }) {
       const oppData = oppRes?.data ?? null;
       const idleData = idleRes?.data ?? null;
       const rightData = rightRes?.data ?? null;
+      const commitmentData = commitmentRes?.data ?? null;
+      const trackerData = trackerRes?.data ?? null;
 
       const opportunities = Array.isArray(oppData) ? oppData : oppData || [];
       const idleResources = Array.isArray(idleData) ? idleData : idleData || [];
       const rightSizingRecs = Array.isArray(rightData) ? rightData : rightData || [];
+      const trackerItems = Array.isArray(trackerData) ? trackerData : trackerData || [];
+      const commitmentGap = commitmentData && typeof commitmentData === "object" ? commitmentData : null;
+
+      const actionCenterModel = buildActionCenterModel({
+        opportunities,
+        idleResources,
+        rightSizingRecs,
+        commitmentGap,
+        trackerItems,
+      });
 
       setOptimizationData({
         opportunities,
         idleResources,
         rightSizingRecs,
+        commitmentGap,
+        trackerItems,
+        actionCenterModel,
         totalPotentialSavings: opportunities.reduce((sum, opp) => sum + (opp.savings || 0), 0),
       });
     } catch (err) {

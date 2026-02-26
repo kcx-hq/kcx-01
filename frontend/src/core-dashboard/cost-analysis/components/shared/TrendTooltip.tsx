@@ -15,14 +15,14 @@ const TrendTooltip = ({ active, payload, label }: TooltipProps<number, string>) 
     .sort((a, b) => Number(b.value || 0) - Number(a.value || 0));
 
   return (
-    <div className="min-w-[220px] rounded-xl border border-slate-700 bg-slate-900 p-3 text-white shadow-xl">
-      <p className="mb-2 text-[10px] font-bold uppercase tracking-wider text-slate-300">
+    <div className="min-w-[220px] rounded-xl border border-emerald-100 bg-white p-3 text-slate-800 shadow-xl">
+      <p className="mb-2 text-[10px] font-bold uppercase tracking-wider text-slate-500">
         {formatDate(tooltipDate)}
       </p>
       <div className="space-y-1.5">
         {items.map((entry, index) => (
           <div key={`${String(entry.name)}-${index}`} className="flex items-center justify-between gap-3">
-            <span className="truncate text-[11px] text-slate-200">{entry.name}</span>
+            <span className="truncate text-[11px] text-slate-600">{entry.name}</span>
             <span className="text-[11px] font-bold">{formatCurrency(Number(entry.value || 0))}</span>
           </div>
         ))}

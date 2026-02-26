@@ -17,6 +17,7 @@ import RightSizingTab from "./components/RightSizingTab";
 import CommitmentsTab from "./components/CommitmentsTab";
 import InsightModal from "./components/InsightModal";
 import ResourceSidePanel from "./components/ResourceSidePanel";
+import ActionCenterOverviewTab from "./components/ActionCenterOverviewTab";
 
 export function OptimizationView({
   isMasked,
@@ -65,6 +66,7 @@ export function OptimizationView({
   }
 
   const tabs = [
+    { id: "overview", label: "Action Center", icon: Sparkles },
     { id: "opportunities", label: "Top Opportunities", icon: Target },
     { id: "idle", label: "Idle Resources", icon: Zap },
     { id: "rightsizing", label: "Right-Sizing", icon: TrendingDown },
@@ -91,6 +93,16 @@ export function OptimizationView({
         </div>
       ) : (
         <AnimatePresence mode="wait">
+          {activeTab === "overview" && (
+            <motion.div key="overview" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="relative">
+              <ActionCenterOverviewTab
+                model={optimizationData.actionCenterModel}
+                onSelectInsight={setSelectedInsight}
+              />
+              {isRefreshing && <SectionRefreshOverlay rounded="rounded-xl" label="Refreshing action center..." />}
+            </motion.div>
+          )}
+
           {activeTab === "opportunities" && (
             <motion.div key="opportunities" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="relative">
               <OpportunitiesTab opportunities={optimizationData.opportunities} onSelectInsight={setSelectedInsight} />
@@ -128,7 +140,7 @@ export function OptimizationView({
 
           {activeTab === "commitments" && (
             <motion.div key="commitments" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="relative">
-              <CommitmentsTab />
+              <CommitmentsTab commitmentGap={optimizationData.commitmentGap} />
               {isRefreshing && <SectionRefreshOverlay rounded="rounded-xl" label="Refreshing commitment insights..." />}
             </motion.div>
           )}

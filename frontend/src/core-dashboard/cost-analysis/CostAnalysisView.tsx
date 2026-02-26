@@ -98,6 +98,7 @@ const CostAnalysisView = ({
         activeKpiInsight={vm.activeKpiInsight}
         onToggleKpi={vm.toggleKpiInsight}
         onCloseInsight={vm.closeKpiInsight}
+        contextLabel={`${vm.scopeContext.periodLabel} | ${vm.scopeContext.granularityLabel} | ${vm.scopeContext.compareLabel}`}
       />
 
       <BusinessProviderInsightsSection

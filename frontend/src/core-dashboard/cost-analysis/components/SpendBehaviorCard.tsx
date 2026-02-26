@@ -29,12 +29,12 @@ const COLOR_PALETTE = [
   "#007758", // 1. Emerald
   "#84cc16", // 2. Lime
   "#0ea5e9", // 3. Sky Blue
-  "#8b5cf6", // 4. Violet
+  "#22c55e", // 4. Green
   "#14b8a6", // 5. Teal
   "#f59e0b", // 6. Amber
-  "#6366f1", // 7. Indigo
-  "#ec4899", // 8. Pink
-  "#f43f5e", // 9. Rose
+  "#10b981", // 7. Mint
+  "#38bdf8", // 8. Cyan
+  "#fb923c", // 9. Orange
   "#64748b", // 10. Slate
 ];
 
@@ -90,9 +90,9 @@ const SpendBehaviorCard = ({
       const sortedPayload = [...payload].sort((a, b) => b.value - a.value);
 
       return (
-        <div className="bg-slate-900/95 backdrop-blur-xl text-white p-4 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.3)] border border-white/10 min-w-[220px] animate-in zoom-in-95 duration-200 z-50">
-          <div className="flex items-center justify-between mb-3 pb-2 border-b border-white/10">
-            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+        <div className="min-w-[220px] animate-in zoom-in-95 rounded-2xl border border-emerald-100 bg-white p-4 text-slate-800 shadow-[0_20px_50px_rgba(0,0,0,0.12)] backdrop-blur-xl duration-200 z-50">
+          <div className="mb-3 flex items-center justify-between border-b border-slate-100 pb-2">
+            <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">
               {formatDate(label)}
             </span>
             <Sparkles size={10} className="text-emerald-400" />
@@ -105,11 +105,11 @@ const SpendBehaviorCard = ({
                     className="w-2 h-2 rounded-full ring-2 ring-white/10 shadow-sm" 
                     style={{ backgroundColor: entry.color }} 
                   />
-                  <span className="text-[11px] font-bold text-slate-300 truncate max-w-[120px]">
+                  <span className="max-w-[120px] truncate text-[11px] font-bold text-slate-600">
                     {entry.name}
                   </span>
                 </div>
-                <span className="text-[11px] font-black text-white font-mono">
+                <span className="font-mono text-[11px] font-black text-slate-800">
                   {formatCurrency(entry.value)}
                 </span>
               </div>

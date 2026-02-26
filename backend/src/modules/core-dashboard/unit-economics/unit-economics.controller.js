@@ -26,6 +26,7 @@ export const getUnitEconomicsSummary = async (req, res) => {
     const data = await unitEconomicsService.getSummary({
       filters,
       period: req.query.period || null,
+      compareTo: req.query.compareTo || "previous_period",
       costBasis: req.query.costBasis || "actual",
       uploadIds
     });

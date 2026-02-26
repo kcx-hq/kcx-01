@@ -138,13 +138,13 @@ const DashboardPage = () => {
           <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-red-50">
             <AlertCircle className="h-8 w-8 text-red-500" />
           </div>
-          <h2 className="mb-2 text-2xl font-bold text-[#192630]">Failed to Load Dashboard</h2>
+          <h2 className="mb-2 text-2xl font-bold text-slate-800">Failed to Load Dashboard</h2>
           <p className="mb-8 leading-relaxed text-slate-500">
             We encountered an issue loading your account capabilities. This might be a temporary connection issue.
           </p>
           <button
             onClick={() => window.location.reload()}
-            className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#192630] px-6 py-3 font-semibold text-white transition-all hover:bg-black"
+            className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#007758] px-6 py-3 font-semibold text-white transition-all hover:bg-[#005c45]"
           >
             <RefreshCw size={18} /> Reload Page
           </button>

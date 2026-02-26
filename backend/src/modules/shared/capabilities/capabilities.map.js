@@ -65,6 +65,10 @@ export const CAPABILITIES_MAP = {
             method: "GET",
             path: "/optimization/tracker",
           },
+          actionCenter: {
+            method: "GET",
+            path: "/optimization/action-center",
+          },
           rightSizing: {
             method: "GET",
             path: "/optimization/right-sizing",

@@ -242,6 +242,12 @@ const OverviewKpi = ({
         safeSpend > 0 ? ((Number(topService?.value || 0) / safeSpend) * 100).toFixed(1) : "0.0";
       const topProviderPercent =
         safeSpend > 0 ? ((Number(topProvider?.value || 0) / safeSpend) * 100).toFixed(1) : "0.0";
+      const billingPeriodText =
+        billingPeriod && billingPeriod.start && billingPeriod.end
+          ? `${new Date(billingPeriod.start).toLocaleDateString()} - ${new Date(
+              billingPeriod.end
+            ).toLocaleDateString()}`
+          : "N/A";
 
       switch (cardId) {
         case "total-billed-cost":
@@ -251,7 +257,7 @@ const OverviewKpi = ({
             metrics: [
               { label: "Total Spend", value: formatCurrency(safeSpend) },
               { label: "Period Change", value: formatPercent(spendChangePercent) },
-              { label: "Billing Period", value: billingPeriod && billingPeriod.start && billingPeriod.end ? `${new Date(billingPeriod.start).toLocaleDateString()} - ${new Date(billingPeriod.end).toLocaleDateString()}` : "N/A" },
+              { label: "Billing Period", value: billingPeriodText },
             ],
             breakdown: [],
           };
@@ -264,6 +270,7 @@ const OverviewKpi = ({
               { label: "Region Spend", value: formatCurrency(topRegion?.value || 0) },
               { label: "% of Total", value: `${topRegionPercent}%` },
               { label: "Region Name", value: topRegion?.name || "N/A" },
+              { label: "Billing Period", value: billingPeriodText },
             ],
             breakdown: [],
           };
@@ -276,6 +283,7 @@ const OverviewKpi = ({
               { label: "Service Spend", value: formatCurrency(topService?.value || 0) },
               { label: "% of Total", value: `${topServicePercent}%` },
               { label: "Service Name", value: topService?.name || "N/A" },
+              { label: "Billing Period", value: billingPeriodText },
             ],
             breakdown: [],
           };
@@ -290,6 +298,7 @@ const OverviewKpi = ({
               { label: "Change Percentage", value: formatPercent(spendChangePercent) },
               { label: "Trend", value: Number(spendChangePercent) >= 0 ? "Increasing" : "Decreasing" },
               { label: "Status", value: Math.abs(Number(spendChangePercent || 0)) > 10 ? "⚠️ High Change" : "✓ Normal" },
+              { label: "Billing Period", value: billingPeriodText },
             ],
             breakdown: [],
           };
@@ -302,6 +311,7 @@ const OverviewKpi = ({
               { label: "Provider Spend", value: formatCurrency(topProvider?.value || 0) },
               { label: "% of Total", value: `${topProviderPercent}%` },
               { label: "Provider Name", value: topProvider?.name || "N/A" },
+              { label: "Billing Period", value: billingPeriodText },
             ],
             breakdown: [],
           };
@@ -315,6 +325,7 @@ const OverviewKpi = ({
               { label: "Untagged Cost", value: formatCurrency(untaggedCost) },
               { label: "% of Total", value: `${untaggedPercent}%` },
               { label: "Impact", value: impact },
+              { label: "Billing Period", value: billingPeriodText },
             ],
             breakdown: [],
             recommendation:
@@ -333,6 +344,7 @@ const OverviewKpi = ({
               { label: "Missing Metadata Cost", value: formatCurrency(missingMetadataCost) },
               { label: "% of Total", value: `${missingMetadataPercent}%` },
               { label: "Impact", value: impact },
+              { label: "Billing Period", value: billingPeriodText },
             ],
             breakdown: [],
             recommendation:

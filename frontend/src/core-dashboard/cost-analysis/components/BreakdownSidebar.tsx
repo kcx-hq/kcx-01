@@ -7,12 +7,12 @@ const COLOR_PALETTE = [
   "#007758", // 1. Emerald
   "#84cc16", // 2. Lime
   "#0ea5e9", // 3. Sky Blue
-  "#8b5cf6", // 4. Violet
+  "#22c55e", // 4. Green
   "#14b8a6", // 5. Teal
   "#f59e0b", // 6. Amber
-  "#6366f1", // 7. Indigo
-  "#ec4899", // 8. Pink
-  "#f43f5e", // 9. Rose
+  "#10b981", // 7. Mint
+  "#38bdf8", // 8. Cyan
+  "#fb923c", // 9. Orange
   "#64748b", // 10. Slate
 ];
 

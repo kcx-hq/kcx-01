@@ -11,6 +11,7 @@ import * as rules from './optimization.rules.js';
 import { formatCurrency } from '../../../common/utils/cost.helpers.js';
 import { FINOPS_CONSTANTS } from '../../../common/constants/finops.constants.js';
 import { roundTo } from '../../../common/utils/cost.calculations.js';
+import { buildActionCenterModel } from './action-center.engine.js';
 
 /**
  * Helper: normalize uploadIds from request
@@ -272,5 +273,46 @@ export const optimizationService = {
     });
 
     return trackerItems;
+  },
+
+  /**
+   * Get action center overview model
+   * Server-side deterministic model for optimization insights.
+   *
+   * @param {Object} params
+   * @returns {Promise<Object>}
+   */
+  async getActionCenter(params = {}) {
+    const normalizedParams = normalizeParams(params);
+
+    const [opportunities, idleResources, rightSizingRecommendations, commitmentGap, trackerItems] =
+      await Promise.all([
+        this.getOpportunities(normalizedParams),
+        this.getIdleResources(normalizedParams),
+        this.getRightSizingRecommendations(normalizedParams),
+        this.getCommitmentGaps(normalizedParams),
+        this.getTrackerItems(normalizedParams),
+      ]);
+
+    const model = buildActionCenterModel({
+      opportunities,
+      idleResources,
+      rightSizingRecommendations,
+      commitmentGap,
+      trackerItems,
+    });
+
+    return {
+      model,
+      opportunities,
+      idleResources,
+      rightSizingRecommendations,
+      commitmentGap,
+      trackerItems,
+      meta: {
+        generatedAt: new Date().toISOString(),
+        formulaVersion: model?.meta?.formulaVersion || 'optimization_action_center_v1',
+      },
+    };
   }
 };

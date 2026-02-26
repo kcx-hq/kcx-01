@@ -99,7 +99,7 @@ export default function VerticalSidebar({
           px-3 py-2.5 rounded-lg transition-all duration-200 mb-1
           ${
             isActive
-              ? "bg-white/10 text-white"
+              ? "bg-white/10 text-white border border-white/10"
               : "text-gray-400 hover:bg-white/5 hover:text-white"
           }
           ${isPremiumItemLocked ? "opacity-50 cursor-not-allowed grayscale" : ""}
@@ -135,7 +135,7 @@ export default function VerticalSidebar({
 
   return (
     <>
-      {/* Tooltip (Dark Mode) */}
+      {/* Tooltip */}
       <AnimatePresence mode="wait">
         {showTooltip && hoveredItem && (
           <motion.div
@@ -187,7 +187,7 @@ export default function VerticalSidebar({
       <div
         className="fixed top-0 left-0 h-screen w-[72px] lg:w-[240px] z-50 flex flex-col transition-all duration-300 border-r border-[var(--border-dark)]"
         style={{ 
-            backgroundColor: "var(--bg-dark)" // #192630
+            backgroundColor: "var(--bg-dark)"
         }}
       >
         {/* Brand Area */}
@@ -230,13 +230,13 @@ export default function VerticalSidebar({
 
         {/* Footer / Upload Area */}
         {showFooterUpload && (
-          <div className="p-3 mt-auto bg-[#0f0f11] border-t border-white/5">
+          <div className="p-3 mt-auto bg-[#162A38] border-t border-white/10">
             <button
               onClick={() => navigate("/billing-uploads")}
-              className="w-full mb-2 flex items-center justify-center gap-2 rounded-lg border border-white/10 bg-white/5 hover:bg-white/10 hover:border-[#a02ff1]/35 px-3 py-2 transition-all"
+              className="w-full mb-2 flex items-center justify-center gap-2 rounded-lg border border-[#1EA88A]/45 bg-[#162A38] hover:bg-[#1A3345] hover:border-[#35C9A7]/80 px-3 py-2 transition-all"
             >
-              <Files size={15} className="text-[#a02ff1]" />
-              <span className="hidden lg:inline text-xs font-semibold text-gray-200">
+              <Files size={15} className="text-[#007758]" />
+              <span className="hidden lg:inline text-xs font-semibold text-white">
                 Billing Uploads
               </span>
             </button>

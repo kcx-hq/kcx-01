@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronDown, X, Lock, Sparkles, Activity, Info } from "lucide-react";
+import { ChevronDown, Lock, Activity } from "lucide-react";
+import KpiInsightModal from "../components/KpiInsightModal";
 
 // KCX Primary Theme Color
 const BRAND_PRIMARY = "#007758";
@@ -88,6 +89,7 @@ export const KpiCard = ({
               {contextLabel}
             </div>
           )}
+          <p className="mt-1 text-[10px] font-semibold text-slate-500">Click for insight</p>
         </div>
       </div>
     </motion.div>
@@ -110,6 +112,28 @@ const KpiGrid = ({
     if (!selectedCardId || typeof getInsights !== "function") return null;
     return getInsights(selectedCardId, ctx);
   }, [selectedCardId, getInsights, ctx]);
+  const selectedCard = useMemo(() => {
+    if (!selectedCardId) return null;
+    return [...cards, ...extraCards].find((card) => card.id === selectedCardId) || null;
+  }, [cards, extraCards, selectedCardId]);
+  const insightPoints = useMemo(() => {
+    if (!insights) return [];
+    const metrics = Array.isArray(insights.metrics)
+      ? insights.metrics.map((metric) => `${metric.label}: ${metric.value}`)
+      : [];
+    const breakdown = Array.isArray(insights.breakdown)
+      ? insights.breakdown.map((metric) => `${metric.label}: ${metric.value}`)
+      : [];
+    const recommendation = insights.recommendation ? [insights.recommendation] : [];
+    return [...metrics, ...breakdown, ...recommendation];
+  }, [insights]);
+  const contextFromInsight = useMemo(() => {
+    if (!insights?.metrics?.length) return null;
+    const periodMetric = insights.metrics.find((metric) =>
+      String(metric.label || "").toLowerCase().includes("period"),
+    );
+    return periodMetric ? String(periodMetric.value || "") : null;
+  }, [insights]);
 
   const handleClick = (card) => {
     onCardClick?.(card.id, card);
@@ -188,74 +212,16 @@ const KpiGrid = ({
         )}
       </div>
 
-      <AnimatePresence>
-        {insights && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-            <motion.div 
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setSelectedCardId(null)}
-              className="absolute inset-0 bg-slate-900/40 backdrop-blur-md"
-            />
-            
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="bg-white border border-slate-200 rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden relative z-10"
-              onClick={(e) => e.stopPropagation()}
-            >
-              {/* Header */}
-              <div className="p-6 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
-                <div className="flex items-center gap-3">
-                   <div className="p-2 bg-[#007758] text-white rounded-xl shadow-[0_5px_15px_rgba(0,119,88,0.3)]">
-                      <Sparkles size={18} />
-                   </div>
-                   <div>
-                     <h3 className="text-base font-black text-slate-900">{insights.title}</h3>
-                     <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Detailed Intelligence</p>
-                   </div>
-                </div>
-                <button
-                  onClick={() => setSelectedCardId(null)}
-                  className="p-2 rounded-xl hover:bg-white hover:shadow-sm text-slate-400 hover:text-red-500 transition-all border border-transparent hover:border-slate-100"
-                >
-                  <X size={18} />
-                </button>
-              </div>
-
-              {/* Content */}
-              <div className="p-6 space-y-6 max-h-[75vh] overflow-y-auto">
-                {insights.description && (
-                  <div className="bg-emerald-50/50 border border-emerald-100/50 p-4 rounded-2xl flex gap-3">
-                     <Info size={16} className="text-[#007758] shrink-0 mt-0.5" />
-                     <p className="text-xs text-slate-600 leading-relaxed font-medium">{insights.description}</p>
-                  </div>
-                )}
-
-                {insights.metrics?.length > 0 && (
-                  <div className="grid grid-cols-2 gap-3">
-                    {insights.metrics.map((metric, idx) => (
-                      <div key={idx} className="bg-white border border-slate-100 rounded-2xl p-4 shadow-sm transition-all hover:border-[#007758]/20">
-                        <div className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-1">{metric.label}</div>
-                        <div className="text-sm font-black text-slate-900">{metric.value}</div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-
-                {insights.recommendation && (
-                  <div className="bg-[#007758] p-4 rounded-2xl shadow-[0_10px_20px_rgba(0,119,88,0.2)]">
-                    <div className="text-[10px] font-black text-white/70 uppercase tracking-widest mb-1">Strategic Advice</div>
-                    <p className="text-xs text-white font-semibold">{insights.recommendation}</p>
-                  </div>
-                )}
-              </div>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
+      <KpiInsightModal
+        open={Boolean(insights)}
+        title={insights?.title || "KPI Insight"}
+        value={selectedCard?.value || null}
+        summary={insights?.description || null}
+        points={insightPoints}
+        contextLabel={selectedCard?.contextLabel || contextFromInsight || null}
+        onClose={() => setSelectedCardId(null)}
+        maxWidthClass="max-w-lg"
+      />
     </>
   );
 };
