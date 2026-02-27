@@ -1,6 +1,9 @@
-export const formatCurrency = (val) =>
+export const formatCurrency = (val: number | string | null | undefined) =>
   new Intl.NumberFormat('en-US', {
     style: 'currency',
     currency: 'USD',
     minimumFractionDigits: 2,
-  }).format(val ?? 0);
+  }).format(Number(val ?? 0));
+
+
+

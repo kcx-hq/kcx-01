@@ -1,4 +1,5 @@
 import { detectColumns, normalizeRow } from './columnMapper.js';
+import logger from "../lib/logger.js";
 
 export const processRecords = (records) => {
   if (!records || records.length === 0) {
@@ -81,7 +82,7 @@ export const processRecords = (records) => {
       regionMap[region] = (regionMap[region] || 0) + cost;
 
     } catch (err) {
-      console.warn(`Skipping row ${index} due to error:`, err.message);
+      logger.warn(`Skipping row ${index} due to error:`, err.message);
     }
   });
 

@@ -1,4 +1,6 @@
 // frontend/clients/client-c/data-explorer/utils/downloadCsvFromBackend.js
+import type { ApiLikeError, DownloadCsvFromBackendParams } from "../types";
+
 export async function downloadCsvFromBackend({
   api,
   caps,
@@ -9,14 +11,14 @@ export async function downloadCsvFromBackend({
   selectedIndices,
   visibleColumns,
   uploadId
-}) {
+}: DownloadCsvFromBackendParams) {
   try {
     if (!api || !caps) {
       alert("API not available");
       return;
     }
 
-    const blob = await api.call("dataExplorer", "exportCsv", {
+    const blob = await api.call<Blob | null>("dataExplorer", "exportCsv", {
       params: {
         provider: filters?.provider !== "All" ? filters.provider : undefined,
         service: filters?.service !== "All" ? filters.service : undefined,
@@ -42,8 +44,9 @@ export async function downloadCsvFromBackend({
     a.click();
     document.body.removeChild(a);
     window.URL.revokeObjectURL(url);
-  } catch (error) {
+  } catch (error: unknown) {
+    const apiError = error as ApiLikeError;
     console.error("Error downloading CSV:", error);
-    alert("Failed to export CSV. Please try again.");
+    alert(apiError.message || "Failed to export CSV. Please try again.");
   }
 }

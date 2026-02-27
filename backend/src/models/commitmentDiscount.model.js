@@ -1,5 +1,8 @@
+import { createRequire } from "module";
 import { DataTypes } from "sequelize";
-import sequelize from "../config/db.config.js";
+
+const require = createRequire(import.meta.url);
+const { sequelize } = require("../db/index.cjs");
 
 const CommitmentDiscountModel = sequelize.define(
   "CommitmentDiscount",
@@ -46,3 +49,5 @@ const CommitmentDiscountModel = sequelize.define(
 );
 
 export default CommitmentDiscountModel;
+
+

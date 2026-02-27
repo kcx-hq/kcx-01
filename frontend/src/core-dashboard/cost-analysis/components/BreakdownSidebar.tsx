@@ -1,6 +1,7 @@
 import React, { useCallback } from "react";
 import { RotateCcw, BarChart4, Sparkles, Lock } from "lucide-react";
 import { formatCurrency } from "../utils/format";
+import type { BreakdownSidebarProps, CostBreakdownItem } from "../types";
 
 // --- SHARED PALETTE (Exact match to SpendBehaviorCard) ---
 const COLOR_PALETTE = [
@@ -25,10 +26,10 @@ const BreakdownSidebar = ({
   onReset,
   activeKeys = [],
   brandColor = "#007758",
-}) => {
+}: BreakdownSidebarProps) => {
 
   const getShare = useCallback(
-    (val) => (totalSpend ? ((val / totalSpend) * 100).toFixed(1) : 0),
+    (val: number) => (totalSpend ? ((val / totalSpend) * 100).toFixed(1) : 0),
     [totalSpend]
   );
 
@@ -84,7 +85,7 @@ const BreakdownSidebar = ({
             )}
 
             <div className={`space-y-2 ${isLocked ? 'opacity-20 pointer-events-none' : ''}`}>
-              {(breakdown || []).map((b, i) => {
+              {(breakdown || []).map((b: CostBreakdownItem, i: number) => {
                 const name = b?.name ?? "";
                 const isHidden = hiddenSeries.has(name);
                 
@@ -116,13 +117,13 @@ const BreakdownSidebar = ({
                           {name || "Unallocated"}
                         </span>
                         <span className="text-[8px] text-slate-400 font-bold uppercase tracking-tight">
-                          {getShare(b.value)}% Share
+                          {getShare(Number(b.value) || 0)}% Share
                         </span>
                       </div>
                     </div>
                     
                     <span className="text-[10px] font-black text-slate-900 font-mono">
-                      {formatCurrency(b.value)}
+                      {formatCurrency(Number(b.value) || 0)}
                     </span>
                   </div>
                 );
@@ -160,3 +161,6 @@ const BreakdownSidebar = ({
 };
 
 export default BreakdownSidebar;
+
+
+

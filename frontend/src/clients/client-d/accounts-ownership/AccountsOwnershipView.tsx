@@ -1,12 +1,21 @@
-import React, { useMemo } from "react";
+import React from "react";
+import type { ChangeEvent } from "react";
 import { Tags, ShieldAlert, Loader2, Download } from "lucide-react";
 import PremiumGate from "../../../core-dashboard/common/PremiumGate";
 import { LoadingState } from "../../../core-dashboard/accounts-ownership/components/LoadingState";
 import { ErrorState } from "../../../core-dashboard/accounts-ownership/components/ErrorState";
 import { formatCurrency } from "../../../core-dashboard/accounts-ownership/utils/format";
+import type {
+  AccountsOwnershipSortField,
+  AccountsOwnershipViewProps,
+  CoverageChipProps,
+  CoverageChipTone,
+  MissingTagsTableProps,
+  TagCoverageRow,
+} from "./types";
 
-function Chip({ label, value, tone = "neutral" }) {
-  const tones = {
+function Chip({ label, value, tone = "neutral" }: CoverageChipProps) {
+  const tones: Record<CoverageChipTone, string> = {
     neutral: "bg-white/5 border-white/10 text-gray-200",
     good: "bg-emerald-500/10 border-emerald-500/20 text-emerald-200",
     warn: "bg-yellow-500/10 border-yellow-500/20 text-yellow-200",
@@ -23,8 +32,8 @@ function Chip({ label, value, tone = "neutral" }) {
   );
 }
 
-function MissingTagsTable({ rows, sortBy, sortOrder, onSortChange }) {
-  const sortIcon = (key) =>
+function MissingTagsTable({ rows, sortBy, sortOrder, onSortChange }: MissingTagsTableProps) {
+  const sortIcon = (key: AccountsOwnershipSortField) =>
     sortBy === key ? (sortOrder === "asc" ? " ↑" : " ↓") : "";
 
   return (
@@ -45,13 +54,13 @@ function MissingTagsTable({ rows, sortBy, sortOrder, onSortChange }) {
       </thead>
 
       <tbody>
-        {rows.map((r) => (
+        {rows.map((r: TagCoverageRow) => (
           <tr key={r.resourceId} className="border-b border-white/5 hover:bg-white/5">
             <td className="px-4 py-3 font-mono text-gray-200">{r.resourceId}</td>
             <td className="px-4 py-3 text-gray-300">{r.resourceName ?? "—"}</td>
             <td className="px-4 py-3">
               <div className="flex flex-wrap gap-1.5">
-                {(r.missingTags || []).map((t) => (
+                {(r.missingTags || []).map((t: string) => (
                   <span
                     key={t}
                     className="px-2 py-0.5 rounded-lg bg-red-500/10 border border-red-500/20 text-red-200 text-[10px] font-bold"
@@ -61,7 +70,7 @@ function MissingTagsTable({ rows, sortBy, sortOrder, onSortChange }) {
                 ))}
               </div>
             </td>
-            <td className="px-4 py-3 text-right font-mono text-[#a02ff1]">
+            <td className="px-4 py-3 text-right font-mono text-[#007758]">
               {formatCurrency(r.cost || 0)}
             </td>
           </tr>
@@ -94,24 +103,21 @@ export function AccountsOwnershipView({
 
   // actions
   onExport,
-}) {
+}: AccountsOwnershipViewProps) {
   if (error && !hasData) return <ErrorState error={error} />;
   if (!hasData && loading) return <LoadingState />;
 
-  const taggedTone = (coverage?.taggedPercent ?? 0) >= 80 ? "good" : "warn";
-  const untaggedTone = (coverage?.untaggedPercent ?? 0) >= 50 ? "bad" : "warn";
+  const taggedTone: CoverageChipTone = (coverage?.taggedPercent ?? 0) >= 80 ? "good" : "warn";
+  const untaggedTone: CoverageChipTone = (coverage?.untaggedPercent ?? 0) >= 50 ? "bad" : "warn";
 
-  const totalCost = useMemo(() => {
-    const t = Number(coverage?.taggedCost || 0) + Number(coverage?.untaggedCost || 0);
-    return t;
-  }, [coverage?.taggedCost, coverage?.untaggedCost]);
+  const totalCost = Number(coverage?.taggedCost || 0) + Number(coverage?.untaggedCost || 0);
 
   return (
     <div className="p-6 space-y-5 min-h-screen bg-[#0f0f11] text-white font-sans animate-in fade-in duration-500 relative">
       {/* subtle filtering indicator */}
       {isFiltering && hasData && (
-        <div className="absolute top-4 right-4 z-50 flex items-center gap-2 bg-[#1a1b20] border border-[#a02ff1]/30 rounded-lg px-3 py-2 shadow-lg">
-          <Loader2 size={16} className="text-[#a02ff1] animate-spin" />
+        <div className="absolute top-4 right-4 z-50 flex items-center gap-2 bg-[#1a1b20] border border-[#007758]/30 rounded-lg px-3 py-2 shadow-lg">
+          <Loader2 size={16} className="text-[#007758] animate-spin" />
           <p className="text-gray-400 text-xs">Updating...</p>
         </div>
       )}
@@ -121,7 +127,7 @@ export function AccountsOwnershipView({
         <div className="p-6 border-b border-white/10 flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
           <div>
             <h1 className="text-2xl font-extrabold flex items-center gap-2">
-              <Tags className="text-[#a02ff1]" size={22} />
+              <Tags className="text-[#007758]" size={22} />
               Tag Coverage
             </h1>
             <p className="text-gray-400 text-sm mt-1">
@@ -154,7 +160,7 @@ export function AccountsOwnershipView({
 
           <button
             onClick={onExport}
-            className="shrink-0 flex items-center gap-2 px-4 py-2 rounded-xl bg-[#a02ff1]/10 hover:bg-[#a02ff1]/20 border border-[#a02ff1]/30 text-[#a02ff1] text-xs font-extrabold transition"
+            className="shrink-0 flex items-center gap-2 px-4 py-2 rounded-xl bg-[#007758]/10 hover:bg-[#007758]/20 border border-[#007758]/30 text-[#007758] text-xs font-extrabold transition"
           >
             <Download size={14} /> Export CSV
           </button>
@@ -176,13 +182,13 @@ export function AccountsOwnershipView({
         <div className="flex items-center gap-2">
           <input
             value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
+            onChange={(e: ChangeEvent<HTMLInputElement>) => setSearchTerm(e.target.value)}
             placeholder="Search resource id, name, tag, cost..."
-            className="w-full md:w-[420px] px-4 py-2 rounded-xl bg-[#1a1b20] border border-white/10 text-xs text-white focus:outline-none focus:border-[#a02ff1]"
+            className="w-full md:w-[420px] px-4 py-2 rounded-xl bg-[#1a1b20] border border-white/10 text-xs text-white focus:outline-none focus:border-[#007758]"
           />
           <select
             value={filterProvider}
-            onChange={(e) => onFilterProviderChange(e.target.value)}
+            onChange={(e: ChangeEvent<HTMLSelectElement>) => onFilterProviderChange(e.target.value)}
             className="px-3 py-2 rounded-xl bg-[#1a1b20] border border-white/10 text-xs text-gray-200 outline-none"
             style={{ colorScheme: "dark" }}
           >
@@ -202,7 +208,7 @@ export function AccountsOwnershipView({
       <div className="bg-[#1a1b20] border border-white/10 rounded-2xl shadow-2xl overflow-hidden">
         <div className="max-h-[560px] overflow-auto relative">
           {isPremiumMasked ? (
-            <PremiumGate mode="wrap">
+            <PremiumGate variant="wrap">
               <MissingTagsTable
                 rows={rows || []}
                 sortBy={sortBy}

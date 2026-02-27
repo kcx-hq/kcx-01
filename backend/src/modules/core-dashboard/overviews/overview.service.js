@@ -907,7 +907,7 @@ export const dashboardService = {
         count: anomalies.length,
       };
     } catch (error) {
-      console.error('Anomaly Calculation Error:', error);
+      logger.error('Anomaly Calculation Error:', error);
       return { list: [], count: 0 };
     }
   },

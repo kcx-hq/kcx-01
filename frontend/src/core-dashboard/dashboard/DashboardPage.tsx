@@ -18,6 +18,7 @@ import {
 } from "./hooks/useDashboardCapabilities";
 import { useKeepAliveRegistry } from "./hooks/useKeepAliveRegistry";
 import { useHeaderAnomalies } from "./hooks/useHeaderAnomalies";
+import type { DashboardFilters } from "./types";
 
 import {
   Overview,
@@ -33,6 +34,9 @@ import {
 } from "./lazyViews";
 import VerticalSidebarConfig from "../verticalSidebar.config";
 
+const isNavigationTimingEntry = (entry: PerformanceEntry): entry is PerformanceNavigationTiming =>
+  "type" in entry;
+
 const DashboardPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -46,41 +50,27 @@ const DashboardPage = () => {
   const [isLocked, setIsLocked] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  const [filters, setFilters] = useState(() => ({
+  const filters = useMemo<DashboardFilters>(() => ({
     provider: searchParams.get("provider") || "All",
     service: searchParams.get("service") || "All",
     region: searchParams.get("region") || "All",
-  }));
+  }), [searchParams]);
 
 
-  const handleFilterChange = useCallback((partial) => {
-    setFilters((prev) => {
-      const next = { ...prev, ...partial };
-      const nextParams = new URLSearchParams(searchParams);
+  const handleFilterChange = useCallback((partial: Partial<DashboardFilters>) => {
+    const next: DashboardFilters = { ...filters, ...partial };
+    const nextParams = new URLSearchParams(searchParams);
 
-      ["provider", "service", "region"].forEach((k) => {
-        const value = next[k];
-        if (!value || value === "All") nextParams.delete(k);
-        else nextParams.set(k, value);
-      });
-
-      setSearchParams(nextParams, { replace: true });
-      return next;
+    (["provider", "service", "region"] as const).forEach((k) => {
+      const value = next[k];
+      if (!value || value === "All") nextParams.delete(k);
+      else nextParams.set(k, value);
     });
-  }, [searchParams, setSearchParams]);
 
-  const memoizedFilters = useMemo(
-    () => filters,
-    [filters.provider, filters.service, filters.region],
-  );
+    setSearchParams(nextParams, { replace: true });
+  }, [filters, searchParams, setSearchParams]);
 
-  useEffect(() => {
-    setFilters({
-      provider: searchParams.get("provider") || "All",
-      service: searchParams.get("service") || "All",
-      region: searchParams.get("region") || "All",
-    });
-  }, [searchParams]);
+  const memoizedFilters = filters;
 
   const anomaliesData = useHeaderAnomalies({ api, caps, filters, route });
   const { hasAnyDashboardModule } = useDashboardCapabilities(caps);
@@ -101,7 +91,7 @@ const DashboardPage = () => {
     hasHandledInitialRedirect.current = true;
 
     const navEntry = performance.getEntriesByType("navigation")?.[0];
-    const isReload = navEntry?.type === "reload";
+    const isReload = navEntry ? isNavigationTimingEntry(navEntry) && navEntry.type === "reload" : false;
     const isDashboardChildRoute =
       location.pathname.startsWith("/dashboard/") && location.pathname !== "/dashboard";
 
@@ -123,7 +113,7 @@ const DashboardPage = () => {
     return "Overview";
   }, [route]);
 
-  const withBoundary = useCallback((moduleName, node) => (
+  const withBoundary = useCallback((moduleName: string, node: React.ReactNode) => (
     <ModuleErrorBoundary moduleName={moduleName}>
       {node}
     </ModuleErrorBoundary>
@@ -301,3 +291,6 @@ const DashboardPage = () => {
 };
 
 export default DashboardPage;
+
+
+

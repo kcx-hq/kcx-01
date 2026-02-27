@@ -1,6 +1,12 @@
 import React from 'react';
+import type { ReactNode } from "react";
 
-const KeepAlive = ({ children, isActive }) => {
+interface KeepAliveProps {
+  children: ReactNode;
+  isActive: boolean;
+}
+
+const KeepAlive = ({ children, isActive }: KeepAliveProps) => {
   return (
     <div 
       style={{ 

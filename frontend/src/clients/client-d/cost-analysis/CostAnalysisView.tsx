@@ -6,9 +6,9 @@ import {
   Maximize2,
   TrendingUp,
   Crown,
-  Lock,
   Info,
 } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 
 import KpiCard from "../../../core-dashboard/cost-analysis/components/KpiCard";
 import SpendBehaviorCard from "../../../core-dashboard/cost-analysis/components/SpendBehaviorCard";
@@ -18,6 +18,17 @@ import BreakdownModal from "../../../core-dashboard/cost-analysis/components/Bre
 import InfoModal from "../../../core-dashboard/cost-analysis/components/InfoModal";
 
 import { formatCurrency, formatDate } from "./utils/format";
+import type { CostAnalysisViewProps } from "./types";
+
+interface CostKpiCardConfig {
+  label: string;
+  value: number | string;
+  icon: LucideIcon;
+  iconColor: string;
+  premium: boolean;
+  trend?: number;
+  onClick: () => void;
+}
 
 const CostAnalysisView = ({
   children,
@@ -29,8 +40,6 @@ const CostAnalysisView = ({
   setChartType,
   hiddenSeries,
   toggleSeries,
-
-  apiData,
   kpis,
   chartData,
   activeKeys,
@@ -38,23 +47,23 @@ const CostAnalysisView = ({
 
   activeModal,
   setActiveModal,
-}) => {
+}: CostAnalysisViewProps) => {
   const showPremiumChartsOverlay =
     isLocked && (chartType === "bar" || chartType === "line");
 
-  const kpiCards = useMemo(() => {
+  const kpiCards = useMemo<CostKpiCardConfig[]>(() => {
     return [
       {
         label: "Total Spend",
-        value: kpis.totalSpend,
+        value: kpis.totalSpend ?? 0,
         icon: DollarSign,
-        iconColor: "text-[#a02ff1]",
+        iconColor: "text-[#007758]",
         premium: false,
         onClick: () => setActiveModal("breakdown"),
       },
       {
         label: "Daily Average",
-        value: kpis.avgDaily,
+        value: kpis.avgDaily ?? 0,
         icon: Activity,
         iconColor: "text-cyan-400",
         premium: true,
@@ -62,7 +71,7 @@ const CostAnalysisView = ({
       },
       {
         label: "Peak Usage",
-        value: kpis.peakUsage,
+        value: kpis.peakUsage ?? 0,
         icon: Maximize2,
         iconColor: "text-emerald-400",
         premium: true,
@@ -80,11 +89,11 @@ const CostAnalysisView = ({
     ];
   }, [kpis, setActiveModal]);
 
-  const momentumLabel = useMemo(() => {
+  const momentumLabel = (() => {
     const t = Number(kpis?.trend ?? 0);
     if (!isFinite(t) || t === 0) return "Stable";
     return t > 0 ? "Rising" : "Cooling";
-  }, [kpis?.trend]);
+  })();
 
   const hasChartData = Array.isArray(chartData) && chartData.length > 0;
 
@@ -130,7 +139,7 @@ const CostAnalysisView = ({
               <div className="flex items-center gap-2 shrink-0">
                 <button
                   onClick={() => setActiveModal("breakdown")}
-                  className="px-4 py-2 rounded-xl bg-[#a02ff1]/10 hover:bg-[#a02ff1]/20 border border-[#a02ff1]/30 text-[#a02ff1] text-xs font-extrabold transition flex items-center gap-2"
+                  className="px-4 py-2 rounded-xl bg-[#007758]/10 hover:bg-[#007758]/20 border border-[#007758]/30 text-[#007758] text-xs font-extrabold transition flex items-center gap-2"
                 >
                   <Info size={14} />
                   View Breakdown
@@ -146,7 +155,7 @@ const CostAnalysisView = ({
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
-              {kpiCards.map((c) => {
+              {kpiCards.map((c: CostKpiCardConfig) => {
                 if (!c.premium) {
                   return (
                     <KpiCard
@@ -154,7 +163,7 @@ const CostAnalysisView = ({
                       label={c.label}
                       value={c.value}
                       icon={c.icon}
-                      iconColor={c.iconColor}
+                      iconStyle={c.iconColor}
                       trend={c.trend}
                       onClick={c.onClick}
                     />
@@ -180,7 +189,7 @@ const CostAnalysisView = ({
                         label={c.label}
                         value={c.value}
                         icon={c.icon}
-                        iconColor={c.iconColor}
+                        iconStyle={c.iconColor}
                         trend={c.trend}
                         onClick={() => {}}
                       />
@@ -192,7 +201,7 @@ const CostAnalysisView = ({
                     label={c.label}
                     value={c.value}
                     icon={c.icon}
-                    iconColor={c.iconColor}
+                    iconStyle={c.iconColor}
                     trend={c.trend}
                     onClick={c.onClick}
                   />
@@ -220,10 +229,8 @@ const CostAnalysisView = ({
             {showPremiumChartsOverlay && (
               <PremiumGate
                 title="Premium Feature"
-                buttonText="Upgrade to Access"
-                icon={<Lock size={16} />}
-                onAction={() => setChartType("area")}
-                rounded="rounded-2xl"
+                ctaText="Upgrade to Access"
+                onUpgradeClick={() => setChartType("area")}
               />
             )}
 
@@ -240,7 +247,6 @@ const CostAnalysisView = ({
                   chartData={chartData}
                   activeKeys={activeKeys}
                   hiddenSeries={hiddenSeries}
-                  toggleSeries={toggleSeries}   
                   kpis={kpis}
                 />
               </div>
@@ -265,7 +271,7 @@ const CostAnalysisView = ({
                 <div className="text-white font-bold">Insights</div>
                 <button
                   onClick={() => setActiveModal("trend")}
-                  className="text-xs text-[#a02ff1] hover:underline"
+                  className="text-xs text-[#007758] hover:underline"
                 >
                   Details
                 </button>
@@ -302,7 +308,7 @@ const CostAnalysisView = ({
 
                 <button
                   onClick={() => setActiveModal("breakdown")}
-                  className="w-full px-4 py-2 rounded-xl bg-[#a02ff1]/10 hover:bg-[#a02ff1]/20 border border-[#a02ff1]/30 text-[#a02ff1] text-xs font-extrabold transition"
+                  className="w-full px-4 py-2 rounded-xl bg-[#007758]/10 hover:bg-[#007758]/20 border border-[#007758]/30 text-[#007758] text-xs font-extrabold transition"
                 >
                   Open Full Breakdown
                 </button>

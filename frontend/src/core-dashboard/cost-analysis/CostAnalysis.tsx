@@ -47,7 +47,7 @@ const CostAnalysis = ({ api, caps }: CostAnalysisProps) => {
     setFilters(defaultSpendAnalyticsFilters);
   }, []);
 
-  if (!api || !caps || !caps.modules?.costAnalysis?.enabled) return null;
+  if (!api || !caps || !caps.modules?.["costAnalysis"]?.enabled) return null;
 
   if (loading && !apiData) {
     return <SectionLoading label="Loading Spend Analytics..." />;
@@ -76,3 +76,6 @@ const CostAnalysis = ({ api, caps }: CostAnalysisProps) => {
 };
 
 export default CostAnalysis;
+
+
+

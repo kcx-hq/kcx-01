@@ -1,11 +1,18 @@
 import { useEffect, useRef, useState } from "react";
+import type { ApiClient, Capabilities } from "../../../../services/apiClient";
+import type { AccountsFilters, ApiLikeError, SummaryRawData, UseSummaryDataResult } from "../types";
 
-export const useSummaryData = (api, caps, debouncedFilters, forceRefreshKey) => {
-  const [summaryData, setSummaryData] = useState(null);
+export const useSummaryData = (
+  api: ApiClient | null,
+  caps: Capabilities | null,
+  debouncedFilters: AccountsFilters,
+  forceRefreshKey: number,
+): UseSummaryDataResult => {
+  const [summaryData, setSummaryData] = useState<SummaryRawData | null>(null);
   const [loading, setLoading] = useState(true);
   const [isFiltering, setIsFiltering] = useState(false);
 
-  const abortControllerRef = useRef(null);
+  const abortControllerRef = useRef<AbortController | null>(null);
   const prevFiltersRef = useRef(debouncedFilters);
   const isInitialMount = useRef(true);
 
@@ -34,12 +41,12 @@ export const useSummaryData = (api, caps, debouncedFilters, forceRefreshKey) => 
 
       try {
         const endpointDef =
-          caps?.modules?.governance?.enabled &&
-          caps?.modules?.governance?.endpoints?.summary;
+          caps?.modules?.["governance"]?.enabled &&
+          caps?.modules?.["governance"]?.endpoints?.["summary"];
 
         if (!endpointDef) return;
 
-        const params = {};
+        const params: Partial<AccountsFilters> = {};
         if (debouncedFilters?.provider && debouncedFilters.provider !== "All")
           params.provider = debouncedFilters.provider;
         if (debouncedFilters?.service && debouncedFilters.service !== "All")
@@ -47,17 +54,17 @@ export const useSummaryData = (api, caps, debouncedFilters, forceRefreshKey) => 
         if (debouncedFilters?.region && debouncedFilters.region !== "All")
           params.region = debouncedFilters.region;
 
-        const res = await api.call("governance", "summary", { params });
-        const payload = res?.data;
+        const payload = await api.call<SummaryRawData>("governance", "summary", { params });
 
         if (!abortControllerRef.current?.signal.aborted && payload) {
           setSummaryData(payload);
           prevFiltersRef.current = { ...debouncedFilters };
         }
-      } catch (error) {
-        if (error?.code !== "NOT_SUPPORTED") {
-          if (error?.name !== "AbortError" && !abortControllerRef.current?.signal.aborted) {
-            console.error("Error fetching summary data:", error);
+      } catch (error: unknown) {
+        const err = error as ApiLikeError;
+        if (err?.code !== "NOT_SUPPORTED") {
+          if (err?.name !== "AbortError" && !abortControllerRef.current?.signal.aborted) {
+            console.error("Error fetching summary data:", err);
           }
         }
       } finally {

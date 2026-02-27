@@ -23,6 +23,7 @@ import {
 } from "recharts";
 
 import { formatCurrency, formatDate } from "../utils/format";
+import type { CostChartType, SpendBehaviorCardProps, TooltipPayloadEntry } from "../types";
 
 // --- SHARED PALETTE (Must be identical in both files) ---
 const COLOR_PALETTE = [
@@ -38,56 +39,15 @@ const COLOR_PALETTE = [
   "#64748b", // 10. Slate
 ];
 
-const SpendBehaviorCard = ({
-  isLocked,
-  chartType,
-  setChartType,
-  chartData,
-  activeKeys,
-  hiddenSeries,
-  isRefreshing = false,
-  brandColor = "#007758",
-}) => {
-  
-  const BRAND_PRIMARY = brandColor || "var(--brand-primary, #007758)";
-  const getSeriesColor = useCallback(
-    (key) => {
-      const idx = activeKeys.indexOf(key);
-      return COLOR_PALETTE[(idx >= 0 ? idx : 0) % COLOR_PALETTE.length];
-    },
-    [activeKeys]
-  );
+interface SpendBehaviorTooltipProps {
+  active?: boolean;
+  payload?: TooltipPayloadEntry[];
+  label?: string;
+}
 
-  // In stacked areas, last rendered series controls the top boundary stroke.
-  // Reverse draw order so primary keys don't look visually overridden.
-  const stackedRenderKeys = [...activeKeys].reverse();
-  const seriesPointCount = useMemo(() => {
-    const counts = {};
-    activeKeys.forEach((k) => {
-      counts[k] = (chartData || []).reduce((n, row) => {
-        const v = Number(row?.[k]) || 0;
-        return n + (v > 0 ? 1 : 0);
-      }, 0);
-    });
-    return counts;
-  }, [activeKeys, chartData]);
-  const seriesTotals = useMemo(() => {
-    const totals = {};
-    activeKeys.forEach((k) => {
-      totals[k] = (chartData || []).reduce((sum, row) => sum + (Number(row?.[k]) || 0), 0);
-    });
-    return totals;
-  }, [activeKeys, chartData]);
-  const maxSeriesTotal = useMemo(
-    () => Math.max(0, ...Object.values(seriesTotals || {}).map((v) => Number(v) || 0)),
-    [seriesTotals]
-  );
-
-  // --- EXECUTIVE TOOLTIP ---
-  const CustomTooltip = ({ active, payload, label }) => {
-    if (active && payload && payload.length) {
-      // Sort tooltip by value descending
-      const sortedPayload = [...payload].sort((a, b) => b.value - a.value);
+const SpendBehaviorTooltip = ({ active, payload, label }: SpendBehaviorTooltipProps) => {
+  if (active && payload && payload.length) {
+    const sortedPayload = [...payload].sort((a, b) => (Number(b.value) || 0) - (Number(a.value) || 0));
 
       return (
         <div className="min-w-[220px] animate-in zoom-in-95 rounded-2xl border border-emerald-100 bg-white p-4 text-slate-800 shadow-[0_20px_50px_rgba(0,0,0,0.12)] backdrop-blur-xl duration-200 z-50">
@@ -121,7 +81,52 @@ const SpendBehaviorCard = ({
     return null;
   };
 
-  const handleChartType = useCallback((t) => {
+const SpendBehaviorCard = ({
+  isLocked,
+  chartType,
+  setChartType,
+  chartData,
+  activeKeys,
+  hiddenSeries,
+  isRefreshing = false,
+  brandColor = "#007758",
+}: SpendBehaviorCardProps) => {
+  
+  const BRAND_PRIMARY = brandColor || "var(--brand-primary, #007758)";
+  const getSeriesColor = useCallback(
+    (key: string) => {
+      const idx = activeKeys.indexOf(key);
+      return COLOR_PALETTE[(idx >= 0 ? idx : 0) % COLOR_PALETTE.length];
+    },
+    [activeKeys]
+  );
+
+  // In stacked areas, last rendered series controls the top boundary stroke.
+  // Reverse draw order so primary keys don't look visually overridden.
+  const stackedRenderKeys = [...activeKeys].reverse();
+  const seriesPointCount = useMemo(() => {
+    const counts: Record<string, number> = {};
+    activeKeys.forEach((k: string) => {
+      counts[k] = (chartData || []).reduce((n: number, row) => {
+        const v = Number(row?.[k]) || 0;
+        return n + (v > 0 ? 1 : 0);
+      }, 0);
+    });
+    return counts;
+  }, [activeKeys, chartData]);
+  const seriesTotals = useMemo(() => {
+    const totals: Record<string, number> = {};
+    activeKeys.forEach((k: string) => {
+      totals[k] = (chartData || []).reduce((sum: number, row) => sum + (Number(row?.[k]) || 0), 0);
+    });
+    return totals;
+  }, [activeKeys, chartData]);
+  const maxSeriesTotal = useMemo(
+    () => Math.max(0, ...Object.values(seriesTotals || {}).map((v: number) => Number(v) || 0)),
+    [seriesTotals]
+  );
+
+  const handleChartType = useCallback((t: CostChartType) => {
     if (isLocked && (t === "bar" || t === "line")) return;
     setChartType(t);
   }, [isLocked, setChartType]);
@@ -153,11 +158,11 @@ const SpendBehaviorCard = ({
 
         {/* --- TOGGLE CONTROLS --- */}
         <div className="flex bg-slate-50 p-1.5 rounded-2xl border border-slate-100 shadow-inner w-full md:w-auto overflow-x-auto no-scrollbar">
-          {[
+          {([
             { id: "area", icon: LayoutPanelLeft, label: "Stacked Area" },
             { id: "bar", icon: BarChart3, label: "Comparison" },
             { id: "line", icon: LineIcon, label: "Trend Line" }
-          ].map((t) => {
+          ] as Array<{ id: CostChartType; icon: typeof LayoutPanelLeft; label: string }>).map((t) => {
             const isPremium = isLocked && (t.id === "bar" || t.id === "line");
             const isActive = chartType === t.id;
 
@@ -196,7 +201,7 @@ const SpendBehaviorCard = ({
             {chartType === "area" ? (
               <AreaChart data={chartData} margin={{ left: 0, right: 0, top: 10, bottom: 0 }}>
                 <defs>
-                  {activeKeys.map((k) => {
+                  {activeKeys.map((k: string) => {
                     const color = getSeriesColor(k);
                     const gradId = `color-${String(k).replace(/[^a-zA-Z0-9_-]/g, "_")}`;
                     return (
@@ -211,7 +216,7 @@ const SpendBehaviorCard = ({
                 <XAxis
                   dataKey="date"
                   stroke="#cbd5e1"
-                  tickFormatter={(str) => (str ? str.slice(5) : "")}
+                  tickFormatter={(str: string) => (str ? str.slice(5) : "")}
                   fontSize={10}
                   fontWeight={800}
                   axisLine={false}
@@ -222,16 +227,16 @@ const SpendBehaviorCard = ({
                   stroke="#cbd5e1"
                   fontSize={10}
                   fontWeight={800}
-                  tickFormatter={(val) => `$${val >= 1000 ? (val / 1000).toFixed(0) + 'k' : val}`}
+                  tickFormatter={(val: number) => `$${val >= 1000 ? (val / 1000).toFixed(0) + 'k' : val}`}
                   axisLine={false}
                   tickLine={false}
                   dx={-10}
                 />
-                <Tooltip 
-                  content={<CustomTooltip />} 
-                  cursor={{ stroke: BRAND_PRIMARY, strokeWidth: 1.5, strokeDasharray: '4 4' }} 
+                <Tooltip
+                  content={<SpendBehaviorTooltip />}
+                  cursor={{ stroke: BRAND_PRIMARY, strokeWidth: 1.5, strokeDasharray: '4 4' }}
                 />
-                {stackedRenderKeys.map((k) => {
+                {stackedRenderKeys.map((k: string) => {
                   if (hiddenSeries.has(k)) return null;
                   const color = getSeriesColor(k);
                   const sparse = (seriesPointCount[k] || 0) <= 1;
@@ -250,12 +255,12 @@ const SpendBehaviorCard = ({
                         stroke={color}
                         strokeWidth={2}
                         connectNulls={false}
-                        dot={(props) => {
+                        dot={(props: { cx?: number; cy?: number; payload?: Record<string, unknown> }) => {
                           const v = Number(props?.payload?.[k]) || 0;
                           if (v <= 0 || props?.cx == null || props?.cy == null) return null;
                           return <circle cx={props.cx} cy={props.cy} r={5} fill={color} stroke="#fff" strokeWidth={2} />;
                         }}
-                        activeDot={(props) => {
+                        activeDot={(props: { cx?: number; cy?: number; payload?: Record<string, unknown> }) => {
                           const v = Number(props?.payload?.[k]) || 0;
                           if (v <= 0 || props?.cx == null || props?.cy == null) return null;
                           return <circle cx={props.cx} cy={props.cy} r={7} fill={color} stroke="#fff" strokeWidth={2} />;
@@ -295,7 +300,7 @@ const SpendBehaviorCard = ({
                 <XAxis 
                   dataKey="date" 
                   stroke="#cbd5e1" 
-                  tickFormatter={(str) => str?.slice(5)} 
+                  tickFormatter={(str: string) => str?.slice(5)} 
                   fontSize={10} 
                   fontWeight={800} 
                   axisLine={false} 
@@ -306,13 +311,13 @@ const SpendBehaviorCard = ({
                   stroke="#cbd5e1" 
                   fontSize={10} 
                   fontWeight={800} 
-                  tickFormatter={(val) => `$${val >= 1000 ? (val / 1000).toFixed(0) + 'k' : val}`} 
+                  tickFormatter={(val: number) => `$${val >= 1000 ? (val / 1000).toFixed(0) + 'k' : val}`} 
                   axisLine={false} 
                   tickLine={false} 
                   dx={-10} 
                 />
-                <Tooltip content={<CustomTooltip />} cursor={{ fill: '#f8fafc', radius: 12 }} />
-                {activeKeys.map((k) => !hiddenSeries.has(k) && (
+                <Tooltip content={<SpendBehaviorTooltip />} cursor={{ fill: '#f8fafc', radius: 12 }} />
+                {activeKeys.map((k: string) => !hiddenSeries.has(k) && (
                   <Bar 
                     key={k} 
                     dataKey={k} 
@@ -330,7 +335,7 @@ const SpendBehaviorCard = ({
                 <XAxis 
                   dataKey="date" 
                   stroke="#cbd5e1" 
-                  tickFormatter={(str) => str?.slice(5)} 
+                  tickFormatter={(str: string) => str?.slice(5)} 
                   fontSize={10} 
                   fontWeight={800} 
                   axisLine={false} 
@@ -341,13 +346,13 @@ const SpendBehaviorCard = ({
                   stroke="#cbd5e1" 
                   fontSize={10} 
                   fontWeight={800} 
-                  tickFormatter={(val) => `$${val >= 1000 ? (val / 1000).toFixed(0) + 'k' : val}`} 
+                  tickFormatter={(val: number) => `$${val >= 1000 ? (val / 1000).toFixed(0) + 'k' : val}`} 
                   axisLine={false} 
                   tickLine={false} 
                   dx={-10} 
                 />
-                <Tooltip content={<CustomTooltip />} />
-                {activeKeys.map((k) => !hiddenSeries.has(k) && (
+                <Tooltip content={<SpendBehaviorTooltip />} />
+                {activeKeys.map((k: string) => !hiddenSeries.has(k) && (
                   <Line 
                     key={k} 
                     type="monotone" 
@@ -388,3 +393,6 @@ const SpendBehaviorCard = ({
 };
 
 export default SpendBehaviorCard;
+
+
+

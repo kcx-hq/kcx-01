@@ -4,19 +4,19 @@ import SkeletonLoader from './layout/SkeletonLoader';
 import { useCaps } from '../../../hooks/useCaps';
 import useDashboardInit from './hooks/useDashboardInits';
 import { useDashboardRoutes } from './routing/useDashboardRoutings';
-import { Navigate, useLocation } from 'react-router-dom';
+import { Navigate } from 'react-router-dom';
+import type { ClientCDashboardRoutes } from './routing/useDashboardRoutings';
 
 const ClientCDashboardPage = () => {
   const loading = useDashboardInit();
   const routes = useDashboardRoutes();
   const { caps, api } = useCaps();
-  const location = useLocation();
 
 
   if (loading) return <SkeletonLoader />;
 
   // Check if any route is active, otherwise default to overview
-  const hasActiveRoute = Object.values(routes).some(value => value);
+  const hasActiveRoute = Object.values(routes as ClientCDashboardRoutes).some((value: boolean) => value);
 
   return (
     <DashboardLayout title="Client C Dashboard">

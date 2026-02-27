@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import {
   ScatterChart,
   Scatter,
@@ -20,13 +20,43 @@ import {
   Activity,
   Sparkles
 } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import { motion } from "framer-motion";
 
 // --- THEME ---
 const BRAND_EMERALD = "#007758";
 
+interface RiskPoint {
+  name: string;
+  x: number;
+  y: number;
+  severity?: string;
+}
+
+interface CostRiskProps {
+  riskData?: RiskPoint[];
+  totalSpend?: number;
+}
+
+interface RiskKPIProps {
+  title: string;
+  value: string | number;
+  icon: LucideIcon;
+  colorClass: string;
+  subtext: string;
+}
+
+interface ScatterTooltipPayload {
+  payload: RiskPoint;
+}
+
+interface ScatterTooltipProps {
+  active?: boolean;
+  payload?: ScatterTooltipPayload[];
+}
+
 // --- HELPERS ---
-const formatCurrency = (val) =>
+const formatCurrency = (val: number) =>
   new Intl.NumberFormat("en-US", {
     style: "currency",
     currency: "USD",
@@ -35,7 +65,7 @@ const formatCurrency = (val) =>
   }).format(val);
 
 // --- KPI CARD (Redesigned for Enterprise theme) ---
-const RiskKPI = ({ title, value, icon: Icon, colorClass, subtext }) => (
+const RiskKPI = ({ title, value, icon: Icon, colorClass, subtext }: RiskKPIProps) => (
   <div className="bg-white border border-slate-100 rounded-[2rem] p-6 flex flex-col justify-between relative overflow-hidden shadow-sm transition-all hover:shadow-md group">
     {/* Subtle Decorative Aura */}
     <div className={`absolute -right-4 -top-4 w-24 h-24 blur-3xl opacity-10 rounded-full bg-current ${colorClass.split('-')[0] === 'red' ? 'text-rose-500' : colorClass.split('-')[0] === 'orange' ? 'text-amber-500' : 'text-emerald-500'}`} />
@@ -63,14 +93,14 @@ const RiskKPI = ({ title, value, icon: Icon, colorClass, subtext }) => (
 );
 
 // --- MAIN COMPONENT ---
-const CostRisk = ({ riskData = [], totalSpend = 0 }) => {
+const CostRisk = ({ riskData = [] }: CostRiskProps) => {
   // Filter out tiny data points
-  const chartData = riskData.filter((d) => d.x > 0);
+  const chartData = riskData.filter((d: RiskPoint) => d.x > 0);
 
   // Calculate Metrics
-  const criticalCount = riskData.filter((d) => d.severity === "critical").length;
-  const highVelocityCount = riskData.filter((d) => d.y > 20).length;
-  const unallocatedSpend = riskData.find((d) => d.name.includes("Unallocated"))?.x || 0;
+  const criticalCount = riskData.filter((d: RiskPoint) => d.severity === "critical").length;
+  const highVelocityCount = riskData.filter((d: RiskPoint) => d.y > 20).length;
+  const unallocatedSpend = riskData.find((d: RiskPoint) => d.name.includes("Unallocated"))?.x || 0;
 
   return (
     <div className="flex flex-col gap-6 h-full animate-in fade-in duration-700">
@@ -136,7 +166,7 @@ const CostRisk = ({ riskData = [], totalSpend = 0 }) => {
                   type="number"
                   dataKey="x"
                   stroke="#94a3b8"
-                  tickFormatter={(val) => `$${val / 1000}k`}
+                  tickFormatter={(val: number) => `$${val / 1000}k`}
                   fontSize={10}
                   fontWeight={700}
                   axisLine={false}
@@ -148,15 +178,17 @@ const CostRisk = ({ riskData = [], totalSpend = 0 }) => {
                   stroke="#94a3b8"
                   fontSize={10}
                   fontWeight={700}
-                  tickFormatter={(val) => `${val}%`}
+                  tickFormatter={(val: number) => `${val}%`}
                   axisLine={false}
                   tickLine={false}
                 />
                 <Tooltip 
                   cursor={{ stroke: '#cbd5e1', strokeWidth: 1, strokeDasharray: '4 4' }}
-                  content={({ active, payload }) => {
+                  content={({ active, payload }: ScatterTooltipProps) => {
                     if (!active || !payload?.length) return null;
-                    const d = payload[0].payload;
+                    const first = payload[0];
+                    if (!first?.payload) return null;
+                    const d = first.payload;
                     return (
                         <div className="bg-[#192630] text-white p-4 rounded-2xl shadow-2xl border border-white/10 min-w-[200px] backdrop-blur-md">
                             <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 border-b border-white/5 pb-2 truncate">{d.name}</p>
@@ -193,7 +225,7 @@ const CostRisk = ({ riskData = [], totalSpend = 0 }) => {
                 />
 
                 <Scatter data={chartData}>
-                  {chartData.map((entry, index) => (
+                  {chartData.map((entry: RiskPoint, index: number) => (
                     <Cell
                       key={`cell-${index}`}
                       fill={
@@ -251,3 +283,5 @@ const CostRisk = ({ riskData = [], totalSpend = 0 }) => {
 };
 
 export default CostRisk;
+
+

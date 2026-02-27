@@ -4,6 +4,8 @@
  */
 
 import { clientCDataExplorerService } from './data-explorer.service.js';
+import AppError from "../../../../errors/AppError.js";
+import logger from "../../../../lib/logger.js";
 
 /**
  * Helper: normalize uploadIds from request
@@ -35,7 +37,7 @@ function getUploadIdsFromRequest(req) {
 /**
  * GET /api/client-c/data-explorer
  */
-export const getDataExplorer = async (req, res) => {
+export const getDataExplorer = async (req, res, next) => {
   try {
     const filters = {
       provider: req.query.provider || 'All',
@@ -58,20 +60,17 @@ export const getDataExplorer = async (req, res) => {
     const uploadIds = getUploadIdsFromRequest(req);
 
     if (uploadIds.length === 0) {
-      return res.json({
-        success: true,
-        data: {
-          data: [],
-          total: 0,
-          page: pagination.page,
-          limit: pagination.limit,
-          allColumns: [],
-          summaryData: {},
-          columnMaxValues: {},
-          departmentBreakdown: [],
-          availableDepartments: ['All'],
-          message: 'No upload selected.'
-        }
+      return res.ok({
+        data: [],
+        total: 0,
+        page: pagination.page,
+        limit: pagination.limit,
+        allColumns: [],
+        summaryData: {},
+        columnMaxValues: {},
+        departmentBreakdown: [],
+        availableDepartments: ['All'],
+        message: 'No upload selected.'
       });
     }
 
@@ -91,17 +90,17 @@ export const getDataExplorer = async (req, res) => {
       quickStats: result.quickStats || {}
     };
     
-    res.json({ success: true, data: formattedResult });
+    return res.ok(formattedResult);
   } catch (error) {
-    console.error('DataExplorer Error:', error);
-    res.status(500).json({ success: false, error: error.message });
+    logger.error({ err: error, requestId: req.requestId }, 'DataExplorer Error');
+    return next(new AppError(500, "INTERNAL", "Internal server error", { cause: error }));
   }
 };
 
 /**
  * GET /api/client-c/data-explorer/export-csv
  */
-export const exportDataExplorerCSV = async (req, res) => {
+export const exportDataExplorerCSV = async (req, res, next) => {
   try {
     const filters = {
       provider: req.query.provider || 'All',
@@ -127,11 +126,7 @@ export const exportDataExplorerCSV = async (req, res) => {
     const uploadIds = getUploadIdsFromRequest(req);
 
     if (uploadIds.length === 0) {
-      return res.status(400).json({
-        success: false,
-        error: 'uploadid is required',
-        message: 'No upload selected.'
-      });
+      return next(new AppError(400, "VALIDATION_ERROR", "Invalid request"));
     }
 
     const csvData = await clientCDataExplorerService.exportDataExplorerToCSV(
@@ -150,15 +145,15 @@ export const exportDataExplorerCSV = async (req, res) => {
 
     res.send(csvData);
   } catch (error) {
-    console.error('CSV Export Error:', error);
-    res.status(500).json({ success: false, error: error.message });
+    logger.error({ err: error, requestId: req.requestId }, 'CSV Export Error');
+    return next(new AppError(500, "INTERNAL", "Internal server error", { cause: error }));
   }
 };
 
 /**
  * GET /api/client-c/data-explorer/departments
  */
-export const getAvailableDepartments = async (req, res) => {
+export const getAvailableDepartments = async (req, res, next) => {
   try {
     const filters = {
       provider: req.query.provider || 'All',
@@ -169,16 +164,13 @@ export const getAvailableDepartments = async (req, res) => {
     const uploadIds = getUploadIdsFromRequest(req);
 
     if (uploadIds.length === 0) {
-      return res.json({
-        success: true,
-        data: ['All']
-      });
+      return res.ok(['All']);
     }
 
     const departments = await clientCDataExplorerService.getAvailableDepartments(filters, uploadIds);
-    res.json({ success: true, data: departments });
+    return res.ok(departments);
   } catch (error) {
-    console.error('Departments Error:', error);
-    res.status(500).json({ success: false, error: error.message });
+    logger.error({ err: error, requestId: req.requestId }, 'Departments Error');
+    return next(new AppError(500, "INTERNAL", "Internal server error", { cause: error }));
   }
 };

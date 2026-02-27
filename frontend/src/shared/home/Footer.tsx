@@ -1,4 +1,5 @@
 import React from "react";
+import type { LucideIcon } from "lucide-react";
 import { Linkedin, Twitter, Github } from "lucide-react";
 import { Link } from "react-router-dom";
 
@@ -10,14 +11,14 @@ const Footer = () => {
           
           {/* Column 1: Brand */}
           <div className="md:col-span-1">
-            <a href="#" className="flex items-center gap-2 mb-6">
+            <a href="#" className="flex items-center gap-3 mb-6">
               <img
-                src="/k&cologo.svg"
-                alt="K&Co Logo"
-                className="w-10 h-10 object-contain"
+                src="/KCX.logo.svg"
+                alt="KCX. Logo"
+                className="h-8 w-auto object-contain shrink-0"
               />
-              <span className="text-xl font-bold text-[var(--text-on-dark)]">
-                K&amp;Co.
+              <span className="text-[1.75rem] font-bold leading-none tracking-tight text-[var(--text-on-dark)]">
+                KCX<span className="text-[var(--brand-primary-hover)]">.</span>
               </span>
             </a>
 
@@ -74,7 +75,7 @@ const Footer = () => {
               Company
             </h4>
             <ul className="space-y-4 text-sm text-[var(--text-on-dark-muted)]">
-              {["About K&Co", "Case Studies", "Careers", "Contact"].map(
+              {["About KCX.", "Case Studies", "Careers", "Contact"].map(
                 (label) => (
                   <li key={label}>
                     <a
@@ -119,7 +120,7 @@ const Footer = () => {
             </ul>
 
             <div className="flex gap-4">
-              {[Linkedin, Twitter, Github].map((Icon, idx) => (
+              {[Linkedin, Twitter, Github].map((Icon: LucideIcon, idx) => (
                 <a
                   key={idx}
                   href="#"
@@ -134,7 +135,7 @@ const Footer = () => {
 
         {/* Bottom Bar */}
         <div className="pt-8 border-t border-[var(--border-dark)] flex flex-col items-center gap-4 text-xs text-[var(--text-on-dark-muted)]">
-          <p>&copy; 2025 K&amp;Co. All Rights Reserved.</p>
+          <p>&copy; 2025 KCX. All Rights Reserved.</p>
           <span>Vadodara, India</span>
         </div>
       </div>

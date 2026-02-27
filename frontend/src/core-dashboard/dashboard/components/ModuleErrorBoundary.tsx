@@ -1,17 +1,26 @@
 import React from "react";
 import { AlertTriangle } from "lucide-react";
 
-export class ModuleErrorBoundary extends React.Component {
-  constructor(props) {
+interface ModuleErrorBoundaryProps {
+  moduleName?: string;
+  children?: React.ReactNode;
+}
+
+interface ModuleErrorBoundaryState {
+  hasError: boolean;
+}
+
+export class ModuleErrorBoundary extends React.Component<ModuleErrorBoundaryProps, ModuleErrorBoundaryState> {
+  constructor(props: ModuleErrorBoundaryProps) {
     super(props);
     this.state = { hasError: false };
   }
 
-  static getDerivedStateFromError() {
+  static getDerivedStateFromError(): ModuleErrorBoundaryState {
     return { hasError: true };
   }
 
-  componentDidCatch(error, info) {
+  componentDidCatch(error: Error, info: React.ErrorInfo) {
     console.error(`[Dashboard Module Error] ${this.props.moduleName || "Module"}`, error, info);
   }
 

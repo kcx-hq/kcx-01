@@ -81,7 +81,7 @@ const InquirySection = () => {
       className="py-24 bg-[var(--bg-main)] relative overflow-hidden"
       id="contact"
     >
-      {/* Background blob (remove purple, use emerald soft) */}
+      {/* Background blob (soft emerald) */}
       <motion.div
         animate={{ scale: [1, 1.1, 1], opacity: [0.14, 0.24, 0.14] }}
         transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
@@ -98,7 +98,7 @@ const InquirySection = () => {
       >
         {/* LEFT */}
         <motion.div variants={slideLeftVariants}>
-          {/* Badge (remove purple) */}
+          {/* Badge */}
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[var(--bg-soft)] border border-[var(--border-light)] text-[var(--bg-dark)] text-xs font-semibold mb-6 shadow-[var(--shadow-sm)]">
             <motion.span
               animate={{ scale: [1, 1.3, 1], opacity: [1, 0.5, 1] }}
@@ -154,7 +154,7 @@ const InquirySection = () => {
                 </label>
                 <input
                   value={firstName}
-                  onChange={(e) => {
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
                     setFirstName(e.target.value);
                     setError("");
                   }}
@@ -169,7 +169,7 @@ const InquirySection = () => {
                 </label>
                 <input
                   value={lastName}
-                  onChange={(e) => {
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
                     setLastName(e.target.value);
                     setError("");
                   }}
@@ -186,7 +186,7 @@ const InquirySection = () => {
               <input
                 type="email"
                 value={email}
-                onChange={(e) => {
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
                   setEmail(e.target.value);
                   setError("");
                 }}
@@ -201,7 +201,7 @@ const InquirySection = () => {
               </label>
               <select
                 value={interest}
-                onChange={(e) => {
+                onChange={(e: React.ChangeEvent<HTMLSelectElement>) => {
                   setInterest(e.target.value);
                   setError("");
                 }}
@@ -221,9 +221,9 @@ const InquirySection = () => {
                 Message
               </label>
               <textarea
-                rows="3"
+                rows={3}
                 value={message}
-                onChange={(e) => setMessage(e.target.value)}
+                onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setMessage(e.target.value)}
                 className="w-full bg-[var(--bg-main)] border border-[var(--border-light)] rounded-[var(--radius-md)] p-2.5 text-sm text-[var(--text-primary)] placeholder:text-[var(--text-disabled)] resize-none focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)]/40"
                 placeholder="Tell us about your team size or cloud spend..."
               />

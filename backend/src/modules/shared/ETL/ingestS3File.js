@@ -1,10 +1,8 @@
-
+import { createRequire } from "module";
 import { S3Client, GetObjectCommand } from "@aws-sdk/client-s3";
 import { createGunzip } from "zlib";
 import csv from "csv-parser";
 import assumeRole from "../../../aws/assumeRole.js";
-import sequelize from "../../../config/db.config.js";
-
 import { collectDimensions } from "./dimensions/collectDimensions.js";
 import { bulkUpsertDimensions } from "./dimensions/bulkUpsertDimensions.js";
 import { preloadDimensionMaps } from "./dimensions/preloadDimensionsMaps.js";
@@ -19,25 +17,27 @@ import { mapRow } from "../../../utils/sanitize.js";
 import { detectProvider } from "./provider-detect.service.js";
 import { autoSuggest } from "../../../utils/mapping/autoSuggest.js";
 import { internalFields } from "../../../utils/mapping/internalFields.js";
+import logger from "../../../lib/logger.js";
 
+const require = createRequire(import.meta.url);
+const { sequelize } = require("../../../db/index.cjs");
 
-export async function ingestS3File({ 
+export async function ingestS3File({
   s3Key,
   clientid,
   uploadId,
-  Bucket , clientcreds = null,
+  Bucket,
+  clientcreds = null,
   region = "ap-south-1",
   assumeRoleOptions = null,
-}){
+}) {
   try {
-    const creds = await assumeRole( {region , clientcreds , assumeRoleOptions  });
-
+    const creds = await assumeRole({ region, clientcreds, assumeRoleOptions });
 
     const s3 = new S3Client({
-      region: region,
+      region,
       credentials: creds,
     });
-
 
     const response = await s3.send(
       new GetObjectCommand({
@@ -46,14 +46,13 @@ export async function ingestS3File({
       })
     );
 
-
     const isGzip = s3Key.toLowerCase().endsWith(".gz");
     const inputStream = isGzip
       ? response.Body.pipe(createGunzip())
       : response.Body;
 
     const csvStream = inputStream.pipe(csv());
- 
+
     let headers;
     let provider;
     const sampleRows = [];
@@ -64,34 +63,23 @@ export async function ingestS3File({
       if (isFirstRow) {
         headers = Object.keys(rawRow);
         provider = detectProvider(headers);
-
         await storeDetectedColumns(provider, headers, clientid);
-
         isFirstRow = false;
       }
 
       sampleRows.push(rawRow);
     }
 
-    // Resolve mapping even for small files (<200 rows), then map all rows.
     const suggestionRows = sampleRows.slice(0, 200);
     const suggestions = autoSuggest(headers, suggestionRows, internalFields);
 
     await storeAutoSuggestions(provider, uploadId, suggestions, clientid);
 
-    const resolvedMapping = await loadResolvedMapping(
-      provider,
-      headers,
-      clientid
-    );
+    const resolvedMapping = await loadResolvedMapping(provider, headers, clientid);
 
     const mappedRowsForDims = sampleRows.map((rawRow) =>
       mapRow(rawRow, resolvedMapping)
     );
-
-    /* ======================
-       DIMENSIONS UPSERT
-    ======================= */
 
     const dims = await collectDimensions(mappedRowsForDims);
 
@@ -106,10 +94,6 @@ export async function ingestS3File({
 
     const maps = await preloadDimensionMaps();
 
-    /* ======================
-       FACT INSERT
-    ======================= */
-
     for (const row of mappedRowsForDims) {
       const dimensionIds = resolveDimensionIdsFromMaps(row, maps);
 
@@ -118,16 +102,21 @@ export async function ingestS3File({
       if (
         !dimensionIds.regionid ||
         !dimensionIds.cloudaccountid ||
-        !dimensionIds.serviceid
-      ) continue;
+        !dimensionIds.commitmentdiscountid ||
+        !dimensionIds.resourceid ||
+        !dimensionIds.serviceid ||
+        !dimensionIds.skuid
+      ) {
+        continue;
+      }
 
       await pushFact(uploadId, row, dimensionIds);
     }
 
     await flushFacts();
-
-    console.log("✅ Direct ETL complete");
+    logger.info({ uploadId, clientid, bucket: Bucket, s3Key }, "direct ETL complete");
   } catch (err) {
-    console.error("❌ ETL failed:", err);
+    logger.error({ err, uploadId, clientid, bucket: Bucket, s3Key }, "direct ETL failed");
+    throw err;
   }
 }

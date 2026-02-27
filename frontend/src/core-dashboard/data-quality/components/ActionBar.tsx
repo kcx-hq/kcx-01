@@ -1,6 +1,7 @@
-﻿import { formatCurrency } from "../utils/format";
+import { formatCurrency } from "../utils/format";
+import type { StatsProps } from "../types";
 
-const ActionBar = ({ stats }) => {
+const ActionBar = ({ stats }: StatsProps) => {
   const missingMetaCount = stats?.buckets?.missingMeta?.length || 0;
 
   return (
@@ -36,4 +37,7 @@ const ActionBar = ({ stats }) => {
 };
 
 export default ActionBar;
+
+
+
 

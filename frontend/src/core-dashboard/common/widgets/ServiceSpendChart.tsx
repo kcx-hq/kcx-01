@@ -12,7 +12,29 @@ import {
 import { BarChart3, ChevronDown, Activity, Sparkles, Inbox } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
-const COLORS = ["#007758", "#3B82F6", "#0EA5E9", "#6366F1", "#14B8A6", "#8B5CF6", "#F59E0B"];
+const COLORS = ["#007758", "#3B82F6", "#0EA5E9", "#34d399", "#14B8A6", "#10b981", "#F59E0B"];
+
+interface ServiceSpendDatum {
+  name: string;
+  value: number;
+}
+
+interface ServiceTooltipPayload {
+  payload: ServiceSpendDatum;
+}
+
+interface ServiceTooltipProps {
+  active?: boolean;
+  payload?: ServiceTooltipPayload[];
+}
+
+interface ServiceSpendChartProps {
+  data?: ServiceSpendDatum[];
+  title?: string;
+  limit?: number;
+  onLimitChange?: (limit: number) => void;
+  totalSpend?: number;
+}
 
 const ServiceSpendChart = ({
   data = [],
@@ -20,21 +42,21 @@ const ServiceSpendChart = ({
   limit = 8,
   onLimitChange,
   totalSpend = 0,
-}) => {
+}: ServiceSpendChartProps) => {
   const [isOpen, setIsOpen] = useState(false);
 
   const validData = useMemo(() => {
     return Array.isArray(data)
       ? data
-          .filter((item) => item && item.name && typeof item.value === "number")
-          .sort((a, b) => b.value - a.value) // Ensure highest spend is always on top
+          .filter((item: ServiceSpendDatum) => item && item.name && typeof item.value === "number")
+          .sort((a: ServiceSpendDatum, b: ServiceSpendDatum) => b.value - a.value) // Ensure highest spend is always on top
           .slice(0, limit)
       : [];
   }, [data, limit]);
 
   const chartHeight = Math.max(400, validData.length * 52 + 120);
 
-  const handleSelect = (val) => {
+  const handleSelect = (val: number) => {
     if (onLimitChange) onLimitChange(val);
     setIsOpen(false);
   };
@@ -92,10 +114,10 @@ const ServiceSpendChart = ({
                     exit={{ opacity: 0, y: 8, scale: 0.95 }}
                     className="absolute right-0 mt-3 w-36 bg-white border border-slate-100 rounded-[1.25rem] shadow-2xl z-[100] overflow-hidden p-1.5 ring-1 ring-slate-200/50"
                   >
-                    {[5, 8, 10, 15].map((val) => (
+                    {[5, 8, 10, 15].map((val: number) => (
                       <button
                         key={val}
-                        onMouseDown={(e) => {
+                        onMouseDown={(e: React.MouseEvent<HTMLButtonElement>) => {
                           e.preventDefault();
                           handleSelect(val);
                         }}
@@ -136,13 +158,15 @@ const ServiceSpendChart = ({
                 axisLine={false} 
                 tickLine={false}
                 tick={{ fill: '#475569' }}
-                tickFormatter={(value) => value.length > 18 ? `${value.substring(0, 16)}...` : value}
+                tickFormatter={(value: string) => value.length > 18 ? `${value.substring(0, 16)}...` : value}
               />
               <Tooltip 
                 cursor={{ fill: "rgba(241, 245, 249, 0.6)", radius: 16 }}
-                content={({ active, payload }) => {
+                content={({ active, payload }: ServiceTooltipProps) => {
                   if (active && payload && payload.length) {
-                    const data = payload[0].payload;
+                    const first = payload[0];
+                    if (!first?.payload) return null;
+                    const data = first.payload;
                     const pct = totalSpend > 0 ? ((data.value / totalSpend) * 100).toFixed(1) : 0;
                     return (
                       <div className="bg-[#192630] text-white p-4 rounded-2xl shadow-2xl border border-white/10 min-w-[180px]">
@@ -164,7 +188,7 @@ const ServiceSpendChart = ({
                 animationDuration={1800}
                 animationEasing="ease-in-out"
               >
-                {validData.map((entry, index) => (
+                {validData.map((entry: ServiceSpendDatum, index: number) => (
                   <Cell 
                     key={`cell-${index}`} 
                     fill={COLORS[index % COLORS.length]} 
@@ -208,3 +232,5 @@ const ServiceSpendChart = ({
 };
 
 export default ServiceSpendChart;
+
+

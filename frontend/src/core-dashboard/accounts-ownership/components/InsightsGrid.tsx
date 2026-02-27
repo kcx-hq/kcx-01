@@ -1,8 +1,9 @@
 import React from "react";
 import { Briefcase } from "lucide-react";
 import { formatCurrency } from "../utils/format";
+import type { InsightsGridProps } from "../types";
 
-export function InsightsGrid({ insights }) {
+export function InsightsGrid({ insights }: InsightsGridProps) {
   return (
     <div className="rounded-xl border border-[var(--border-light)] bg-white p-4 shadow-sm md:p-6">
       <h2 className="mb-4 flex items-center gap-2 text-sm font-bold text-[var(--text-primary)]">

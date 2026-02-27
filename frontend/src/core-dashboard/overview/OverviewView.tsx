@@ -83,7 +83,7 @@ const OverviewView = ({
       <div className="sticky top-0 z-30 -mx-2 mb-4 bg-[var(--bg-main)]/95 px-2 py-2 backdrop-blur-sm">
         <FilterBar
           filters={filters}
-          onChange={onFilterChange}
+          onChange={(next) => onFilterChange(next as Partial<typeof filters>)}
           onReset={onReset}
           providerOptions={filterOptions?.providers ?? []}
           serviceOptions={filterOptions?.services ?? []}
@@ -461,3 +461,6 @@ const OverviewView = ({
 };
 
 export default OverviewView;
+
+
+

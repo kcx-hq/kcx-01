@@ -1,9 +1,10 @@
 import React from "react";
+import type { OptimizationTabItem, TabsProps } from "../types";
 
-export function Tabs({ activeTab, onChange, tabs }) {
+export function Tabs({ activeTab, onChange, tabs }: TabsProps) {
   return (
     <div className="flex gap-2 overflow-x-auto rounded-xl border border-[var(--border-light)] bg-white p-2">
-      {tabs.map((tab) => (
+      {tabs.map((tab: OptimizationTabItem) => (
         <button
           key={tab.id}
           onClick={() => onChange(tab.id)}
@@ -22,3 +23,6 @@ export function Tabs({ activeTab, onChange, tabs }) {
 }
 
 export default Tabs;
+
+
+

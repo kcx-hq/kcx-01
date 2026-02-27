@@ -8,6 +8,8 @@
 
 import { clientDReportsService } from "./reports.service.js";
 import { extractUploadIds } from '../helpers/extractUploadId.js';
+import AppError from "../../../../errors/AppError.js";
+import logger from "../../../../lib/logger.js";
 
 
 /**
@@ -24,18 +26,14 @@ function extractFilters(req) {
 /**
  * GET /api/client-d/reports/summary
  */
-export const getClientDSummary = async (req, res) => {
+export const getClientDSummary = async (req, res, next) => {
   try {
     const uploadIds = extractUploadIds(req);
     const filters = extractFilters(req);
     const period = req.body?.period || req.query?.period || null;
 
     if (uploadIds.length === 0) {
-      return res.json({
-        success: true,
-        data: clientDReportsService.emptySummary(),
-        message: "No upload selected. Please select a billing upload.",
-      });
+      return res.ok(clientDReportsService.emptySummary());
     }
 
     const data = await clientDReportsService.getDashboardSummary({
@@ -44,21 +42,17 @@ export const getClientDSummary = async (req, res) => {
       uploadIds,
     });
 
-    return res.json({ success: true, data });
+    return res.ok(data);
   } catch (error) {
-    console.error("Client-D Reports Summary Error:", error);
-    return res.status(500).json({
-      success: false,
-      error: "Failed to generate Client-D dashboard summary",
-      message: error.message,
-    });
+    logger.error({ err: error, requestId: req.requestId }, "Client-D Reports Summary Error");
+    return next(new AppError(500, "INTERNAL", "Internal server error", { cause: error }));
   }
 };
 
 /**
  * GET /api/client-d/reports/top-services
  */
-export const getClientDTopServices = async (req, res) => {
+export const getClientDTopServices = async (req, res, next) => {
   try {
     const uploadIds = extractUploadIds(req);
     const filters = extractFilters(req);
@@ -68,11 +62,7 @@ export const getClientDTopServices = async (req, res) => {
     const limit = Number.isFinite(Number(limitRaw)) ? parseInt(limitRaw, 10) : 10;
 
     if (uploadIds.length === 0) {
-      return res.json({
-        success: true,
-        data: [],
-        message: "No upload selected. Please select a billing upload.",
-      });
+      return res.ok([]);
     }
 
     const data = await clientDReportsService.getTopServices({
@@ -82,21 +72,17 @@ export const getClientDTopServices = async (req, res) => {
       uploadIds,
     });
 
-    return res.json({ success: true, data });
+    return res.ok(data);
   } catch (error) {
-    console.error("Client-D Top Services Error:", error);
-    return res.status(500).json({
-      success: false,
-      error: "Failed to fetch Client-D top services",
-      message: error.message,
-    });
+    logger.error({ err: error, requestId: req.requestId }, "Client-D Top Services Error");
+    return next(new AppError(500, "INTERNAL", "Internal server error", { cause: error }));
   }
 };
 
 /**
  * GET /api/client-d/reports/top-regions
  */
-export const getClientDTopRegions = async (req, res) => {
+export const getClientDTopRegions = async (req, res, next) => {
   try {
     const uploadIds = extractUploadIds(req);
     const filters = extractFilters(req);
@@ -106,11 +92,7 @@ export const getClientDTopRegions = async (req, res) => {
     const limit = Number.isFinite(Number(limitRaw)) ? parseInt(limitRaw, 10) : 10;
 
     if (uploadIds.length === 0) {
-      return res.json({
-        success: true,
-        data: [],
-        message: "No upload selected. Please select a billing upload.",
-      });
+      return res.ok([]);
     }
 
     const data = await clientDReportsService.getTopRegions({
@@ -120,13 +102,9 @@ export const getClientDTopRegions = async (req, res) => {
       uploadIds,
     });
 
-    return res.json({ success: true, data });
+    return res.ok(data);
   } catch (error) {
-    console.error("Client-D Top Regions Error:", error);
-    return res.status(500).json({
-      success: false,
-      error: "Failed to fetch Client-D top regions",
-      message: error.message,
-    });
+    logger.error({ err: error, requestId: req.requestId }, "Client-D Top Regions Error");
+    return next(new AppError(500, "INTERNAL", "Internal server error", { cause: error }));
   }
 };

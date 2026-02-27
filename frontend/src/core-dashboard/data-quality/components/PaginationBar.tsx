@@ -1,4 +1,6 @@
-﻿const PaginationBar = ({
+import type { PaginationBarProps } from "../types";
+
+const PaginationBar = ({
   currentPage,
   totalPages,
   actualTotalPages,
@@ -7,7 +9,7 @@
   maxAllowedPage,
   onPrev,
   onNext,
-}) => {
+}: PaginationBarProps) => {
   const safeTotalPages = totalPages || 1;
   const safePage = currentPage > safeTotalPages ? safeTotalPages : currentPage;
 
@@ -47,4 +49,7 @@
 };
 
 export default PaginationBar;
+
+
+
 

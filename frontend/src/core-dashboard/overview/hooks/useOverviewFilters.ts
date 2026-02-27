@@ -22,10 +22,9 @@ const toStringArray = (value: unknown): string[] =>
 const getFilterPayload = (response: unknown): OverviewFilterOptions | null => {
   if (!isObjectRecord(response)) return null;
 
-  const candidate = isObjectRecord(response.data) ? response.data : response;
-  const providers = toStringArray(candidate.providers);
-  const services = toStringArray(candidate.services);
-  const regions = toStringArray(candidate.regions);
+  const providers = toStringArray(response["providers"]);
+  const services = toStringArray(response["services"]);
+  const regions = toStringArray(response["regions"]);
 
   if (!providers.length && !services.length && !regions.length) return null;
 

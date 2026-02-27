@@ -108,11 +108,10 @@ export function useForecastingBudgetsData({
     (async () => {
       try {
         const res = (await api.call("forecastingBudgets", "summary", { params })) as
-          | { success?: boolean; data?: ForecastingBudgetsPayload }
-          | ForecastingBudgetsPayload;
+          | ForecastingBudgetsPayload
+          | null;
         if (!active) return;
-        const payload = (res as { data?: ForecastingBudgetsPayload })?.data ?? (res as ForecastingBudgetsPayload);
-        setData(payload || EMPTY_DATA);
+        setData(res || EMPTY_DATA);
       } catch (fetchError) {
         if (!active) return;
         const code = (fetchError as { code?: string })?.code;

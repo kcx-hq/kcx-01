@@ -20,10 +20,56 @@ import {
   Loader2,
   Sparkles
 } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
+interface PredictabilityChartPoint {
+  date: string;
+  actual?: number;
+  forecast?: number;
+  type?: string;
+}
+
+interface PredictabilityAnomaly {
+  date: string;
+}
+
+interface PredictabilityKpis {
+  predictabilityScore?: number;
+  forecastTotal?: number;
+  trend?: number;
+}
+
+interface PredictabilityTooltipPayload {
+  payload: PredictabilityChartPoint;
+}
+
+interface PredictabilityTooltipProps {
+  active?: boolean;
+  payload?: PredictabilityTooltipPayload[];
+  label?: string;
+}
+
+type KpiTone = "brand" | "cyan" | "rose";
+
+interface CompactKPIProps {
+  title: string;
+  value: string;
+  icon: LucideIcon;
+  tone?: KpiTone;
+  isActive: boolean;
+  onClick: () => void;
+  trend?: string;
+}
+
+interface CostPredictabilityProps {
+  chartData?: PredictabilityChartPoint[];
+  anomalies?: PredictabilityAnomaly[];
+  kpis?: PredictabilityKpis;
+}
+
 // --- HELPERS ---
-const formatCurrency = (val) =>
+const formatCurrency = (val: number) =>
   new Intl.NumberFormat("en-US", {
     style: "currency",
     currency: "USD",
@@ -31,7 +77,7 @@ const formatCurrency = (val) =>
     maximumFractionDigits: 0,
   }).format(val || 0);
 
-const formatDate = (dateStr) => {
+const formatDate = (dateStr: string | undefined) => {
   if (!dateStr) return "";
   const date = new Date(dateStr);
   return `${date.toLocaleString("default", { month: "short" })} ${date.getDate()}`;
@@ -40,12 +86,14 @@ const formatDate = (dateStr) => {
 const BRAND_EMERALD = "#007758";
 
 // --- REDESIGNED COMPACT KPI ---
-const CompactKPI = ({ title, value, icon: Icon, tone = "brand", isActive, onClick, trend }) => {
-  const styles = {
+const CompactKPI = ({ title, value, icon: Icon, tone = "brand", isActive, onClick, trend }: CompactKPIProps) => {
+  const toneMap: Record<KpiTone, { bg: string; text: string; border: string }> = {
     brand: { bg: "bg-emerald-50", text: "text-[#007758]", border: "border-emerald-100" },
     cyan: { bg: "bg-blue-50", text: "text-blue-600", border: "border-blue-100" },
     rose: { bg: "bg-rose-50", text: "text-rose-600", border: "border-rose-100" },
-  }[tone];
+  };
+  const normalizedTone: KpiTone = tone === "cyan" || tone === "rose" ? tone : "brand";
+  const styles = toneMap[normalizedTone];
 
   return (
     <button
@@ -79,14 +127,14 @@ const CompactKPI = ({ title, value, icon: Icon, tone = "brand", isActive, onClic
 };
 
 // --- MAIN COMPONENT ---
-const CostPredictability = ({ chartData = [], anomalies = [], kpis = {} }) => {
+const CostPredictability = ({ chartData = [], anomalies = [], kpis = {} }: CostPredictabilityProps) => {
   const [activeView, setActiveView] = useState("score");
   const score = Number(kpis.predictabilityScore || 0);
 
   const viewData = useMemo(() => {
     if (!chartData?.length) return [];
     if (activeView === "forecast") {
-      const historyPoints = chartData.filter((d) => d.type === "history");
+      const historyPoints = chartData.filter((d: PredictabilityChartPoint) => d.type === "history");
       return chartData.slice(Math.max(0, historyPoints.length - 10));
     }
     return chartData;
@@ -185,7 +233,7 @@ const CostPredictability = ({ chartData = [], anomalies = [], kpis = {} }) => {
                   stroke="#94a3b8"
                   fontSize={10}
                   fontWeight={700}
-                  tickFormatter={(str) => formatDate(str)}
+                  tickFormatter={(str: string) => formatDate(str)}
                   axisLine={false}
                   tickLine={false}
                   dy={10}
@@ -194,16 +242,18 @@ const CostPredictability = ({ chartData = [], anomalies = [], kpis = {} }) => {
                   stroke="#94a3b8"
                   fontSize={10}
                   fontWeight={700}
-                  tickFormatter={(val) => `$${val}`}
+                  tickFormatter={(val: number) => `$${val}`}
                   axisLine={false}
                   tickLine={false}
                 />
 
                 <Tooltip
                   cursor={{ stroke: '#cbd5e1', strokeWidth: 1, strokeDasharray: '4 4' }}
-                  content={({ active, payload, label }) => {
+                  content={({ active, payload, label }: PredictabilityTooltipProps) => {
                     if (!active || !payload?.length) return null;
-                    const data = payload[0].payload;
+                    const first = payload[0];
+                    if (!first?.payload) return null;
+                    const data = first.payload;
                     return (
                       <div className="bg-[#192630] text-white p-4 rounded-2xl shadow-2xl border border-white/10 min-w-[200px] backdrop-blur-md">
                         <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 border-b border-white/5 pb-2">
@@ -247,7 +297,7 @@ const CostPredictability = ({ chartData = [], anomalies = [], kpis = {} }) => {
                   animationDuration={1500}
                 />
 
-                {activeView === "variance" && anomalies.map((a, idx) => (
+                {activeView === "variance" && anomalies.map((a: PredictabilityAnomaly, idx: number) => (
                   <ReferenceLine
                     key={idx}
                     x={a.date}
@@ -282,3 +332,6 @@ const CostPredictability = ({ chartData = [], anomalies = [], kpis = {} }) => {
 };
 
 export default CostPredictability;
+
+
+

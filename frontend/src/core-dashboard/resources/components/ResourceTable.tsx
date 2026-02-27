@@ -3,13 +3,14 @@ import { AlertTriangle } from "lucide-react";
 import { Sparkline } from "../components/Sparkline";
 import { StatusBadge } from "../components/StatusBadge";
 import { formatCurrency } from "../utils/format";
+import type { ResourceItem, ResourceTableProps } from "../types";
 
 const ResourceTableView = ({
   rows,
   isPremiumMasked,
   onRowClick,
   flaggedResources,
-}) => {
+}: ResourceTableProps) => {
   const displayRows = isPremiumMasked ? rows.slice(0, 10) : rows;
 
   return (
@@ -28,7 +29,7 @@ const ResourceTableView = ({
         </thead>
 
         <tbody className="divide-y divide-[var(--border-muted)]">
-          {displayRows.map((item) => {
+          {displayRows.map((item: ResourceItem) => {
             const isFlagged = flaggedResources.has(item.id);
             return (
               <tr
@@ -81,4 +82,7 @@ const ResourceTableView = ({
 };
 
 export default ResourceTableView;
+
+
+
 

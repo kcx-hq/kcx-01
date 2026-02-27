@@ -1,4 +1,3 @@
-export * from './pages';
 export * from './common';
 export * from './overview';
 export * from './cost-analysis';
@@ -10,5 +9,5 @@ export * from './reports';
 export * from './accounts-ownership';
 export * from './data-explorer';
 export * from './department-cost';
-export * from './cost-alert';
+export * from './cost-alerts';
 export * from './project-tracking';

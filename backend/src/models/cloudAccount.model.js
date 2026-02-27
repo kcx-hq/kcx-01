@@ -1,5 +1,8 @@
+import { createRequire } from "module";
 import { DataTypes } from "sequelize";
-import sequelize from "../config/db.config.js";
+
+const require = createRequire(import.meta.url);
+const { sequelize } = require("../db/index.cjs");
 
 const CloudAccount = sequelize.define(
   "CloudAccount",
@@ -59,3 +62,5 @@ const CloudAccount = sequelize.define(
 );
 
 export default CloudAccount;
+
+

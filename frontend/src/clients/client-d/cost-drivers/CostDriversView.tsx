@@ -14,8 +14,9 @@ import { DynamicsCard } from "./components/DynamicsCard";
 import { CostMapCard } from "./components/CostMapCard";
 import { CostDriversEmptyState } from "./components/CostDriversEmptyState";
 import { CostDriversMessage } from "./components/CostDriversMessage";
+import type { CostDriversViewProps } from "./types";
 
-export function CostDriversView(props) {
+export function CostDriversView(props: CostDriversViewProps) {
   const {
     api,
     caps,
@@ -57,14 +58,14 @@ export function CostDriversView(props) {
     details,
   } = props;
 
-  if (!api || !caps || !caps.modules?.costDrivers?.enabled) return null;
+  if (!api || !caps || !caps.modules?.["costDrivers"]?.enabled) return null;
 
   // Full page loader (initial)
   if (loading) {
     return (
       <div className="p-10 text-center text-gray-500 flex items-center justify-center min-h-screen">
         <div className="flex flex-col items-center gap-4">
-          <Loader2 className="animate-spin text-[#a02ff1]" size={32} />
+          <Loader2 className="animate-spin text-[#007758]" size={32} />
           <span>Analyzing cost drivers...</span>
         </div>
       </div>
@@ -106,9 +107,9 @@ export function CostDriversView(props) {
             {/* Refreshing badge */}
             {isRefreshing && (
               <div className="flex justify-end">
-                <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-[#a02ff1]/20 border border-[#a02ff1]/30 rounded-lg backdrop-blur-sm">
-                  <Loader2 className="text-[#a02ff1] animate-spin" size={14} />
-                  <span className="text-[#a02ff1] text-xs font-medium">Updating...</span>
+                <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-[#007758]/20 border border-[#007758]/30 rounded-lg backdrop-blur-sm">
+                  <Loader2 className="text-[#007758] animate-spin" size={14} />
+                  <span className="text-[#007758] text-xs font-medium">Updating...</span>
                 </div>
               </div>
             )}
@@ -162,7 +163,7 @@ export function CostDriversView(props) {
             {/* Small footer note */}
             {periods?.prev && periods?.current && (
               <div className="text-[10px] text-gray-500 flex items-center gap-2 pt-2">
-                <TrendingUp size={12} className="text-[#a02ff1]" />
+                <TrendingUp size={12} className="text-[#007758]" />
                 Comparing <span className="text-gray-300 font-semibold">{formatDate(periods.prev)}</span>{" "}
                 → <span className="text-gray-300 font-semibold">{formatDate(periods.current)}</span>
               </div>

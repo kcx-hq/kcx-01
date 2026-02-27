@@ -1,16 +1,18 @@
 import { useEffect, useRef, useState } from "react";
 import { normalizeDataQualityResponse, EMPTY_DQ_STATS } from "../utils/normalizeDataQuality";
+import type { ApiLikeError, DataQualityStats, UseDataQualityParams, UseDataQualityResult } from "../types";
+import type { ApiCallOptions } from "../../../../services/apiClient";
 
-export const useDataQuality = ({ filters, api, caps }) => {
-  const abortRef = useRef(null);
+export const useDataQuality = ({ filters, api, caps }: UseDataQualityParams): UseDataQualityResult => {
+  const abortRef = useRef<AbortController | null>(null);
 
   const [loading, setLoading] = useState(true);
-  const [stats, setStats] = useState(null);
-  const [error, setError] = useState(null);
+  const [stats, setStats] = useState<DataQualityStats | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!api || !caps) return;
-    if (!caps.modules?.dataQuality?.enabled) return;
+    if (!caps.modules?.["dataQuality"]?.enabled) return;
 
     if (abortRef.current) abortRef.current.abort();
     abortRef.current = new AbortController();
@@ -22,26 +24,32 @@ export const useDataQuality = ({ filters, api, caps }) => {
       setError(null);
 
       try {
-        const res = await api.call("dataQuality", "analysis", {
+        const controller = abortRef.current;
+        if (!controller) return;
+
+        const requestOptions = {
           params: {
             provider: filters?.provider !== "All" ? filters.provider : undefined,
             service: filters?.service !== "All" ? filters.service : undefined,
             region: filters?.region !== "All" ? filters.region : undefined,
             uploadId: filters?.uploadId || undefined,
           },
-          signal: abortRef.current.signal,
-        });
+          signal: controller.signal,
+        } as unknown as ApiCallOptions;
+
+        const res = await api.call<unknown>("dataQuality", "analysis", requestOptions);
 
         if (!mounted) return;
         const normalized = normalizeDataQualityResponse(res);
         setStats(normalized);
-      } catch (e) {
-        if (e?.name === "AbortError") return;
-        if (e?.code === "NOT_SUPPORTED") return;
+      } catch (e: unknown) {
+        const apiError = e as ApiLikeError;
+        if (apiError?.name === "AbortError") return;
+        if (apiError?.code === "NOT_SUPPORTED") return;
 
-        console.error("Error fetching data quality:", e);
+        console.error("Error fetching data quality:", apiError);
         if (mounted) {
-          setError(e?.message || "Failed to load data quality");
+          setError(apiError?.message || "Failed to load data quality");
           setStats(EMPTY_DQ_STATS);
         }
       } finally {

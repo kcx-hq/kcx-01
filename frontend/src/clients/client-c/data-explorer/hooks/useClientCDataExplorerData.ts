@@ -1,4 +1,12 @@
 import { useEffect, useRef, useState } from "react";
+import type {
+  ApiLikeError,
+  ClientCApiCallOptions,
+  ClientCDataExplorerPayload,
+  ClientCUseDataExplorerDataParams,
+  ClientCUseDataExplorerDataResult,
+  DataExplorerRow,
+} from "../types";
 
 /**
  * Fetches client-c data explorer payload from backend.
@@ -14,22 +22,22 @@ export const useClientCDataExplorerData = ({
   sortConfig,
   columnFilters,
   uploadId
-}) => {
+}: ClientCUseDataExplorerDataParams): ClientCUseDataExplorerDataResult => {
   const [loading, setLoading] = useState(true);
   const [isInitialLoad, setIsInitialLoad] = useState(true);
   const [isFiltering, setIsFiltering] = useState(false);
 
-  const [data, setData] = useState([]);
+  const [data, setData] = useState<DataExplorerRow[]>([]);
   const [totalCount, setTotalCount] = useState(0);
 
-  const [allColumns, setAllColumns] = useState([]);
-  const [quickStats, setQuickStats] = useState(null);
-  const [summaryData, setSummaryData] = useState({});
-  const [columnMaxValues, setColumnMaxValues] = useState({});
-  const [departmentBreakdown, setDepartmentBreakdown] = useState([]);
-  const [availableDepartments, setAvailableDepartments] = useState(['All']);
+  const [allColumns, setAllColumns] = useState<string[]>([]);
+  const [quickStats, setQuickStats] = useState<ClientCUseDataExplorerDataResult["quickStats"]>(null);
+  const [summaryData, setSummaryData] = useState<ClientCUseDataExplorerDataResult["summaryData"]>({});
+  const [columnMaxValues, setColumnMaxValues] = useState<ClientCUseDataExplorerDataResult["columnMaxValues"]>({});
+  const [departmentBreakdown, setDepartmentBreakdown] = useState<ClientCUseDataExplorerDataResult["departmentBreakdown"]>([]);
+  const [availableDepartments, setAvailableDepartments] = useState<string[]>(['All']);
 
-  const prevColumnFiltersRef = useRef({});
+  const prevColumnFiltersRef = useRef<Record<string, string>>({});
   const prevPageRef = useRef(currentPage);
 
   useEffect(() => {
@@ -55,14 +63,14 @@ export const useClientCDataExplorerData = ({
         if (!api || !caps) return;
 
         // Check if dataExplorer module is enabled
-        const isDataExplorerEnabled = caps?.modules?.dataExplorer?.enabled === true;
+        const isDataExplorerEnabled = caps?.modules?.["dataExplorer"]?.enabled === true;
         if (!isDataExplorerEnabled) {
           console.warn('DataExplorer module is not enabled');
           return;
         }
 
         // Use the correct endpoint path for client-c data explorer
-        const res = await api.call("dataExplorer", "dataExplorer", {
+        const options: ClientCApiCallOptions = {
           params: {
             provider: filters?.provider !== "All" ? filters.provider : undefined,
             service: filters?.service !== "All" ? filters.service : undefined,
@@ -74,19 +82,27 @@ export const useClientCDataExplorerData = ({
             uploadId: uploadId
           },
           signal: abortController.signal,
-        });
+        };
+
+        const res = await api.call<ClientCDataExplorerPayload>(
+          "dataExplorer",
+          "dataExplorer",
+          options,
+        );
 
         if (!isMounted) return;
 
-        if (res?.success && res?.data) {
-          setData(res.data.data || []);
-          setTotalCount(res.data.total || res.data.totalCount || 0);
-          setAllColumns(res.data.allColumns || []);
-          setQuickStats(res.data.quickStats || null);
-          setSummaryData(res.data.summaryData || {});
-          setColumnMaxValues(res.data.columnMaxValues || {});
-          setDepartmentBreakdown(res.data.departmentBreakdown || []);
-          setAvailableDepartments(res.data.availableDepartments || ['All']);
+        const payload = res as ClientCDataExplorerPayload | undefined;
+
+        if (payload) {
+          setData(payload.data || []);
+          setTotalCount(payload.total || payload.totalCount || 0);
+          setAllColumns(payload.allColumns || []);
+          setQuickStats(payload.quickStats || null);
+          setSummaryData(payload.summaryData || {});
+          setColumnMaxValues(payload.columnMaxValues || {});
+          setDepartmentBreakdown(payload.departmentBreakdown || []);
+          setAvailableDepartments(payload.availableDepartments || ['All']);
         } else {
           // Handle fallback case
           setData([]);
@@ -98,9 +114,10 @@ export const useClientCDataExplorerData = ({
           setDepartmentBreakdown([]);
           setAvailableDepartments(['All']);
         }
-      } catch (err) {
-        if (err?.code === "NOT_SUPPORTED") return;
-        if (isMounted && err?.name !== "AbortError") {
+      } catch (err: unknown) {
+        const apiError = err as ApiLikeError;
+        if (apiError.code === "NOT_SUPPORTED") return;
+        if (isMounted && apiError?.name !== "AbortError") {
           console.error("Error fetching client-c data explorer data:", err);
         }
       } finally {

@@ -1,4 +1,16 @@
-export function normalizeAccountsData(accountsData) {
+import type {
+  AccountItem,
+  AccountsRawData,
+  ComplianceDepartmentItem,
+  ComplianceRawData,
+  DepartmentMergedItem,
+  NormalizedAccountsData,
+  NormalizedComplianceData,
+  NormalizedSummaryData,
+  SummaryRawData,
+} from "../types";
+
+export function normalizeAccountsData(accountsData: AccountsRawData | null): NormalizedAccountsData {
   if (!accountsData || typeof accountsData !== "object") {
     return {
       accounts: [],
@@ -16,7 +28,7 @@ export function normalizeAccountsData(accountsData) {
   const insights = accountsData.insights || {};
   
   const totalAccounts = insights.totalAccounts || accounts.length;
-  const ownedAccounts = insights.accountsWithOwner || accounts.filter(account => account.owner).length;
+  const ownedAccounts = insights.accountsWithOwner || accounts.filter((account: AccountItem) => account.owner).length;
   const unownedAccounts = insights.accountsWithoutOwner || (totalAccounts - ownedAccounts);
   const ownershipRate = totalAccounts > 0 ? Math.round((ownedAccounts / totalAccounts) * 100) : 0;
   
@@ -36,7 +48,7 @@ export function normalizeAccountsData(accountsData) {
   };
 }
 
-export function normalizeComplianceData(complianceData) {
+export function normalizeComplianceData(complianceData: ComplianceRawData | null): NormalizedComplianceData {
   if (!complianceData || typeof complianceData !== "object") {
     return {
       overall: {
@@ -55,7 +67,7 @@ export function normalizeComplianceData(complianceData) {
     };
   }
 
-  const overall = {
+  const overall: NormalizedComplianceData["overall"] = {
     taggedCost: complianceData.taggedCost || 0,
     untaggedCost: complianceData.untaggedCost || 0,
     taggedPercent: complianceData.taggedPercent || 0,
@@ -84,7 +96,7 @@ export function normalizeComplianceData(complianceData) {
   };
 }
 
-export function normalizeSummaryData(summaryData) {
+export function normalizeSummaryData(summaryData: SummaryRawData | null): NormalizedSummaryData {
   if (!summaryData || typeof summaryData !== "object") {
     return {
       totalAccounts: 0,
@@ -97,8 +109,16 @@ export function normalizeSummaryData(summaryData) {
     };
   }
 
-  const tagCompliance = summaryData.tagCompliance || { taggedCost: 0, untaggedCost: 0, taggedPercent: 0 };
-  const ownershipGaps = summaryData.ownershipGaps || { ownedCount: 0, unownedCount: 0, ownershipPercentValue: 0 };
+  const tagCompliance = {
+    taggedCost: summaryData.tagCompliance?.taggedCost ?? 0,
+    untaggedCost: summaryData.tagCompliance?.untaggedCost ?? 0,
+    taggedPercent: summaryData.tagCompliance?.taggedPercent ?? 0,
+  };
+  const ownershipGaps = {
+    ownedCount: summaryData.ownershipGaps?.ownedCount ?? 0,
+    unownedCount: summaryData.ownershipGaps?.unownedCount ?? 0,
+    ownershipPercentValue: summaryData.ownershipGaps?.ownershipPercentValue ?? 0,
+  };
   
   return {
     totalAccounts: summaryData.totalAccounts || 0,
@@ -111,19 +131,34 @@ export function normalizeSummaryData(summaryData) {
   };
 }
 
-export function mergeAccountData(accounts, ownership, compliance) {
+export function mergeAccountData(
+  accounts: NormalizedAccountsData,
+  ownership: SummaryRawData | null,
+  compliance: NormalizedComplianceData,
+): DepartmentMergedItem[] {
   // Extract departments from compliance data
-  const departments = {};
+  const departments: Record<string, {
+    totalCost: number;
+    ownedCost: number;
+    unownedCost: number;
+    compliantCost: number;
+    nonCompliantCost: number;
+    complianceRate: number;
+    count: number;
+    taggedCount: number;
+    untaggedCount: number;
+  }> = {};
   
   if (compliance?.byDepartment) {
-    compliance.byDepartment.forEach(dept => {
-      departments[dept.department] = {
-        totalCost: dept.totalCost,
+    compliance.byDepartment.forEach((dept: ComplianceDepartmentItem) => {
+      const departmentName = dept.department || "N/A";
+      departments[departmentName] = {
+        totalCost: Number(dept.totalCost || 0),
         ownedCost: 0,
         unownedCost: 0,
-        compliantCost: dept.taggedCost,
-        nonCompliantCost: dept.untaggedCost,
-        complianceRate: dept.compliancePercent,
+        compliantCost: Number(dept.taggedCost || 0),
+        nonCompliantCost: Number(dept.untaggedCost || 0),
+        complianceRate: Number(dept.compliancePercent || 0),
         count: 0,
         taggedCount: 0,
         untaggedCount: 0,
@@ -132,23 +167,23 @@ export function mergeAccountData(accounts, ownership, compliance) {
   }
 
   // Merge account ownership with departments
-  if (accounts) {
-    accounts.accounts.forEach(account => {
+  if (accounts?.accounts) {
+    accounts.accounts.forEach((account: AccountItem) => {
       const dept = account.department || 'N/A';
       if (departments[dept]) {
         if (account.owner) {
-          departments[dept].ownedCost += parseFloat(account.totalSpend || 0);
+          departments[dept].ownedCost += Number(account.totalSpend || 0);
         } else {
-          departments[dept].unownedCost += parseFloat(account.totalSpend || 0);
+          departments[dept].unownedCost += Number(account.totalSpend || 0);
         }
         departments[dept].count += 1;
         if (account.owner) departments[dept].taggedCount += 1;
         else departments[dept].untaggedCount += 1;
       } else {
         departments[dept] = {
-          totalCost: parseFloat(account.totalSpend || 0),
-          ownedCost: account.owner ? parseFloat(account.totalSpend || 0) : 0,
-          unownedCost: account.owner ? 0 : parseFloat(account.totalSpend || 0),
+          totalCost: Number(account.totalSpend || 0),
+          ownedCost: account.owner ? Number(account.totalSpend || 0) : 0,
+          unownedCost: account.owner ? 0 : Number(account.totalSpend || 0),
           compliantCost: 0,
           nonCompliantCost: 0,
           complianceRate: 0,
@@ -162,11 +197,11 @@ export function mergeAccountData(accounts, ownership, compliance) {
 
   return Object.entries(departments).map(([name, stats]) => ({
     name,
-    totalCost: parseFloat(stats.totalCost || 0).toFixed(2),
-    ownedCost: parseFloat(stats.ownedCost || 0).toFixed(2),
-    unownedCost: parseFloat(stats.unownedCost || 0).toFixed(2),
-    compliantCost: parseFloat(stats.compliantCost || 0).toFixed(2),
-    nonCompliantCost: parseFloat(stats.nonCompliantCost || 0).toFixed(2),
+    totalCost: Number(stats.totalCost || 0).toFixed(2),
+    ownedCost: Number(stats.ownedCost || 0).toFixed(2),
+    unownedCost: Number(stats.unownedCost || 0).toFixed(2),
+    compliantCost: Number(stats.compliantCost || 0).toFixed(2),
+    nonCompliantCost: Number(stats.nonCompliantCost || 0).toFixed(2),
     ownershipRate: stats.totalCost > 0 
       ? parseFloat(((stats.ownedCost / stats.totalCost) * 100).toFixed(2))
       : 0,

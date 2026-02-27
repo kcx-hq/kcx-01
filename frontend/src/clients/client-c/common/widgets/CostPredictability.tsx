@@ -20,17 +20,58 @@ import {
   AlertCircle,
   Loader2
 } from "lucide-react";
+import type { ComponentType, ReactNode } from "react";
+
+interface ChartPoint {
+  date: string;
+  type?: "history" | "forecast" | string;
+  actual?: number | null;
+  forecast?: number | null;
+  range?: [number, number] | null;
+}
+
+interface AnomalyPoint {
+  date: string;
+}
+
+interface PredictabilityKpis {
+  predictabilityScore?: number;
+  forecastTotal?: number;
+  trend?: number;
+}
+
+interface CompactKpiProps {
+  title: string;
+  value: string;
+  icon: ComponentType<{ size?: number; className?: string }>;
+  color: string;
+  isActive: boolean;
+  onClick: () => void;
+  trend?: string;
+}
+
+interface CostPredictabilityProps {
+  chartData?: ChartPoint[];
+  anomalies?: AnomalyPoint[];
+  kpis?: PredictabilityKpis;
+}
+
+interface TooltipContentProps {
+  active?: boolean;
+  payload?: Array<{ payload: ChartPoint }>;
+  label?: string | number;
+}
 
 // --- HELPERS ---
-const formatCurrency = (val) =>
+const formatCurrency = (val: number | null | undefined) =>
   new Intl.NumberFormat("en-US", {
     style: "currency",
     currency: "USD",
     minimumFractionDigits: 0,
     maximumFractionDigits: 0,
-  }).format(val);
+  }).format(Number(val ?? 0));
 
-const formatDate = (dateStr) => {
+const formatDate = (dateStr: string | number | undefined) => {
   if (!dateStr) return "";
   const date = new Date(dateStr);
   return `${date.toLocaleString("default", { month: "short" })} ${date.getDate()}`;
@@ -45,7 +86,7 @@ const CompactKPI = ({
   isActive, 
   onClick, 
   trend 
-}) => (
+}: CompactKpiProps) => (
   <button
     onClick={onClick}
     className={`
@@ -91,25 +132,26 @@ const CostPredictability = ({
   chartData = [], 
   anomalies = [], 
   kpis = {} 
-}) => {
+}: CostPredictabilityProps) => {
   const [activeView, setActiveView] = useState("score");
 
   const score = kpis.predictabilityScore || 0;
-  const scoreColor = score >= 80 ? "emerald-400" : score >= 50 ? "yellow-400" : "red-400";
   const scoreTailwind = score >= 80 ? "emerald-400" : score >= 50 ? "yellow-400" : "red-400";
 
   // Filter Data Logic
   const viewData = useMemo(() => {
     if (!chartData || chartData.length === 0) return [];
     if (activeView === "forecast") {
-      const historyPoints = chartData.filter(d => d.type === 'history');
+      const historyPoints = chartData.filter((d: ChartPoint) => d.type === 'history');
       const cutoffIndex = Math.max(0, historyPoints.length - 7);
       return chartData.slice(cutoffIndex);
     }
     return chartData;
   }, [chartData, activeView]);
 
-  const todayEntry = chartData?.findLast(d => d.type === 'history');
+  const todayEntry = (
+    chartData as ChartPoint[] & { findLast?: (predicate: (d: ChartPoint) => boolean) => ChartPoint | undefined }
+  ).findLast?.((d: ChartPoint) => d.type === 'history');
   const lastHistoryDate = todayEntry?.date;
 
   return (
@@ -165,7 +207,7 @@ const CostPredictability = ({
           </div>
 
           <div className="flex gap-4 text-[10px] font-bold bg-[#0f0f11]/50 p-2 rounded-lg border border-white/5">
-            <div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-[#a02ff1]"></div>Actual</div>
+            <div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-[#007758]"></div>Actual</div>
             <div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full border border-cyan-400"></div>Forecast</div>
             {activeView === 'variance' && (
               <div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-rose-500"></div>Anomaly</div>
@@ -184,11 +226,11 @@ const CostPredictability = ({
             <ResponsiveContainer width="100%" height="100%">
               <ComposedChart data={viewData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
                 <defs>
-                  <linearGradient id="purpleGradient" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#a02ff1" stopOpacity={0.4} />
-                    <stop offset="95%" stopColor="#a02ff1" stopOpacity={0} />
+                  <linearGradient id="emeraldGradient" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#007758" stopOpacity={0.4} />
+                    <stop offset="95%" stopColor="#007758" stopOpacity={0} />
                   </linearGradient>
-                  <pattern id="hatch" patternUnits="userSpaceOnUse" width="4" height="4" rotation={45}>
+                  <pattern id="hatch" patternUnits="userSpaceOnUse" width="4" height="4" patternTransform="rotate(45)">
                      <path d="M-1,1 l2,-2 M0,4 l4,-4 M3,5 l2,-2" stroke="#22d3ee" strokeWidth="1" opacity={0.3} />
                   </pattern>
                 </defs>
@@ -199,7 +241,7 @@ const CostPredictability = ({
                   dataKey="date" 
                   stroke="#555" 
                   fontSize={10} 
-                  tickFormatter={(str) => formatDate(str)} 
+                  tickFormatter={(str: string) => formatDate(str)} 
                   tickLine={false} 
                   axisLine={false} 
                   dy={10}
@@ -208,7 +250,7 @@ const CostPredictability = ({
                 <YAxis 
                   stroke="#555" 
                   fontSize={10} 
-                  tickFormatter={(val) => `$${val}`} 
+                  tickFormatter={(val: number) => `$${val}`} 
                   tickLine={false} 
                   axisLine={false} 
                   width={40}
@@ -216,9 +258,11 @@ const CostPredictability = ({
                 
                 <Tooltip
                   cursor={{ stroke: '#fff', strokeWidth: 1, strokeDasharray: '4 4', opacity: 0.3 }}
-                  content={({ active, payload, label }) => {
+                  content={({ active, payload, label }: TooltipContentProps): ReactNode => {
                     if (active && payload && payload.length) {
-                      const data = payload[0].payload;
+                      const firstPoint = payload[0];
+                      if (!firstPoint) return null;
+                      const data = firstPoint.payload;
                       return (
                         <div className="bg-[#0f0f11]/95 backdrop-blur border border-white/10 p-3 rounded-xl shadow-[0_0_30px_rgba(0,0,0,0.5)]">
                           <p className="text-[10px] font-bold text-gray-500 uppercase mb-2">{formatDate(label)}</p>
@@ -249,10 +293,10 @@ const CostPredictability = ({
                 <Area
                   type="monotone"
                   dataKey="actual"
-                  stroke="#a02ff1"
+                  stroke="#007758"
                   strokeWidth={3}
-                  fill="url(#purpleGradient)"
-                  activeDot={{ r: 6, fill: "#fff", stroke: "#a02ff1" }}
+                  fill="url(#emeraldGradient)"
+                  activeDot={{ r: 6, fill: "#fff", stroke: "#007758" }}
                   animationDuration={1000}
                 />
                 <Area
@@ -277,7 +321,7 @@ const CostPredictability = ({
                       strokeOpacity={0.2} 
                   />
                 )}
-                {activeView === 'variance' && anomalies.map((anomaly, idx) => (
+                {activeView === 'variance' && anomalies.map((anomaly: AnomalyPoint, idx: number) => (
                    <ReferenceLine 
                       key={idx}
                       x={anomaly.date} 
@@ -295,8 +339,8 @@ const CostPredictability = ({
       </div>
 
       {/* --- ROW 3: INSIGHTS STRIP --- */}
-      <div className="shrink-0 flex items-center gap-3 p-3 rounded-xl bg-gradient-to-r from-[#a02ff1]/10 to-transparent border border-[#a02ff1]/20">
-        <div className="p-2 rounded-lg bg-[#a02ff1]/20 text-[#a02ff1]">
+      <div className="shrink-0 flex items-center gap-3 p-3 rounded-xl bg-gradient-to-r from-[#007758]/10 to-transparent border border-[#007758]/20">
+        <div className="p-2 rounded-lg bg-[#007758]/20 text-[#007758]">
             <Zap size={16} />
         </div>
         <div className="flex-1">

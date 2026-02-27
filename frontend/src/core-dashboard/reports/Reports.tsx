@@ -5,12 +5,19 @@ import ReportsView from "./ReportsView";
 import { useReportsData } from "./hooks/useReportsData";
 import { useReportsDefinitions } from "./hooks/useReportsDefinitions";
 import { parseCurrency, parsePercentage } from "./utils/parsers";
+import type {
+  ApiLikeError,
+  DownloadReportPayload,
+  ReportMetricItem,
+  ReportsProps,
+  ReportType,
+} from "./types";
 
-const Reports = ({ filters = {}, api, caps }) => {
+const Reports = ({ filters = {}, api, caps }: ReportsProps) => {
   const { user } = useAuthStore();
 
   const isLocked = !user?.is_premium;
-  const canDownload = !!caps?.modules?.reports?.endpoints?.downloadPdf;
+  const canDownload = !!caps?.modules?.["reports"]?.endpoints?.["downloadPdf"];
 
   const [downloading, setDownloading] = useState(false);
 
@@ -23,27 +30,27 @@ const Reports = ({ filters = {}, api, caps }) => {
   const reports = useReportsDefinitions(reportData , isLocked);
 
   const onDownloadReport = useCallback(
-    async (reportType) => {
+    async (reportType: ReportType) => {
       if (!api || !canDownload) return;
 
       setDownloading(true);
 
       try {
-        const period = reportData?.billingPeriod || new Date().toISOString().split("T")[0];
+        const period = reportData?.billingPeriod || new Date().toISOString().split("T")[0] || "";
         const totalSpend = parseCurrency(reportData?.totalSpend || 0);
 
-        const topServices = (reportData?.topServices || []).slice(0, 3).map((s) => ({
+        const topServices = (reportData?.topServices || []).slice(0, 3).map((s: ReportMetricItem) => ({
           name: s?.name || "Unknown",
           cost: parseCurrency(s?.value ?? s?.cost ?? 0),
         }));
 
-        const topRegions = (reportData?.topRegions || []).slice(0, 3).map((r) => ({
+        const topRegions = (reportData?.topRegions || []).slice(0, 3).map((r: ReportMetricItem) => ({
           name: r?.name || "Unknown",
           cost: parseCurrency(r?.value ?? r?.cost ?? 0),
         }));
 
         const topServicePercent =
-          topServices.length > 0 && totalSpend > 0 ? (topServices[0].cost / totalSpend) * 100 : 0;
+          topServices.length > 0 && totalSpend > 0 ? ((topServices[0]?.cost || 0) / totalSpend) * 100 : 0;
 
         const taggedPercent = parsePercentage(reportData?.taggedPercent || 0);
         const prodPercent = parsePercentage(reportData?.prodPercent || 0);
@@ -60,7 +67,7 @@ const Reports = ({ filters = {}, api, caps }) => {
         const underReviewPercent =
           totalRecommendations > 0 ? Math.round((rightSizingCount / totalRecommendations) * 100) : 0;
 
-        const payload = {
+        const payload: DownloadReportPayload = {
           reportType,
           period,
           totalSpend,
@@ -84,7 +91,7 @@ const Reports = ({ filters = {}, api, caps }) => {
           responseType: "blob",
         });
 
-        const blob = res instanceof Blob ? res : res?.data;
+        const blob = res instanceof Blob ? res : null;
         if (!(blob instanceof Blob)) throw new Error("Invalid PDF response");
 
         const url = window.URL.createObjectURL(blob);
@@ -95,8 +102,9 @@ const Reports = ({ filters = {}, api, caps }) => {
         link.click();
         link.remove();
         window.URL.revokeObjectURL(url);
-      } catch (err) {
-        console.error("PDF download failed:", err);
+      } catch (err: unknown) {
+        const error = err as ApiLikeError;
+        console.error("PDF download failed:", error);
         alert("Failed to generate report PDF");
       } finally {
         setDownloading(false);
@@ -108,7 +116,6 @@ const Reports = ({ filters = {}, api, caps }) => {
   return (
     <ReportsView
       fetchingData={fetchingData}
-      isLocked={isLocked}
       reports={reports}
       onDownloadReport={onDownloadReport}
       downloading={downloading}
@@ -118,3 +125,6 @@ const Reports = ({ filters = {}, api, caps }) => {
 };
 
 export default Reports;
+
+
+

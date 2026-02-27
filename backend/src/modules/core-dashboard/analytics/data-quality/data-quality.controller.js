@@ -5,6 +5,9 @@
  */
 
 import { dataQualityService } from './data-quality.service.js';
+import AppError from "../../../../errors/AppError.js";
+import logger from "../../../../lib/logger.js";
+import { assertUploadScope } from "../../utils/uploadScope.service.js";
 
 /**
  * Helper: Normalize uploadId(s) from query/body into an array
@@ -36,7 +39,7 @@ function normalizeUploadIds(req) {
  * GET /api/quality/analysis
  * Get data quality analysis with fully computed, UI-ready data
  */
-export const getQualityAnalysis = async (req, res) => {
+export const getQualityAnalysis = async (req, res, next) => {
   try {
     const filters = {
       provider: req.query.provider || req.body?.provider || 'All',
@@ -55,7 +58,10 @@ export const getQualityAnalysis = async (req, res) => {
 
     if (requestedUploadIds.length > 0) {
       // If user explicitly requested uploadIds, use them
-      uploadIds = requestedUploadIds;
+      uploadIds = await assertUploadScope({
+        uploadIds: requestedUploadIds,
+        clientId: req.client_id,
+      });
     } 
 
     const data = await dataQualityService.analyzeDataQuality({
@@ -65,16 +71,12 @@ export const getQualityAnalysis = async (req, res) => {
       uploadIds,
     });
 
-    res.json({
-      success: true,
-      data,
-    });
+    return res.ok(data);
   } catch (error) {
-    console.error('Error in getQualityAnalysis:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to analyze data quality',
-      message: error.message,
-    });
+    if (error instanceof AppError) {
+      return next(error);
+    }
+    logger.error({ err: error, requestId: req.requestId }, 'Error in getQualityAnalysis');
+    return next(new AppError(500, "INTERNAL", "Internal server error", { cause: error }));
   }
 };

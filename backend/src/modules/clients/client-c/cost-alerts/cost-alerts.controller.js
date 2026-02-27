@@ -1,4 +1,6 @@
 import { getActiveAlerts, getDepartmentBudgetStatus, createAlertRule } from './cost-alerts.service.js';
+import AppError from "../../../../errors/AppError.js";
+import logger from "../../../../lib/logger.js";
 
 function extractUploadIds(req) {
   const raw = req.query.uploadIds ?? req.query.uploadId ?? req.body?.uploadIds;
@@ -8,45 +10,42 @@ function extractUploadIds(req) {
   return [];
 }
 
-export const getAlerts = async (req, res) => {
+export const getAlerts = async (req, res, next) => {
   try {
     const uploadIds = extractUploadIds(req);
     const thresholds = req.body?.thresholds || req.query.thresholds ? JSON.parse(req.query.thresholds) : {};
     const data = await getActiveAlerts({ uploadIds, thresholds });
-    res.json({ success: true, data });
+    return res.ok(data);
   } catch (error) {
-    console.error('Alerts Error:', error);
-    res.status(500).json({ success: false, error: error.message });
+    logger.error({ err: error, requestId: req.requestId }, 'Alerts Error');
+    return next(new AppError(500, "INTERNAL", "Internal server error", { cause: error }));
   }
 };
 
-export const getBudgetStatus = async (req, res) => {
+export const getBudgetStatus = async (req, res, next) => {
   try {
     const uploadIds = extractUploadIds(req);
     const budgets = req.body?.budgets || req.query.budgets ? JSON.parse(req.query.budgets) : {};
     const data = await getDepartmentBudgetStatus({ uploadIds, budgets });
-    res.json({ success: true, data });
+    return res.ok(data);
   } catch (error) {
-    console.error('Budget Status Error:', error);
-    res.status(500).json({ success: false, error: error.message });
+    logger.error({ err: error, requestId: req.requestId }, 'Budget Status Error');
+    return next(new AppError(500, "INTERNAL", "Internal server error", { cause: error }));
   }
 };
 
-export const createRule = async (req, res) => {
+export const createRule = async (req, res, next) => {
   try {
     const { department, threshold, type } = req.body || {};
     
     if (!department || !threshold || !type) {
-      return res.status(400).json({ 
-        success: false, 
-        error: 'Missing required fields: department, threshold, and type are all required.' 
-      });
+      return next(new AppError(400, "VALIDATION_ERROR", "Invalid request"));
     }
 
     const data = await createAlertRule({ department, threshold, type });
-    res.json({ success: true, data });
+    return res.ok(data);
   } catch (error) {
-    console.error('Create Rule Error:', error);
-    res.status(500).json({ success: false, error: error.message });
+    logger.error({ err: error, requestId: req.requestId }, 'Create Rule Error');
+    return next(new AppError(500, "INTERNAL", "Internal server error", { cause: error }));
   }
 };

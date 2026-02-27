@@ -1,14 +1,36 @@
 import {CloudAccountCredentials} from "../../../models/index.js";
+import AppError from "../../../errors/AppError.js";
+import logger from "../../../lib/logger.js";
 
-export async function createCloudAccountCredential(req, res) {
+function normalizeString(value) {
+  return String(value || "").trim();
+}
+
+export async function createCloudAccountCredential(req, res, next) {
   try {
-    const { clientId, accountId, accessKey, secretAccessKey, region } = req.body;
+    const clientId = normalizeString(
+      req.client_id ?? req.user?.client_id ?? req.user?.clientId
+    );
+    const accountId = normalizeString(req.body?.accountId);
+    const accessKey = normalizeString(req.body?.accessKey);
+    const secretAccessKey = normalizeString(req.body?.secretAccessKey);
+    const region = normalizeString(req.body?.region);
+
+    if (!clientId) {
+      return next(new AppError(403, "UNAUTHORIZED", "You do not have permission to perform this action"));
+    }
 
     // Basic validation
-    if (!clientId || !accountId || !accessKey || !secretAccessKey || !region) {
-      return res.status(400).json({
-        error: "clientId, accountId, accessKey, secretAccessKey and region are required",
-      });
+    if (!accountId || !accessKey || !secretAccessKey || !region) {
+      return next(new AppError(400, "VALIDATION_ERROR", "Invalid request"));
+    }
+
+    if (!/^\d{12}$/.test(accountId)) {
+      return next(new AppError(400, "VALIDATION_ERROR", "Invalid request"));
+    }
+
+    if (!/^[a-z]{2}-[a-z-]+-\d$/.test(region)) {
+      return next(new AppError(400, "VALIDATION_ERROR", "Invalid request"));
     }
 
     const record = await CloudAccountCredentials.create({
@@ -20,7 +42,7 @@ export async function createCloudAccountCredential(req, res) {
     });
 
     // NEVER return decrypted secrets
-    return res.status(201).json({
+    return res.created({
       message: "Cloud account credentials added successfully",
       data: {
         id: record.id,
@@ -30,18 +52,13 @@ export async function createCloudAccountCredential(req, res) {
       },
     });
   } catch (error) {
-    console.error("Error creating cloud account credential:", error);
+    logger.error({ err: error, requestId: req.requestId }, "Error creating cloud account credential");
 
     // Unique constraint error
     if (error.name === "SequelizeUniqueConstraintError") {
-      return res.status(409).json({
-        error: "This clientId + accountId combination already exists",
-      });
+      return next(new AppError(409, "CONFLICT", "Conflict"));
     }
 
-    return res.status(500).json({
-      error: "Internal server error",
-      message: error.message,
-    });
+    return next(new AppError(500, "INTERNAL", "Internal server error", { cause: error }));
   }
 }

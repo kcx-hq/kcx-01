@@ -1,7 +1,12 @@
 import React from 'react';
 
+interface KeepAliveProps {
+  children?: React.ReactNode;
+  isActive: boolean;
+}
+
 const KeepAlive = React.memo(
-  ({ children, isActive }) => {
+  ({ children, isActive }: KeepAliveProps) => {
     return (
       <div
         style={{
@@ -21,8 +26,11 @@ const KeepAlive = React.memo(
       </div>
     );
   },
-  (prev, next) => prev.isActive === next.isActive
+  (prev: KeepAliveProps, next: KeepAliveProps) => prev.isActive === next.isActive
 );
 
 KeepAlive.displayName = 'KeepAlive';
 export default KeepAlive;
+
+
+

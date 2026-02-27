@@ -1,4 +1,7 @@
 import { dashboardService } from './overview.service.js';
+import AppError from "../../../errors/AppError.js";
+import logger from "../../../lib/logger.js";
+import { assertUploadScope } from "../utils/uploadScope.service.js";
 
 /**
  * Helper: normalize uploadIds from request
@@ -40,7 +43,7 @@ function getUploadIdsFromRequest(req) {
   return normalizeUploadIds(raw);
 }
 
-export const getOverview = async (req, res) => {
+export const getOverview = async (req, res, next) => {
   try {
     const parsedBudget = Number(req.query.budget || req.body?.budget || 0);
     const filters = {
@@ -51,39 +54,42 @@ export const getOverview = async (req, res) => {
     };
 
     // ✅ same approach as cost-analysis: uploadid from request
-    const uploadIds = getUploadIdsFromRequest(req);
+    const uploadIds = await assertUploadScope({
+      uploadIds: getUploadIdsFromRequest(req),
+      clientId: req.client_id,
+    });
 
     // If you want to force explicit selection like cost-analysis, keep this:
     if (uploadIds.length === 0) {
-      return res.json({
-        success: true,
-        data: {
-          kpis: {
-            totalSpend: 0,
-            avgDaily: 0,
-            peakUsage: 0,
-            peakDate: null,
-            trend: 0,
-            predictabilityScore: 100,
-            forecastTotal: 0,
-            atRiskSpend: 0
-          },
-          chartData: [],
-          breakdown: [],
-          message: 'No upload selected. Please select a billing upload.'
-        }
+      return res.ok({
+        kpis: {
+          totalSpend: 0,
+          avgDaily: 0,
+          peakUsage: 0,
+          peakDate: null,
+          trend: 0,
+          predictabilityScore: 100,
+          forecastTotal: 0,
+          atRiskSpend: 0
+        },
+        chartData: [],
+        breakdown: [],
+        message: 'No upload selected. Please select a billing upload.'
       });
     }
 
     const data = await dashboardService.getOverviewMetrics(filters, uploadIds);
-    res.json({ success: true, data });
+    return res.ok(data);
   } catch (error) {
-    console.error('Overview Error:', error);
-    res.status(500).json({ success: false, error: error.message });
+    if (error instanceof AppError) {
+      return next(error);
+    }
+    logger.error({ err: error, requestId: req.requestId }, 'Overview Error');
+    return next(new AppError(500, "INTERNAL", "Internal server error", { cause: error }));
   }
 };
 
-export const getAnomalies = async (req, res) => {
+export const getAnomalies = async (req, res, next) => {
   try {
     const filters = {
       provider: req.query.provider || 'All',
@@ -92,47 +98,53 @@ export const getAnomalies = async (req, res) => {
     };
 
     // ✅ same approach as cost-analysis: uploadid from request
-    const uploadIds = getUploadIdsFromRequest(req);
+    const uploadIds = await assertUploadScope({
+      uploadIds: getUploadIdsFromRequest(req),
+      clientId: req.client_id,
+    });
 
     if (uploadIds.length === 0) {
-      return res.json({
-        success: true,
-        data: {
-          anomalies: [],
-          message: 'No upload selected. Please select a billing upload.'
-        }
+      return res.ok({
+        anomalies: [],
+        message: 'No upload selected. Please select a billing upload.'
       });
     }
 
     const data = await dashboardService.getAnomalies(filters, uploadIds);
-    res.json({ success: true, data });
+    return res.ok(data);
   } catch (error) {
-    console.error('Anomaly Error:', error);
-    res.status(500).json({ success: false, error: error.message });
+    if (error instanceof AppError) {
+      return next(error);
+    }
+    logger.error({ err: error, requestId: req.requestId }, 'Anomaly Error');
+    return next(new AppError(500, "INTERNAL", "Internal server error", { cause: error }));
   }
 };
 
 // keep getFilters and getDataExplorer as they were (only update uploadIds wiring)
-export const getFilters = async (req, res) => {
+export const getFilters = async (req, res, next) => {
   try {
-     const uploadIds = getUploadIdsFromRequest(req);
+     const uploadIds = await assertUploadScope({
+      uploadIds: getUploadIdsFromRequest(req),
+      clientId: req.client_id,
+    });
      if (uploadIds.length === 0) {
-      return res.json({
-        success: true,
-        data: {
-          anomalies: [],
-          message: 'No upload selected. Please select a billing upload.'
-        }
+      return res.ok({
+        anomalies: [],
+        message: 'No upload selected. Please select a billing upload.'
       });
     }
     const data = await dashboardService.getFilters(uploadIds);
-    res.json({ success: true, data });
+    return res.ok(data);
   } catch (error) {
-    res.status(500).json({ success: false, error: error.message });
+    if (error instanceof AppError) {
+      return next(error);
+    }
+    return next(new AppError(500, "INTERNAL", "Internal server error"));
   }
 };
 
-export const getDataExplorer = async (req, res) => {
+export const getDataExplorer = async (req, res, next) => {
   try {
     const filters = {
       provider: req.query.provider || 'All',
@@ -152,26 +164,29 @@ export const getDataExplorer = async (req, res) => {
     };
 
     // ✅ same approach as cost-analysis: uploadid from request
-    const uploadIds = getUploadIdsFromRequest(req);
+    const uploadIds = await assertUploadScope({
+      uploadIds: getUploadIdsFromRequest(req),
+      clientId: req.client_id,
+    });
 
     if (uploadIds.length === 0) {
-      return res.json({
-        success: true,
-        data: {
-          rows: [],
-          total: 0,
-          page: pagination.page,
-          limit: pagination.limit,
-          message: 'No upload selected. Please select a billing upload.'
-        }
+      return res.ok({
+        rows: [],
+        total: 0,
+        page: pagination.page,
+        limit: pagination.limit,
+        message: 'No upload selected. Please select a billing upload.'
       });
     }
 
     const data = await dashboardService.getDataExplorerData(filters, pagination, uploadIds);
-    res.json({ success: true, data });
+    return res.ok(data);
   } catch (error) {
-    console.error('DataExplorer Error:', error);
-    res.status(500).json({ success: false, error: error.message });
+    if (error instanceof AppError) {
+      return next(error);
+    }
+    logger.error({ err: error, requestId: req.requestId }, 'DataExplorer Error');
+    return next(new AppError(500, "INTERNAL", "Internal server error", { cause: error }));
   }
 };
 
@@ -179,7 +194,7 @@ export const getDataExplorer = async (req, res) => {
  * Export Data Explorer to CSV
  * All CSV generation logic is in backend - frontend just triggers download
  */
-export const exportDataExplorerCSV = async (req, res) => {
+export const exportDataExplorerCSV = async (req, res, next) => {
   try {
     const filters = {
       provider: req.query.provider || 'All',
@@ -202,14 +217,13 @@ export const exportDataExplorerCSV = async (req, res) => {
     const visibleColumns = req.query.visibleColumns ? JSON.parse(req.query.visibleColumns) : null;
 
     // ✅ same approach as cost-analysis: uploadid from request
-    const uploadIds = getUploadIdsFromRequest(req);
+    const uploadIds = await assertUploadScope({
+      uploadIds: getUploadIdsFromRequest(req),
+      clientId: req.client_id,
+    });
 
     if (uploadIds.length === 0) {
-      return res.status(400).json({
-        success: false,
-        error: 'uploadid is required',
-        message: 'No upload selected. Please select a billing upload to export.'
-      });
+      return next(new AppError(400, "VALIDATION_ERROR", "Invalid request"));
     }
 
     const csvData = await dashboardService.exportDataExplorerToCSV(
@@ -228,12 +242,15 @@ export const exportDataExplorerCSV = async (req, res) => {
 
     res.send(csvData);
   } catch (error) {
-    console.error('CSV Export Error:', error);
-    res.status(500).json({ success: false, error: error.message });
+    if (error instanceof AppError) {
+      return next(error);
+    }
+    logger.error('CSV Export Error:', error);
+    return next(new AppError(500, "INTERNAL", "Internal server error"));
   }
 };
 
-export const getCostAnalysis = async (req, res) => {
+export const getCostAnalysis = async (req, res, next) => {
   try {
     const filters = {
       provider: req.query.provider || 'All',
@@ -244,39 +261,42 @@ export const getCostAnalysis = async (req, res) => {
     const groupBy = req.query.groupBy || 'ServiceName';
 
     // ✅ same approach as cost-analysis: uploadid from request
-    const uploadIds = getUploadIdsFromRequest(req);
+    const uploadIds = await assertUploadScope({
+      uploadIds: getUploadIdsFromRequest(req),
+      clientId: req.client_id,
+    });
 
     if (uploadIds.length === 0) {
-      return res.json({
-        success: true,
-        data: {
-          kpis: {
-            totalSpend: 0,
-            avgDaily: 0,
-            peakUsage: 0,
-            peakDate: null,
-            trend: 0,
-            predictabilityScore: 100,
-            forecastTotal: 0,
-            atRiskSpend: 0
-          },
-          chartData: [],
-          predictabilityChartData: [],
-          anomalies: [],
-          activeKeys: [],
-          drivers: [],
-          riskData: [],
-          breakdown: [],
-          message: 'No upload selected. Please select a billing upload to analyze cost.'
-        }
+      return res.ok({
+        kpis: {
+          totalSpend: 0,
+          avgDaily: 0,
+          peakUsage: 0,
+          peakDate: null,
+          trend: 0,
+          predictabilityScore: 100,
+          forecastTotal: 0,
+          atRiskSpend: 0
+        },
+        chartData: [],
+        predictabilityChartData: [],
+        anomalies: [],
+        activeKeys: [],
+        drivers: [],
+        riskData: [],
+        breakdown: [],
+        message: 'No upload selected. Please select a billing upload to analyze cost.'
       });
     }
 
     // Pass uploadIds along (dashboardService should forward to cost analysis service/repo filters)
     const data = await dashboardService.getCostAnalysisData(filters, groupBy, uploadIds);
-    res.json({ success: true, data });
+    return res.ok(data);
   } catch (error) {
-    console.error('CostAnalysis Error:', error);
-    res.status(500).json({ success: false, error: error.message });
+    if (error instanceof AppError) {
+      return next(error);
+    }
+    logger.error({ err: error, requestId: req.requestId }, 'CostAnalysis Error');
+    return next(new AppError(500, "INTERNAL", "Internal server error", { cause: error }));
   }
 };

@@ -1,0 +1,18 @@
+services:
+  postgres_test:
+    image: postgres:16
+    container_name: backend_postgres_test
+    environment:
+      POSTGRES_USER: test
+      POSTGRES_PASSWORD: test
+      POSTGRES_DB: app_test
+    command: ["postgres", "-p", "54329"]
+    ports:
+      - "54329:54329"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U test -d app_test -p 54329"]
+      interval: 2s
+      timeout: 2s
+      retries: 30
+    tmpfs:
+      - /var/lib/postgresql/data

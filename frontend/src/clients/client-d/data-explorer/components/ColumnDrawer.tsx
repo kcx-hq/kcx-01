@@ -2,8 +2,16 @@
 import React from "react";
 import { X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import type { ColumnDrawerProps } from "../types";
 
-const ColumnsDrawer = ({ open, onClose, allColumns, hiddenColumns, toggleColumn, searchTerm }) => {
+const ColumnsDrawer = ({
+  open,
+  onClose,
+  allColumns,
+  hiddenColumns,
+  toggleColumn,
+  searchTerm,
+}: ColumnDrawerProps) => {
   return (
     <AnimatePresence>
       {open && (
@@ -49,11 +57,11 @@ const ColumnsDrawer = ({ open, onClose, allColumns, hiddenColumns, toggleColumn,
 
             <div className="flex-1 overflow-y-auto p-3 space-y-1 scrollbar-thin scrollbar-thumb-gray-700">
               {allColumns
-                .filter((col) => {
+                .filter((col: string) => {
                   if (!searchTerm?.trim()) return true;
                   return col.toLowerCase().includes(searchTerm.trim().toLowerCase());
                 })
-                .map((col) => {
+                .map((col: string) => {
                   const visible = !hiddenColumns.includes(col);
                   return (
                     <button
@@ -78,7 +86,7 @@ const ColumnsDrawer = ({ open, onClose, allColumns, hiddenColumns, toggleColumn,
 
             <div className="p-3 border-t border-white/10 bg-[#171820]">
               <button
-                onClick={() => hiddenColumns.forEach((c) => toggleColumn(c))}
+                onClick={() => hiddenColumns.forEach((c: string) => toggleColumn(c))}
                 className="w-full py-2 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-xs font-semibold text-gray-200"
               >
                 Show all columns

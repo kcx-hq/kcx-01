@@ -6,32 +6,38 @@ import { generateJWT } from "../../../utils/jwt.js";
 import { generateVerificationOTP } from "../../../utils/generateVerificationOTP.js";
 import { sendVerificationEmail, sendEmail } from "../../../utils/sendEmail.js";
 import { BillingUpload, User } from "../../../models/index.js";
-import { CAPABILITIES_MAP } from "../../shared/capabilities/capabilities.map.js";
 import crypto from "crypto";
 import { Op } from "sequelize";
-export const signUp = async (req, res) => {
+import AppError from "../../../errors/AppError.js";
+import logger from "../../../lib/logger.js";
+import {
+  buildAuthPayload,
+  deriveClientName,
+  getCapabilitiesForClient,
+  isValidProfileName,
+  normalizeEmail,
+  resolveClientEmail,
+} from "./auth.utils.js";
+export const signUp = async (req, res, next) => {
   try {
     const { email, password, full_name, role, client_name, client_email } =
       req.body;
 
     // Validate required fields
     if (!email || !password || !full_name || !role) {
-      return res.status(400).json({
-        message: "Email, password, full name, and role are required",
-      });
+      return next(new AppError(400, "VALIDATION_ERROR", "Invalid request"));
     }
 
     // Validate email format
     if (!isValidEmail(email)) {
-      return res.status(400).json({
-        message: "Invalid email format",
-      });
+      return next(new AppError(400, "VALIDATION_ERROR", "Invalid request"));
     }
 
-    const normalizedEmail = email.toLowerCase().trim();
-    const normalizedClientEmail = client_email
-      ? client_email.toLowerCase().trim()
-      : normalizedEmail;
+    const normalizedEmail = normalizeEmail(email);
+    const normalizedClientEmail = resolveClientEmail(
+      client_email,
+      normalizedEmail,
+    );
 
     // 1. Generate verification OTP ONCE
     const { otp, expires } = generateVerificationOTP();
@@ -43,9 +49,7 @@ export const signUp = async (req, res) => {
 
     if (existingUser) {
       if (existingUser.is_verified) {
-        return res.status(409).json({
-          message: "User already exists",
-        });
+        return next(new AppError(409, "CONFLICT", "Conflict"));
       }
 
       // Re-send verification for unverified user
@@ -59,7 +63,7 @@ export const signUp = async (req, res) => {
         otp,
       );
 
-      return res.status(200).json({
+      return res.ok({
         message:
           "User is already registered. Verify the email. Verification OTP resent. Please verify your email.",
         user: {
@@ -75,10 +79,7 @@ export const signUp = async (req, res) => {
       const client =
         (await clientService.getClientByEmail(normalizedClientEmail)) ??
         (await clientService.createClient({
-          name:
-            client_name ||
-            normalizedEmail.split("@")[1]?.split(".")[0] ||
-            "Default Client",
+          name: deriveClientName(client_name, normalizedEmail),
           email: normalizedClientEmail,
         }));
 
@@ -99,7 +100,7 @@ export const signUp = async (req, res) => {
     await sendVerificationEmail(user.email, user.full_name, otp);
 
     // 6. Response
-    return res.status(201).json({
+    return res.created({
       message: "User registered successfully. Please verify your email.",
       user: {
         id: user.id,
@@ -110,38 +111,30 @@ export const signUp = async (req, res) => {
       },
     });
   } catch (error) {
-    console.error("Signup error:", error);
-    return res.status(500).json({
-      message: "Internal server error",
-    });
+    logger.error({ err: error, requestId: req.requestId }, "Signup error");
+    return next(new AppError(500, "INTERNAL", "Internal server error", { cause: error }));
   }
 };
 
-export const signIn = async (req, res) => {
+export const signIn = async (req, res, next) => {
   try {
     const { email, password } = req.body;
 
     /* 1. Required fields */
     if (!email || !password) {
-      return res.status(400).json({
-        message: "Email and password are required",
-      });
+      return next(new AppError(400, "VALIDATION_ERROR", "Invalid request"));
     }
     /* 2. Normalize email */
-    const normalizedEmail = email.toLowerCase().trim();
+    const normalizedEmail = normalizeEmail(email);
     /* 3. Find user */
     const user = await userService.getUserByEmail(normalizedEmail);
     if (!user) {
-      return res.status(401).json({
-        message: "Invalid email or password",
-      });
+      return next(new AppError(401, "UNAUTHENTICATED", "Authentication required"));
     }
     /* 4. Check password */
     const isPasswordValid = await bcrypt.compare(password, user.password_hash);
     if (!isPasswordValid) {
-      return res.status(401).json({
-        message: "Invalid email or password",
-      });
+      return next(new AppError(401, "UNAUTHENTICATED", "Authentication required"));
     }
 
     if (!user.is_verified) {
@@ -150,13 +143,10 @@ export const signIn = async (req, res) => {
       user.verification_otp_expires = expires;
       await user.save();
       await sendVerificationEmail(user.email, user.full_name, otp);
-      return res.status(403).json({
-        message:
-          "OTP sent on registered Email.Please verify your email before logging in.",
-      });
+      return next(new AppError(403, "UNAUTHORIZED", "You do not have permission to perform this action"));
     }
     /* 5. Generate JWT */
-    const payload = { id: user.id, role: user.role, client_id: user.client_id };
+    const payload = buildAuthPayload(user);
     const token = generateJWT(payload);
 
     /* 6. Set cookie */
@@ -176,7 +166,7 @@ export const signIn = async (req, res) => {
     const hasUploaded = !!existingUpload;
 
     /* 8. Response */
-    return res.status(200).json({
+    return res.ok({
       message: "Login successful",
       user: {
         id: user.id,
@@ -186,17 +176,15 @@ export const signIn = async (req, res) => {
       hasUploaded,
     });
   } catch (error) {
-    console.error("Login error:", error);
-    return res.status(500).json({
-      message: "Internal server error",
-    });
+    logger.error({ err: error, requestId: req.requestId }, "Login error");
+    return next(new AppError(500, "INTERNAL", "Internal server error", { cause: error }));
   }
 };
 
-export const getUser = async (req, res) => {
+export const getUser = async (req, res, next) => {
   try {
     const user = await userService.getUserById(req.user.id);
-    if (!user) return res.status(404).json({ error: "User not found" });
+    if (!user) return next(new AppError(404, "NOT_FOUND", "Not found"));
 
     // Check if user has existing upload
     const existingUpload = await BillingUpload.findOne({
@@ -204,8 +192,8 @@ export const getUser = async (req, res) => {
     });
     const hasUploaded = !!existingUpload;
 
-    const caps = CAPABILITIES_MAP[req.client_id] || CAPABILITIES_MAP.core;
-    res.json({
+    const caps = getCapabilitiesForClient(req.client_id);
+    return res.ok({
       id: user.id,
       email: user.email,
       full_name: user.full_name,
@@ -217,28 +205,28 @@ export const getUser = async (req, res) => {
       hasUploaded,
     });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    return next(new AppError(500, "INTERNAL", "Internal server error", { cause: err }));
   }
 };
 
-export const updateProfile = async (req, res) => {
+export const updateProfile = async (req, res, next) => {
   try {
     const { full_name } = req.body;
     const userId = req.user.id;
 
-    if (!full_name || full_name.trim() === "") {
-      return res.status(400).json({ message: "Full name is required" });
+    if (!isValidProfileName(full_name)) {
+      return next(new AppError(400, "VALIDATION_ERROR", "Invalid request"));
     }
 
     const user = await userService.getUserById(userId);
     if (!user) {
-      return res.status(404).json({ message: "User not found" });
+      return next(new AppError(404, "NOT_FOUND", "Not found"));
     }
 
     user.full_name = full_name.trim();
     await user.save();
 
-    return res.status(200).json({
+    return res.ok({
       message: "Profile updated successfully",
       user: {
         id: user.id,
@@ -250,12 +238,12 @@ export const updateProfile = async (req, res) => {
       },
     });
   } catch (err) {
-    console.error("Update profile error:", err);
-    return res.status(500).json({ message: "Internal server error" });
+    logger.error({ err, requestId: req.requestId }, "Update profile error");
+    return next(new AppError(500, "INTERNAL", "Internal server error", { cause: err }));
   }
 };
 
-export const logout = (req, res) => {
+export const logout = (req, res, _next) => {
   // Ensure we clear the same cookie attributes when logging out
   res.clearCookie("kandco_token", {
     httpOnly: true,
@@ -263,39 +251,39 @@ export const logout = (req, res) => {
     sameSite: "strict",
     path: "/",
   });
-  return res.status(200).json({ message: "Logged out successfully" });
+  return res.ok({ message: "Logged out successfully" });
 };
 
-export const verifyEmail = async (req, res) => {
+export const verifyEmail = async (req, res, next) => {
   try {
     const { email, otp } = req.body;
-    const normalizedEmail = email.toLowerCase().trim();
+    const normalizedEmail = normalizeEmail(email);
     const user = await userService.getUserByEmail(normalizedEmail);
 
     if (!user) {
-      return res.status(404).json({ message: "User not found" });
+      return next(new AppError(404, "NOT_FOUND", "Not found"));
     }
     if (user.is_verified) {
-      return res.status(400).json({ message: "User already verified" });
+      return next(new AppError(400, "VALIDATION_ERROR", "Invalid request"));
     }
     if (
       user.verification_otp !== otp ||
       new Date() > user.verification_otp_expires
     ) {
-      return res.status(400).json({ message: "Invalid or expired OTP" });
+      return next(new AppError(400, "VALIDATION_ERROR", "Invalid request"));
     }
     user.is_verified = true;
     user.verification_otp = null;
     user.verification_otp_expires = null;
     await user.save();
-    return res.status(200).json({ message: "Email verified successfully" });
+    return res.ok({ message: "Email verified successfully" });
   } catch (error) {
-    console.error("Email verification error:", error);
-    return res.status(500).json({ message: "Internal server error" });
+    logger.error({ err: error, requestId: req.requestId }, "Email verification error");
+    return next(new AppError(500, "INTERNAL", "Internal server error", { cause: error }));
   }
 };
 
-export const forgotPassword = async (req, res) => {
+export const forgotPassword = async (req, res, next) => {
   try {
     const { email } = req.body;
 
@@ -304,15 +292,15 @@ export const forgotPassword = async (req, res) => {
       message: "A reset link has been sent to your email.",
     };
 
-    if (!email) return res.status(200).json(genericMsg);
+    if (!email) return res.ok(genericMsg);
 
     const user = await User.findOne({
       where: {
-        email: email.toLowerCase().trim()
+        email: normalizeEmail(email)
       },
     });
 
-    if (!user) return res.status(200).json({ message: "User not exist" });
+    if (!user) return res.ok({ message: "User not exist" });
 
     // Generate token
     const rawToken = crypto.randomBytes(32).toString("hex");
@@ -332,17 +320,17 @@ export const forgotPassword = async (req, res) => {
       to: user.email,
       subject: "Reset your password",
       html: `
-        <div style="background-color:#0a0a0c; padding:32px; font-family:ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;">
-  <div style="max-width:520px; margin:0 auto; background-color:#121218; border:1px solid rgba(255,255,255,0.08); border-radius:16px; padding:28px;">
+        <div style="background-color:#f3fbf7; padding:32px; font-family:ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;">
+  <div style="max-width:520px; margin:0 auto; background-color:#ffffff; border:1px solid rgba(15,157,115,0.18); border-radius:16px; padding:28px;">
 
-    <h2 style="color:#ffffff; margin:0 0 12px; font-size:22px;">
+    <h2 style="color:#133a2d; margin:0 0 12px; font-size:22px;">
       Reset your password
     </h2>
 
-    <p style="color:#9CA3AF; font-size:14px; line-height:1.6; margin:0 0 20px;">
+    <p style="color:#5f7a70; font-size:14px; line-height:1.6; margin:0 0 20px;">
       We received a request to reset your password. Click the button below to set a new password.
       <br />
-      <span style="color:#6B7280;">This link is valid for 15 minutes.</span>
+      <span style="color:#6d8379;">This link is valid for 15 minutes.</span>
     </p>
 
     <div style="text-align:center; margin:28px 0;">
@@ -350,28 +338,28 @@ export const forgotPassword = async (req, res) => {
         href="${resetUrl}"
         style="
           display:inline-block;
-          background-color:#8B2FC9;
+          background-color:#0f9d73;
           color:#ffffff;
           text-decoration:none;
           font-weight:700;
           padding:14px 26px;
           border-radius:14px;
-          box-shadow:0 4px 14px rgba(139,47,201,0.45);
+          box-shadow:0 4px 14px rgba(15,157,115,0.28);
         "
       >
         Reset Password
       </a>
     </div>
 
-    <p style="color:#9CA3AF; font-size:13px; line-height:1.6; margin:0;">
-      If you didn’t request a password reset, you can safely ignore this email.
+    <p style="color:#5f7a70; font-size:13px; line-height:1.6; margin:0;">
+      If you didn't request a password reset, you can safely ignore this email.
       Your password will remain unchanged.
     </p>
 
-    <hr style="border:none; border-top:1px solid rgba(255,255,255,0.08); margin:24px 0;" />
+    <hr style="border:none; border-top:1px solid rgba(15,157,115,0.18); margin:24px 0;" />
 
-    <p style="color:#6B7280; font-size:12px; text-align:center; margin:0;">
-      © ${new Date().getFullYear()} K and Co., All rights reserved
+    <p style="color:#6d8379; font-size:12px; text-align:center; margin:0;">
+      (c) ${new Date().getFullYear()} K and Co., All rights reserved
     </p>
 
   </div>
@@ -380,25 +368,23 @@ export const forgotPassword = async (req, res) => {
       `,
     });
 
-    return res.status(200).json(genericMsg);
+    return res.ok(genericMsg);
   } catch (err) {
-    return res.status(500).json({ message: "Server error" });
+    return next(new AppError(500, "INTERNAL", "Internal server error", { cause: err }));
   }
 };
 
-export const resetPassword = async (req, res) => {
+export const resetPassword = async (req, res, next) => {
   try {
     const { token } = req.params;
     const { password, confirmPassword } = req.body;
 
     if (!password || !confirmPassword) {
-      return res
-        .status(400)
-        .json({ message: "Password and confirm password are required." });
+      return next(new AppError(400, "VALIDATION_ERROR", "Invalid request"));
     }
 
     if (password !== confirmPassword) {
-      return res.status(400).json({ message: "Passwords do not match." });
+      return next(new AppError(400, "VALIDATION_ERROR", "Invalid request"));
     }
 
     // Hash incoming token to compare with DB
@@ -414,12 +400,10 @@ export const resetPassword = async (req, res) => {
     });
 
     if (!user) {
-      return res
-        .status(400)
-        .json({ message: "Reset link is invalid or expired." });
+      return next(new AppError(400, "VALIDATION_ERROR", "Invalid request"));
     }
 
-    // ✅ Update password (your field is password_hash)
+    // Update password (your field is password_hash)
     // You can hash manually OR just set password_hash and let your beforeUpdate hook hash it.
     // Option A (hash manually):
     user.password_hash = password;
@@ -430,10 +414,8 @@ export const resetPassword = async (req, res) => {
 
     await user.save();
 
-    return res
-      .status(200)
-      .json({ message: "Password reset successful. Please login." });
+    return res.ok({ message: "Password reset successful. Please login." });
   } catch (err) {
-    return res.status(500).json({ message: "Server error" });
+    return next(new AppError(500, "INTERNAL", "Internal server error", { cause: err }));
   }
 };

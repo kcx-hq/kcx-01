@@ -1,7 +1,10 @@
 // models/RawAwsBillingRow.js
 
-import sequelize from "../config/db.config.js";
+import { createRequire } from "module";
 import { DataTypes } from "sequelize";
+
+const require = createRequire(import.meta.url);
+const { sequelize } = require("../db/index.cjs");
 
 const RawAwsBillingRow = sequelize.define(
   "RawAwsBillingRow",
@@ -46,3 +49,4 @@ const RawAwsBillingRow = sequelize.define(
 );
 
 export default RawAwsBillingRow;
+

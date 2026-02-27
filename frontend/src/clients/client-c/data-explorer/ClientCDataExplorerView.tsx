@@ -1,17 +1,11 @@
 import React, { useState } from "react";
+import type { DataExplorerRow, ClientCDataExplorerViewProps, ExplorerInputChange, ApiLikeError } from "./types";
 
-// Updated function signature - full module including ContextFilters to comply with current config module
-function getContextWithFilters(widget, accountId, parent, initialContext) { 
-  return { 
-    ...initialContext, 
-    filters: { accountId, parent }, 
-    widget 
-  }; 
-}const FullScreenLoader = ({ text = "Loading data..." }) => (
+const FullScreenLoader = () => (
   <div className="flex items-center justify-center h-[70vh]">
     <div className="flex flex-col items-center gap-4">
       <svg
-        className="w-12 h-12 animate-spin text-[#a02ff1]"
+        className="w-12 h-12 animate-spin text-[#007758]"
         fill="none"
         viewBox="0 0 24 24"
       >
@@ -47,38 +41,25 @@ const DataExplorer = ({
   totalCount,
   allColumns,
   quickStats,
-  summaryData,
   columnMaxValues,
   totalPages,
   // UI state
   searchTerm,
   setSearchTerm,
-  selectedRow,
-  setSelectedRow,
   sortConfig,
   setSortConfig,
   filterInputs,
   setFilterInputs,
   columnFilters,
   showFilterRow,
-  setShowFilterRow,
-  hiddenColumns,
-  showColumnMenu,
-  setShowColumnMenu,
   currentPage,
   setCurrentPage,
   rowsPerPage,
-  setRowsPerPage,
-  density,
-  setDensity,
   showDataBars,
   setShowDataBars,
   selectedIndices,
-  setSelectedIndices,
   viewMode,
   setViewMode,
-  groupByCol,
-  setGroupByCol,
 
 
   // derived
@@ -86,33 +67,30 @@ const DataExplorer = ({
   tableDataToRender,
   clientSideGroupedData,
   // helpers + actions
-  getRowHeight,
   getColumnWidth,
-  toggleColumn,
   handleRowSelect,
   handleRowClick,
   removeFilter,
   resetFilters,
-  handleDrillDown,
   // passthrough for backend export
   filters,
   uploadId,
-}) => {
+}: ClientCDataExplorerViewProps) => {
   const [showAggregates, setShowAggregates] = useState(false);
   const [showStats, setShowStats] = useState(false);
-  const visibleData = viewMode === "table" ? tableDataToRender : clientSideGroupedData;
+  const visibleData: DataExplorerRow[] = viewMode === "table" ? tableDataToRender : clientSideGroupedData;
 
   // Calculate aggregated metrics
   const calculateAggregates = () => {
     if (!data || data.length === 0) return {};
     
-    const numericColumns = [];
-    const aggregates = {};
+    const numericColumns: string[] = [];
+    const aggregates: Record<string, { sum: number; avg: number; min: number; max: number; count: number }> = {};
     
     // Identify numeric columns
     if (allColumns && data[0]) {
-      allColumns.forEach(col => {
-        const isNumeric = data.some(row => {
+      allColumns.forEach((col: string) => {
+        const isNumeric = data.some((row: DataExplorerRow) => {
           const val = row[col];
           return typeof val === 'number' || (typeof val === 'string' && !isNaN(parseFloat(val)));
         });
@@ -125,7 +103,7 @@ const DataExplorer = ({
           let max = -Infinity;
           let count = 0;
           
-          data.forEach(row => {
+          data.forEach((row: DataExplorerRow) => {
             const val = typeof row[col] === 'string' ? parseFloat(row[col]) : row[col];
             if (typeof val === 'number' && !isNaN(val)) {
               sum += val;
@@ -152,7 +130,7 @@ const DataExplorer = ({
   const { numericColumns, aggregates } = calculateAggregates();
 
   // Handle sorting
-  const handleSort = (columnKey) => {
+  const handleSort = (columnKey: string) => {
     setSortConfig((prev) => ({
       key: columnKey,
       direction: prev.key === columnKey && prev.direction === "asc" ? "desc" : "asc",
@@ -160,7 +138,7 @@ const DataExplorer = ({
   };
 
   // Handle column filter input
-  const handleColumnFilterChange = (column, value) => {
+  const handleColumnFilterChange = (column: string, value: string) => {
     setFilterInputs((prev) => ({
       ...prev,
       [column]: value,
@@ -175,7 +153,7 @@ const DataExplorer = ({
         return;
       }
 
-      const blob = await api.call("dataExplorer", "exportCsv", {
+      const blob = await api.call<Blob | null>("dataExplorer", "exportCsv", {
         params: {
           provider: filters?.provider !== "All" ? filters.provider : undefined,
           service: filters?.service !== "All" ? filters.service : undefined,
@@ -201,9 +179,10 @@ const DataExplorer = ({
       a.click();
       document.body.removeChild(a);
       window.URL.revokeObjectURL(url);
-    } catch (error) {
+    } catch (error: unknown) {
+      const apiError = error as ApiLikeError;
       console.error("Error downloading CSV:", error);
-      alert("Failed to export CSV. Please try again.");
+      alert(apiError.message || "Failed to export CSV. Please try again.");
     }
   };
 
@@ -220,22 +199,22 @@ const DataExplorer = ({
     
     return (
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-        <div className="bg-[#1a1b20]/60 backdrop-blur-md border border-white/5 rounded-xl p-4 hover:border-[#a02ff1]/20 transition-all duration-200">
+        <div className="bg-[#1a1b20]/60 backdrop-blur-md border border-white/5 rounded-xl p-4 hover:border-[#007758]/20 transition-all duration-200">
           <div className="text-xs text-gray-400 mb-1">Total Records</div>
           <div className="text-2xl font-bold text-white">{totalCount?.toLocaleString() || '0'}</div>
           <div className="text-xs text-gray-500 mt-1 truncate">{recordSize.toLocaleString()} cells</div>
         </div>
-        <div className="bg-[#1a1b20]/60 backdrop-blur-md border border-white/5 rounded-xl p-4 hover:border-[#a02ff1]/20 transition-all duration-200">
+        <div className="bg-[#1a1b20]/60 backdrop-blur-md border border-white/5 rounded-xl p-4 hover:border-[#007758]/20 transition-all duration-200">
           <div className="text-xs text-gray-400 mb-1">Columns</div>
           <div className="text-2xl font-bold text-white">{allColumns?.length || '0'}</div>
           <div className="text-xs text-gray-500 mt-1 truncate">{numericColumns?.length || '0'} numeric</div>
         </div>
-        <div className="bg-[#1a1b20]/60 backdrop-blur-md border border-white/5 rounded-xl p-4 hover:border-[#a02ff1]/20 transition-all duration-200">
+        <div className="bg-[#1a1b20]/60 backdrop-blur-md border border-white/5 rounded-xl p-4 hover:border-[#007758]/20 transition-all duration-200">
           <div className="text-xs text-gray-400 mb-1">Selected</div>
-          <div className="text-2xl font-bold text-[#a02ff1]">{selectedIndices?.size || '0'}</div>
+          <div className="text-2xl font-bold text-[#007758]">{selectedIndices?.size || '0'}</div>
           <div className="text-xs text-gray-500 mt-1 truncate">{totalCount ? Math.round((selectedIndices?.size / totalCount) * 100) || 0 : 0}% of total</div>
         </div>
-        <div className="bg-[#1a1b20]/60 backdrop-blur-md border border-white/5 rounded-xl p-4 hover:border-[#a02ff1]/20 transition-all duration-200">
+        <div className="bg-[#1a1b20]/60 backdrop-blur-md border border-white/5 rounded-xl p-4 hover:border-[#007758]/20 transition-all duration-200">
           <div className="text-xs text-gray-400 mb-1">Data Size</div>
           <div className="text-2xl font-bold text-green-400">{(dataSize > 1024 ? (dataSize/1024).toFixed(2) + ' MB' : dataSize.toFixed(2) + ' KB')}</div>
           <div className="text-xs text-gray-500 mt-1 truncate">Updated: {lastUpdated}</div>
@@ -265,7 +244,7 @@ const DataExplorer = ({
             Aggregated Metrics
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-            {numericColumns && numericColumns.map(col => (
+            {numericColumns && numericColumns.map((col: string) => (
               <div key={col} className="bg-[#25262b] p-3 rounded-lg border border-white/10">
                 <div className="text-sm text-gray-400 truncate">{col}</div>
                 <div className="text-lg font-bold text-white">{aggregates[col]?.sum?.toLocaleString()}</div>
@@ -301,7 +280,7 @@ const DataExplorer = ({
             </div>
             <div className="bg-[#25262b] p-3 rounded-lg border border-white/10">
               <div className="text-sm text-gray-400">Selected Rows</div>
-              <div className="text-2xl font-bold text-[#a02ff1]">{selectedIndices?.size || '0'}</div>
+              <div className="text-2xl font-bold text-[#007758]">{selectedIndices?.size || '0'}</div>
             </div>
           </div>
         </div>
@@ -315,8 +294,8 @@ const DataExplorer = ({
             type="text"
             placeholder="Search columns..."
             value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 bg-[#0f0f11] border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#a02ff1] focus:border-transparent transition-all"
+            onChange={(e: ExplorerInputChange) => setSearchTerm(e.target.value)}
+            className="w-full pl-10 pr-4 py-2 bg-[#0f0f11] border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#007758] focus:border-transparent transition-all"
           />
           <svg className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -331,7 +310,7 @@ const DataExplorer = ({
             onClick={() => setViewMode("table")}
             className={`px-3 py-1.5 text-sm rounded-md transition-all ${
               viewMode === "table"
-                ? "bg-[#a02ff1] text-white shadow-sm"
+                ? "bg-[#007758] text-white shadow-sm"
                 : "text-gray-400 hover:text-white hover:bg-white/5"
             }`}
           >
@@ -341,7 +320,7 @@ const DataExplorer = ({
             onClick={() => setViewMode("pivot")}
             className={`px-3 py-1.5 text-sm rounded-md transition-all ${
               viewMode === "pivot"
-                ? "bg-[#a02ff1] text-white shadow-sm"
+                ? "bg-[#007758] text-white shadow-sm"
                 : "text-gray-400 hover:text-white hover:bg-white/5"
             }`}
           >
@@ -354,7 +333,7 @@ const DataExplorer = ({
           onClick={() => setShowAggregates(!showAggregates)}
           className={`px-3 py-2 bg-[#0f0f11] border border-white/10 rounded-lg text-sm transition-all ${
             showAggregates
-              ? "text-[#a02ff1] border-[#a02ff1]/50 bg-[#a02ff1]/10"
+              ? "text-[#007758] border-[#007758]/50 bg-[#007758]/10"
               : "text-gray-400 hover:text-white hover:border-white/20"
           }`}
         >
@@ -369,7 +348,7 @@ const DataExplorer = ({
           onClick={() => setShowStats(!showStats)}
           className={`px-3 py-2 bg-[#0f0f11] border border-white/10 rounded-lg text-sm transition-all ${
             showStats
-              ? "text-[#a02ff1] border-[#a02ff1]/50 bg-[#a02ff1]/10"
+              ? "text-[#007758] border-[#007758]/50 bg-[#007758]/10"
               : "text-gray-400 hover:text-white hover:border-white/20"
           }`}
         >
@@ -384,7 +363,7 @@ const DataExplorer = ({
           onClick={() => setShowDataBars(!showDataBars)}
           className={`px-3 py-2 bg-[#0f0f11] border border-white/10 rounded-lg text-sm transition-all ${
             showDataBars
-              ? "text-[#a02ff1] border-[#a02ff1]/50 bg-[#a02ff1]/10"
+              ? "text-[#007758] border-[#007758]/50 bg-[#007758]/10"
               : "text-gray-400 hover:text-white hover:border-white/20"
           }`}
         >
@@ -395,7 +374,7 @@ const DataExplorer = ({
         <button
           onClick={handleExportCSV}
           disabled={loading}
-          className="px-4 py-2 bg-[#a02ff1] hover:bg-[#8a2be2] text-white rounded-lg text-sm flex items-center gap-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-[#a02ff1]/20"
+          className="px-4 py-2 bg-[#007758] hover:bg-[#007758] text-white rounded-lg text-sm flex items-center gap-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-[#007758]/20"
         >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
@@ -418,10 +397,10 @@ const DataExplorer = ({
       {/* Active Filters */}
       {Object.keys(columnFilters).length > 0 && (
         <div className="flex flex-wrap gap-2 mb-4">
-          {Object.entries(columnFilters).map(([key, value]) => (
+          {Object.entries(columnFilters).map(([key, value]: [string, string]) => (
             <div
               key={key}
-              className="flex items-center gap-2 px-3 py-1.5 bg-[#a02ff1]/20 text-[#a02ff1] rounded-lg text-sm border border-[#a02ff1]/30"
+              className="flex items-center gap-2 px-3 py-1.5 bg-[#007758]/20 text-[#007758] rounded-lg text-sm border border-[#007758]/30"
             >
               <span>{key}: {value}</span>
               <button
@@ -457,12 +436,12 @@ const DataExplorer = ({
                 <th className="px-4 py-3 sticky left-0 z-[50] bg-[#25262b] border-b border-r border-white/10 w-[50px] text-center">
                   <input
                     type="checkbox"
-                    className="rounded border-gray-600 bg-gray-800 text-[#a02ff1] focus:ring-[#a02ff1]"
+                    className="rounded border-gray-600 bg-gray-800 text-[#007758] focus:ring-[#007758]"
                   />
                 </th>
 
                 {/* Column Headers */}
-                {visibleColumns.map((column) => (
+                {visibleColumns.map((column: string) => (
                   <th
                     key={column}
                     className="px-4 py-3 sticky top-0 z-[40] bg-[#25262b] border-b border-white/10 cursor-pointer hover:text-white transition-colors group"
@@ -493,14 +472,14 @@ const DataExplorer = ({
               {showFilterRow && (
                 <tr className="border-t border-white/10">
                   <td className="px-4 py-2 sticky left-0 z-[50] bg-[#25262b]"></td>
-                  {visibleColumns.map((column) => (
+                  {visibleColumns.map((column: string) => (
                     <td key={column} className="px-4 py-2 sticky top-0 z-[40] bg-[#25262b]">
                       <input
                         type="text"
                         placeholder={`Filter ${column}...`}
                         value={filterInputs[column] || ""}
-                        onChange={(e) => handleColumnFilterChange(column, e.target.value)}
-                        className="w-full px-2 py-1 bg-[#0f0f11] border border-white/10 rounded text-white text-xs focus:outline-none focus:ring-1 focus:ring-[#a02ff1]"
+                        onChange={(e: ExplorerInputChange) => handleColumnFilterChange(column, e.target.value)}
+                        className="w-full px-2 py-1 bg-[#0f0f11] border border-white/10 rounded text-white text-xs focus:outline-none focus:ring-1 focus:ring-[#007758]"
                       />
                     </td>
                   ))}
@@ -509,7 +488,7 @@ const DataExplorer = ({
             </thead>
 
             <tbody className="divide-y divide-white/5">
-              {visibleData.map((row, index) => (
+              {visibleData.map((row: DataExplorerRow, index: number) => (
                 <tr
                   key={index}
                   className="hover:bg-white/5 transition-colors group cursor-pointer"
@@ -520,12 +499,12 @@ const DataExplorer = ({
                       type="checkbox"
                       checked={selectedIndices.has(index)}
                       onChange={() => handleRowSelect(index)}
-                      className="rounded border-gray-600 bg-gray-800 text-[#a02ff1] focus:ring-[#a02ff1]"
+                      className="rounded border-gray-600 bg-gray-800 text-[#007758] focus:ring-[#007758]"
                     />
                   </td>
-                  {visibleColumns.map((col, colIndex) => {
+                  {visibleColumns.map((col: string, colIndex: number) => {
                     const value = row[col];
-                    const maxValue = columnMaxValues[col];
+                    const maxValue = columnMaxValues[col] ?? 0;
                     const numericValue = typeof value === 'number' ? value : 
                                         (typeof value === 'string' && !isNaN(parseFloat(value)) ? parseFloat(value) : 0);
                     const percentage = maxValue > 0 ? (numericValue / maxValue) * 100 : 0;
@@ -540,7 +519,7 @@ const DataExplorer = ({
                       >
                         {/* Data Bar Visualization */}
                         {showDataBars && typeof numericValue === 'number' && !isNaN(numericValue) && (
-                          <div className="absolute left-0 top-0 bottom-0 bg-[#a02ff1]/10 rounded-r"
+                          <div className="absolute left-0 top-0 bottom-0 bg-[#007758]/10 rounded-r"
                                style={{ width: `${percentage}%` }} />
                         )}
                         

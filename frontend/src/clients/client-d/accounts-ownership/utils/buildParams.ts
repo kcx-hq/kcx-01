@@ -1,24 +1,24 @@
-export const buildAccountsParams = ({ debouncedFilters, uploadId }) => {
-  return {
-    // Optional upload isolation if you use it
-    uploadId: uploadId || undefined,
+import type { AccountsOwnershipQueryParams, BuildAccountsParamsInput } from "../types";
 
-    provider:
-      debouncedFilters?.provider && debouncedFilters.provider !== "All"
-        ? debouncedFilters.provider
-        : undefined,
+export const buildAccountsParams = ({
+  debouncedFilters,
+  uploadId,
+}: BuildAccountsParamsInput): AccountsOwnershipQueryParams => {
+  const params: AccountsOwnershipQueryParams = {};
 
-    service:
-      debouncedFilters?.service && debouncedFilters.service !== "All"
-        ? debouncedFilters.service
-        : undefined,
+  if (uploadId) params.uploadId = uploadId;
+  if (debouncedFilters?.provider && debouncedFilters.provider !== "All") {
+    params.provider = debouncedFilters.provider;
+  }
+  if (debouncedFilters?.service && debouncedFilters.service !== "All") {
+    params.service = debouncedFilters.service;
+  }
+  if (debouncedFilters?.region && debouncedFilters.region !== "All") {
+    params.region = debouncedFilters.region;
+  }
+  if (debouncedFilters?.requiredTags) {
+    params.requiredTags = debouncedFilters.requiredTags;
+  }
 
-    region:
-      debouncedFilters?.region && debouncedFilters.region !== "All"
-        ? debouncedFilters.region
-        : undefined,
-
-    // Optional: if you later support required tags
-    requiredTags: debouncedFilters?.requiredTags || undefined,
-  };
+  return params;
 };

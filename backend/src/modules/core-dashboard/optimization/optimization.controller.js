@@ -5,6 +5,8 @@
 
 import { optimizationService } from './optimization.service.js';
 import { BillingUpload } from '../../../models/index.js';
+import AppError from "../../../errors/AppError.js";
+import logger from "../../../lib/logger.js";
 
 /**
  * Helper: normalize uploadIds from request
@@ -61,7 +63,7 @@ function getUploadIdsFromReq(req) {
  * GET /api/optimization/recommendations
  * Get all optimization recommendations
  */
-export const getRecommendations = async (req, res) => {
+export const getRecommendations = async (req, res, next) => {
   try {
     const filters = {
       provider: req.query.provider || 'All',
@@ -83,14 +85,10 @@ export const getRecommendations = async (req, res) => {
       uploadIds,
     });
 
-    res.json({ success: true, data });
+    return res.ok(data);
   } catch (error) {
-    console.error('Error in getRecommendations:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to generate optimization recommendations',
-      message: error.message,
-    });
+    logger.error({ err: error, requestId: req.requestId }, 'Error in getRecommendations');
+    return next(new AppError(500, "INTERNAL", "Internal server error"));
   }
 };
 
@@ -98,7 +96,7 @@ export const getRecommendations = async (req, res) => {
  * GET /api/optimization/idle-resources
  * Get idle resource recommendations
  */
-export const getIdleResources = async (req, res) => {
+export const getIdleResources = async (req, res, next) => {
   try {
     const filters = {
       provider: req.query.provider || 'All',
@@ -119,14 +117,10 @@ export const getIdleResources = async (req, res) => {
       uploadIds,
     });
 
-    res.json({ success: true, data });
+    return res.ok(data);
   } catch (error) {
-    console.error('Error in getIdleResources:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to detect idle resources',
-      message: error.message,
-    });
+    logger.error({ err: error, requestId: req.requestId }, 'Error in getIdleResources');
+    return next(new AppError(500, "INTERNAL", "Internal server error"));
   }
 };
 
@@ -134,7 +128,7 @@ export const getIdleResources = async (req, res) => {
  * GET /api/optimization/opportunities
  * Get aggregated optimization opportunities
  */
-export const getOpportunities = async (req, res) => {
+export const getOpportunities = async (req, res, next) => {
   try {
     const filters = {
       provider: req.query.provider || 'All',
@@ -155,14 +149,10 @@ export const getOpportunities = async (req, res) => {
       uploadIds,
     });
 
-    res.json({ success: true, data });
+    return res.ok(data);
   } catch (error) {
-    console.error('Error in getOpportunities:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to generate opportunities',
-      message: error.message,
-    });
+    logger.error({ err: error, requestId: req.requestId }, 'Error in getOpportunities');
+    return next(new AppError(500, "INTERNAL", "Internal server error"));
   }
 };
 
@@ -170,7 +160,7 @@ export const getOpportunities = async (req, res) => {
  * GET /api/optimization/commitments
  * Get commitment coverage gaps
  */
-export const getCommitmentGaps = async (req, res) => {
+export const getCommitmentGaps = async (req, res, next) => {
   try {
     const filters = {
       provider: req.query.provider || 'All',
@@ -191,14 +181,10 @@ export const getCommitmentGaps = async (req, res) => {
       uploadIds,
     });
 
-    res.json({ success: true, data });
+    return res.ok(data);
   } catch (error) {
-    console.error('Error in getCommitmentGaps:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to analyze commitment gaps',
-      message: error.message,
-    });
+    logger.error({ err: error, requestId: req.requestId }, 'Error in getCommitmentGaps');
+    return next(new AppError(500, "INTERNAL", "Internal server error"));
   }
 };
 
@@ -206,7 +192,7 @@ export const getCommitmentGaps = async (req, res) => {
  * GET /api/optimization/tracker
  * Get optimization tracker items
  */
-export const getTrackerItems = async (req, res) => {
+export const getTrackerItems = async (req, res, next) => {
   try {
     const filters = {
       provider: req.query.provider || 'All',
@@ -227,14 +213,42 @@ export const getTrackerItems = async (req, res) => {
       uploadIds,
     });
 
-    res.json({ success: true, data });
+    return res.ok(data);
   } catch (error) {
-    console.error('Error in getTrackerItems:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to fetch tracker items',
-      message: error.message,
+    logger.error({ err: error, requestId: req.requestId }, 'Error in getTrackerItems');
+    return next(new AppError(500, "INTERNAL", "Internal server error"));
+  }
+};
+
+/**
+ * GET /api/optimization/action-center
+ * Get precomputed action center model for optimization overview
+ */
+export const getActionCenter = async (req, res, next) => {
+  try {
+    const filters = {
+      provider: req.query.provider || 'All',
+      service: req.query.service || 'All',
+      region: req.query.region || 'All',
+    };
+
+    const period = req.query.period || 'last90days';
+
+    let uploadIds = getUploadIdsFromReq(req);
+    if (uploadIds.length === 0) {
+      uploadIds = await getUserUploadIds(req.user?.id);
+    }
+
+    const data = await optimizationService.getActionCenter({
+      filters,
+      period,
+      uploadIds,
     });
+
+    return res.ok(data);
+  } catch (error) {
+    logger.error({ err: error, requestId: req.requestId }, 'Error in getActionCenter');
+    return next(new AppError(500, "INTERNAL", "Internal server error", { cause: error }));
   }
 };
 
@@ -278,7 +292,7 @@ export const getActionCenter = async (req, res) => {
  * GET /api/optimization/right-sizing
  * Get right-sizing recommendations
  */
-export const getRightSizing = async (req, res) => {
+export const getRightSizing = async (req, res, next) => {
   try {
     const filters = {
       provider: req.query.provider || 'All',
@@ -299,13 +313,9 @@ export const getRightSizing = async (req, res) => {
       uploadIds,
     });
 
-    res.json({ success: true, data });
+    return res.ok(data);
   } catch (error) {
-    console.error('Error in getRightSizing:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to generate right-sizing recommendations',
-      message: error.message,
-    });
+    logger.error({ err: error, requestId: req.requestId }, 'Error in getRightSizing');
+    return next(new AppError(500, "INTERNAL", "Internal server error"));
   }
 };

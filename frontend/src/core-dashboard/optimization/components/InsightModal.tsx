@@ -2,8 +2,18 @@ import React from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Lightbulb, X } from "lucide-react";
 import { formatCurrency } from "../utils/format";
+import type {
+  InsightModalProps,
+  Opportunity,
+  OptimizationDivClick,
+  RightSizingRecommendation,
+} from "../types";
 
-export function InsightModal({ selectedInsight, onClose }) {
+export function InsightModal({ selectedInsight, onClose }: InsightModalProps) {
+  const isRightSizingInsight = (
+    insight: Opportunity | RightSizingRecommendation,
+  ): insight is RightSizingRecommendation => insight.type === "rightsizing";
+
   return (
     <AnimatePresence>
       {selectedInsight && (
@@ -19,7 +29,7 @@ export function InsightModal({ selectedInsight, onClose }) {
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0.95, opacity: 0 }}
             className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-xl border border-[var(--border-light)] bg-white p-6"
-            onClick={(e) => e.stopPropagation()}
+            onClick={(e: OptimizationDivClick) => e.stopPropagation()}
           >
             <div className="mb-4 flex items-center justify-between">
               <h2 className="flex items-center gap-2 text-xl font-bold text-[var(--text-primary)]">
@@ -94,7 +104,7 @@ export function InsightModal({ selectedInsight, onClose }) {
                 <div className="rounded-lg border border-[var(--border-light)] bg-[var(--bg-surface)] p-4">
                   <div className="mb-2 text-xs font-bold uppercase text-[var(--text-muted)]">Assumptions Used</div>
                   <ul className="space-y-1 text-sm text-[var(--text-secondary)]">
-                    {(selectedInsight.assumptions || []).map((assumption, idx) => (
+                    {(selectedInsight.assumptions || []).map((assumption: string, idx: number) => (
                       <li key={idx}>- {assumption}</li>
                     ))}
                     {(!selectedInsight.assumptions || selectedInsight.assumptions.length === 0) && (
@@ -123,7 +133,7 @@ export function InsightModal({ selectedInsight, onClose }) {
                 <div>
                   <div className="mb-2 text-xs font-bold uppercase text-[var(--text-muted)]">Evidence (Data Signals)</div>
                   <ul className="space-y-1 text-sm text-[var(--text-secondary)]">
-                    {(selectedInsight.evidence || []).map((item, idx) => (
+                    {(selectedInsight.evidence || []).map((item: string, idx: number) => (
                       <li key={idx}>- {item}</li>
                     ))}
                     {(!selectedInsight.evidence || selectedInsight.evidence.length === 0) && (
@@ -161,3 +171,6 @@ export function InsightModal({ selectedInsight, onClose }) {
 }
 
 export default InsightModal;
+
+
+

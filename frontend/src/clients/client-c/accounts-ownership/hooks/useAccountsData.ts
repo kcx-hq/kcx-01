@@ -1,11 +1,18 @@
 import { useEffect, useRef, useState } from "react";
+import type { ApiClient, Capabilities } from "../../../../services/apiClient";
+import type { AccountsFilters, AccountsRawData, ApiLikeError, UseAccountsDataResult } from "../types";
 
-export const useAccountsData = (api, caps, debouncedFilters, forceRefreshKey) => {
-  const [accountsData, setAccountsData] = useState(null);
+export const useAccountsData = (
+  api: ApiClient | null,
+  caps: Capabilities | null,
+  debouncedFilters: AccountsFilters,
+  forceRefreshKey: number,
+): UseAccountsDataResult => {
+  const [accountsData, setAccountsData] = useState<AccountsRawData | null>(null);
   const [loading, setLoading] = useState(true);
   const [isFiltering, setIsFiltering] = useState(false);
 
-  const abortControllerRef = useRef(null);
+  const abortControllerRef = useRef<AbortController | null>(null);
   const prevFiltersRef = useRef(debouncedFilters);
   const isInitialMount = useRef(true);
 
@@ -34,12 +41,12 @@ export const useAccountsData = (api, caps, debouncedFilters, forceRefreshKey) =>
 
       try {
         const endpointDef =
-          caps?.modules?.governance?.enabled &&
-          caps?.modules?.governance?.endpoints?.accounts;
+          caps?.modules?.["governance"]?.enabled &&
+          caps?.modules?.["governance"]?.endpoints?.["accounts"];
 
         if (!endpointDef) return;
 
-        const params = {};
+        const params: Partial<AccountsFilters> = {};
         if (debouncedFilters?.provider && debouncedFilters.provider !== "All")
           params.provider = debouncedFilters.provider;
         if (debouncedFilters?.service && debouncedFilters.service !== "All")
@@ -47,18 +54,17 @@ export const useAccountsData = (api, caps, debouncedFilters, forceRefreshKey) =>
         if (debouncedFilters?.region && debouncedFilters.region !== "All")
           params.region = debouncedFilters.region;
 
-        const res = await api.call("governance", "accounts", { params });
-       console.log(res)
-        const payload = res?.data;
+        const payload = await api.call<AccountsRawData>("governance", "accounts", { params });
 
         if (!abortControllerRef.current?.signal.aborted && payload) {
           setAccountsData(payload);
           prevFiltersRef.current = { ...debouncedFilters };
         }
-      } catch (error) {
-        if (error?.code !== "NOT_SUPPORTED") {
-          if (error?.name !== "AbortError" && !abortControllerRef.current?.signal.aborted) {
-            console.error("Error fetching accounts data:", error);
+      } catch (error: unknown) {
+        const err = error as ApiLikeError;
+        if (err?.code !== "NOT_SUPPORTED") {
+          if (err?.name !== "AbortError" && !abortControllerRef.current?.signal.aborted) {
+            console.error("Error fetching accounts data:", err);
           }
         }
       } finally {

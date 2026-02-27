@@ -3,10 +3,16 @@ import ComponentLoader from "../layout/ComponentLoader";
 import KeepAlive from "../Keep-alive/KeepAlive";
 import * as Views from "../views/lazyViews";
 import { isModuleEnabled } from "../utils/capsUtils";
+import type { ApiClient, Capabilities } from "../../../../services/apiClient";
+import type { ClientCDashboardRoutes } from "./useDashboardRoutings";
 
+interface DashboardRouterProps {
+  routes: ClientCDashboardRoutes;
+  api: ApiClient | null;
+  caps: Capabilities | null;
+}
 
-
-const DashboardRouter = ({ routes, api, caps }) => {
+const DashboardRouter = ({ routes, api, caps }: DashboardRouterProps) => {
 
   return (
     <Suspense fallback={<ComponentLoader />}>

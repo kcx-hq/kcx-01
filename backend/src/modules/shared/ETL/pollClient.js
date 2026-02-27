@@ -6,6 +6,7 @@ import {
 import { BillingUpload } from "../../../models/index.js";
 import { ingestS3File } from "./ingestS3File.js";
 import assumeRole from "../../../aws/assumeRole.js";
+import logger from "../../../lib/logger.js";
 
 export async function pollClient({ clientid, Bucket, prefix, uploadedby }) {
   const creds = await assumeRole();
@@ -20,59 +21,58 @@ export async function pollClient({ clientid, Bucket, prefix, uploadedby }) {
 
   const res = await s3.send(
     new ListObjectsV2Command({
-      Bucket: Bucket,
-      Prefix: prefix, // must be capital P
-    }),
+      Bucket,
+      Prefix: prefix,
+    })
   );
 
-  console.log(res);
-
   const objects = res.Contents ?? [];
+  logger.info({ clientid, bucket: Bucket, objectCount: objects.length }, "fetched objects");
 
-  console.log(objects);
+  for (const o of objects) {
+    if (!o.Key || o.Key.endsWith("/")) {
+      continue;
+    }
 
-    for (const o of objects) {
-      if (!o.Key || o.Key.endsWith("/")) continue;
+    const head = await s3.send(new HeadObjectCommand({ Bucket, Key: o.Key }));
+    const size = head.ContentLength ?? o.Size ?? 0;
+    const lastModified = head.LastModified ?? o.LastModified;
+    if (!lastModified) {
+      continue;
+    }
 
-      // optional head (more accurate size)
-      const head = await s3.send(new HeadObjectCommand({ Bucket: Bucket, Key: o.Key }));
-      const size = head.ContentLength ?? o.Size ?? 0;
-      const lastModified = head.LastModified ?? o.LastModified;
-      if (!lastModified) continue;
+    const tempChecksum = `${o.Key}:${size}:${new Date(lastModified).toISOString()}`;
 
-      // BASIC "fingerprint"
-      const tempChecksum = `${o.Key}:${size}:${new Date(lastModified).toISOString()}`;
-
-      // dedupe: same key + same lastModified + same size
-      const exists = await BillingUpload.findOne({
-        where: {
-          clientid,
-          filename: o.Key,
-          filesize: size,
-          uploadedat: lastModified,
-        },
-        attributes: ["uploadid"],
-      });
-
-      if (exists) continue;
-
-      // create upload row (uploadid becomes your uploadId)
-      const upload = await BillingUpload.create({
+    const exists = await BillingUpload.findOne({
+      where: {
         clientid,
-        uploadedby, // system user id
         filename: o.Key,
         filesize: size,
-        checksum: tempChecksum, // placeholder for now
-        billingperiodstart: new Date().toISOString().slice(0, 10), // temp
-        billingperiodend: new Date().toISOString().slice(0, 10),   // temp
-        uploadedat: lastModified, // IMPORTANT: use S3 last modified
-      });
+        uploadedat: lastModified,
+      },
+      attributes: ["uploadid"],
+    });
 
-      await ingestS3File({
-        clientid,
-        uploadId: upload.uploadid,
-        Bucket,
-        s3Key: o.Key, // key: o.Key,
-      });
+    if (exists) {
+      continue;
     }
+
+    const upload = await BillingUpload.create({
+      clientid,
+      uploadedby,
+      filename: o.Key,
+      filesize: size,
+      checksum: tempChecksum,
+      billingperiodstart: new Date().toISOString().slice(0, 10),
+      billingperiodend: new Date().toISOString().slice(0, 10),
+      uploadedat: lastModified,
+    });
+
+    await ingestS3File({
+      clientid,
+      uploadId: upload.uploadid,
+      Bucket,
+      s3Key: o.Key,
+    });
+  }
 }

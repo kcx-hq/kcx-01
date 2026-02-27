@@ -4,6 +4,7 @@ import CostTrendChart from "../../../core-dashboard/common/widgets/CostTrendChar
 import ServiceSpendChart from "../../../core-dashboard/common/widgets/ServiceSpendChart";
 import PremiumGate from "../../../core-dashboard/common/PremiumGate";
 import OverviewStates from "../../../core-dashboard/overview/components/OverviewStates";
+import type { OverviewViewProps } from "./types";
 
 const OverviewView = ({
   filters,
@@ -19,14 +20,10 @@ const OverviewView = ({
   onTrendLimitChange,
   onBarLimitChange,
   isLocked,
-}) => {
+}: OverviewViewProps) => {
   const {
     totalSpend,
     dailyData,
-  
-    billingPeriod,
- 
-    avgDailySpend,
   } = extractedData;
 
   if (overviewData?.message === "No upload selected. Please select a billing upload.") {
@@ -52,7 +49,7 @@ const OverviewView = ({
 
       <div className="flex-1 overflow-y-auto relative min-h-0">
         {isFiltering && overviewData && (
-          <div className="absolute top-4 right-4 z-50 flex items-center gap-2 bg-[#1a1b20]/90 backdrop-blur-md border border-[#a02ff1]/30 rounded-lg px-3 py-2 shadow-lg">
+          <div className="absolute top-4 right-4 z-50 flex items-center gap-2 bg-[#1a1b20]/90 backdrop-blur-md border border-[#007758]/30 rounded-lg px-3 py-2 shadow-lg">
             <span className="text-xs text-gray-300 font-medium">Filtering...</span>
           </div>
         )}
@@ -72,8 +69,6 @@ const OverviewView = ({
                 data={dailyData}
                 limit={chartFilters.trendChart.limit}
                 onLimitChange={onTrendLimitChange}
-                billingPeriod={billingPeriod}
-                avgDailySpend={avgDailySpend}
               />
 
               {isLocked ? (

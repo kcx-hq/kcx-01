@@ -1,5 +1,5 @@
 /** @type {import('tailwindcss').Config} */
-module.exports = {
+export default {
   content: [
     "./src/**/*.{js,jsx,ts,tsx}",
   ],
@@ -57,7 +57,7 @@ module.exports = {
         highlight: {
           green: 'var(--highlight-green)',
           blue: 'var(--highlight-blue)',
-          purple: 'var(--highlight-purple)',
+          mint: 'var(--highlight-mint)',
           yellow: 'var(--highlight-yellow)',
         }
       },

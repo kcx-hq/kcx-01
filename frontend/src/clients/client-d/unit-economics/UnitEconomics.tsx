@@ -4,12 +4,17 @@ import { AlertCircle, Loader2 } from "lucide-react";
 
 import UnitEconomicsView from "./UnitEconomicsView";
 import { useUnitEconomicsData } from "./hooks/useUnitEconomicsData";
+import type { UnitEconomicsProps, UnitEconomicsSkuItem } from "./types";
 
-const UnitEconomics = ({ filters = {}, api, caps }) => {
+const UnitEconomics = ({ filters = {}, api, caps }: UnitEconomicsProps) => {
+  if (!api || !caps || !caps.modules?.["unitEconomics"]?.enabled) return null;
+
+  return <UnitEconomicsContent filters={filters} api={api} caps={caps} />;
+};
+
+const UnitEconomicsContent = ({ filters = {}, api, caps }: UnitEconomicsProps) => {
   const { user } = useAuthStore();
   const isLocked = !user?.is_premium;
-
-  if (!api || !caps || !caps.modules?.unitEconomics?.enabled) return null;
 
   const { loading, data, error } = useUnitEconomicsData({ api, caps, filters });
 
@@ -21,7 +26,9 @@ const UnitEconomics = ({ filters = {}, api, caps }) => {
     const skuEfficiency = Array.isArray(data?.skuEfficiency) ? data.skuEfficiency : [];
 
     // sort: highest cost first
-    const skuSorted = [...skuEfficiency].sort((a, b) => (Number(b?.cost || 0) - Number(a?.cost || 0)));
+    const skuSorted = [...skuEfficiency].sort(
+      (a: UnitEconomicsSkuItem, b: UnitEconomicsSkuItem) => Number(b?.cost || 0) - Number(a?.cost || 0)
+    );
 
     return { kpis, drift, trend, skuEfficiency: skuSorted };
   }, [data]);
@@ -30,12 +37,14 @@ const UnitEconomics = ({ filters = {}, api, caps }) => {
   const filteredSkus = useMemo(() => {
     if (!skuSearch.trim()) return normalized.skuEfficiency;
     const q = skuSearch.trim().toLowerCase();
-    return normalized.skuEfficiency.filter((s) => String(s?.sku || "").toLowerCase().includes(q));
+    return normalized.skuEfficiency.filter((s: UnitEconomicsSkuItem) =>
+      String(s?.sku || "").toLowerCase().includes(q)
+    );
   }, [normalized.skuEfficiency, skuSearch]);
 
   if (loading) {
     return (
-      <div className="flex h-96 items-center justify-center text-[#a02ff1]">
+      <div className="flex h-96 items-center justify-center text-[#007758]">
         <Loader2 className="animate-spin" size={48} />
       </div>
     );

@@ -1,5 +1,5 @@
 import jwt from 'jsonwebtoken';
-import { decode } from 'node:punycode';
+import AppError from "../errors/AppError.js";
 export const decodeUser = (req, res, next) => {
 
  const token = req.cookies.kandco_token || req.cookies._vercel_jwt ||
@@ -7,7 +7,7 @@ export const decodeUser = (req, res, next) => {
                   (req.headers.authorization && req.headers.authorization.split(" ")[1]);
                   
     if (!token) {
-        return res.status(401).json({ message: "Unauthorized: No token provided" });
+        return next(new AppError(401, "UNAUTHENTICATED", "Authentication required"));
     }
     try {
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
@@ -15,6 +15,6 @@ export const decodeUser = (req, res, next) => {
         req.client_id = decoded.client_id 
         next();
     } catch (error) {
-        return res.status(401).json({ message: "Unauthorized: Invalid token" });
+        return next(new AppError(401, "UNAUTHENTICATED", "Authentication required", { cause: error }));
     }
 }

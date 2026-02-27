@@ -1,5 +1,8 @@
-import sequelize from "../config/db.config.js";
+import { createRequire } from "module";
 import { DataTypes } from "sequelize";
+
+const require = createRequire(import.meta.url);
+const { sequelize } = require("../db/index.cjs");
 
 const ClientS3Integrations = sequelize.define(
   "ClientS3Integrations",
@@ -72,3 +75,4 @@ const ClientS3Integrations = sequelize.define(
 );
 
 export default ClientS3Integrations;
+

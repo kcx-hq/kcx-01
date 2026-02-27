@@ -1,11 +1,18 @@
 import { useEffect, useRef, useState } from "react";
+import type { ApiClient, Capabilities } from "../../../../services/apiClient";
+import type { AccountsFilters, ApiLikeError, ComplianceRawData, UseComplianceDataResult } from "../types";
 
-export const useComplianceData = (api, caps, debouncedFilters, forceRefreshKey) => {
-  const [complianceData, setComplianceData] = useState(null);
+export const useComplianceData = (
+  api: ApiClient | null,
+  caps: Capabilities | null,
+  debouncedFilters: AccountsFilters,
+  forceRefreshKey: number,
+): UseComplianceDataResult => {
+  const [complianceData, setComplianceData] = useState<ComplianceRawData | null>(null);
   const [loading, setLoading] = useState(true);
   const [isFiltering, setIsFiltering] = useState(false);
 
-  const abortControllerRef = useRef(null);
+  const abortControllerRef = useRef<AbortController | null>(null);
   const prevFiltersRef = useRef(debouncedFilters);
   const isInitialMount = useRef(true);
 
@@ -34,12 +41,12 @@ export const useComplianceData = (api, caps, debouncedFilters, forceRefreshKey) 
 
       try {
         const endpointDef =
-          caps?.modules?.governance?.enabled &&
-          caps?.modules?.governance?.endpoints?.compliance;
+          caps?.modules?.["governance"]?.enabled &&
+          caps?.modules?.["governance"]?.endpoints?.["compliance"];
 
         if (!endpointDef) return;
 
-        const params = {};
+        const params: Partial<AccountsFilters> = {};
         if (debouncedFilters?.provider && debouncedFilters.provider !== "All")
           params.provider = debouncedFilters.provider;
         if (debouncedFilters?.service && debouncedFilters.service !== "All")
@@ -47,18 +54,17 @@ export const useComplianceData = (api, caps, debouncedFilters, forceRefreshKey) 
         if (debouncedFilters?.region && debouncedFilters.region !== "All")
           params.region = debouncedFilters.region;
 
-        const res = await api.call("governance", "compliance", { params });
-        console.log(res)
-        const payload = res?.data;
+        const payload = await api.call<ComplianceRawData>("governance", "compliance", { params });
 
         if (!abortControllerRef.current?.signal.aborted && payload) {
           setComplianceData(payload);
           prevFiltersRef.current = { ...debouncedFilters };
         }
-      } catch (error) {
-        if (error?.code !== "NOT_SUPPORTED") {
-          if (error?.name !== "AbortError" && !abortControllerRef.current?.signal.aborted) {
-            console.error("Error fetching compliance data:", error);
+      } catch (error: unknown) {
+        const err = error as ApiLikeError;
+        if (err?.code !== "NOT_SUPPORTED") {
+          if (err?.name !== "AbortError" && !abortControllerRef.current?.signal.aborted) {
+            console.error("Error fetching compliance data:", err);
           }
         }
       } finally {

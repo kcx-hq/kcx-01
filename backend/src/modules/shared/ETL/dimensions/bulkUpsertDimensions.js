@@ -1,4 +1,3 @@
-import { v4 as uuidv4 } from "uuid";
 import {
   CloudAccount,
   Service,
@@ -9,72 +8,106 @@ import {
   CommitmentDiscount,
 } from "../../../../models/index.js";
 
+async function upsertByWhere(model, where, values, transaction) {
+  const existing = await model.findOne({ where, transaction });
+
+  if (!existing) {
+    await model.create(values, { transaction });
+    return;
+  }
+
+  await existing.update(values, { transaction });
+}
+
+async function upsertByPrimaryKey(model, primaryKeyField, values, transaction) {
+  const primaryKeyValue = values?.[primaryKeyField];
+  if (!primaryKeyValue) {
+    return;
+  }
+
+  const existing = await model.findByPk(primaryKeyValue, { transaction });
+  if (!existing) {
+    await model.create(values, { transaction });
+    return;
+  }
+
+  await existing.update(values, { transaction });
+}
+
 export async function bulkUpsertDimensions(dims, transaction) {
-
-
   if (dims.services.size) {
-    await Service.bulkCreate([...dims.services.values()], {
-      updateOnDuplicate: ["servicecategory"],
-      transaction,
-    });
+    for (const service of dims.services.values()) {
+      await upsertByWhere(
+        Service,
+        {
+          providername: service.providername,
+          servicename: service.servicename,
+        },
+        service,
+        transaction,
+      );
+    }
   }
 
   if (dims.regions.size) {
-    await Region.bulkCreate([...dims.regions.values()], {
-      updateOnDuplicate: ["regionname", "availabilityzone"],
-      transaction,
-    });
+    for (const region of dims.regions.values()) {
+      await upsertByWhere(
+        Region,
+        {
+          providername: region.providername,
+          regioncode: region.regioncode,
+        },
+        region,
+        transaction,
+      );
+    }
   }
 
   if (dims.cloudAccounts.size) {
-    await CloudAccount.bulkCreate([...dims.cloudAccounts.values()], {
-      updateOnDuplicate: [
-        "billingaccountname",
-        "billingcurrency",
-        "invoiceissuername",
-        "publishername",
-      ],
-      transaction,
-    });
+    for (const cloudAccount of dims.cloudAccounts.values()) {
+      await upsertByWhere(
+        CloudAccount,
+        {
+          providername: cloudAccount.providername,
+          billingaccountid: cloudAccount.billingaccountid,
+        },
+        cloudAccount,
+        transaction,
+      );
+    }
   }
 
   if (dims.skus.size) {
-    await Sku.bulkCreate([...dims.skus.values()], {
-      updateOnDuplicate: [
-        "skupriceid",
-        "pricingcategory",
-        "pricingunit",
-      ],
-      transaction,
-    });
+    for (const sku of dims.skus.values()) {
+      await upsertByPrimaryKey(Sku, "skuid", sku, transaction);
+    }
   }
 
   if (dims.resources.size) {
-    await Resource.bulkCreate([...dims.resources.values()], {
-      updateOnDuplicate: ["resourcename", "resourcetype"],
-      transaction,
-    });
+    for (const resource of dims.resources.values()) {
+      await upsertByPrimaryKey(Resource, "resourceid", resource, transaction);
+    }
   }
 
   if (dims.subAccounts.size) {
-    await SubAccount.bulkCreate([...dims.subAccounts.values()], {
-      updateOnDuplicate: ["subaccountname"],
-      transaction,
-    });
+    for (const subAccount of dims.subAccounts.values()) {
+      await upsertByPrimaryKey(
+        SubAccount,
+        "subaccountid",
+        subAccount,
+        transaction,
+      );
+    }
   }
 
   if (dims.commitmentDiscounts.size) {
-    await CommitmentDiscount.bulkCreate(
-      [...dims.commitmentDiscounts.values()],
-      {
-        updateOnDuplicate: [
-          "commitmentdiscountname",
-          "commitmentdiscountcategory",
-          "commitmentdiscounttype",
-          "commitmentdiscountstatus",
-        ],
+    for (const commitmentDiscount of dims.commitmentDiscounts.values()) {
+      await upsertByPrimaryKey(
+        CommitmentDiscount,
+        "commitmentdiscountid",
+        commitmentDiscount,
         transaction,
-      }
-    );
+      );
+    }
   }
 }

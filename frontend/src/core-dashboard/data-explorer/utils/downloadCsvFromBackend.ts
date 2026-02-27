@@ -1,4 +1,6 @@
 // frontend/shared/utils/downloadCsvFromBackend.js
+import type { ApiLikeError, DownloadCsvFromBackendParams } from "../types";
+
 export async function downloadCsvFromBackend({
   api,
   caps,
@@ -10,7 +12,7 @@ export async function downloadCsvFromBackend({
   rowsPerPage,
   sortConfig,
   filenamePrefix = "data-explorer-export",
-}) {
+}: DownloadCsvFromBackendParams) {
   try {
     if (!api || !caps) return;
 
@@ -31,10 +33,10 @@ export async function downloadCsvFromBackend({
         sortOrder: sortConfig?.direction || "asc",
       },
       responseType: "blob",
-    });
+    } as Parameters<typeof api.call>[2]);
 
     // ✅ supports axios shapes: either res.data is Blob OR res itself is Blob
-    const blob = res?.data instanceof Blob ? res.data : res;
+    const blob = res instanceof Blob ? res : null;
     if (!(blob instanceof Blob)) return;
 
     const url = window.URL.createObjectURL(blob);
@@ -45,8 +47,12 @@ export async function downloadCsvFromBackend({
     a.click();
     document.body.removeChild(a);
     window.URL.revokeObjectURL(url);
-  } catch (error) {
-    console.error("Error downloading CSV:", error);
+  } catch (error: unknown) {
+    const err = error as ApiLikeError;
+    console.error("Error downloading CSV:", err);
     alert("Failed to export CSV. Please try again.");
   }
 }
+
+
+

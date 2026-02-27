@@ -5,6 +5,7 @@ import LoadingState from "./components/LoadingState";
 import ReportCard from "./components/ReportCard";
 import AboutExecutiveReportsNote from "./components/AboutExecutiveReportsNote";
 import ComingSoonReports from "./components/ComingSoonReports";
+import type { ReportDefinition, ReportsViewProps } from "./types";
 
 const ReportsView = ({
   fetchingData,
@@ -14,7 +15,7 @@ const ReportsView = ({
   canDownload,
   title = "Executive Reports",
   subtitle = "Downloadable PDF reports for leadership and stakeholders",
-}) => {
+}: ReportsViewProps) => {
   if (fetchingData) return <LoadingState />;
 
   return (
@@ -28,7 +29,7 @@ const ReportsView = ({
       </div>
 
       <div className="space-y-4">
-        {reports.map((report, index) => (
+        {reports.map((report: ReportDefinition, index: number) => (
           <ReportCard
             key={report.id}
             report={report}
@@ -47,3 +48,6 @@ const ReportsView = ({
 };
 
 export default ReportsView;
+
+
+

@@ -1,8 +1,9 @@
 import React from "react";
 import { AlertTriangle, CheckCircle } from "lucide-react";
 import { formatCurrency } from "../utils/format";
+import type { AccountOwnershipRow, AccountsTableProps } from "../types";
 
-export function AccountsTable({ accounts, sortBy, sortOrder, onSortChange }) {
+export function AccountsTable({ accounts, sortBy, sortOrder, onSortChange }: AccountsTableProps) {
   return (
     <div className="overflow-x-auto">
       <table className="min-w-[1100px] w-full border-collapse text-left">
@@ -48,12 +49,12 @@ export function AccountsTable({ accounts, sortBy, sortOrder, onSortChange }) {
         <tbody className="divide-y divide-[var(--border-muted)] text-sm">
           {accounts.length === 0 ? (
             <tr>
-              <td colSpan="7" className="px-6 py-12 text-center text-[var(--text-muted)]">
+              <td colSpan={7} className="px-6 py-12 text-center text-[var(--text-muted)]">
                 No accounts found matching filters/search
               </td>
             </tr>
           ) : (
-            accounts.map((account) => (
+            accounts.map((account: AccountOwnershipRow) => (
               <tr
                 key={account.accountId}
                 className={`transition-colors hover:bg-[var(--bg-surface)] ${

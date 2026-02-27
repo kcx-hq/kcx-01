@@ -12,6 +12,58 @@ import {
   X
 } from 'lucide-react';
 import { motion } from 'framer-motion';
+import type { ComponentType } from "react";
+
+interface Metric {
+  label: string;
+  value: string;
+}
+
+interface InsightCard {
+  title: string;
+  description: string;
+  isCompact?: boolean;
+  metrics: Metric[];
+}
+
+interface KpiEntity {
+  name: string;
+  value: number;
+}
+
+interface BillingPeriod {
+  start?: string;
+  end?: string;
+}
+
+interface KpiCardConfig {
+  id: string;
+  title: string;
+  value: string;
+  icon: ComponentType<{ size?: number; className?: string }>;
+  color: string;
+  subValue?: string | null;
+  delay?: number;
+  contextLabel?: string;
+  showChangeTooltip?: boolean;
+}
+
+interface KpiCardProps extends KpiCardConfig {
+  onClick: () => void;
+}
+
+interface KpiGridProps {
+  spend: number;
+  topRegion?: KpiEntity;
+  topService?: KpiEntity;
+  spendChangePercent?: number;
+  topProvider?: KpiEntity;
+  untaggedCost?: number;
+  missingMetadataCost?: number;
+  billingPeriod?: BillingPeriod | null;
+  topRegionPercent?: number;
+  topServicePercent?: number;
+}
 
 /* ================= KPI CARD ================= */
 
@@ -21,11 +73,11 @@ const KpiCard = ({
   icon: Icon,
   color,
   subValue,
-  delay,
+  delay = 0,
   onClick,
   contextLabel,
   showChangeTooltip
-}) => {
+}: KpiCardProps) => {
   const [showTooltip, setShowTooltip] = useState(false);
 
   return (
@@ -35,7 +87,7 @@ const KpiCard = ({
       transition={{ delay: delay * 0.1 }}
       whileHover={{ y: -5 }}
       onClick={onClick}
-      className="bg-[#1a1b20]/60 backdrop-blur-md border border-white/5 p-3 rounded-xl shadow-lg relative overflow-hidden group min-h-[100px] cursor-pointer hover:border-[#a02ff1]/30 transition-all"
+      className="bg-[#1a1b20]/60 backdrop-blur-md border border-white/5 p-3 rounded-xl shadow-lg relative overflow-hidden group min-h-[100px] cursor-pointer hover:border-[#007758]/30 transition-all"
     >
       <div className={`absolute -top-10 -right-10 p-16 ${color} bg-opacity-5 blur-[40px] rounded-full`} />
 
@@ -100,24 +152,24 @@ const KpiGrid = ({
   billingPeriod = null,
   topRegionPercent = 0,
   topServicePercent = 0
-}) => {
+}: KpiGridProps) => {
   const [showMoreCards, setShowMoreCards] = useState(false);
-  const [selectedCard, setSelectedCard] = useState(null);
+  const [selectedCard, setSelectedCard] = useState<InsightCard | null>(null);
 
-  const formatCurrency = (val) =>
+  const formatCurrency = (val: number) =>
     new Intl.NumberFormat('en-US', {
       style: 'currency',
       currency: 'USD'
     }).format(val);
 
-  const formatPercent = (val) => {
+  const formatPercent = (val: number) => {
     const sign = val >= 0 ? '+' : '';
     return `${sign}${val.toFixed(1)}%`;
   };
 
   /* ================= INSIGHTS ================= */
 
-  const getInsights = (id) => {
+  const getInsights = (id: string): InsightCard | null => {
     switch (id) {
       case 'total-billed-cost':
         return {
@@ -206,13 +258,13 @@ const KpiGrid = ({
 
   /* ================= CARDS ================= */
 
-  const baseCards = [
+  const baseCards: KpiCardConfig[] = [
     {
       id: 'total-billed-cost',
       title: 'Total Billed Cost',
       value: formatCurrency(spend),
       icon: DollarSign,
-      color: 'text-[#a02ff1]',
+      color: 'text-[#007758]',
       subValue:
         spendChangePercent !== 0 ? formatPercent(spendChangePercent) : null,
       showChangeTooltip: true,
@@ -231,7 +283,7 @@ const KpiGrid = ({
       title: 'Top Cost Service',
       value: topService?.name || 'N/A',
       icon: Server,
-      color: 'text-[#a02ff1]',
+      color: 'text-[#007758]',
       delay: 0.2
     },
     {
@@ -244,7 +296,7 @@ const KpiGrid = ({
     }
   ];
 
-  const extraCards = [
+  const extraCards: KpiCardConfig[] = [
     {
       id: 'top-provider',
       title: 'Top Provider',
@@ -277,7 +329,7 @@ const KpiGrid = ({
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {allCards.map((card) => (
+        {allCards.map((card: KpiCardConfig) => (
           <KpiCard
             key={card.id}
             {...card}
@@ -323,7 +375,7 @@ const KpiGrid = ({
               </p>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {selectedCard.metrics.map((m, i) => (
+                {selectedCard.metrics.map((m: Metric, i: number) => (
                   <div key={i} className="bg-white/5 p-4 rounded-lg">
                     <div className="text-gray-500 text-sm">{m.label}</div>
                     <div className="text-white font-semibold mt-1">

@@ -1,7 +1,8 @@
-﻿// frontend/core/dashboards/overview/data-quality/hooks/useDataQuality.js
+// frontend/core/dashboards/overview/data-quality/hooks/useDataQuality.js
 import { useEffect, useState } from "react";
+import type { ApiLikeError, DataQualityStats, UseDataQualityParams, UseDataQualityResult } from "../types";
 
-const EMPTY_STATS = {
+const EMPTY_STATS: DataQualityStats = {
   score: 100,
   totalRows: 0,
   costAtRisk: 0,
@@ -17,9 +18,9 @@ const EMPTY_STATS = {
   topOffenders: [],
 };
 
-export const useDataQuality = ({ filters, api, caps }) => {
+export const useDataQuality = ({ filters, api, caps }: UseDataQualityParams): UseDataQualityResult => {
   const [loading, setLoading] = useState(true);
-  const [stats, setStats] = useState(null);
+  const [stats, setStats] = useState<DataQualityStats | null>(null);
 
   useEffect(() => {
     if (!api || !caps) {
@@ -33,7 +34,7 @@ export const useDataQuality = ({ filters, api, caps }) => {
     const fetchData = async () => {
       setLoading(true);
       try {
-        const res = await api.call("dataQuality", "analysis", {
+        const res = await api.call<unknown>("dataQuality", "analysis", {
           params: {
             provider: filters?.provider !== "All" ? filters.provider : undefined,
             service: filters?.service !== "All" ? filters.service : undefined,
@@ -43,13 +44,12 @@ export const useDataQuality = ({ filters, api, caps }) => {
 
         if (!isMounted) return;
 
-        if (res?.success && res?.data) setStats(res.data);
-        else if (res?.data) setStats(res.data);
-        else if (res) setStats(res);
-        else setStats(EMPTY_STATS);
-      } catch (error) {
-        if (error?.code === "NOT_SUPPORTED") return;
-        console.error("Error fetching quality data:", error);
+        const typed = res as DataQualityStats | null | undefined;
+        setStats(typed ?? EMPTY_STATS);
+      } catch (error: unknown) {
+        const err = error as ApiLikeError;
+        if (err?.code === "NOT_SUPPORTED") return;
+        console.error("Error fetching quality data:", err);
         if (isMounted) setStats(EMPTY_STATS);
       } finally {
         if (isMounted) setLoading(false);
@@ -65,4 +65,7 @@ export const useDataQuality = ({ filters, api, caps }) => {
 
   return { loading, stats };
 };
+
+
+
 

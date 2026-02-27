@@ -1,9 +1,6 @@
-import dotenv from "dotenv";
 import { STSClient, AssumeRoleCommand } from "@aws-sdk/client-sts";
-
-dotenv.config({
-  path: `.env.${process.env.NODE_ENV || "development"}`,
-});
+import env from "../config/env.js";
+import logger from "../lib/logger.js";
 
 /**
  * Assumes AWS role using base IAM user credentials.
@@ -21,7 +18,7 @@ export default async function assumeRole(options = {}) {
       AWS_SECRET_ACCESS_KEY,
       AWS_ASSUME_ROLE_ARN,
       AWS_ASSUME_ROLE_SESSION_NAME,
-    } = process.env;
+    } = env;
 
 
     
@@ -63,7 +60,7 @@ export default async function assumeRole(options = {}) {
       assumedRoleArn: response.AssumedRoleUser?.Arn || roleArn,
     };
   } catch (err) {
-    console.error("ASSUME ROLE FAILED");
+    logger.error("ASSUME ROLE FAILED");
     throw err;
   }
 }

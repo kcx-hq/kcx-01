@@ -4,8 +4,9 @@ import { AlertCircle, Loader2, Calendar } from "lucide-react";
 import ClientCDataQualityView from "./ClientCDataQualityView";
 import { normalizeDataQualityData } from "./utils/normalizeDataQualityData";
 import { useClientCDataQualityData } from "./hooks/useClientCDataQualityData";
+import type { ClientCDataQualityProps } from "./types";
 
-const ClientCDataQuality = ({ api, caps }) => {
+const ClientCDataQuality = ({ api, caps }: ClientCDataQualityProps) => {
   // Fetch data quality data
   const { 
     qualityData, 
@@ -68,9 +69,9 @@ const ClientCDataQuality = ({ api, caps }) => {
     <div className="flex flex-col h-full relative">
       {/* Loading overlay */}
       {(isLoading || (dataLoading && !qualityData)) && (
-        <div className="absolute inset-0 z-50 flex items-center justify-center bg-[#0f0f11]/90 backdrop-blur-sm rounded-xl border border-[#a02ff1]/30">
+        <div className="absolute inset-0 z-50 flex items-center justify-center bg-[#0f0f11]/90 backdrop-blur-sm rounded-xl border border-[#007758]/30">
           <div className="text-center bg-[#1a1b20] p-6 rounded-xl border border-white/10">
-            <Loader2 className="animate-spin text-[#a02ff1] mx-auto mb-3" size={32} />
+            <Loader2 className="animate-spin text-[#007758] mx-auto mb-3" size={32} />
             <p className="text-sm text-gray-300 font-medium">Loading data quality analysis...</p>
             <p className="text-xs text-gray-500 mt-1">Fetching data from backend</p>
           </div>

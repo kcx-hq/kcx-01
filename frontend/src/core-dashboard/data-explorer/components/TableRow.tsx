@@ -1,4 +1,5 @@
 import React, { memo } from "react";
+import type { DataExplorerRow, TableRowProps } from "../types";
 
 // KCX Brand Primary
 const BRAND_EMERALD = "#007758";
@@ -15,7 +16,7 @@ const TableRow = memo(
     getRowHeight,
     onSelect,
     onRowClick,
-  }) => {
+  }: TableRowProps) => {
     const rowHeight = getRowHeight() || "py-3";
 
     return (
@@ -38,11 +39,11 @@ const TableRow = memo(
           />
         </td>
 
-        {visibleColumns.map((col, cIdx) => {
+        {visibleColumns.map((col: string, cIdx: number) => {
           const isCost =
             col.toLowerCase().includes("cost") || col.toLowerCase().includes("price");
           const val = row?.[col];
-          const numVal = parseFloat(val);
+          const numVal = parseFloat(String(val));
           const maxVal = columnMaxValues?.[col] || 1;
           
           // Data Bar calculation (Emerald tint)
@@ -92,7 +93,7 @@ const TableRow = memo(
       </tr>
     );
   },
-  (prevProps, nextProps) => {
+  (prevProps: TableRowProps, nextProps: TableRowProps) => {
     return (
       prevProps.globalIndex === nextProps.globalIndex &&
       prevProps.isSelected === nextProps.isSelected &&
@@ -108,3 +109,5 @@ const TableRow = memo(
 TableRow.displayName = "TableRow";
 
 export default TableRow;
+
+

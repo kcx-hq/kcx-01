@@ -1,7 +1,8 @@
 import React from "react";
 import { X } from "lucide-react";
+import type { InfoModalProps } from "../types";
 
-const InfoModal = ({ isOpen, onClose, title, message, date, highlight }) => {
+const InfoModal = ({ isOpen, onClose, title, message, date, highlight }: InfoModalProps) => {
   if (!isOpen) return null;
 
   return (
@@ -17,7 +18,7 @@ const InfoModal = ({ isOpen, onClose, title, message, date, highlight }) => {
         <div className="p-6 text-center space-y-3">
           <p className="text-gray-400 text-xs leading-relaxed">{message}</p>
           {highlight && <p className="text-2xl font-black text-white">{highlight}</p>}
-          {date && <p className="text-[#a02ff1] font-mono text-xs font-bold uppercase tracking-widest">{date}</p>}
+          {date && <p className="text-[#007758] font-mono text-xs font-bold uppercase tracking-widest">{date}</p>}
         </div>
 
         <div className="p-3 border-t border-white/5 bg-[#0f0f11]/50 flex justify-center">

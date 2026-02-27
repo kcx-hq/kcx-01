@@ -1,14 +1,26 @@
+import { createRequire } from "module";
 import { DataTypes } from "sequelize";
 import crypto from "crypto";
-import sequelize from "../config/db.config.js";
+
+const require = createRequire(import.meta.url);
+const { sequelize } = require("../db/index.cjs");
 
 // --- Encryption Setup ---
-const KEY = Buffer.from(process.env.CRED_ENC_KEY, "hex");
+const RAW_KEY = String(process.env.CRED_ENC_KEY || "").trim();
+const KEY =
+  /^[a-f0-9]{64}$/i.test(RAW_KEY) ? Buffer.from(RAW_KEY, "hex") : null;
 const ALGO = "aes-256-gcm";
 const IV_LEN = 12;
 
+function ensureEncryptionKey() {
+  if (!KEY) {
+    throw new Error("CRED_ENC_KEY must be set to a 64-char hex key");
+  }
+}
+
 function encrypt(text) {
   if (!text) return text;
+  ensureEncryptionKey();
 
   const iv = crypto.randomBytes(IV_LEN);
   const cipher = crypto.createCipheriv(ALGO, KEY, iv);
@@ -25,6 +37,7 @@ function encrypt(text) {
 
 function decrypt(payload) {
   if (!payload) return payload;
+  ensureEncryptionKey();
 
   const [ivB64, tagB64, encryptedB64] = String(payload).split(":");
 
@@ -138,3 +151,4 @@ CloudAccountCredential.prototype.getDecryptedSecretAccessKey = function () {
 };
 
 export default CloudAccountCredential;
+

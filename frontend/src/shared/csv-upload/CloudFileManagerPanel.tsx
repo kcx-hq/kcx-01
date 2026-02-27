@@ -1,5 +1,4 @@
 import React, { useEffect, useMemo, useState } from "react";
-import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import {
   AlertCircle,
@@ -11,8 +10,56 @@ import {
 } from "lucide-react";
 import { useDashboardStore } from "../../store/Dashboard.store";
 import { uploadTheme } from "./theme";
+import { apiPost } from "../../services/http";
+import { getApiErrorMessageWithRequestId } from "../../services/apiError";
+import type {
+  CloudConnection,
+  CloudFileEntry,
+  CloudFolderEntry,
+  DashboardUploadMeta,
+  SelectedCloudFile,
+} from "./types";
 
-function formatSize(bytes) {
+interface CloudFilesResponse {
+  folders?: CloudFolderEntry[];
+  files?: CloudFileEntry[];
+  path?: string;
+}
+
+interface IngestResponse {
+  uploadId?: string;
+}
+
+interface FailedIngestion {
+  filePath: string;
+  message: string;
+}
+
+interface SuccessfulIngestion {
+  filePath: string;
+  uploadId: string | null;
+}
+
+interface CloudFileManagerPanelProps {
+  cloudConfig: CloudConnection;
+}
+
+type SizeInput = number | string | null | undefined;
+type DateInput = string | number | Date | null | undefined;
+
+interface FileSelectionSource {
+  path: string;
+  name: string;
+  size?: number | string | null;
+  lastModified?: string | null;
+}
+
+const getAxiosErrorMessage = (error: unknown, fallback: string): string => {
+  const message = getApiErrorMessageWithRequestId(error, fallback);
+  return message || fallback;
+};
+
+function formatSize(bytes: SizeInput) {
   if (bytes == null) return "--";
   const sizes = ["B", "KB", "MB", "GB"];
   let value = Number(bytes);
@@ -24,7 +71,7 @@ function formatSize(bytes) {
   return `${value.toFixed(index === 0 ? 0 : 2)} ${sizes[index]}`;
 }
 
-function formatDateTime(value) {
+function formatDateTime(value: DateInput) {
   if (!value) return "--";
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return String(value);
@@ -37,21 +84,20 @@ function formatDateTime(value) {
   });
 }
 
-const CloudFileManagerPanel = ({ cloudConfig }) => {
+const CloudFileManagerPanel = ({ cloudConfig }: CloudFileManagerPanelProps) => {
   const navigate = useNavigate();
-  const API_URL = import.meta.env.VITE_API_URL;
   const [currentPath, setCurrentPath] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [folders, setFolders] = useState([]);
-  const [files, setFiles] = useState([]);
-  const [selectedFiles, setSelectedFiles] = useState([]);
-  const [selectedFileMeta, setSelectedFileMeta] = useState({});
+  const [folders, setFolders] = useState<CloudFolderEntry[]>([]);
+  const [files, setFiles] = useState<CloudFileEntry[]>([]);
+  const [selectedFiles, setSelectedFiles] = useState<string[]>([]);
+  const [selectedFileMeta, setSelectedFileMeta] = useState<Record<string, SelectedCloudFile>>({});
   const [actionMessage, setActionMessage] = useState("");
   const [ingestingPath, setIngestingPath] = useState("");
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [modalMessage, setModalMessage] = useState("");
-  const [lastIngestedUploadIds, setLastIngestedUploadIds] = useState([]);
+  const [lastIngestedUploadIds, setLastIngestedUploadIds] = useState<string[]>([]);
 
   const setUploadIds = useDashboardStore((s) => s.setUploadIds);
   const setSelectedUploads = useDashboardStore((s) => s.setSelectedUploads);
@@ -63,14 +109,14 @@ const CloudFileManagerPanel = ({ cloudConfig }) => {
     return clean.split("/").filter(Boolean);
   }, [currentPath]);
 
-  const loadPath = async (pathValue) => {
+  const loadPath = async (pathValue: string) => {
     setLoading(true);
     setError("");
     setActionMessage("");
 
     try {
-      const res = await axios.post(
-        `${API_URL}/api/cloud/aws/files`,
+      const response = await apiPost<CloudFilesResponse>(
+        "/api/cloud/aws/files",
         {
           accountId: cloudConfig?.accountId,
           roleName: cloudConfig?.roleName,
@@ -78,14 +124,13 @@ const CloudFileManagerPanel = ({ cloudConfig }) => {
           region: cloudConfig?.region,
           path: pathValue || "",
         },
-        { withCredentials: true },
       );
-      const data = res?.data || {};
+      const data = (response ?? {}) as CloudFilesResponse;
       setFolders(Array.isArray(data.folders) ? data.folders : []);
       setFiles(Array.isArray(data.files) ? data.files : []);
       setCurrentPath(data.path || "");
-    } catch (err) {
-      setError(err?.response?.data?.message || err?.message || "Unable to load files under /data");
+    } catch (err: unknown) {
+      setError(getAxiosErrorMessage(err, "Unable to load files under /data"));
     } finally {
       setLoading(false);
     }
@@ -97,11 +142,11 @@ const CloudFileManagerPanel = ({ cloudConfig }) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cloudConfig]);
 
-  const handleOpenFolder = (path) => {
+  const handleOpenFolder = (path: string) => {
     loadPath(path);
   };
 
-  const toggleFileSelection = (file) => {
+  const toggleFileSelection = (file: FileSelectionSource) => {
     const filePath = file.path;
     if (!filePath) return;
 
@@ -122,8 +167,8 @@ const CloudFileManagerPanel = ({ cloudConfig }) => {
         ...prev,
         [filePath]: {
           name: file.name,
-          size: file.size,
-          lastModified: file.lastModified,
+          size: file.size ?? null,
+          lastModified: file.lastModified ?? null,
           path: filePath,
         },
       };
@@ -131,15 +176,18 @@ const CloudFileManagerPanel = ({ cloudConfig }) => {
   };
 
   const selectedItems = useMemo(
-    () =>
-      selectedFiles.map((path) => ({
+    () => selectedFiles.map((path) => {
+      const metadata = selectedFileMeta[path];
+      if (metadata) {
+        return metadata;
+      }
+      return {
         path,
-        ...(selectedFileMeta[path] || {
-          name: path.split("/").pop(),
-          size: null,
-          lastModified: null,
-        }),
-      })),
+        name: path.split("/").pop() ?? path,
+        size: null,
+        lastModified: null,
+      };
+    }),
     [selectedFiles, selectedFileMeta],
   );
 
@@ -150,13 +198,13 @@ const CloudFileManagerPanel = ({ cloudConfig }) => {
     setActionMessage("");
     setModalMessage("");
 
-    const failed = [];
-    const succeeded = [];
+    const failed: FailedIngestion[] = [];
+    const succeeded: SuccessfulIngestion[] = [];
 
     for (const filePath of selectedFiles) {
       try {
-        const res = await axios.post(
-          `${API_URL}/api/cloud/aws/ingest`,
+        const response = await apiPost<IngestResponse>(
+          "/api/cloud/aws/ingest",
           {
             accountId: cloudConfig?.accountId,
             roleName: cloudConfig?.roleName,
@@ -164,38 +212,50 @@ const CloudFileManagerPanel = ({ cloudConfig }) => {
             region: cloudConfig?.region,
             filePath,
           },
-          { withCredentials: true },
         );
+        const responseData = (response ?? {}) as IngestResponse;
         succeeded.push({
           filePath,
-          uploadId: res?.data?.uploadId || null,
+          uploadId: responseData.uploadId || null,
         });
-      } catch (err) {
+      } catch (err: unknown) {
         failed.push({
           filePath,
-          message: err?.response?.data?.message || err?.message || "Failed to queue ingestion.",
+          message: getAxiosErrorMessage(err, "Failed to queue ingestion."),
         });
       }
     }
 
     if (failed.length) {
-      setModalMessage(`Ingestion failed for ${failed.length} file(s). First error: ${failed[0].message}`);
+      const firstFailed = failed[0];
+      setModalMessage(
+        firstFailed
+          ? `Ingestion failed for ${failed.length} file(s). First error: ${firstFailed.message}`
+          : `Ingestion failed for ${failed.length} file(s).`,
+      );
       setSelectedFiles(failed.map((item) => item.filePath));
-      setLastIngestedUploadIds(succeeded.map((item) => item.uploadId).filter(Boolean));
+      setLastIngestedUploadIds(
+        succeeded
+          .map((item) => item.uploadId)
+          .filter((uploadId): uploadId is string => Boolean(uploadId)),
+      );
       setActionMessage("");
     } else {
-      const uploadIds = succeeded.map((item) => item.uploadId).filter(Boolean);
+      const uploadIds = succeeded
+        .map((item) => item.uploadId)
+        .filter((uploadId): uploadId is string => Boolean(uploadId));
       setLastIngestedUploadIds(uploadIds);
       if (uploadIds.length) {
         setUploadIds(uploadIds);
         const selectedByPath = new Map(selectedItems.map((item) => [item.path, item]));
+        const uploadedFiles: DashboardUploadMeta[] = succeeded
+          .filter((item): item is SuccessfulIngestion & { uploadId: string } => Boolean(item.uploadId))
+          .map((item) => ({
+            uploadId: item.uploadId,
+            filename: selectedByPath.get(item.filePath)?.name || item.filePath,
+          }));
         setSelectedUploads(
-          succeeded
-            .filter((item) => item.uploadId)
-            .map((item) => ({
-              uploadId: item.uploadId,
-              filename: selectedByPath.get(item.filePath)?.name || item.filePath,
-            })),
+          uploadedFiles,
         );
       }
 
@@ -215,11 +275,11 @@ const CloudFileManagerPanel = ({ cloudConfig }) => {
     setModalMessage("");
   };
 
-  const handleModalToggle = (item) => {
+  const handleModalToggle = (item: SelectedCloudFile) => {
     toggleFileSelection(item);
   };
 
-  const isFileSelected = (path) => selectedFiles.includes(path);
+  const isFileSelected = (path: string) => selectedFiles.includes(path);
 
   const handleOpenProceed = () => {
     if (proceedDisabled) return;

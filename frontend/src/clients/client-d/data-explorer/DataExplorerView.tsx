@@ -1,5 +1,5 @@
 // frontend/clients/client-d/dashboards/overview/data-explorer/DataExplorerView.jsx
-import React, { useCallback } from "react";
+import React from "react";
 import DataExplorerStates from "../../../core-dashboard/data-explorer/components/DataExplorerStates";
 import DetailPanel from "../../../core-dashboard/data-explorer/components/DetailPanel";
 import { downloadCsvFromBackend } from "../../../core-dashboard/data-explorer/utils/downloadCsvFromBackend";
@@ -8,15 +8,15 @@ import HeaderBar from "./components/HeaderBar";
 import TableView from "./components/TableView";
 import PivotView from "./components/PivotView";
 import ColumnsDrawer from "./components/ColumnDrawer";
+import type { DataExplorerViewProps } from "./types";
 
-const DataExplorerView = (props) => {
+const DataExplorerView = (props: DataExplorerViewProps) => {
   const {
     // meta
     api,
     caps,
     loading,
     isInitialLoad,
-    isFiltering,
     data,
     totalPages,
 
@@ -32,17 +32,7 @@ const DataExplorerView = (props) => {
     sortConfig,
   } = props;
 
-  // initial loader
-  if (loading && isInitialLoad && (!data || data.length === 0)) {
-    return <DataExplorerStates type="loading" />;
-  }
-
-  // empty
-  if (!loading && (!data || data.length === 0)) {
-    return <DataExplorerStates type="empty" />;
-  }
-
-  const onExportCsv = useCallback(async () => {
+  const onExportCsv = async () => {
     await downloadCsvFromBackend({
       api,
       caps,
@@ -54,7 +44,17 @@ const DataExplorerView = (props) => {
       sortConfig,
       filenamePrefix: "client-d-data-explorer",
     });
-  }, [api, caps, filters, currentPage, rowsPerPage, sortConfig]);
+  };
+
+  // initial loader
+  if (loading && isInitialLoad && (!data || data.length === 0)) {
+    return <DataExplorerStates type="loading" />;
+  }
+
+  // empty
+  if (!loading && (!data || data.length === 0)) {
+    return <DataExplorerStates type="empty" />;
+  }
 
   return (
     <div className="w-full h-[calc(100vh-140px)] rounded-2xl border border-white/10 bg-[#0f0f11] shadow-2xl overflow-hidden relative">

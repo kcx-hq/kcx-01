@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useState } from "react";
 import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell, AreaChart, Area } from "recharts";
 import { DollarSign, Activity, Maximize2, TrendingUp, Calendar, Tag, Filter, ChevronDown, Cloud, Settings, MapPin, Building, Users, Loader2, AlertCircle } from "lucide-react";
 import { motion } from "framer-motion";
@@ -6,14 +6,23 @@ import { motion } from "framer-motion";
 import FilterBar from "../common/widgets/FilterBar";
 
 import { Card, CardContent, CardHeader, CardTitle } from "../common/widgets";
+import type {
+  ChartTooltipEntry,
+  ChartTooltipProps,
+  ClientCCostAnalysisViewProps,
+  CostBreakdownItem,
+  CostChartPoint,
+  CustomLegendProps,
+  GroupByValue,
+  KpiCardConfig,
+  PieTooltipProps,
+  SelectChangeEvent,
+} from "./types";
 
 
 
 const ClientCCostAnalysisView = ({
-  api,
-  caps,
   filters,
-  filterOptions,
   onFilterChange,
   onGroupByChange,
   onReset,
@@ -26,24 +35,15 @@ const ClientCCostAnalysisView = ({
   onTrendLimitChange,
   onBarLimitChange,
   isEmptyState,
-}) => {
-  const [selectedCard, setSelectedCard] = useState(null);
+}: ClientCCostAnalysisViewProps) => {
+  const [selectedCard, setSelectedCard] = useState<KpiCardConfig | null>(null);
   
   const {
     kpis,
     chartData,
     activeKeys,
     breakdown,
-    riskData,
-    anomalies,
-    drivers,
     totalSpend,
-    avgDaily,
-    peakUsage,
-    peakDate,
-    trend,
-    atRiskSpend,
-    forecastTotal,
   } = extractedData;
 
   // Debug logging for data state
@@ -55,7 +55,7 @@ const ClientCCostAnalysisView = ({
       <div className="flex flex-col items-center justify-center h-96 bg-[#0f0f11] rounded-xl border border-white/5 p-8 text-center">
         <div className="mb-4">
           {filters.groupBy === 'Department' ? (
-            <Users className="mx-auto text-purple-400" size={48} />
+            <Users className="mx-auto text-emerald-400" size={48} />
           ) : (
             <Calendar className="mx-auto text-gray-500" size={48} />
           )}
@@ -72,7 +72,7 @@ const ClientCCostAnalysisView = ({
         <div className="flex gap-3">
           <button 
             onClick={onReset}
-            className="px-4 py-2 bg-[#a02ff1] hover:bg-[#8b2bd4] text-white rounded-lg text-sm font-medium transition-colors"
+            className="px-4 py-2 bg-[#007758] hover:bg-[#8b2bd4] text-white rounded-lg text-sm font-medium transition-colors"
           >
             Reset Filters
           </button>
@@ -186,7 +186,7 @@ const ClientCCostAnalysisView = ({
     return (
       <div className="flex items-center justify-center h-64 bg-[#0f0f11] rounded-xl border border-white/5">
         <div className="text-center text-gray-500">
-          <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-[#a02ff1] mb-2"></div>
+          <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-[#007758] mb-2"></div>
           <p className="text-sm">Loading cost analysis...</p>
         </div>
       </div>
@@ -272,13 +272,13 @@ const ClientCCostAnalysisView = ({
   }
 
   // KPI Cards
-  const kpiCards = [
+  const kpiCards: KpiCardConfig[] = [
     {
       id: 'total-spend',
       title: "Total Spend",
       value: new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(kpis.totalSpend || 0),
       icon: DollarSign,
-      color: "text-[#a02ff1]",
+      color: "text-[#007758]",
       description: "Total cloud spend",
       delay: 0,
       insights: `Your total spend is ${new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(kpis.totalSpend || 0)}. This represents your complete cloud expenditure for the selected period.`
@@ -317,20 +317,21 @@ const ClientCCostAnalysisView = ({
 
   // Chart Colors - Extended palette for department views
   const COLORS = [
-    '#a02ff1', '#48bb78', '#f56565', '#ecc94b', 
-    '#4fd1c5', '#805ad5', '#ed64a6', '#38b2ac',
+    '#007758', '#48bb78', '#f56565', '#ecc94b', 
+    '#4fd1c5', '#059669', '#ed64a6', '#38b2ac',
     '#f6ad55', '#63b3ed', '#fc8181', '#68d391',
-    '#a7f3d0', '#c084fc', '#f472b6', '#7dd3fc'
+    '#a7f3d0', '#6ee7b7', '#f472b6', '#7dd3fc'
   ];
 
   // Enhanced Chart Tooltip with department support
-  const CustomTooltip = ({ active, payload, label }) => {
+  const renderCustomTooltip = ({ active, payload, label }: ChartTooltipProps) => {
     if (active && payload && payload.length) {
+      const totalEntry = payload.find((p) => p.dataKey === 'total');
       return (
         <div className="bg-[#1a1b20] border border-white/10 p-3 rounded-lg shadow-lg max-w-xs">
           <p className="text-gray-300 text-sm font-medium mb-2">{label}</p>
           <div className="space-y-1">
-            {payload.map((entry, index) => {
+            {payload.map((entry: ChartTooltipEntry, index: number) => {
               // Handle stacked area chart data
               if (entry.dataKey && entry.dataKey !== 'total' && entry.dataKey !== 'date') {
                 return (
@@ -348,7 +349,7 @@ const ClientCCostAnalysisView = ({
                         currency: 'USD',
                         minimumFractionDigits: 0,
                         maximumFractionDigits: 0 
-                      }).format(entry.value)}
+                      }).format(entry.value || 0)}
                     </span>
                   </div>
                 );
@@ -356,7 +357,7 @@ const ClientCCostAnalysisView = ({
               return null;
             })}
             {/* Show total if present */}
-            {payload.find(p => p.dataKey === 'total') && (
+            {totalEntry && (
               <div className="border-t border-white/10 pt-2 mt-2">
                 <div className="flex justify-between items-center">
                   <span className="text-xs text-gray-400 font-medium">Total:</span>
@@ -366,7 +367,7 @@ const ClientCCostAnalysisView = ({
                       currency: 'USD',
                       minimumFractionDigits: 0,
                       maximumFractionDigits: 0 
-                    }).format(payload.find(p => p.dataKey === 'total').value)}
+                    }).format(totalEntry.value || 0)}
                   </span>
                 </div>
               </div>
@@ -379,15 +380,16 @@ const ClientCCostAnalysisView = ({
   };
 
   // Enhanced Pie Chart Tooltip
-  const PieTooltip = ({ active, payload }) => {
+  const renderPieTooltip = ({ active, payload }: PieTooltipProps) => {
     if (active && payload && payload.length) {
-      const data = payload[0].payload;
-      const percentage = totalSpend > 0 ? ((data.value / totalSpend) * 100) : 0;
+      const data = payload[0]?.payload;
+      if (!data) return null;
+      const percentage = totalSpend > 0 ? (((data.value || 0) / totalSpend) * 100) : 0;
       
       return (
         <div className="bg-[#1a1b20] border border-white/10 p-3 rounded-lg shadow-lg">
           <p className="text-gray-300 text-sm font-medium flex items-center gap-2 mb-1">
-            {filters.groupBy === 'Department' && <Users size={14} className="text-purple-400" />}
+            {filters.groupBy === 'Department' && <Users size={14} className="text-emerald-400" />}
             {data.name}
           </p>
           <p className="text-white text-sm font-bold">
@@ -396,7 +398,7 @@ const ClientCCostAnalysisView = ({
               currency: 'USD',
               minimumFractionDigits: 0,
               maximumFractionDigits: 0 
-            }).format(data.value)}
+            }).format(data.value || 0)}
           </p>
           <p className="text-gray-400 text-xs mt-1">
             {percentage.toFixed(1)}% of total spend
@@ -419,13 +421,13 @@ const ClientCCostAnalysisView = ({
         <div className="shrink-0 space-y-4 mb-4">
           <div className="bg-[#1a1b20] border border-white/5 p-4 rounded-xl flex flex-wrap gap-4 items-center shadow-lg relative z-40">
             <div className="flex items-center gap-2 text-sm text-gray-400 font-bold mr-2 uppercase tracking-wider">
-              <Filter size={16} className="text-[#a02ff1]" /> 
+              <Filter size={16} className="text-[#007758]" /> 
             </div>
 
             {/* Group By Dropdown */}
             <div className="flex flex-col gap-1.5 relative">
               <div className="flex items-center gap-2">
-                <Tag size={14} className="text-purple-400" />
+                <Tag size={14} className="text-emerald-400" />
                 <label className="text-[10px] text-gray-500 font-semibold uppercase tracking-wider">
                   Group By
                 </label>
@@ -433,8 +435,8 @@ const ClientCCostAnalysisView = ({
               <div className="relative group">
                 <select
                   value={filters.groupBy}
-                  onChange={(e) => onGroupByChange(e.target.value)}
-                  className="appearance-none bg-[#0f0f11] border border-white/10 hover:border-[#a02ff1]/50 rounded-lg pl-3 pr-8 py-2 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-[#a02ff1]/50 transition-all min-w-[140px] text-gray-300 z-40 relative cursor-pointer"
+                  onChange={(e: SelectChangeEvent) => onGroupByChange(e.target.value as GroupByValue)}
+                  className="appearance-none bg-[#0f0f11] border border-white/10 hover:border-[#007758]/50 rounded-lg pl-3 pr-8 py-2 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-[#007758]/50 transition-all min-w-[140px] text-gray-300 z-40 relative cursor-pointer"
                 >
                   <option value="ServiceName">Service</option>
                   <option value="RegionName">Region</option>
@@ -454,7 +456,7 @@ const ClientCCostAnalysisView = ({
         {/* CONTENT */}
         <div className="flex-1 overflow-y-auto relative min-h-0">
           {isFiltering && costAnalysisData && (
-            <div className="absolute top-4 right-4 z-50 flex items-center gap-2 bg-[#1a1b20]/90 backdrop-blur-md border border-[#a02ff1]/30 rounded-lg px-3 py-2 shadow-lg">
+            <div className="absolute top-4 right-4 z-50 flex items-center gap-2 bg-[#1a1b20]/90 backdrop-blur-md border border-[#007758]/30 rounded-lg px-3 py-2 shadow-lg">
               <span className="text-xs text-gray-300 font-medium">Filtering...</span>
             </div>
           )}
@@ -471,7 +473,7 @@ const ClientCCostAnalysisView = ({
             <div className="space-y-6">
               {/* KPI GRID */}
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                {kpiCards.map((card, index) => (
+                {kpiCards.map((card: KpiCardConfig) => (
                   <motion.div
                     key={card.title}
                     initial={{ opacity: 0, y: 20 }}
@@ -479,7 +481,7 @@ const ClientCCostAnalysisView = ({
                     transition={{ delay: card.delay }}
                     whileHover={{ y: -5 }} 
                     onClick={() => setSelectedCard(card)}
-                    className="bg-[#1a1b20]/60 backdrop-blur-md border border-white/5 p-4 rounded-xl shadow-lg relative overflow-hidden group min-h-[100px] hover:border-[#a02ff1]/30 transition-all cursor-pointer"
+                    className="bg-[#1a1b20]/60 backdrop-blur-md border border-white/5 p-4 rounded-xl shadow-lg relative overflow-hidden group min-h-[100px] hover:border-[#007758]/30 transition-all cursor-pointer"
                   >
                     <div className={`absolute -top-10 -right-10 p-16 ${card.color} bg-opacity-5 blur-[40px] rounded-full`} />
                     
@@ -512,7 +514,7 @@ const ClientCCostAnalysisView = ({
                 <div className="bg-[#1a1b20]/60 backdrop-blur-md border border-white/5 rounded-2xl p-5 shadow-xl">
                   <div className="flex justify-between items-center mb-4">
                     <div className="flex items-center gap-2">
-                      <Calendar size={16} className="text-[#a02ff1]" />
+                      <Calendar size={16} className="text-[#007758]" />
                       <h3 className="text-sm font-bold text-white">
                         {filters.groupBy === 'Department' ? 'Department Spend Over Time' : 'Spend Over Time'}
                       </h3>
@@ -520,7 +522,7 @@ const ClientCCostAnalysisView = ({
                     <div className="flex gap-2">
                       <select
                         value={chartFilters.trendChart.limit}
-                        onChange={(e) => onTrendLimitChange(Number(e.target.value))}
+                        onChange={(e: SelectChangeEvent) => onTrendLimitChange(Number(e.target.value))}
                         className="bg-[#0f0f11] border border-white/10 rounded px-2 py-1 text-xs text-gray-300"
                       >
                         <option value={7}>7 Days</option>
@@ -538,7 +540,7 @@ const ClientCCostAnalysisView = ({
                           margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
                         >
                           <defs>
-                            {activeKeys.map((key, index) => (
+                            {activeKeys.map((key: string, index: number) => (
                               <linearGradient key={key} id={`color${index}`} x1="0" y1="0" x2="0" y2="1">
                                 <stop offset="5%" stopColor={COLORS[index % COLORS.length]} stopOpacity={0.8}/>
                                 <stop offset="95%" stopColor={COLORS[index % COLORS.length]} stopOpacity={0.1}/>
@@ -551,17 +553,17 @@ const ClientCCostAnalysisView = ({
                             tick={{ fontSize: 11, fill: '#9CA3AF' }}
                             axisLine={{ stroke: '#374151' }}
                             tickLine={{ stroke: '#374151' }}
-                            tickFormatter={(value) => new Date(value).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                            tickFormatter={(value: string | number) => new Date(value).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                           />
                           <YAxis 
                             tick={{ fontSize: 11, fill: '#9CA3AF' }}
                             axisLine={{ stroke: '#374151' }}
                             tickLine={{ stroke: '#374151' }}
-                            tickFormatter={(value) => `$${value >= 1000 ? (value/1000).toFixed(0) + 'K' : value}`}
+                            tickFormatter={(value: string | number) => `$${Number(value) >= 1000 ? (Number(value)/1000).toFixed(0) + 'K' : value}`}
                           />
-                          <Tooltip content={<CustomTooltip />} />
+                          <Tooltip content={renderCustomTooltip} />
                           <Legend />
-                          {activeKeys.map((key, index) => (
+                          {activeKeys.map((key: string, index: number) => (
                             <Area
                               key={key}
                               type="monotone"
@@ -581,23 +583,23 @@ const ClientCCostAnalysisView = ({
                             tick={{ fontSize: 12, fill: '#9CA3AF' }}
                             axisLine={{ stroke: '#374151' }}
                             tickLine={{ stroke: '#374151' }}
-                            tickFormatter={(value) => new Date(value).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                            tickFormatter={(value: string | number) => new Date(value).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                           />
                           <YAxis 
                             tick={{ fontSize: 12, fill: '#9CA3AF' }}
                             axisLine={{ stroke: '#374151' }}
                             tickLine={{ stroke: '#374151' }}
-                            tickFormatter={(value) => `$${value >= 1000 ? (value/1000).toFixed(0) + 'K' : value}`}
+                            tickFormatter={(value: string | number) => `$${Number(value) >= 1000 ? (Number(value)/1000).toFixed(0) + 'K' : value}`}
                           />
-                          <Tooltip content={<CustomTooltip />} />
+                          <Tooltip content={renderCustomTooltip} />
                           <Legend />
                           <Line 
                             type="monotone" 
                             dataKey="total" 
-                            stroke="#a02ff1" 
+                            stroke="#007758" 
                             strokeWidth={3}
                             dot={{ r: 3 }}
-                            activeDot={{ r: 6, stroke: '#a02ff1', strokeWidth: 2, fill: '#1a1b20' }}
+                            activeDot={{ r: 6, stroke: '#007758', strokeWidth: 2, fill: '#1a1b20' }}
                           />
                         </LineChart>
                       )}
@@ -610,9 +612,9 @@ const ClientCCostAnalysisView = ({
                   <div className="flex justify-between items-center mb-4">
                     <div className="flex items-center gap-2">
                       {filters.groupBy === 'Department' ? (
-                        <Users size={16} className="text-purple-400" />
+                        <Users size={16} className="text-emerald-400" />
                       ) : filters.groupBy === 'ServiceName' ? (
-                        <Settings size={16} className="text-[#a02ff1]" />
+                        <Settings size={16} className="text-[#007758]" />
                       ) : filters.groupBy === 'RegionName' ? (
                         <MapPin size={16} className="text-green-400" />
                       ) : (
@@ -625,7 +627,7 @@ const ClientCCostAnalysisView = ({
                     <div className="flex gap-2">
                       <select
                         value={chartFilters.barChart.limit}
-                        onChange={(e) => onBarLimitChange(Number(e.target.value))}
+                        onChange={(e: SelectChangeEvent) => onBarLimitChange(Number(e.target.value))}
                         className="bg-[#0f0f11] border border-white/10 rounded px-2 py-1 text-xs text-gray-300"
                       >
                         <option value={5}>Top 5</option>
@@ -648,7 +650,7 @@ const ClientCCostAnalysisView = ({
                           tick={{ fontSize: 11, fill: '#9CA3AF' }}
                           axisLine={{ stroke: '#374151' }}
                           tickLine={{ stroke: '#374151' }}
-                          tickFormatter={(value) => `$${value >= 1000 ? (value/1000).toFixed(0) + 'K' : value}`}
+                          tickFormatter={(value: string | number) => `$${Number(value) >= 1000 ? (Number(value)/1000).toFixed(0) + 'K' : value}`}
                         />
                         <YAxis 
                           type="category"
@@ -657,17 +659,20 @@ const ClientCCostAnalysisView = ({
                           axisLine={{ stroke: '#374151' }}
                           tickLine={{ stroke: '#374151' }}
                           width={90}
-                          tickFormatter={(value) => value.length > 12 ? `${value.substring(0, 12)}...` : value}
+                          tickFormatter={(value: string | number) => {
+                            const displayValue = String(value);
+                            return displayValue.length > 12 ? `${displayValue.substring(0, 12)}...` : displayValue;
+                          }}
                         />
                         <Tooltip 
-                          content={<CustomTooltip />} 
-                          formatter={(value) => [
+                          content={renderCustomTooltip} 
+                          formatter={(value: number | string) => [
                             new Intl.NumberFormat('en-US', { 
                               style: 'currency', 
                               currency: 'USD',
                               minimumFractionDigits: 0,
                               maximumFractionDigits: 0 
-                            }).format(value),
+                            }).format(Number(value)),
                             'Cost'
                           ]}
                         />
@@ -676,7 +681,7 @@ const ClientCCostAnalysisView = ({
                           radius={[0, 4, 4, 0]}
                           minPointSize={2}
                         >
-                          {filteredBreakdownData.map((entry, index) => (
+                          {filteredBreakdownData.map((entry: CostBreakdownItem, index: number) => (
                             <Cell 
                               key={`cell-${index}`} 
                               fill={COLORS[index % COLORS.length]}
@@ -696,9 +701,9 @@ const ClientCCostAnalysisView = ({
                   <div className="flex justify-between items-center mb-4">
                     <div className="flex items-center gap-2">
                       {filters.groupBy === 'Department' ? (
-                        <Users size={16} className="text-purple-400" />
+                        <Users size={16} className="text-emerald-400" />
                       ) : (
-                        <Tag size={16} className="text-[#a02ff1]" />
+                        <Tag size={16} className="text-[#007758]" />
                       )}
                       <h3 className="text-sm font-bold text-white">
                         {filters.groupBy === 'Department' ? 'Department Cost Breakdown' : 'Cost Breakdown'}
@@ -720,13 +725,13 @@ const ClientCCostAnalysisView = ({
                           fill="#8884d8"
                           dataKey="value"
                           nameKey="name"
-                          label={({ name, percent }) => {
-                            const percentage = (percent * 100);
+                          label={({ name, percent }: { name?: string; percent?: number }) => {
+                            const percentage = ((percent || 0) * 100);
                             return percentage > 5 ? `${name}: ${percentage.toFixed(0)}%` : '';
                           }}
                           paddingAngle={2}
                         >
-                          {breakdown.map((entry, index) => (
+                          {breakdown.map((entry: CostBreakdownItem, index: number) => (
                             <Cell 
                               key={`cell-${index}`} 
                               fill={COLORS[index % COLORS.length]}
@@ -735,18 +740,18 @@ const ClientCCostAnalysisView = ({
                             />
                           ))}
                         </Pie>
-                        <Tooltip content={<PieTooltip />} />
+                        <Tooltip content={renderPieTooltip} />
                         <Legend 
                           layout="vertical" 
                           verticalAlign="middle" 
                           align="right"
-                          content={(props) => {
+                          content={(props: CustomLegendProps) => {
                             const { payload } = props;
                             if (!payload || payload.length === 0) return null;
                             
                             return (
                               <div className="text-xs text-gray-300 ml-4">
-                                {payload.slice(0, 8).map((entry, index) => (
+                                {payload.slice(0, 8).map((entry, index: number) => (
                                   <div key={`legend-${index}`} className="flex items-center gap-2 mb-1">
                                     <div 
                                       className="w-3 h-3 rounded-full" 
@@ -785,7 +790,7 @@ const ClientCCostAnalysisView = ({
                 <div className="flex flex-wrap justify-between items-center gap-4 text-[10px] text-gray-500">
                   <div className="flex items-center gap-4">
                     <span className="flex items-center gap-1">
-                      <span className="w-2 h-2 rounded-full bg-[#a02ff1]"></span>
+                      <span className="w-2 h-2 rounded-full bg-[#007758]"></span>
                       Data source: Database
                     </span>
                     <span>•</span>
@@ -796,7 +801,7 @@ const ClientCCostAnalysisView = ({
                       <>
                         <span>•</span>
                         <span className="flex items-center gap-1">
-                          <Users size={10} className="text-purple-400" />
+                          <Users size={10} className="text-emerald-400" />
                           Department data from resource tags
                         </span>
                       </>
@@ -824,11 +829,11 @@ const ClientCCostAnalysisView = ({
                 {filters.groupBy === 'Department' && breakdown.length > 0 && (
                   <div className="mt-4 pt-4 border-t border-white/5">
                     <div className="flex items-center gap-2 mb-2">
-                      <Users size={14} className="text-purple-400" />
+                      <Users size={14} className="text-emerald-400" />
                       <span className="text-xs font-medium text-gray-400">Department Legend</span>
                     </div>
                     <div className="flex flex-wrap gap-3">
-                      {breakdown.slice(0, 6).map((dept, index) => (
+                      {breakdown.slice(0, 6).map((dept: CostBreakdownItem, index: number) => (
                         <div key={dept.name} className="flex items-center gap-2 text-[10px]">
                           <div 
                             className="w-2 h-2 rounded-full" 

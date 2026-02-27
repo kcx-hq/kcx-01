@@ -1,12 +1,24 @@
 import { useEffect, useRef, useState } from "react";
+import type { ApiClient, Capabilities } from "../../../../services/apiClient";
+import type {
+  ApiLikeError,
+  CostAlertsApiData,
+  CostAlertsFilters,
+  UseClientCCostAlertsDataResult,
+} from "../types";
 
-export const useClientCCostAlertsData = (api, caps, debouncedFilters, forceRefreshKey) => {
-  const [alertsData, setAlertsData] = useState(null);
+export const useClientCCostAlertsData = (
+  api: ApiClient | null,
+  caps: Capabilities | null,
+  debouncedFilters: CostAlertsFilters,
+  forceRefreshKey: number,
+): UseClientCCostAlertsDataResult => {
+  const [alertsData, setAlertsData] = useState<CostAlertsApiData | null>(null);
   const [loading, setLoading] = useState(true);
   const [isFiltering, setIsFiltering] = useState(false);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState<string | null>(null);
 
-  const abortControllerRef = useRef(null);
+  const abortControllerRef = useRef<AbortController | null>(null);
   const prevFiltersRef = useRef(debouncedFilters);
   const isInitialMount = useRef(true);
 
@@ -36,12 +48,12 @@ export const useClientCCostAlertsData = (api, caps, debouncedFilters, forceRefre
       try {
         // Check if endpoints are available
         const hasAlertsEndpoint = 
-          caps?.modules?.costAlerts?.enabled &&
-          caps?.modules?.costAlerts?.endpoints?.alerts;
+          caps?.modules?.["costAlerts"]?.enabled &&
+          caps?.modules?.["costAlerts"]?.endpoints?.["alerts"];
 
         const hasBudgetStatusEndpoint = 
-          caps?.modules?.costAlerts?.enabled &&
-          caps?.modules?.costAlerts?.endpoints?.budgetStatus;
+          caps?.modules?.["costAlerts"]?.enabled &&
+          caps?.modules?.["costAlerts"]?.endpoints?.["budgetStatus"];
 
         if (!hasAlertsEndpoint && !hasBudgetStatusEndpoint) {
           setError('No cost alerts endpoints available');
@@ -49,7 +61,7 @@ export const useClientCCostAlertsData = (api, caps, debouncedFilters, forceRefre
         }
 
         // Prepare filter parameters
-        const params = {};
+        const params: Partial<CostAlertsFilters> = {};
         if (debouncedFilters?.provider && debouncedFilters.provider !== "All")
           params.provider = debouncedFilters.provider;
         if (debouncedFilters?.service && debouncedFilters.service !== "All")
@@ -75,8 +87,8 @@ export const useClientCCostAlertsData = (api, caps, debouncedFilters, forceRefre
 
          console.log("alerts : ",alertsRes)
         // Process responses
-        const alertsData = alertsRes?.data || alertsRes || null;
-        const budgetStatusData = budgetStatusRes?.data || budgetStatusRes || null;
+        const alertsData = alertsRes || null;
+        const budgetStatusData = budgetStatusRes || null;
 
         if (!abortControllerRef.current?.signal.aborted) {
           setAlertsData({
@@ -86,11 +98,12 @@ export const useClientCCostAlertsData = (api, caps, debouncedFilters, forceRefre
           setError(null);
           prevFiltersRef.current = { ...debouncedFilters };
         }
-      } catch (error) {
-        if (error?.code !== "NOT_SUPPORTED") {
-          if (error?.name !== "AbortError" && !abortControllerRef.current?.signal.aborted) {
+      } catch (error: unknown) {
+        const typedError = error as ApiLikeError;
+        if (typedError?.code !== "NOT_SUPPORTED") {
+          if (typedError?.name !== "AbortError" && !abortControllerRef.current?.signal.aborted) {
             console.error("Error fetching cost alerts data:", error);
-            setError(error.message || 'Failed to load cost alerts data');
+            setError(typedError.message || 'Failed to load cost alerts data');
           }
         }
       } finally {

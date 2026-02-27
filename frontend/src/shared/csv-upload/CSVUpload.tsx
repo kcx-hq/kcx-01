@@ -1,11 +1,17 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
 import { Loader2, Lock, ArrowLeft, Zap } from "lucide-react";
 import { motion } from "framer-motion";
 import { useAuthStore } from "../../store/Authstore";
 import CSVUploadInput from "./CSVUploadInput";
 import { uploadGridStyle, uploadTheme } from "./theme";
+import { apiGet } from "../../services/http";
+
+interface UserResponseShape {
+  isPremium?: boolean;
+  is_premium?: boolean;
+  hasUploaded?: boolean;
+}
 
 const CsvUploadGatePage = () => {
   const navigate = useNavigate();
@@ -40,17 +46,14 @@ const CsvUploadGatePage = () => {
         }
 
         // Fallback when auth store is empty.
-        const API_URL = import.meta.env.VITE_API_URL;
-        const res = await axios.get(`${API_URL}/api/auth/me`, {
-          withCredentials: true,
-        });
+        const response = await apiGet<UserResponseShape>("/api/auth/me");
 
-        const premium2 = !!res.data?.isPremium || !!res.data?.is_premium;
-        const uploaded2 = !!res.data?.hasUploaded;
+        const premium2 = !!response?.isPremium || !!response?.is_premium;
+        const uploaded2 = !!response?.hasUploaded;
 
         setIsPremium(premium2);
         setHasUploaded(uploaded2);
-      } catch (e) {
+      } catch (e: unknown) {
         console.error("Gate check failed:", e);
       } finally {
         setChecking(false);

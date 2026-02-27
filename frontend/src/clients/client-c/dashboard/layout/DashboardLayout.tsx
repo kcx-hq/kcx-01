@@ -1,7 +1,19 @@
 import VerticalSidebar from '../../common/Layout/VerticalSidebar';
 import Header from '../../common/Layout/Header';
+import type { ReactNode } from "react";
 
-const DashboardLayout = ({ title, children, anomalies = [], anomaliesCount = 0 }) => {
+interface DashboardAnomaly {
+  [key: string]: unknown;
+}
+
+interface DashboardLayoutProps {
+  title: string;
+  children: ReactNode;
+  anomalies?: DashboardAnomaly[];
+  anomaliesCount?: number;
+}
+
+const DashboardLayout = ({ title, children, anomalies = [], anomaliesCount = 0 }: DashboardLayoutProps) => {
   return (
     <div className="min-h-screen bg-[#0f0f11] text-white font-sans">
       <VerticalSidebar />

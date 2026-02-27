@@ -1,4 +1,12 @@
-export function normalizeOverviewData(overviewData) {
+import type {
+  NormalizedOverviewData,
+  OverviewData,
+  OverviewGroupedPoint,
+} from "../types";
+
+export function normalizeOverviewData(
+  overviewData: OverviewData | null | undefined
+): NormalizedOverviewData {
   if (!overviewData || typeof overviewData !== "object") {
     return {
       totalSpend: 0,
@@ -20,11 +28,16 @@ export function normalizeOverviewData(overviewData) {
   }
 
   const totalSpend = Number(overviewData.totalSpend ?? 0);
-  const dailyData = Array.isArray(overviewData.dailyData) ? overviewData.dailyData : [];
+  const dailyData = Array.isArray(overviewData.dailyData)
+    ? overviewData.dailyData.map((point) => ({
+        date: String(point?.date ?? ""),
+        cost: Number(point?.cost ?? 0),
+      }))
+    : [];
 
   // ✅ Client-D: serviceBreakdown -> groupedData
   const groupedData = Array.isArray(overviewData.serviceBreakdown)
-    ? overviewData.serviceBreakdown.map((x) => ({
+    ? overviewData.serviceBreakdown.map((x: OverviewGroupedPoint) => ({
         name: x?.name ?? "Unknown",
         value: Number(x?.value ?? 0),
       }))
@@ -32,7 +45,7 @@ export function normalizeOverviewData(overviewData) {
 
   // ✅ compute topService from groupedData
   const topService = groupedData.length
-    ? groupedData.reduce((a, b) => (b.value > a.value ? b : a))
+    ? groupedData.reduce((a: OverviewGroupedPoint, b: OverviewGroupedPoint) => (b.value > a.value ? b : a))
     : { name: "N/A", value: 0 };
 
   return {

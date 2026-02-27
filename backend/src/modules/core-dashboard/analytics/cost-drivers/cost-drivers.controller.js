@@ -1,3 +1,5 @@
+import AppError from "../../../../errors/AppError.js";
+import logger from "../../../../lib/logger.js";
 import { costDriversService } from './cost-drivers.service.js';
 
 function normalizeUploadIds(input) {
@@ -47,14 +49,10 @@ const readFilters = (source = {}) => ({
   uploadId: source.uploadId || source.uploadid || null,
 });
 
-export const getCostDrivers = async (req, res) => {
+export const getCostDrivers = async (req, res, next) => {
   try {
     if (!req.user?.id) {
-      return res.status(401).json({
-        success: false,
-        error: 'Authentication required',
-        message: 'Please log in to view cost drivers',
-      });
+      return next(new AppError(401, "UNAUTHENTICATED", "Authentication required"));
     }
 
     const uploadIds = extractUploadIds(req);
@@ -94,35 +92,22 @@ export const getCostDrivers = async (req, res) => {
         'No cost changes detected in selected windows. Try another time range or compare mode.';
     }
 
-    return res.json({
-      success: true,
-      data: safeData,
-    });
+    return res.ok(safeData);
   } catch (error) {
-    console.error('Error in getCostDrivers:', error);
-    return res.status(500).json({
-      success: false,
-      error: 'Failed to analyze cost drivers',
-      message: error.message,
-    });
+    logger.error({ err: error, requestId: req.requestId }, "Error in getCostDrivers");
+    return next(new AppError(500, "INTERNAL", "Internal server error", { cause: error }));
   }
 };
 
-export const getDriverDetails = async (req, res) => {
+export const getDriverDetails = async (req, res, next) => {
   try {
     if (!req.user?.id) {
-      return res.status(401).json({
-        success: false,
-        error: 'Authentication required',
-      });
+      return next(new AppError(401, "UNAUTHENTICATED", "Authentication required"));
     }
 
     const uploadIds = extractUploadIds(req);
     if (!uploadIds.length) {
-      return res.status(400).json({
-        success: false,
-        error: 'uploadid is required',
-      });
+      return next(new AppError(400, "VALIDATION_ERROR", "Invalid request"));
     }
 
     const body = req.body || {};
@@ -140,10 +125,7 @@ export const getDriverDetails = async (req, res) => {
       'service';
 
     if (!driver && !driverKey) {
-      return res.status(400).json({
-        success: false,
-        error: 'driver or driverKey is required',
-      });
+      return next(new AppError(400, "VALIDATION_ERROR", "Invalid request"));
     }
 
     const period = parseNumberOrDefault(body.period ?? query.period, 30);
@@ -163,16 +145,9 @@ export const getDriverDetails = async (req, res) => {
       uploadIds,
     });
 
-    return res.json({
-      success: true,
-      data,
-    });
+    return res.ok(data);
   } catch (error) {
-    console.error('Error in getDriverDetails:', error);
-    return res.status(500).json({
-      success: false,
-      error: 'Failed to get driver details',
-      message: error.message,
-    });
+    logger.error({ err: error, requestId: req.requestId }, "Error in getDriverDetails");
+    return next(new AppError(500, "INTERNAL", "Internal server error", { cause: error }));
   }
 };

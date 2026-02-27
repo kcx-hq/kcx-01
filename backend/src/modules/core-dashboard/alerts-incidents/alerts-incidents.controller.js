@@ -1,3 +1,5 @@
+import AppError from "../../../errors/AppError.js";
+import logger from "../../../lib/logger.js";
 import { alertsIncidentsService } from "./alerts-incidents.service.js";
 
 const normalizeUploadIds = (value) => {
@@ -11,7 +13,7 @@ const normalizeUploadIds = (value) => {
   return [];
 };
 
-export const getAlertsIncidentsSummary = async (req, res) => {
+export const getAlertsIncidentsSummary = async (req, res, next) => {
   try {
     const uploadIds = normalizeUploadIds(
       req.query.uploadIds ??
@@ -37,13 +39,9 @@ export const getAlertsIncidentsSummary = async (req, res) => {
       view: req.query.view || req.body?.view || "full",
     });
 
-    res.json({ success: true, data });
+    return res.ok(data);
   } catch (error) {
-    console.error("Alerts & Incidents Summary Error:", error);
-    res.status(500).json({
-      success: false,
-      error: "Failed to build Alerts & Incidents summary",
-      message: error.message,
-    });
+    logger.error({ err: error, requestId: req.requestId }, "Alerts & Incidents Summary Error");
+    return next(new AppError(500, "INTERNAL", "Internal server error", { cause: error }));
   }
 };

@@ -41,7 +41,7 @@ export function OptimizationView({
   error,
   isRefreshing,
   onRetry,
-}) {
+}: OptimizationViewProps) {
   if (loading) {
     return <SectionLoading label="Analyzing Optimization..." />;
   }
@@ -132,7 +132,7 @@ export function OptimizationView({
             <motion.div key="rightsizing" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="relative">
               <RightSizingTab
                 rightSizingRecs={optimizationData.rightSizingRecs}
-                onSelectInsight={(rec) => setSelectedInsight({ ...rec, type: "rightsizing" })}
+                onSelectInsight={(rec: RightSizingRecommendation) => setSelectedInsight({ ...rec, type: "rightsizing" })}
               />
               {isRefreshing && <SectionRefreshOverlay rounded="rounded-xl" label="Refreshing right-sizing recommendations..." />}
             </motion.div>
@@ -154,3 +154,6 @@ export function OptimizationView({
 }
 
 export default OptimizationView;
+
+
+

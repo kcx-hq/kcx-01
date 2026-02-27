@@ -1,5 +1,8 @@
+import { createRequire } from "module";
 import { DataTypes } from "sequelize";
-import sequelize from "../config/db.config.js";
+
+const require = createRequire(import.meta.url);
+const { sequelize } = require("../db/index.cjs");
 
 const BillingUsageFact = sequelize.define(
   "BillingUsageFact",
@@ -106,3 +109,4 @@ const BillingUsageFact = sequelize.define(
 );
 
 export default BillingUsageFact
+

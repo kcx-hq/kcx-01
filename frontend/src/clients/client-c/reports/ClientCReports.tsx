@@ -19,16 +19,27 @@ import {
   Clock,
   Zap
 } from "lucide-react";
+import type {
+  ApiLikeError,
+  ClientCReportsProps,
+  DownloadReportPayload,
+  ReportColor,
+  ReportDefinition,
+  ReportsData,
+  ReportsExtractedData,
+  ReportsMetricItem,
+  ReportsSummary,
+} from "./types";
 
-const ClientCReports = ({ api, caps }) => {
-  const [reportsData, setReportsData] = useState(null);
+const ClientCReports = ({ api, caps }: ClientCReportsProps) => {
+  const [reportsData, setReportsData] = useState<ReportsData | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState<string | null>(null);
   const [downloading, setDownloading] = useState(false);
 
   useEffect(() => {
     const fetchReportsData = async () => {
-      if (!api || !caps.modules?.reports) {
+      if (!api || !caps?.modules?.["reports"]) {
         setError('Reports module not available');
         setLoading(false);
         return;
@@ -40,13 +51,29 @@ const ClientCReports = ({ api, caps }) => {
 
         // Fetch all reports endpoints
         const [summaryRes, topServicesRes, monthlySpendRes] = await Promise.allSettled([
-          api.call('reports', 'summary'),
-          api.call('reports', 'topServices'),
-          api.call('reports', 'monthlySpend')
+          api.call<ReportsSummary>('reports', 'summary'),
+          api.call<ReportsData["topServices"]>('reports', 'topServices'),
+          api.call<ReportsData["monthlySpend"]>('reports', 'monthlySpend')
         ]);
 
-        const summaryData = summaryRes.status === 'fulfilled' && summaryRes.value?.success 
-          ? summaryRes.value.data 
+        const summaryData = summaryRes.status === 'fulfilled'
+          ? (summaryRes.value ?? {
+              totalSpend: 0,
+              forecast: 0,
+              spendChangePercent: 0,
+              avgDailySpend: 0,
+              dailyData: [],
+              topService: { name: 'N/A', value: 0, percentage: 0 },
+              topRegion: { name: 'N/A', value: 0, percentage: 0 },
+              taggedCost: 0,
+              untaggedCost: 0,
+              prodCost: 0,
+              nonProdCost: 0,
+              billingPeriod: "Current Period",
+              taggedPercent: 0,
+              prodPercent: 0,
+              departmentSplit: []
+            })
           : { 
               totalSpend: 0, 
               forecast: 0, 
@@ -59,15 +86,18 @@ const ClientCReports = ({ api, caps }) => {
               untaggedCost: 0,
               prodCost: 0,
               nonProdCost: 0,
+              billingPeriod: "Current Period",
+              taggedPercent: 0,
+              prodPercent: 0,
               departmentSplit: []
             };
 
-        const topServicesData = topServicesRes.status === 'fulfilled' && topServicesRes.value?.success 
-          ? topServicesRes.value.data 
+        const topServicesData = topServicesRes.status === 'fulfilled'
+          ? (topServicesRes.value ?? { topServices: [], topRegions: [] })
           : { topServices: [], topRegions: [] };
 
-        const monthlySpendData = monthlySpendRes.status === 'fulfilled' && monthlySpendRes.value?.success 
-          ? monthlySpendRes.value.data 
+        const monthlySpendData = monthlySpendRes.status === 'fulfilled'
+          ? (monthlySpendRes.value ?? { monthlyData: [] })
           : { monthlyData: [] };
 
         setReportsData({
@@ -75,8 +105,9 @@ const ClientCReports = ({ api, caps }) => {
           topServices: topServicesData,
           monthlySpend: monthlySpendData
         });
-      } catch (err) {
-        setError(err.message || 'Failed to fetch reports data');
+      } catch (err: unknown) {
+        const apiError = err as ApiLikeError;
+        setError(apiError.message || 'Failed to fetch reports data');
       } finally {
         setLoading(false);
       }
@@ -85,7 +116,7 @@ const ClientCReports = ({ api, caps }) => {
     fetchReportsData();
   }, [api, caps]);
 
-  const extractedData = useMemo(() => {
+  const extractedData = useMemo<ReportsExtractedData>(() => {
     if (!reportsData) {
       return {
         summary: {
@@ -100,6 +131,9 @@ const ClientCReports = ({ api, caps }) => {
           untaggedCost: 0,
           prodCost: 0,
           nonProdCost: 0,
+          billingPeriod: "Current Period",
+          taggedPercent: 0,
+          prodPercent: 0,
           departmentSplit: []
         },
         topServices: {
@@ -116,9 +150,9 @@ const ClientCReports = ({ api, caps }) => {
     }
 
     // Combine all data sources
-    const summary = reportsData.summary || {};
-    const topServices = reportsData.topServices || {};
-    const monthlySpend = reportsData.monthlySpend || {};
+    const summary = reportsData.summary || ({} as ReportsSummary);
+    const topServices = reportsData.topServices || { topServices: [], topRegions: [] };
+    const monthlySpend = reportsData.monthlySpend || { monthlyData: [] };
 
     return {
       summary: {
@@ -133,6 +167,9 @@ const ClientCReports = ({ api, caps }) => {
         untaggedCost: summary.untaggedCost || 0,
         prodCost: summary.prodCost || 0,
         nonProdCost: summary.nonProdCost || 0,
+        billingPeriod: summary.billingPeriod || "Current Period",
+        taggedPercent: summary.taggedPercent || 0,
+        prodPercent: summary.prodPercent || 0,
         departmentSplit: Array.isArray(summary.departmentSplit) ? summary.departmentSplit : []
       },
       topServices: {
@@ -143,13 +180,13 @@ const ClientCReports = ({ api, caps }) => {
         monthlyData: Array.isArray(monthlySpend.monthlyData) ? monthlySpend.monthlyData : []
       },
       metadata: {
-        isEmptyState: (summary.totalSpend === 0 && summary.dailyData.length === 0)
+        isEmptyState: ((summary.totalSpend || 0) === 0 && (summary.dailyData || []).length === 0)
       }
     };
   }, [reportsData]);
 
   // Define available reports
-  const reports = useMemo(() => {
+  const reports = useMemo<ReportDefinition[]>(() => {
     const period = reportsData?.summary?.billingPeriod || "Current Period";
     
     return [
@@ -185,7 +222,7 @@ const ClientCReports = ({ api, caps }) => {
           "Commitment coverage analysis",
         ],
         description: "Analysis of optimization efforts and potential cost savings",
-        color: "purple",
+        color: "mint",
       },
       {
         id: "department-cost-allocation",
@@ -252,7 +289,7 @@ const ClientCReports = ({ api, caps }) => {
     ];
   }, [reportsData]);
 
-  const onDownloadReport = useCallback(async (reportId) => {
+  const onDownloadReport = useCallback(async (reportId: string) => {
     if (!api) {
       setError('API not available');
       return;
@@ -263,18 +300,19 @@ const ClientCReports = ({ api, caps }) => {
     try {
       // Prepare report data for PDF generation
       const totalSpend = extractedData.summary.totalSpend;
-      const topServices = extractedData.topServices.topServices.slice(0, 3).map((s) => ({
+      const topServices = extractedData.topServices.topServices.slice(0, 3).map((s: ReportsMetricItem) => ({
         name: s?.name || "Unknown",
         cost: s?.value ?? s?.cost ?? 0,
       }));
-      const topRegions = extractedData.topServices.topRegions.slice(0, 3).map((r) => ({
+      const topRegions = extractedData.topServices.topRegions.slice(0, 3).map((r: ReportsMetricItem) => ({
         name: r?.name || "Unknown",
         cost: r?.value ?? r?.cost ?? 0,
       }));
+      const firstTopServiceCost = topServices[0]?.cost ?? 0;
 
-      const payload = {
+      const payload: DownloadReportPayload = {
         reportType: reportId,
-        period: extractedData.summary.billingPeriod || new Date().toISOString().split('T')[0],
+        period: extractedData.summary.billingPeriod || new Date().toISOString().split('T')[0] || "",
         totalSpend: totalSpend,
         topServices: topServices.length ? topServices : [{ name: "No data available", cost: 0 }],
         topRegions: topRegions.length ? topRegions : [{ name: "No data available", cost: 0 }],
@@ -286,34 +324,36 @@ const ClientCReports = ({ api, caps }) => {
           rightSizing: 0,
           commitments: 0,
         },
-        topServicePercent: topServices.length > 0 && totalSpend > 0 ? (topServices[0].cost / totalSpend) * 100 : 0,
+        topServicePercent: topServices.length > 0 && totalSpend > 0 ? (firstTopServiceCost / totalSpend) * 100 : 0,
         taggedPercent: extractedData.summary.taggedPercent || 0,
         prodPercent: extractedData.summary.prodPercent || 0,
       };
 
       try {
-        const res = await api.call("reports", "downloadPdf", {
+        const res = await api.call<Blob>("reports", "downloadPdf", {
           data: payload,
           responseType: "blob",
         });
 
-        const blob = res instanceof Blob ? res : res?.data;
+        const blob = res;
         const url = window.URL.createObjectURL(blob);
         const link = document.createElement('a');
         link.href = url;
         link.download = `${reportId}_${new Date().toISOString().split('T')[0]}.pdf`;
         link.click();
         window.URL.revokeObjectURL(url);
-      } catch (apiErr) {
+      } catch (apiErr: unknown) {
+        const apiError = apiErr as ApiLikeError;
         // If downloadPdf endpoint is not supported, show user-friendly message
-        if (apiErr.message?.includes('Endpoint not supported') || apiErr.message?.includes('downloadPdf')) {
+        if (apiError.message?.includes('Endpoint not supported') || apiError.message?.includes('downloadPdf')) {
           setError('PDF download endpoint is not yet available. Please try again later.');
         } else {
           throw apiErr;
         }
       }
-    } catch (err) {
-      setError(err.message || 'Failed to download report');
+    } catch (err: unknown) {
+      const apiError = err as ApiLikeError;
+      setError(apiError.message || 'Failed to download report');
     } finally {
       setDownloading(false);
     }
@@ -344,14 +384,14 @@ const ClientCReports = ({ api, caps }) => {
     );
   }
 
-  const getColorClasses = (color) => {
-    const colorMap = {
+  const getColorClasses = (color: ReportColor) => {
+    const colorMap: Record<ReportColor, string> = {
       blue: 'bg-blue-500/20 text-blue-400 border border-blue-500/30',
-      purple: 'bg-purple-500/20 text-purple-400 border border-purple-500/30',
+      mint: 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30',
       green: 'bg-green-500/20 text-green-400 border border-green-500/30',
       orange: 'bg-orange-500/20 text-orange-400 border border-orange-500/30',
       red: 'bg-red-500/20 text-red-400 border border-red-500/30',
-      indigo: 'bg-indigo-500/20 text-indigo-400 border border-indigo-500/30',
+      indigo: 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30',
       yellow: 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/30',
     };
     return colorMap[color] || colorMap.blue;
@@ -361,7 +401,7 @@ const ClientCReports = ({ api, caps }) => {
     <div className="animate-in fade-in zoom-in-95 duration-300 flex flex-col h-full">
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-white flex items-center gap-2">
-          <FileText size={24} className="text-[#a02ff1]" />
+          <FileText size={24} className="text-[#007758]" />
           Executive Reports
         </h1>
         <p className="text-sm text-gray-400 mt-1">Download PDF reports for leadership and stakeholders</p>
@@ -387,7 +427,7 @@ const ClientCReports = ({ api, caps }) => {
         <div className="space-y-6">
           {/* Available Reports Grid */}
           <div className="space-y-4">
-            {reports.map((report, index) => {
+            {reports.map((report: ReportDefinition, index: number) => {
               const Icon = report.icon;
               
               return (
@@ -396,7 +436,7 @@ const ClientCReports = ({ api, caps }) => {
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: index * 0.1 }}
-                  className="relative bg-[#1a1b20]/60 backdrop-blur-md border border-white/5 rounded-xl p-6 transition-all hover:border-[#a02ff1]/30"
+                  className="relative bg-[#1a1b20]/60 backdrop-blur-md border border-white/5 rounded-xl p-6 transition-all hover:border-[#007758]/30"
                 >
                   <div className="flex items-start justify-between mb-4">
                     <div className="flex items-start gap-4 flex-1">
@@ -422,9 +462,9 @@ const ClientCReports = ({ api, caps }) => {
                         <div className="bg-[#0f0f11] rounded-lg p-4 border border-white/5">
                           <div className="text-xs text-gray-500 mb-2 font-bold uppercase">Includes</div>
                           <ul className="space-y-1.5">
-                            {report.includes.map((item, idx) => (
+                            {report.includes.map((item: string, idx: number) => (
                               <li key={idx} className="text-sm text-gray-300 flex items-start gap-2">
-                                <span className="text-[#a02ff1] mt-1">•</span>
+                                <span className="text-[#007758] mt-1">•</span>
                                 <span>{item}</span>
                               </li>
                             ))}
@@ -438,7 +478,7 @@ const ClientCReports = ({ api, caps }) => {
                     <button
                       onClick={() => onDownloadReport(report.id)}
                       disabled={downloading}
-                      className="px-6 py-2 bg-[#a02ff1] hover:bg-[#8e25d9] disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg text-sm font-medium transition-colors flex items-center gap-2"
+                      className="px-6 py-2 bg-[#007758] hover:bg-[#006b4f] disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg text-sm font-medium transition-colors flex items-center gap-2"
                     >
                       {downloading ? (
                         <>
@@ -472,32 +512,32 @@ const ClientCReports = ({ api, caps }) => {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {[
+              {([
                 {
                   title: "Forecast & Budget Variance",
                   description: "Projected spend vs budget with variance analysis",
                   icon: TrendingUp,
-                  color: "blue",
+                  color: "blue" as ReportColor,
                 },
                 {
                   title: "Compliance & Audit Report",
                   description: "Policy compliance, tagging adherence, and audit trail",
                   icon: FileText,
-                  color: "green",
+                  color: "green" as ReportColor,
                 },
                 {
                   title: "Resource Utilization Report",
                   description: "Detailed utilization metrics and efficiency analysis",
                   icon: Target,
-                  color: "yellow",
+                  color: "yellow" as ReportColor,
                 },
                 {
                   title: "Cost Anomaly Detection",
                   description: "Automated detection of unusual spending patterns",
                   icon: AlertCircle,
-                  color: "red",
+                  color: "red" as ReportColor,
                 },
-              ].map((r, index) => {
+              ] as Array<{ title: string; description: string; icon: ReportDefinition["icon"]; color: ReportColor }>).map((r, index: number) => {
                 const Icon = r.icon;
                 return (
                   <motion.div

@@ -1,5 +1,8 @@
+import { createRequire } from "module";
 import { DataTypes } from "sequelize";
-import sequelize from "../config/db.config.js";
+
+const require = createRequire(import.meta.url);
+const { sequelize } = require("../db/index.cjs");
 
 const Service = sequelize.define(
   "Service",
@@ -45,3 +48,5 @@ const Service = sequelize.define(
 );
 
 export default Service;
+
+

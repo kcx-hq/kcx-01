@@ -2,8 +2,9 @@ import React from "react";
 import { ChevronRight } from "lucide-react";
 import { formatCurrency } from "../utils/format";
 import PremiumOverlay from "../components/PremiumOverlay";
+import type { GroupedListProps, ResourceGroup, ResourceItem } from "../types";
 
-const GroupedListView = ({ groupedData, isPremiumMasked, onRowClick }) => {
+const GroupedListView = ({ groupedData, isPremiumMasked, onRowClick }: GroupedListProps) => {
   return (
     <div className="relative flex min-h-full flex-col">
       {isPremiumMasked && (
@@ -13,8 +14,8 @@ const GroupedListView = ({ groupedData, isPremiumMasked, onRowClick }) => {
       )}
 
       {Object.entries(groupedData)
-        .sort((a, b) => (b[1].total || 0) - (a[1].total || 0))
-        .map(([key, grp]) => (
+        .sort((a: [string, ResourceGroup], b: [string, ResourceGroup]) => (b[1].total || 0) - (a[1].total || 0))
+        .map(([key, grp]: [string, ResourceGroup]) => (
           <div key={key} className="border-b border-[var(--border-muted)]">
             <div className="sticky top-0 z-10 flex cursor-pointer items-center justify-between bg-[var(--bg-surface)] px-4 py-3 md:px-6">
               <div className="flex items-center gap-3">
@@ -30,7 +31,7 @@ const GroupedListView = ({ groupedData, isPremiumMasked, onRowClick }) => {
             </div>
 
             <div className="divide-y divide-[var(--border-muted)] bg-white">
-              {(isPremiumMasked ? grp.items.slice(0, 10) : grp.items).map((item) => (
+              {(isPremiumMasked ? grp.items.slice(0, 10) : grp.items).map((item: ResourceItem) => (
                 <div
                   key={item.id}
                   onClick={() => onRowClick(item)}
@@ -55,3 +56,6 @@ const GroupedListView = ({ groupedData, isPremiumMasked, onRowClick }) => {
 };
 
 export default GroupedListView;
+
+
+

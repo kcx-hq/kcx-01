@@ -4,20 +4,33 @@ import { useAuthStore } from "../../../store/Authstore";
 
 import CostAnalysisView from "./CostAnalysisView";
 import { useCostAnalysis } from "./hooks/useCostAnalysis";
+import type {
+  CostAnalysisProps,
+  CostBreakdownItem,
+  CostChartRow,
+  CostChartType,
+  CostFilters,
+  CostKpis,
+  CostModalType,
+} from "./types";
 
-const CostAnalysis = ({ api, caps }) => {
+const CostAnalysis = ({ api, caps }: CostAnalysisProps) => {
+  // Don't render if module not enabled or API not available
+  if (!api || !caps || !caps.modules?.["costAnalytics"]?.enabled) return null;
+
+  return <CostAnalysisContent api={api} caps={caps} />;
+};
+
+const CostAnalysisContent = ({ api, caps }: CostAnalysisProps) => {
   const { user } = useAuthStore();
   const isLocked = !user?.is_premium; // mask if NOT premium
 
-  // Don't render if module not enabled or API not available
-  if (!api || !caps || !caps.modules?.costAnalytics?.enabled) return null;
-
-  const [activeModal, setActiveModal] = useState(null);
-  const [activeTab, setActiveTab] = useState("overview");
-  const [filters, setFilters] = useState({ provider: "All", service: "All", region: "All" });
-  const [groupBy, setGroupBy] = useState("ServiceName");
-  const [chartType, setChartType] = useState("area");
-  const [hiddenSeries, setHiddenSeries] = useState(new Set());
+  const [activeModal, setActiveModal] = useState<CostModalType>(null);
+  const activeTab = "overview";
+  const filters: CostFilters = { provider: "All", service: "All", region: "All" };
+  const groupBy = "ServiceName";
+  const [chartType, setChartType] = useState<CostChartType>("area");
+  const [hiddenSeries, setHiddenSeries] = useState<Set<string>>(new Set());
 
 
   const { loading, isRefreshing, apiData, error } = useCostAnalysis({
@@ -30,8 +43,8 @@ const CostAnalysis = ({ api, caps }) => {
 
  
 
-  const toggleSeries = useCallback((key) => {
-    setHiddenSeries((prev) => {
+  const toggleSeries = useCallback((key: string) => {
+    setHiddenSeries((prev: Set<string>) => {
       const next = new Set(prev);
       if (next.has(key)) next.delete(key);
       else next.add(key);
@@ -39,38 +52,51 @@ const CostAnalysis = ({ api, caps }) => {
     });
   }, []);
 
-  const kpis = useMemo(() => {
-    const baseKpis = apiData?.kpis || {};
+  const kpis = useMemo<CostKpis>(() => {
+    const baseKpis: CostKpis = {
+      totalSpend: 0,
+      avgDaily: 0,
+      peakUsage: 0,
+      trend: 0,
+      ...(apiData?.kpis ?? {}),
+    };
     // Compute additional KPIs from dailyTrends
-    const dailyTrends = apiData?.dailyTrends || [];
+    const dailyTrends = (apiData?.dailyTrends || []) as CostChartRow[];
     if (dailyTrends.length > 0) {
-      const totals = dailyTrends.map(d => d.total);
+      const totals = dailyTrends.map((d: CostChartRow) => Number(d.total || 0));
       const maxTotal = Math.max(...totals);
-      const peakDate = dailyTrends.find(d => d.total === maxTotal)?.date;
+      const peakDate = dailyTrends.find((d: CostChartRow) => Number(d.total || 0) === maxTotal)?.date;
       const mid = Math.floor(dailyTrends.length / 2);
-      const firstHalf = dailyTrends.slice(0, mid).reduce((sum, d) => sum + d.total, 0);
-      const secondHalf = dailyTrends.slice(mid).reduce((sum, d) => sum + d.total, 0);
+      const firstHalf = dailyTrends.slice(0, mid).reduce((sum: number, d: CostChartRow) => sum + Number(d.total || 0), 0);
+      const secondHalf = dailyTrends.slice(mid).reduce((sum: number, d: CostChartRow) => sum + Number(d.total || 0), 0);
       const trend = firstHalf > 0 ? ((secondHalf - firstHalf) / firstHalf) * 100 : 0;
       baseKpis.peakUsage = maxTotal;
-      baseKpis.peakDate = peakDate;
+      if (peakDate) baseKpis.peakDate = peakDate;
       baseKpis.trend = trend;
     }
     return baseKpis;
   }, [apiData]);
-  const chartData = useMemo(() => apiData?.dailyTrends || [], [apiData]);
+  const chartData = useMemo<CostChartRow[]>(() => (apiData?.dailyTrends as CostChartRow[]) || [], [apiData]);
   const activeKeys = useMemo(() => {
-    const keys = new Set();
-    (apiData?.dailyTrends || []).forEach(day => {
-      Object.keys(day).forEach(key => {
-        if (key !== 'date' && key !== 'total') keys.add(key);
+    const keys = new Set<string>();
+    (apiData?.dailyTrends || []).forEach((day: CostChartRow) => {
+      Object.keys(day).forEach((key: string) => {
+        if (key !== "date" && key !== "total") keys.add(key);
       });
     });
     return Array.from(keys);
   }, [apiData]);
-  const breakdown = useMemo(() => (apiData?.breakdown || []).map(b => ({ ...b, value: parseFloat(b.value) })), [apiData]);
+  const breakdown = useMemo<CostBreakdownItem[]>(
+    () =>
+      ((apiData?.breakdown || []) as CostBreakdownItem[]).map((b: CostBreakdownItem) => ({
+        ...b,
+        value: parseFloat(String(b.value ?? 0)),
+      })),
+    [apiData],
+  );
 
   return (
-    <div className="flex flex-col h-full bg-[#0f0f11] text-white overflow-hidden relative font-sans selection:bg-[#a02ff1]/30">
+    <div className="flex flex-col h-full bg-[#0f0f11] text-white overflow-hidden relative font-sans selection:bg-[#007758]/30">
       
 
       {/* CONTROLS */}
@@ -83,15 +109,15 @@ const CostAnalysis = ({ api, caps }) => {
         {/* Full loader only initial */}
         {loading && !apiData && (
           <div className="absolute inset-0 z-50 flex items-center justify-center bg-[#0f0f11]/60 backdrop-blur-[2px]">
-            <Loader2 className="animate-spin text-[#a02ff1]" size={32} />
+            <Loader2 className="animate-spin text-[#007758]" size={32} />
           </div>
         )}
 
         {/* Subtle updating */}
         {isRefreshing && apiData && (
-          <div className="absolute top-4 right-4 z-50 flex items-center gap-2 px-3 py-1.5 bg-[#a02ff1]/20 border border-[#a02ff1]/30 rounded-lg backdrop-blur-sm">
-            <Loader2 className="text-[#a02ff1] animate-spin" size={14} />
-            <span className="text-[#a02ff1] text-xs font-medium">Updating...</span>
+          <div className="absolute top-4 right-4 z-50 flex items-center gap-2 px-3 py-1.5 bg-[#007758]/20 border border-[#007758]/30 rounded-lg backdrop-blur-sm">
+            <Loader2 className="text-[#007758] animate-spin" size={14} />
+            <span className="text-[#007758] text-xs font-medium">Updating...</span>
           </div>
         )}
 

@@ -9,8 +9,20 @@ import { useFlaggedResources } from './hooks/useFlaggedResources';
 import { exportResourceInventoryCSV } from './utils/csv';
 
 import ResourceInventoryView from './ResourceInventoryView';
+import type {
+  ResourceGrouping,
+  ResourceInventoryProps,
+  ResourceItem,
+  ResourceTab,
+} from "./types";
 
-const ResourceInventory = ({ filters, api, caps }) => {
+const ResourceInventory = ({ filters, api, caps }: ResourceInventoryProps) => {
+  if (!api || !caps || !caps.modules?.["resources"]?.enabled) return null;
+
+  return <ResourceInventoryContent filters={filters} api={api} caps={caps} />;
+};
+
+const ResourceInventoryContent = ({ filters, api, caps }: ResourceInventoryProps) => {
   const { user } = useAuthStore();
 
   // ⚠️ Your original code uses inverted naming.
@@ -18,12 +30,10 @@ const ResourceInventory = ({ filters, api, caps }) => {
   // If you want: mask when NOT premium:
   const isPremiumMasked = !user?.is_premium;
 
-  if (!api || !caps || !caps.modules?.resources?.enabled) return null;
-
   const [searchTerm, setSearchTerm] = useState('');
-  const [activeTab, setActiveTab] = useState('all');
-  const [grouping, setGrouping] = useState('none');
-  const [selectedResource, setSelectedResource] = useState(null);
+  const [activeTab, setActiveTab] = useState<ResourceTab>('all');
+  const [grouping, setGrouping] = useState<ResourceGrouping>('none');
+  const [selectedResource, setSelectedResource] = useState<ResourceItem | null>(null);
 
   const { flaggedResources, toggleFlag } = useFlaggedResources();
 
@@ -67,3 +77,6 @@ const ResourceInventory = ({ filters, api, caps }) => {
 };
 
 export default ResourceInventory;
+
+
+

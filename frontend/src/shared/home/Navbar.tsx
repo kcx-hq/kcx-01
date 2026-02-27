@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Menu, X } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 
-const Navbar = ({ showJourney = () => {} }) => {
+const Navbar = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [activeSection, setActiveSection] = useState("");
@@ -16,6 +16,9 @@ const Navbar = ({ showJourney = () => {} }) => {
 
       for (let i = sections.length - 1; i >= 0; i--) {
         const id = sections[i];
+        if (!id) {
+          continue;
+        }
         const el = document.getElementById(id);
         if (el && scrollPosition >= el.offsetTop) {
           setActiveSection(id);
@@ -36,7 +39,7 @@ const Navbar = ({ showJourney = () => {} }) => {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  const handleNavClick = (hash) => {
+  const handleNavClick = (hash: string) => {
     setIsMobileMenuOpen(false);
     if (!hash.startsWith("#")) {
       navigate(hash);
@@ -53,7 +56,7 @@ const Navbar = ({ showJourney = () => {} }) => {
     }
   };
 
-  const underline = (active) =>
+  const underline = (active: boolean) =>
     `absolute -bottom-1 left-0 h-0.5 transition-all ${
       active ? "w-full" : "w-0 group-hover:w-full"
     }`;
@@ -73,8 +76,13 @@ const Navbar = ({ showJourney = () => {} }) => {
       >
         <div className="max-w-7xl mx-auto px-6 flex items-center justify-between">
           {/* Logo */}
-          <Link to="/" className="flex items-center gap-2">
-            <span className="text-2xl font-bold text-[var(--text-on-dark)]">
+          <Link to="/" className="flex items-center gap-3">
+            <img
+              src="/KCX.logo.svg"
+              alt="KCX Logo"
+              className="h-8 w-auto object-contain shrink-0"
+            />
+            <span className="text-[1.9rem] font-bold leading-none tracking-tight text-[var(--text-on-dark)]">
               KCX
               <span style={{ color: "var(--brand-primary)" }}>.</span>
             </span>
@@ -113,10 +121,10 @@ const Navbar = ({ showJourney = () => {} }) => {
                 backgroundColor: "var(--brand-primary)",
                 color: "#ffffff",
               }}
-              onMouseEnter={(e) =>
+              onMouseEnter={(e: React.MouseEvent<HTMLButtonElement>) =>
                 (e.currentTarget.style.backgroundColor = "var(--brand-primary-hover)")
               }
-              onMouseLeave={(e) =>
+              onMouseLeave={(e: React.MouseEvent<HTMLButtonElement>) =>
                 (e.currentTarget.style.backgroundColor = "var(--brand-primary)")
               }
             >
@@ -166,10 +174,10 @@ const Navbar = ({ showJourney = () => {} }) => {
                 backgroundColor: "var(--brand-primary)",
                 color: "#ffffff",
               }}
-              onMouseEnter={(e) =>
+              onMouseEnter={(e: React.MouseEvent<HTMLButtonElement>) =>
                 (e.currentTarget.style.backgroundColor = "var(--brand-primary-hover)")
               }
-              onMouseLeave={(e) =>
+              onMouseLeave={(e: React.MouseEvent<HTMLButtonElement>) =>
                 (e.currentTarget.style.backgroundColor = "var(--brand-primary)")
               }
             >

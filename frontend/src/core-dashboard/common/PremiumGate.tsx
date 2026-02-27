@@ -2,6 +2,18 @@
 import React from "react";
 import { Crown, Lock } from "lucide-react";
 
+type PremiumGateVariant = "wrap" | "full" | "inlineBadge" | "card";
+
+interface PremiumGateProps {
+  children?: React.ReactNode;
+  variant?: PremiumGateVariant;
+  minHeight?: string | number;
+  onUpgradeClick?: () => void;
+  ctaText?: string;
+  title?: string;
+  description?: string;
+}
+
 const PremiumGate = ({
   children,
   variant = "wrap", // wrap | full | inlineBadge | card
@@ -10,7 +22,7 @@ const PremiumGate = ({
   ctaText = "Upgrade to Access",
   title = "Premium Feature",
   description = "This feature is available in our paid version",
-}) => {
+}: PremiumGateProps) => {
   const CTA = (
     <button
       type="button"
@@ -98,3 +110,6 @@ const PremiumGate = ({
 };
 
 export default PremiumGate;
+
+
+

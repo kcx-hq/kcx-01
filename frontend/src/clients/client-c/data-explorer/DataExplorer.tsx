@@ -1,13 +1,23 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '../common/widgets';
+import type {
+  ClientCDataExplorerPayload,
+  ClientCDataExplorerProps,
+  DataExplorerRow,
+} from "./types";
 
-const DataExplorer = ({ filters = {}, api, caps, uploadId }) => {
-  const [data, setData] = useState([]);
-  const [columns, setColumns] = useState([]);
+const DataExplorer = ({
+  filters = { provider: "All", service: "All", region: "All", department: "All" },
+  api,
+  caps,
+  uploadId,
+}: ClientCDataExplorerProps) => {
+  const [data, setData] = useState<DataExplorerRow[]>([]);
+  const [columns, setColumns] = useState<string[]>([]);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
 
-  const renderCellValue = (value) => {
+  const renderCellValue = (value: unknown) => {
     if (value === null || value === undefined) return '-';
 
     if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') {
@@ -21,9 +31,9 @@ const DataExplorer = ({ filters = {}, api, caps, uploadId }) => {
     if (typeof value === 'object') {
       try {
         return Object.entries(value)
-          .map(([key, val]) => `${key}: ${val}`)
+          .map(([key, val]: [string, unknown]) => `${key}: ${val}`)
           .join(' | ');
-      } catch (error) {
+      } catch {
         return '[Object]';
       }
     }
@@ -34,9 +44,9 @@ const DataExplorer = ({ filters = {}, api, caps, uploadId }) => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        if (!api || !caps?.modules?.dataExplorer?.enabled) return;
+        if (!api || !caps?.modules?.["dataExplorer"]?.enabled) return;
 
-        const response = await api.call('dataExplorer', 'dataExplorer', {
+        const response = await api.call<ClientCDataExplorerPayload>('dataExplorer', 'dataExplorer', {
           params: {
             page,
             limit: 50,
@@ -56,16 +66,14 @@ const DataExplorer = ({ filters = {}, api, caps, uploadId }) => {
           }
         });
 
-        if (response?.success) {
-          setData(response.data.data || response.data.records || []);
-          setColumns(response.data.allColumns || response.data.columns || []);
-          setTotalPages(
-            response.data.pagination?.totalPages ||
-              response.data.totalPages ||
-              1
-          );
+        const payload = response as ClientCDataExplorerPayload | undefined;
+
+        if (payload) {
+          setData(payload.data || payload.records || []);
+          setColumns(payload.allColumns || payload.columns || []);
+          setTotalPages(payload.pagination?.totalPages || payload.totalPages || 1);
         }
-      } catch (error) {
+      } catch (error: unknown) {
         console.error('Error fetching data explorer data:', error);
       }
     };
@@ -85,7 +93,7 @@ const DataExplorer = ({ filters = {}, api, caps, uploadId }) => {
             <table className="min-w-full divide-y divide-gray-700">
               <thead>
                 <tr>
-                  {columns.map((column, index) => (
+                  {columns.map((column: string, index: number) => (
                     <th
                       key={index}
                       className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider"
@@ -97,12 +105,12 @@ const DataExplorer = ({ filters = {}, api, caps, uploadId }) => {
               </thead>
 
               <tbody className="divide-y divide-gray-800">
-                {data.map((row, index) => (
+                {data.map((row: DataExplorerRow, index: number) => (
                   <tr
                     key={index}
                     className={index % 2 === 0 ? 'bg-gray-900' : 'bg-gray-800'}
                   >
-                    {columns.map((column, colIndex) => (
+                    {columns.map((column: string, colIndex: number) => (
                       <td
                         key={colIndex}
                         className="px-4 py-3 whitespace-nowrap text-sm text-gray-300"
@@ -118,7 +126,7 @@ const DataExplorer = ({ filters = {}, api, caps, uploadId }) => {
 
           <div className="flex justify-between items-center mt-4">
             <button
-              onClick={() => setPage((p) => Math.max(1, p - 1))}
+              onClick={() => setPage((p: number) => Math.max(1, p - 1))}
               disabled={page === 1}
               className="px-4 py-2 bg-gray-700 text-white rounded-lg disabled:opacity-50"
             >
@@ -130,7 +138,7 @@ const DataExplorer = ({ filters = {}, api, caps, uploadId }) => {
             </span>
 
             <button
-              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+              onClick={() => setPage((p: number) => Math.min(totalPages, p + 1))}
               disabled={page === totalPages}
               className="px-4 py-2 bg-gray-700 text-white rounded-lg disabled:opacity-50"
             >

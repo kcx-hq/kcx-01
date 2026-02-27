@@ -9,6 +9,7 @@ import {
   AlertCircle,
 } from "lucide-react";
 import TableRow from "../../../../core-dashboard/data-explorer/components/TableRow";
+import type { ExplorerInputChange, ExplorerSelectChange, TableViewProps } from "../types";
 
 const TableView = ({
   // data
@@ -38,7 +39,7 @@ const TableView = ({
   getRowHeight,
   handleRowSelect,
   handleRowClick,
-}) => {
+}: TableViewProps) => {
   return (
     <div className="h-full overflow-auto scrollbar-thin scrollbar-thumb-gray-700">
       <table className="min-w-full border-collapse text-xs text-left">
@@ -52,7 +53,7 @@ const TableView = ({
                     : setSelectedIndices(
                         new Set(
                           tableDataToRender.map(
-                            (_, i) => (currentPage - 1) * rowsPerPage + i
+                            (_: unknown, i: number) => (currentPage - 1) * rowsPerPage + i
                           )
                         )
                       )
@@ -65,12 +66,12 @@ const TableView = ({
             </th>
 
             {visibleColumns.length > 0 ? (
-              visibleColumns.map((col, idx) => (
+              visibleColumns.map((col: string, idx: number) => (
                 <th
                   key={col}
                   className={`px-4 py-3 border-b border-r border-white/10 whitespace-nowrap bg-[#1b1c22] hover:bg-white/5 cursor-pointer group select-none ${
                     idx === 0
-                      ? "sticky left-[50px] z-30 shadow-[4px_0_10px_rgba(0,0,0,0.5)] border-r-[#a02ff1]/50"
+                      ? "sticky left-[50px] z-30 shadow-[4px_0_10px_rgba(0,0,0,0.5)] border-r-[#007758]/50"
                       : ""
                   }`}
                   style={{
@@ -92,9 +93,9 @@ const TableView = ({
                     <div className="opacity-0 group-hover:opacity-100">
                       {sortConfig.key === col ? (
                         sortConfig.direction === "asc" ? (
-                          <ChevronUp size={12} className="text-[#a02ff1]" />
+                          <ChevronUp size={12} className="text-[#007758]" />
                         ) : (
-                          <ChevronDown size={12} className="text-[#a02ff1]" />
+                          <ChevronDown size={12} className="text-[#007758]" />
                         )
                       ) : (
                         <div className="h-3 w-3" />
@@ -116,7 +117,7 @@ const TableView = ({
           {showFilterRow && (
             <tr className="bg-[#14151b]">
               <th className="sticky left-0 z-40 bg-[#14151b] border-b border-r border-white/10"></th>
-              {visibleColumns.map((col, idx) => (
+              {visibleColumns.map((col: string, idx: number) => (
                 <th
                   key={`filter-${col}`}
                   className={`p-1 border-b border-r border-white/10 bg-[#14151b] ${
@@ -127,7 +128,7 @@ const TableView = ({
                     type="text"
                     placeholder="Filter..."
                     value={filterInputs[col] || ""}
-                    onChange={(e) => {
+                    onChange={(e: ExplorerInputChange) => {
                       const value = e.target.value;
                       setFilterInputs((prev) => {
                         if (value.trim()) return { ...prev, [col]: value };
@@ -136,7 +137,7 @@ const TableView = ({
                         return next;
                       });
                     }}
-                    className="w-full px-2 py-1.5 bg-black/30 border border-white/10 rounded-lg text-[10px] text-white focus:outline-none focus:border-[#a02ff1]"
+                    className="w-full px-2 py-1.5 bg-black/30 border border-white/10 rounded-lg text-[10px] text-white focus:outline-none focus:border-[#007758]"
                   />
                 </th>
               ))}
@@ -145,7 +146,7 @@ const TableView = ({
         </thead>
 
         <tbody>
-          {tableDataToRender.map((row, rIdx) => {
+          {tableDataToRender.map((row, rIdx: number) => {
             const globalIndex = (currentPage - 1) * rowsPerPage + rIdx;
             const isSelected = selectedIndices.has(globalIndex);
             return (
@@ -166,10 +167,10 @@ const TableView = ({
           })}
         </tbody>
 
-        <tfoot className="sticky bottom-0 z-30 bg-[#1b1c22] border-t-2 border-[#a02ff1]/30 shadow-[0_-4px_10px_rgba(0,0,0,0.5)]">
+        <tfoot className="sticky bottom-0 z-30 bg-[#1b1c22] border-t-2 border-[#007758]/30 shadow-[0_-4px_10px_rgba(0,0,0,0.5)]">
           <tr>
             <td className="sticky left-0 z-40 bg-[#1b1c22] border-r border-white/10"></td>
-            {visibleColumns.map((col, idx) => {
+            {visibleColumns.map((col: string, idx: number) => {
               const total = summaryData?.[col];
               const showTotal =
                 total !== null && total !== undefined && total !== "" && typeof total !== "object";
@@ -179,9 +180,9 @@ const TableView = ({
                   key={col}
                   className={`px-4 py-3 font-bold text-xs whitespace-nowrap border-r border-white/10 bg-[#1b1c22] ${
                     idx === 0
-                      ? "sticky left-[50px] z-40 border-r-[#a02ff1]/50 text-[#a02ff1]"
+                      ? "sticky left-[50px] z-40 border-r-[#007758]/50 text-[#007758]"
                       : "text-white"
-                  } ${showTotal ? "text-right text-[#a02ff1] font-mono" : ""}`}
+                  } ${showTotal ? "text-right text-[#007758] font-mono" : ""}`}
                 >
                   {idx === 0
                     ? "TOTALS"
@@ -207,8 +208,8 @@ const TableView = ({
           </span>
           <select
             value={rowsPerPage}
-            onChange={(e) => setRowsPerPage(Number(e.target.value))}
-            className="bg-[#0f0f11] border border-white/10 rounded-xl px-3 py-2 text-xs text-gray-300 focus:outline-none focus:border-[#a02ff1]"
+            onChange={(e: ExplorerSelectChange) => setRowsPerPage(Number(e.target.value))}
+            className="bg-[#0f0f11] border border-white/10 rounded-xl px-3 py-2 text-xs text-gray-300 focus:outline-none focus:border-[#007758]"
             style={{ colorScheme: "dark" }}
           >
             <option value={50}>50 rows</option>
@@ -220,7 +221,7 @@ const TableView = ({
 
         <div className="flex gap-2">
           <button
-            onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+            onClick={() => setCurrentPage((p: number) => Math.max(1, p - 1))}
             disabled={currentPage === 1}
             className="p-2 rounded-xl hover:bg-white/5 disabled:opacity-30"
             title="Previous page"
@@ -228,7 +229,7 @@ const TableView = ({
             <ChevronLeft size={16} />
           </button>
           <button
-            onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+            onClick={() => setCurrentPage((p: number) => Math.min(totalPages, p + 1))}
             disabled={currentPage === totalPages}
             className="p-2 rounded-xl hover:bg-white/5 disabled:opacity-30"
             title="Next page"

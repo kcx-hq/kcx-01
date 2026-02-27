@@ -1,7 +1,7 @@
 import React, { lazy } from 'react';
 
 export const Overview = lazy(() =>
-  import('../overview/Overview').catch((err) => {
+  import('../overview/Overview').catch((err: unknown) => {
     console.error('Failed to load Overview:', err);
     throw err;
   })

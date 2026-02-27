@@ -1,11 +1,12 @@
 import { useMemo } from 'react';
+import type { ResourceItem, UseFilteredResourcesParams } from "../types";
 
-export function useFilteredResources({ inventory, searchTerm, activeTab }) {
+export function useFilteredResources({ inventory, searchTerm, activeTab }: UseFilteredResourcesParams) {
   return useMemo(() => {
-    return inventory.filter((item) => {
+    return inventory.filter((item: ResourceItem) => {
       if (searchTerm && searchTerm.trim()) {
         const q = searchTerm.toLowerCase().trim();
-        const toStr = (v) =>
+        const toStr = (v: unknown) =>
           v === null || v === undefined ? 'null' : String(v).toLowerCase();
 
         const matches =
@@ -26,3 +27,6 @@ export function useFilteredResources({ inventory, searchTerm, activeTab }) {
     });
   }, [inventory, searchTerm, activeTab]);
 }
+
+
+

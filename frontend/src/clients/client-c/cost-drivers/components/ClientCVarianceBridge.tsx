@@ -1,7 +1,8 @@
 import React from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import type { ClientCVarianceBridgeProps, NumericLike } from '../types';
 
-export function ClientCVarianceBridge({ overallStats }) {
+export function ClientCVarianceBridge({ overallStats }: ClientCVarianceBridgeProps) {
   if (!overallStats) {
     return (
       <div className="h-32 flex items-center justify-center text-gray-500">
@@ -10,13 +11,13 @@ export function ClientCVarianceBridge({ overallStats }) {
     );
   }
 
-  const formatCurrency = (value) => {
+  const formatCurrency = (value: NumericLike | null | undefined): string => {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
       currency: 'USD',
       notation: 'compact',
       maximumFractionDigits: 1
-    }).format(value);
+    }).format(Number(value || 0));
   };
 
   // Prepare data for the chart
@@ -38,7 +39,7 @@ export function ClientCVarianceBridge({ overallStats }) {
     }
   ];
 
-  const getBarColor = (type, value) => {
+  const getBarColor = (type: string, value: number): string => {
     if (type === 'change') {
       return value >= 0 ? '#ef4444' : '#10b981';
     }
@@ -54,7 +55,7 @@ export function ClientCVarianceBridge({ overallStats }) {
             type="number" 
             stroke="#9ca3af" 
             tick={{ fill: '#9ca3af', fontSize: 10 }}
-            tickFormatter={(value) => `$${(value / 1000).toFixed(0)}k`}
+            tickFormatter={(value: number) => `$${(value / 1000).toFixed(0)}k`}
           />
           <YAxis 
             dataKey="name" 
@@ -71,12 +72,12 @@ export function ClientCVarianceBridge({ overallStats }) {
               borderRadius: '6px',
               fontSize: '12px'
             }}
-            formatter={(value) => [formatCurrency(value), 'Amount']}
+            formatter={(value: number | string) => [formatCurrency(value), 'Amount']}
             labelStyle={{ color: '#f9fafb', fontWeight: 'bold' }}
           />
           <Bar
             dataKey="value"
-            fill={(entry) => getBarColor(entry.type, entry.value)}
+            fill={(entry: { type?: string; value?: number }) => getBarColor(entry.type || "", entry.value || 0)}
             radius={[0, 4, 4, 0]}
           />
         </BarChart>

@@ -1,4 +1,10 @@
 import React from "react";
+import type {
+  IdleResource,
+  IdleResourcesTabProps,
+  OptimizationInputChange,
+  OptimizationSelectChange,
+} from "../types";
 import { AnimatePresence, motion } from "framer-motion";
 import { ChevronDown, Filter, Search, Zap } from "lucide-react";
 import { formatCurrency } from "../utils/format";
@@ -14,7 +20,7 @@ export function IdleResourcesTab({
   setIdleFilter,
   idleSort,
   setIdleSort,
-}) {
+}: IdleResourcesTabProps) {
   return (
     <div className="space-y-4">
       <div className="rounded-lg border border-[var(--border-light)] bg-white p-4">
@@ -25,7 +31,7 @@ export function IdleResourcesTab({
               type="text"
               placeholder="Search resources..."
               value={idleSearch}
-              onChange={(e) => setIdleSearch(e.target.value)}
+              onChange={(e: OptimizationInputChange) => setIdleSearch(e.target.value)}
               className="w-full rounded-lg border border-[var(--border-light)] bg-[var(--bg-surface)] py-2 pl-10 pr-4 text-sm text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:ring-1 focus:ring-emerald-200"
             />
           </div>
@@ -34,7 +40,7 @@ export function IdleResourcesTab({
             <Filter size={16} className="text-[var(--text-muted)]" />
             <select
               value={idleFilter}
-              onChange={(e) => setIdleFilter(e.target.value)}
+              onChange={(e: OptimizationSelectChange) => setIdleFilter(e.target.value as "all" | "prod" | "non-prod")}
               className="rounded-lg border border-[var(--border-light)] bg-[var(--bg-surface)] px-3 py-2 text-sm text-[var(--text-secondary)] focus:outline-none focus:ring-1 focus:ring-emerald-200"
             >
               <option value="all">All Resources</option>
@@ -46,7 +52,7 @@ export function IdleResourcesTab({
           <div className="flex items-center gap-2">
             <select
               value={idleSort}
-              onChange={(e) => setIdleSort(e.target.value)}
+              onChange={(e: OptimizationSelectChange) => setIdleSort(e.target.value as "savings-desc" | "savings-asc" | "days-desc" | "days-asc")}
               className="rounded-lg border border-[var(--border-light)] bg-[var(--bg-surface)] px-3 py-2 text-sm text-[var(--text-secondary)] focus:outline-none focus:ring-1 focus:ring-emerald-200"
             >
               <option value="savings-desc">Savings: High to Low</option>
@@ -71,7 +77,7 @@ export function IdleResourcesTab({
         ) : filteredIdleResources.length === 0 ? (
           <div className="py-8 text-center text-[var(--text-muted)]">No resources found matching your filters.</div>
         ) : (
-          filteredIdleResources.map((resource) => {
+          filteredIdleResources.map((resource: IdleResource) => {
             const expanded = !!expandedItems[resource.id];
             const confidence = resource.confidence || "Low";
 
@@ -117,7 +123,7 @@ export function IdleResourcesTab({
                     </div>
 
                     <div className="text-xs text-[var(--text-muted)]">
-                      {resource.status || "Unknown"} Â· {resource.daysIdle || 0} days idle Â· {resource.utilization || "N/A"} utilization
+                      {resource.status || "Unknown"} · {resource.daysIdle || 0} days idle · {resource.utilization || "N/A"} utilization
                     </div>
                   </div>
 
@@ -155,9 +161,9 @@ export function IdleResourcesTab({
                         <div className="rounded-lg border border-[var(--border-light)] bg-[var(--bg-surface)] p-4">
                           <div className="mb-2 text-xs font-bold uppercase text-[var(--text-muted)]">Common Actions Teams Usually Take</div>
                           <ul className="space-y-2">
-                            {(resource.typicalResolutionPaths || []).map((action, idx) => (
+                            {(resource.typicalResolutionPaths || []).map((action: string, idx: number) => (
                               <li key={idx} className="flex items-start gap-2 text-sm text-[var(--text-secondary)]">
-                                <span className="mt-1 text-[var(--brand-primary)]">â€¢</span>
+                                <span className="mt-1 text-[var(--brand-primary)]">•</span>
                                 <span>{action}</span>
                               </li>
                             ))}
@@ -180,4 +186,7 @@ export function IdleResourcesTab({
 }
 
 export default IdleResourcesTab;
+
+
+
 

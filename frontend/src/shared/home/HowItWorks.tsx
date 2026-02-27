@@ -9,12 +9,24 @@ import {
   CheckCircle2,
   BarChart3,
 } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import type { LucideIcon } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
-const HowItWorks = ({ activateCTA = () => {} }) => {
+interface HowItWorksProps {
+  activateCTA?: () => void;
+}
+
+interface StepButtonProps {
+  step: number;
+  title: string;
+  desc: string;
+  icon: LucideIcon;
+  isActive: boolean;
+  onClick: () => void;
+}
+
+const HowItWorks = ({ activateCTA = () => {} }: HowItWorksProps) => {
   const [activeTab, setActiveTab] = useState(1);
-  const navigate = useNavigate();
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -23,7 +35,7 @@ const HowItWorks = ({ activateCTA = () => {} }) => {
     return () => clearInterval(interval);
   }, []);
 
-  const handleTryItForFree = (e) => {
+  const handleTryItForFree = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
     if (activateCTA) activateCTA();
     const heroSection = document.getElementById("hero");
@@ -427,7 +439,7 @@ const HowItWorks = ({ activateCTA = () => {} }) => {
 
 // --- HELPER COMPONENT ---
 
-const StepButton = ({ step, title, desc, icon: Icon, isActive, onClick }) => (
+const StepButton = ({ step, title, desc, icon: Icon, isActive, onClick }: StepButtonProps) => (
   <motion.button
     variants={{
       hidden: { opacity: 0, x: -20 },

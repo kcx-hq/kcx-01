@@ -3,13 +3,14 @@ import { X, Tag, CheckCircle2, AlertTriangle } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { StatusBadge } from "../components/StatusBadge";
 import { formatCurrency } from "../utils/format";
+import type { InspectorDrawerProps } from "../types";
 
 const InspectorDrawerView = ({
   selectedResource,
   onClose,
   flaggedResources,
   onToggleFlag,
-}) => {
+}: InspectorDrawerProps) => {
   return (
     <AnimatePresence>
       {selectedResource && (
@@ -70,12 +71,12 @@ const InspectorDrawerView = ({
 
                   {selectedResource.hasTags && selectedResource.tags ? (
                     <div className="flex flex-wrap gap-2">
-                      {Object.entries(selectedResource.tags).map(([k, v]) => (
+                      {Object.entries(selectedResource.tags).map(([k, v]: [string, unknown]) => (
                         <span
                           key={k}
                           className="rounded border border-emerald-200 bg-emerald-50 px-2 py-1 text-[10px] text-emerald-700"
                         >
-                          <span className="opacity-60">{k}:</span> {v}
+                          <span className="opacity-60">{k}:</span> {String(v ?? "")}
                         </span>
                       ))}
                     </div>
@@ -114,4 +115,7 @@ const InspectorDrawerView = ({
 };
 
 export default InspectorDrawerView;
+
+
+
 

@@ -1,52 +1,16 @@
 import { costAnalysisRepository } from '../cost-analysis/cost-analysis.repository.js';
 import { buildResourceInventory } from './resources.service.js';
-
-/**
- * Normalize upload IDs (query/body)
- * Supports:
- *  - uploadid=uuid
- *  - uploadid[]=uuid1&uploadid[]=uuid2
- *  - uploadid="uuid1,uuid2"
- *  - uploadId / uploadIds too (optional)
- */
-function normalizeUploadIds(input) {
-  if (!input) return [];
-
-  if (Array.isArray(input)) {
-    return input.map(String).map(v => v.trim()).filter(Boolean);
-  }
-
-  if (typeof input === 'string') {
-    return input
-      .split(',')
-      .map(v => v.trim())
-      .filter(Boolean);
-  }
-
-  return [];
-}
-
-/**
- * Extract uploadIds from query OR body to avoid client mismatch bugs
- */
-function extractUploadIds(req) {
-  return normalizeUploadIds(
-    req.query.uploadid ??
-      req.query.uploadId ??
-      req.query.uploadids ??
-      req.query.uploadIds ??
-      req.body?.uploadid ??
-      req.body?.uploadId ??
-      req.body?.uploadIds
-  );
-}
+import AppError from "../../../../errors/AppError.js";
+import logger from "../../../../lib/logger.js";
+import { extractUploadIdsFromRequest } from "../../utils/uploadIds.utils.js";
+import { assertUploadScope } from "../../utils/uploadScope.service.js";
 
 /**
  * GET /api/resources
  * Get resource inventory
  * NOTE: Same approach as cost-analysis/drivers: upload selection must come from request.
  */
-export const getResources = async (req, res) => {
+export const getResources = async (req, res, next) => {
   try {
     const filters = {
       provider: req.query.provider || 'All',
@@ -54,26 +18,25 @@ export const getResources = async (req, res) => {
       region: req.query.region || 'All'
     };
 
-    const uploadIds = extractUploadIds(req);
+    const uploadIds = await assertUploadScope({
+      uploadIds: extractUploadIdsFromRequest(req),
+      clientId: req.client_id,
+    });
 
     // Return consistent shape with buildResourceInventory()
     if (uploadIds.length === 0) {
-      return res.json({
-        success: true,
-        data: {
-          inventory: [],
-          stats: {
-            total: 0,
-            totalCost: 0,
-            zombieCount: 0,
-            zombieCost: 0,
-            untaggedCount: 0,
-            untaggedCost: 0,
-            spikingCount: 0,
-            spikingCost: 0
-          }
+      return res.ok({
+        inventory: [],
+        stats: {
+          total: 0,
+          totalCost: 0,
+          zombieCount: 0,
+          zombieCost: 0,
+          untaggedCount: 0,
+          untaggedCost: 0,
+          spikingCount: 0,
+          spikingCost: 0
         },
-        message: 'No upload selected. Please select a billing upload to view resources.'
       });
     }
 
@@ -85,16 +48,12 @@ export const getResources = async (req, res) => {
     // 2) Transform to inventory + stats
     const inventoryData = buildResourceInventory(rawData);
 
-    return res.json({
-      success: true,
-      data: inventoryData
-    });
+    return res.ok(inventoryData);
   } catch (error) {
-    console.error('Resource Controller Error:', error);
-    return res.status(500).json({
-      success: false,
-      message: 'Failed to load resources',
-      error: error.message
-    });
+    if (error instanceof AppError) {
+      return next(error);
+    }
+    logger.error({ err: error, requestId: req.requestId }, "Resource Controller Error");
+    return next(new AppError(500, "INTERNAL", "Internal server error", { cause: error }));
   }
 };

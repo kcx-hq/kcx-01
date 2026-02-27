@@ -16,6 +16,33 @@ import {
 
 import { COLOR_PALETTE } from "../utils/constants";
 import { formatCurrency, formatDate } from "../utils/format";
+import type { CostChartType, SpendBehaviorCardProps, TooltipPayloadEntry } from "../types";
+
+interface SpendBehaviorTooltipProps {
+  active?: boolean;
+  payload?: TooltipPayloadEntry[];
+  label?: string;
+}
+
+const SpendBehaviorTooltip = ({ active, payload, label }: SpendBehaviorTooltipProps) => {
+  if (active && payload && payload.length) {
+    return (
+      <div className="bg-[#0f0f11]/90 backdrop-blur-xl border border-white/10 p-3 rounded-lg shadow-2xl">
+        <p className="text-[10px] font-bold text-gray-400 mb-2 uppercase tracking-wider">
+          {formatDate(label)}
+        </p>
+        {payload.map((entry: TooltipPayloadEntry, idx: number) => (
+          <div key={idx} className="flex items-center gap-2 text-xs mb-1">
+            <div className="w-2 h-2 rounded-full" style={{ backgroundColor: entry.color }} />
+            <span className="text-gray-300 font-medium">{entry.name}:</span>
+            <span className="text-white font-mono font-bold ml-auto pl-4">{formatCurrency(entry.value)}</span>
+          </div>
+        ))}
+      </div>
+    );
+  }
+  return null;
+};
 
 const SpendBehaviorCard = ({
   isLocked,
@@ -24,29 +51,9 @@ const SpendBehaviorCard = ({
   chartData,
   activeKeys,
   hiddenSeries,
-}) => {
-  const CustomTooltip = ({ active, payload, label }) => {
-    if (active && payload && payload.length) {
-      return (
-        <div className="bg-[#0f0f11]/90 backdrop-blur-xl border border-white/10 p-3 rounded-lg shadow-2xl">
-          <p className="text-[10px] font-bold text-gray-400 mb-2 uppercase tracking-wider">
-            {formatDate(label)}
-          </p>
-          {payload.map((entry, idx) => (
-            <div key={idx} className="flex items-center gap-2 text-xs mb-1">
-              <div className="w-2 h-2 rounded-full" style={{ backgroundColor: entry.color }} />
-              <span className="text-gray-300 font-medium">{entry.name}:</span>
-              <span className="text-white font-mono font-bold ml-auto pl-4">{formatCurrency(entry.value)}</span>
-            </div>
-          ))}
-        </div>
-      );
-    }
-    return null;
-  };
-
+}: SpendBehaviorCardProps) => {
   const handleChartType = useCallback(
-    (t) => {
+    (t: CostChartType) => {
       const isPremiumChart = isLocked && (t === "bar" || t === "line");
       if (isPremiumChart) return;
       setChartType(t);
@@ -60,7 +67,7 @@ const SpendBehaviorCard = ({
         <h2 className="font-bold text-sm text-gray-300">Spend Behavior</h2>
 
         <div className="flex gap-1 bg-[#0f0f11] p-1 rounded-lg border border-white/5">
-          {["area", "bar", "line"].map((t) => {
+          {(["area", "bar", "line"] as CostChartType[]).map((t: CostChartType) => {
             const isPremiumChart = isLocked && (t === "bar" || t === "line");
             return (
               <div key={t} className="relative">
@@ -74,7 +81,7 @@ const SpendBehaviorCard = ({
                   disabled={isPremiumChart}
                   className={`p-1.5 rounded-md transition-all relative ${
                     isPremiumChart ? "opacity-50 cursor-not-allowed pointer-events-none" : ""
-                  } ${chartType === t ? "bg-[#a02ff1] text-white shadow" : "text-gray-500 hover:text-white"}`}
+                  } ${chartType === t ? "bg-[#007758] text-white shadow" : "text-gray-500 hover:text-white"}`}
                 >
                   <BarChart3 size={14} className={t === "line" ? "rotate-90" : ""} />
                 </button>
@@ -89,7 +96,7 @@ const SpendBehaviorCard = ({
           {chartType === "area" ? (
             <AreaChart data={chartData}>
               <defs>
-                {activeKeys.map((k, i) => (
+                {activeKeys.map((k: string, i: number) => (
                   <linearGradient key={k} id={`color${i}`} x1="0" y1="0" x2="0" y2="1">
                     <stop offset="5%" stopColor={COLOR_PALETTE[i % COLOR_PALETTE.length]} stopOpacity={0.3} />
                     <stop offset="95%" stopColor={COLOR_PALETTE[i % COLOR_PALETTE.length]} stopOpacity={0} />
@@ -100,7 +107,7 @@ const SpendBehaviorCard = ({
               <XAxis
                 dataKey="date"
                 stroke="#555"
-                tickFormatter={(str) => (str ? str.slice(5) : "")}
+                tickFormatter={(str: string) => (str ? str.slice(5) : "")}
                 fontSize={10}
                 axisLine={false}
                 tickLine={false}
@@ -109,14 +116,14 @@ const SpendBehaviorCard = ({
               <YAxis
                 stroke="#555"
                 fontSize={10}
-                tickFormatter={(val) => `$${val}`}
+                tickFormatter={(val: number) => `$${val}`}
                 axisLine={false}
                 tickLine={false}
                 dx={-10}
               />
-              <Tooltip content={<CustomTooltip />} />
+              <Tooltip content={<SpendBehaviorTooltip />} />
               {activeKeys.map(
-                (k, i) =>
+                (k: string, i: number) =>
                   !hiddenSeries.has(k) && (
                     <Area
                       key={k}
@@ -136,7 +143,7 @@ const SpendBehaviorCard = ({
               <XAxis
                 dataKey="date"
                 stroke="#555"
-                tickFormatter={(str) => (str ? str.slice(5) : "")}
+                tickFormatter={(str: string) => (str ? str.slice(5) : "")}
                 fontSize={10}
                 axisLine={false}
                 tickLine={false}
@@ -145,14 +152,14 @@ const SpendBehaviorCard = ({
               <YAxis
                 stroke="#555"
                 fontSize={10}
-                tickFormatter={(val) => `$${val}`}
+                tickFormatter={(val: number) => `$${val}`}
                 axisLine={false}
                 tickLine={false}
                 dx={-10}
               />
-              <Tooltip content={<CustomTooltip />} />
+              <Tooltip content={<SpendBehaviorTooltip />} />
               {activeKeys.map(
-                (k, i) =>
+                (k: string, i: number) =>
                   !hiddenSeries.has(k) && (
                     <Bar
                       key={k}
@@ -170,7 +177,7 @@ const SpendBehaviorCard = ({
               <XAxis
                 dataKey="date"
                 stroke="#555"
-                tickFormatter={(str) => (str ? str.slice(5) : "")}
+                tickFormatter={(str: string) => (str ? str.slice(5) : "")}
                 fontSize={10}
                 axisLine={false}
                 tickLine={false}
@@ -179,14 +186,14 @@ const SpendBehaviorCard = ({
               <YAxis
                 stroke="#555"
                 fontSize={10}
-                tickFormatter={(val) => `$${val}`}
+                tickFormatter={(val: number) => `$${val}`}
                 axisLine={false}
                 tickLine={false}
                 dx={-10}
               />
-              <Tooltip content={<CustomTooltip />} />
+              <Tooltip content={<SpendBehaviorTooltip />} />
               {activeKeys.map(
-                (k, i) =>
+                (k: string, i: number) =>
                   !hiddenSeries.has(k) && (
                     <Line
                       key={k}

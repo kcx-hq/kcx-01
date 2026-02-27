@@ -7,9 +7,39 @@ import {
   Cloud,
   Settings,
   MapPin,
+  type LucideIcon,
 } from "lucide-react";
 
 const BRAND = "var(--brand-secondary, #007758)";
+
+type FilterField = "provider" | "service" | "region";
+type GroupByValue = "ServiceName" | "RegionName" | "ProviderName";
+
+interface CostFilters {
+  provider: string;
+  service: string;
+  region: string;
+}
+
+interface FilterSelectProps {
+  field: FilterField;
+  displayLabel: string;
+  icon?: LucideIcon;
+  iconColor?: string;
+  options: string[];
+  value: string;
+  onChange: (field: FilterField, value: string) => void;
+}
+
+interface FilterBarCostProps {
+  filters: CostFilters;
+  onChange: (next: CostFilters) => void;
+  groupBy: GroupByValue;
+  onGroupChange: (groupBy: GroupByValue) => void;
+  providerOptions?: string[];
+  serviceOptions?: string[];
+  regionOptions?: string[];
+}
 
 const FilterSelect = ({
   field,
@@ -19,7 +49,7 @@ const FilterSelect = ({
   options,
   value,
   onChange,
-}) => (
+}: FilterSelectProps) => (
   <div className="flex flex-col gap-1.5">
     <div className="flex items-center gap-2">
       {Icon && <Icon size={14} className={iconColor || "text-gray-500"} />}
@@ -31,21 +61,21 @@ const FilterSelect = ({
     <div className="relative group">
       <select
         value={value || "All"}
-        onChange={(e) => onChange(field, e.target.value)}
+        onChange={(e: React.ChangeEvent<HTMLSelectElement>) => onChange(field, e.target.value)}
         className="appearance-none bg-[#0f0f11] border border-white/10 rounded-lg pl-3 pr-8 py-2 text-xs font-medium focus:outline-none focus:ring-2 transition-all min-w-[140px] cursor-pointer text-gray-300 z-50 relative"
-        onFocus={(e) => {
+        onFocus={(e: React.FocusEvent<HTMLSelectElement>) => {
           e.currentTarget.style.borderColor = BRAND;
           e.currentTarget.style.boxShadow =
             "0 0 0 2px rgba(0, 119, 88, 0.25)";
         }}
-        onBlur={(e) => {
+        onBlur={(e: React.FocusEvent<HTMLSelectElement>) => {
           e.currentTarget.style.borderColor = "";
           e.currentTarget.style.boxShadow = "";
         }}
-        onMouseEnter={(e) => {
+        onMouseEnter={(e: React.MouseEvent<HTMLSelectElement>) => {
           e.currentTarget.style.borderColor = "rgba(0, 119, 88, 0.5)";
         }}
-        onMouseLeave={(e) => {
+        onMouseLeave={(e: React.MouseEvent<HTMLSelectElement>) => {
           e.currentTarget.style.borderColor = "";
         }}
       >
@@ -55,8 +85,8 @@ const FilterSelect = ({
         {/* Render backend options, filtering out 'All' to prevent duplicates */}
         {Array.isArray(options) &&
           options
-            .filter((opt) => opt !== "All")
-            .map((opt, idx) => (
+            .filter((opt: string) => opt !== "All")
+            .map((opt: string, idx: number) => (
               <option key={`${opt}-${idx}`} value={opt}>
                 {opt}
               </option>
@@ -79,8 +109,8 @@ const FilterBarCost = ({
   providerOptions = [],
   serviceOptions = [],
   regionOptions = [],
-}) => {
-  const handleFilterChange = (field, value) => {
+}: FilterBarCostProps) => {
+  const handleFilterChange = (field: FilterField, value: string) => {
     onChange({ ...filters, [field]: value });
   };
 
@@ -133,21 +163,30 @@ const FilterBarCost = ({
         <div className="relative group">
           <select
             value={groupBy}
-            onChange={(e) => onGroupChange(e.target.value)}
+            onChange={(e: React.ChangeEvent<HTMLSelectElement>) => {
+              const value = e.target.value;
+              if (
+                value === "ServiceName" ||
+                value === "RegionName" ||
+                value === "ProviderName"
+              ) {
+                onGroupChange(value);
+              }
+            }}
             className="appearance-none bg-[#0f0f11] border border-white/10 rounded-lg pl-3 pr-8 py-2 text-xs font-bold text-gray-200 focus:outline-none min-w-[140px] cursor-pointer transition-all"
-            onFocus={(e) => {
+            onFocus={(e: React.FocusEvent<HTMLSelectElement>) => {
               e.currentTarget.style.borderColor = BRAND;
               e.currentTarget.style.boxShadow =
                 "0 0 0 2px rgba(0, 119, 88, 0.25)";
             }}
-            onBlur={(e) => {
+            onBlur={(e: React.FocusEvent<HTMLSelectElement>) => {
               e.currentTarget.style.borderColor = "";
               e.currentTarget.style.boxShadow = "";
             }}
-            onMouseEnter={(e) => {
+            onMouseEnter={(e: React.MouseEvent<HTMLSelectElement>) => {
               e.currentTarget.style.borderColor = "rgba(0, 119, 88, 0.5)";
             }}
-            onMouseLeave={(e) => {
+            onMouseLeave={(e: React.MouseEvent<HTMLSelectElement>) => {
               e.currentTarget.style.borderColor = "";
             }}
           >

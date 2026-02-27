@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React from "react";
 import PremiumGate from "../../../core-dashboard/common/PremiumGate";
 
 import DataQualityStates from "../../../core-dashboard/data-quality/components/DataQualityStates";
@@ -11,8 +11,15 @@ import PaginationBar from "../../../core-dashboard/data-quality/components/Pagin
 import IssueInspector from "../../../core-dashboard/data-quality/components/IssueInspector";
 
 import { formatCurrency } from "./utils/formatCurrency";
+import type {
+  DataQualityViewProps,
+  PanelProps,
+  StatChipProps,
+  TagDimensionStat,
+  TopOffender,
+} from "./types";
 
-const Panel = ({ title, children, right }) => (
+const Panel = ({ title, children, right }: PanelProps) => (
   <div className="rounded-2xl border border-white/10 bg-[#121319] shadow-2xl overflow-hidden">
     <div className="px-4 py-3 border-b border-white/10 bg-black/20 flex items-center justify-between">
       <div className="text-xs font-extrabold tracking-wide text-gray-200">{title}</div>
@@ -22,7 +29,7 @@ const Panel = ({ title, children, right }) => (
   </div>
 );
 
-const StatChip = ({ label, value, sub }) => (
+const StatChip = ({ label, value, sub }: StatChipProps) => (
   <div className="px-3 py-2 rounded-2xl bg-white/5 border border-white/10">
     <div className="text-[10px] uppercase tracking-widest text-gray-500 font-bold">{label}</div>
     <div className="text-sm text-white font-semibold mt-0.5">{value}</div>
@@ -54,7 +61,7 @@ const DataQualityView = ({
   onPrev,
   onNext,
   maxAllowedPage,
-}) => {
+}: DataQualityViewProps) => {
   if (loading) return <DataQualityStates type="loading" />;
   if (error && !stats) return <DataQualityStates type="empty" />;
   if (!stats) return <DataQualityStates type="empty" />;
@@ -67,50 +74,44 @@ const DataQualityView = ({
 
   const costAtRisk = Number(stats?.costAtRisk ?? 0);
 
-  const chips = useMemo(() => {
-    return [
-      {
-        label: "Quality Score",
-        value: `${Number(stats?.score ?? 0)}%`,
-        sub: stats?.score === 100 ? "Perfect tagging signal" : "Room to improve",
-      },
-      { label: "Rows Scanned", value: String(stats?.totalRows ?? 0) },
-      {
-        label: "Cost At Risk",
-        value: formatCurrency(costAtRisk),
-        sub: costAtRisk < 0 ? "Credit / adjustment detected" : "Potential leakage",
-      },
-    ];
-  }, [stats?.score, stats?.totalRows, costAtRisk]);
+  const chips = [
+    {
+      label: "Quality Score",
+      value: `${Number(stats?.score ?? 0)}%`,
+      sub: stats?.score === 100 ? "Perfect tagging signal" : "Room to improve",
+    },
+    { label: "Rows Scanned", value: String(stats?.totalRows ?? 0) },
+    {
+      label: "Cost At Risk",
+      value: formatCurrency(costAtRisk),
+      sub: costAtRisk < 0 ? "Credit / adjustment detected" : "Potential leakage",
+    },
+  ];
 
   // Top offenders (service-level)
-  const offenders = useMemo(() => {
-    const list = Array.isArray(stats?.topOffenders) ? stats.topOffenders : [];
-    return list.slice(0, 5);
-  }, [stats?.topOffenders]);
+  const offenders = (Array.isArray(stats?.topOffenders) ? stats.topOffenders : []).slice(0, 5);
 
   // Tag dimensions: show the "worst" keys by pctPresent ascending
-  const worstTagDims = useMemo(() => {
-    const dims = stats?.tagDimensions || {};
-    const rows = Object.entries(dims).map(([key, v]) => ({
+  const dims = stats?.tagDimensions || {};
+  const worstTagDims = Object.entries(dims)
+    .map(([key, v]: [string, TagDimensionStat]) => ({
       key,
       pctPresent: Number(v?.pctPresent ?? 0),
       missingCount: Number(v?.missingCount ?? 0),
       missingCost: Number(v?.missingCost ?? 0),
       presentCount: Number(v?.presentCount ?? 0),
-    }));
-
-    rows.sort((a, b) => a.pctPresent - b.pctPresent);
-    return rows.slice(0, 8);
-  }, [stats?.tagDimensions]);
+    }))
+    .sort((a, b) => a.pctPresent - b.pctPresent)
+    .slice(0, 8);
 
   // Trend: show last datapoint (you only sent one in sample, still works)
-  const trend = useMemo(() => {
-    const arr = Array.isArray(stats?.trendData) ? stats.trendData : [];
-    if (!arr.length) return null;
-    const last = arr[arr.length - 1];
-    return { date: last?.date, score: Number(last?.score ?? 0) };
-  }, [stats?.trendData]);
+  const trendData = Array.isArray(stats?.trendData) ? stats.trendData : [];
+  const trend = trendData.length
+    ? {
+        date: trendData[trendData.length - 1]?.date,
+        score: Number(trendData[trendData.length - 1]?.score ?? 0),
+      }
+    : null;
 
   return (
     <div className="p-4 md:p-6 space-y-6 min-h-screen bg-[#0f0f11] text-white font-sans animate-in fade-in duration-500">
@@ -190,7 +191,7 @@ const DataQualityView = ({
             {offenders.length === 0 ? (
               <div className="text-sm text-gray-500">No offenders detected.</div>
             ) : (
-              offenders.map((o) => (
+              offenders.map((o: TopOffender) => (
                 <div
                   key={o.name}
                   className="rounded-xl bg-white/5 border border-white/10 p-3 flex items-center justify-between gap-3"
@@ -263,12 +264,10 @@ const DataQualityView = ({
 
           <div className="flex-1 overflow-auto relative">
             {shouldShowGate ? (
-              <PremiumGate mode="wrap">
+              <PremiumGate variant="wrap">
                 <IssuesTable
                   rows={currentListData}
-                  activeTab={activeTab}
                   isLocked={isLocked}
-                  isAccessingPremiumPage={isAccessingPremiumPage}
                   onRowClick={onRowClick}
                 />
                 <PaginationBar
@@ -286,9 +285,7 @@ const DataQualityView = ({
               <>
                 <IssuesTable
                   rows={currentListData}
-                  activeTab={activeTab}
                   isLocked={isLocked}
-                  isAccessingPremiumPage={isAccessingPremiumPage}
                   onRowClick={onRowClick}
                 />
                 <PaginationBar

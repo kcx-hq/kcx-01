@@ -1,10 +1,26 @@
 import React from "react";
 import { ShieldCheck, ArrowLeft, Mail } from "lucide-react";
 
-const VerifyForm = ({ otp, setOtp, handleVerify, isVerifying, emailForVerify, onBackToLogin }) => {
+interface VerifyFormProps {
+  otp: string;
+  setOtp: React.Dispatch<React.SetStateAction<string>>;
+  handleVerify: (e: React.FormEvent<HTMLFormElement>) => void | Promise<void>;
+  isVerifying: boolean;
+  emailForVerify: string;
+  onBackToLogin: () => void;
+}
+
+const VerifyForm = ({
+  otp,
+  setOtp,
+  handleVerify,
+  isVerifying,
+  emailForVerify,
+  onBackToLogin,
+}: VerifyFormProps) => {
   
   // Helper to allow only numbers and max 6 chars
-  const handleInput = (e) => {
+  const handleInput = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value.replace(/[^0-9]/g, '');
     if (value.length <= 6) {
       setOtp(value);

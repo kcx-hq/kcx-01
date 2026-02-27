@@ -1,12 +1,20 @@
-export const useClientSideGrouping = ({ data, groupByCol, allColumns }) => {
+import type { ClientCGroupedRow, DataExplorerRow } from "../types";
+
+interface UseClientSideGroupingParams {
+  data: DataExplorerRow[];
+  groupByCol: string | null;
+  allColumns: string[];
+}
+
+export const useClientSideGrouping = ({ data, groupByCol, allColumns }: UseClientSideGroupingParams): ClientCGroupedRow[] => {
   if (!data || !Array.isArray(data) || !groupByCol || !allColumns) {
     return [];
   }
 
   // Group the data by the specified column
-  const groupedMap = {};
+  const groupedMap: Record<string, ClientCGroupedRow> = {};
   
-  data.forEach(row => {
+  data.forEach((row: DataExplorerRow) => {
     const groupValue = row[groupByCol];
     const groupKey = groupValue !== undefined && groupValue !== null ? String(groupValue) : 'null';
     
@@ -17,26 +25,32 @@ export const useClientSideGrouping = ({ data, groupByCol, allColumns }) => {
         __rawValue: groupValue,
         __children: []
       };
+      const newGroup = groupedMap[groupKey];
+      if (!newGroup) return;
       
       // Initialize all columns to 0 for accumulation
-      allColumns.forEach(col => {
+      allColumns.forEach((col: string) => {
         if (col !== groupByCol) {
-          groupedMap[groupKey][col] = 0;
+          newGroup[col] = 0 as unknown;
         }
       });
     }
+    const group = groupedMap[groupKey];
+    if (!group) return;
     
-    groupedMap[groupKey].__count++;
-    groupedMap[groupKey].__children.push(row);
+    group.__count++;
+    group.__children.push(row);
     
     // Accumulate numeric values
-    allColumns.forEach(col => {
+    allColumns.forEach((col: string) => {
       if (col !== groupByCol) {
         const val = row[col];
         if (typeof val === 'number') {
-          groupedMap[groupKey][col] += val;
+          const current = Number(group[col] ?? 0);
+          group[col] = current + val;
         } else if (typeof val === 'string' && !isNaN(parseFloat(val))) {
-          groupedMap[groupKey][col] += parseFloat(val);
+          const current = Number(group[col] ?? 0);
+          group[col] = current + parseFloat(val);
         }
       }
     });

@@ -1,10 +1,11 @@
 import React from "react";
 import { Trash2, AlertTriangle } from "lucide-react";
 import { formatCurrency } from "../utils/format";
+import type { ResourceItem, ZombieListProps } from "../types";
 
-const ZombieListView = ({ data, onInspect }) => {
-  const zombies = data.filter((i) => i.status === "Zombie");
-  const potentialSavings = zombies.reduce((acc, curr) => acc + (curr.totalCost || 0), 0);
+const ZombieListView = ({ data, onInspect }: ZombieListProps) => {
+  const zombies = data.filter((i: ResourceItem) => i.status === "Zombie");
+  const potentialSavings = zombies.reduce((acc: number, curr: ResourceItem) => acc + (curr.totalCost || 0), 0);
 
   return (
     <div className="space-y-4 p-3 md:space-y-6 md:p-4">
@@ -42,7 +43,7 @@ const ZombieListView = ({ data, onInspect }) => {
             </tr>
           </thead>
           <tbody className="divide-y divide-[var(--border-muted)]">
-            {zombies.map((item) => (
+            {zombies.map((item: ResourceItem) => (
               <tr key={item.id} className="group transition-colors hover:bg-[var(--bg-surface)]">
                 <td className="px-4 py-4 md:px-6">
                   <div className="max-w-[320px] truncate font-bold text-[var(--text-primary)] transition-colors group-hover:text-amber-700">
@@ -74,7 +75,7 @@ const ZombieListView = ({ data, onInspect }) => {
             ))}
             {zombies.length === 0 && (
               <tr>
-                <td colSpan="4" className="p-10 text-center italic text-[var(--text-muted)]">
+                <td colSpan={4} className="p-10 text-center italic text-[var(--text-muted)]">
                   No zombie resources detected. Infrastructure is clean.
                 </td>
               </tr>
@@ -87,3 +88,6 @@ const ZombieListView = ({ data, onInspect }) => {
 };
 
 export default ZombieListView;
+
+
+

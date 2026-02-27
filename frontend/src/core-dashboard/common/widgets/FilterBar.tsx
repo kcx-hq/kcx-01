@@ -7,9 +7,48 @@ import {
   Settings,
   MapPin,
   Lock,
+  type LucideIcon,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuthStore } from "../../../store/Authstore";
+
+type FilterField = "provider" | "service" | "region";
+
+interface SelectOption {
+  value: string;
+  label: string;
+}
+
+type FilterOption = string | SelectOption;
+
+interface CostFilters {
+  provider: string;
+  service: string;
+  region: string;
+}
+
+interface FilterSelectProps {
+  field: FilterField;
+  displayLabel: string;
+  icon?: LucideIcon;
+  iconColor?: string;
+  options: FilterOption[];
+  value: string;
+  onChange: (field: FilterField, value: string) => void;
+  isPremiumField?: boolean;
+  compactMobile?: boolean;
+}
+
+interface FilterBarCostProps {
+  filters: CostFilters;
+  onChange: (next: CostFilters) => void;
+  onReset: () => void;
+  providerOptions?: FilterOption[];
+  serviceOptions?: FilterOption[];
+  regionOptions?: FilterOption[];
+  compactMobile?: boolean;
+  tight?: boolean;
+}
 
 const FilterSelect = ({
   field,
@@ -21,15 +60,19 @@ const FilterSelect = ({
   onChange,
   isPremiumField = false,
   compactMobile = false,
-}) => {
+}: FilterSelectProps) => {
   const { user } = useAuthStore();
   const [isOpen, setIsOpen] = useState(false);
-  const dropdownRef = useRef(null);
+  const dropdownRef = useRef<HTMLDivElement | null>(null);
   const isPremium = !user?.is_premium && isPremiumField;
 
   useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        dropdownRef.current &&
+        event.target instanceof Node &&
+        !dropdownRef.current.contains(event.target)
+      ) {
         setIsOpen(false);
       }
     };
@@ -37,7 +80,7 @@ const FilterSelect = ({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const handleSelect = (val) => {
+  const handleSelect = (val: string) => {
     if (!isPremium) {
       onChange(field, val);
       setIsOpen(false);
@@ -47,7 +90,7 @@ const FilterSelect = ({
   const currentLabel = useMemo(() => {
     if (value === "All") return `All ${displayLabel}s`;
     const selectedOpt = options.find(
-      (opt) => (typeof opt === "object" ? opt.value : opt) === value
+      (opt: FilterOption) => (typeof opt === "object" ? opt.value : opt) === value
     );
     return typeof selectedOpt === "object" ? selectedOpt.label : selectedOpt;
   }, [value, options, displayLabel]);
@@ -125,7 +168,7 @@ const FilterSelect = ({
             >
               <button
                 type="button"
-                onMouseDown={(e) => {
+                onMouseDown={(e: React.MouseEvent<HTMLButtonElement>) => {
                   e.preventDefault();
                   handleSelect("All");
                 }}
@@ -138,15 +181,15 @@ const FilterSelect = ({
 
               <div className="custom-scrollbar max-h-60 overflow-y-auto">
                 {options
-                  .filter((opt) => (typeof opt === "object" ? opt.value : opt) !== "All")
-                  .map((opt, idx) => {
+                  .filter((opt: FilterOption) => (typeof opt === "object" ? opt.value : opt) !== "All")
+                  .map((opt: FilterOption, idx: number) => {
                     const val = typeof opt === "object" ? opt.value : opt;
                     const label = typeof opt === "object" ? opt.label : opt;
                     return (
                       <button
                         key={`${val}-${idx}`}
                         type="button"
-                        onMouseDown={(e) => {
+                        onMouseDown={(e: React.MouseEvent<HTMLButtonElement>) => {
                           e.preventDefault();
                           handleSelect(val);
                         }}
@@ -180,8 +223,8 @@ const FilterBarCost = ({
   regionOptions = [],
   compactMobile = false,
   tight = false,
-}) => {
-  const handleFilterChange = (field, value) => {
+}: FilterBarCostProps) => {
+  const handleFilterChange = (field: FilterField, value: string) => {
     onChange({ ...filters, [field]: value });
   };
 
@@ -231,7 +274,7 @@ const FilterBarCost = ({
           field="service"
           displayLabel="Service"
           icon={Settings}
-          iconColor="text-indigo-500"
+          iconColor="text-emerald-500"
           options={serviceOptions}
           value={filters.service}
           onChange={handleFilterChange}

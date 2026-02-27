@@ -7,6 +7,7 @@ import { generateCostAnalysis as coreCostAnalysis, getFilterDropdowns } from '..
 import { BillingUsageFact, Service, Region, CloudAccount } from '../../../../models/index.js';
 import { Op } from 'sequelize';
 import Sequelize from '../../../../config/db.config.js';
+import logger from "../../../../lib/logger.js";
 
 /**
  * Extract department from tags
@@ -119,7 +120,7 @@ async function analyzeCostByDepartment(filters = {}, uploadIds = []) {
  * Client-C Cost Analysis - Modified version
  */
 export const generateClientCCostAnalysis = async (filters = {}, groupBy) => {
-  console.log('🔎 generateClientCCostAnalysis called with:', { filters, groupBy });
+  logger.info('🔎 generateClientCCostAnalysis called with:', { filters, groupBy });
   
   const uploadIds = Array.isArray(filters.uploadIds) 
     ? filters.uploadIds 
@@ -127,10 +128,10 @@ export const generateClientCCostAnalysis = async (filters = {}, groupBy) => {
     ? [filters.uploadId] 
     : [];
 
-  console.log('📊 Extracted uploadIds:', uploadIds);
+  logger.info('📊 Extracted uploadIds:', uploadIds);
 
   if (uploadIds.length === 0) {
-    console.warn('⚠️ No uploadIds provided, returning empty data');
+    logger.warn('⚠️ No uploadIds provided, returning empty data');
     return {
       kpis: {
         totalSpend: 0,
@@ -154,7 +155,7 @@ export const generateClientCCostAnalysis = async (filters = {}, groupBy) => {
 
   // If grouping by department, use custom logic
   if (groupBy === 'Department') {
-    console.log('🏷️ Using Department grouping logic');
+    logger.info('🏷️ Using Department grouping logic');
     const deptAnalysis = await analyzeCostByDepartment(filters, uploadIds);
     
     const totalSpend = deptAnalysis.breakdown.reduce((sum, b) => sum + b.value, 0);
@@ -187,9 +188,9 @@ export const generateClientCCostAnalysis = async (filters = {}, groupBy) => {
   }
 
   // For other groupings, use core logic but remove risk data
-  console.log('🔧 Using core cost analysis logic with filters:', filters);
+  logger.info('🔧 Using core cost analysis logic with filters:', filters);
   const coreResult = await coreCostAnalysis(filters, groupBy);
-  console.log('✅ Core analysis result:', {
+  logger.info('✅ Core analysis result:', {
     totalSpend: coreResult?.kpis?.totalSpend,
     chartDataLength: coreResult?.chartData?.length,
     breakdownLength: coreResult?.breakdown?.length

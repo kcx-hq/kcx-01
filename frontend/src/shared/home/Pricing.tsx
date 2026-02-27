@@ -11,6 +11,13 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 
+type PricingTheme = "free" | "pro" | "muted";
+
+interface ListItemProps {
+  text: string;
+  theme: PricingTheme;
+}
+
 const Pricing = () => {
   const navigate = useNavigate();
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -57,7 +64,7 @@ const Pricing = () => {
         }}
       />
 
-      {/* Background Decor (keep layout, remove purple/gradients) */}
+      {/* Background decor (light emerald accents) */}
       <motion.div
         animate={{ scale: [1, 1.1, 1], opacity: [0.14, 0.22, 0.14] }}
         transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
@@ -343,7 +350,7 @@ const Pricing = () => {
                 {/* Form */}
                 <form
                   className="space-y-4"
-                  onSubmit={(e) => e.preventDefault()}
+                  onSubmit={(e: React.FormEvent<HTMLFormElement>) => e.preventDefault()}
                 >
                   <div>
                     <label className="block text-xs font-bold text-[var(--text-disabled)] uppercase mb-1">
@@ -384,7 +391,7 @@ const Pricing = () => {
 
 // --- HELPER COMPONENTS ---
 
-const ListItem = ({ text, theme }) => {
+const ListItem = ({ text, theme }: ListItemProps) => {
   let Icon = XIcon;
   let iconColor = "text-[var(--text-disabled)]";
   let textColor = "text-[var(--text-disabled)]";

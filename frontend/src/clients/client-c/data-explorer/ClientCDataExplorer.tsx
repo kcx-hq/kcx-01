@@ -1,20 +1,28 @@
-import React, { useMemo, useState, useCallback, useEffect } from "react";
+import React, { useMemo, useState, useCallback } from "react";
 import { useDebouncedObject } from "../../../core-dashboard/data-explorer/hooks/useDebouncedObject";
 import ClientCDataExplorerView from "./ClientCDataExplorerView";
 import { useClientCDataExplorerData } from "./hooks/useClientCDataExplorerData";
 import { useClientSideGrouping } from "./hooks/useClientSideGrouping";
 import { useClientSideSort } from "./hooks/useClientSideSort";
+import type {
+  ClientCDataExplorerProps,
+  ClientCExplorerViewMode,
+  ClientCGroupedRow,
+  ClientCColumnFilters,
+  DataExplorerRow,
+  DataExplorerSortConfig,
+} from "./types";
 
 const ClientCDataExplorer = (
-  { filters = { provider: "All", service: "All", region: "All", department: "All" }, api, caps, uploadId }
+  { filters = { provider: "All", service: "All", region: "All", department: "All" }, api, caps, uploadId }: ClientCDataExplorerProps
 ) => {
   // --- UI STATE ---
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedRow, setSelectedRow] = useState(null);
+  const [selectedRow, setSelectedRow] = useState<DataExplorerRow | null>(null);
 
-  const [sortConfig, setSortConfig] = useState({ key: null, direction: "asc" });
+  const [sortConfig, setSortConfig] = useState<DataExplorerSortConfig>({ key: null, direction: "asc" });
   const [showFilterRow, setShowFilterRow] = useState(false);
-  const [hiddenColumns, setHiddenColumns] = useState([]);
+  const [hiddenColumns, setHiddenColumns] = useState<string[]>([]);
   const [showColumnMenu, setShowColumnMenu] = useState(false);
 
   const [currentPage, setCurrentPage] = useState(1);
@@ -22,13 +30,13 @@ const ClientCDataExplorer = (
   const [density, setDensity] = useState("compact");
   const [showDataBars, setShowDataBars] = useState(true);
 
-  const [selectedIndices, setSelectedIndices] = useState(new Set());
+  const [selectedIndices, setSelectedIndices] = useState<Set<number>>(new Set<number>());
 
-  const [viewMode, setViewMode] = useState("table"); // 'table' | 'pivot'
-  const [groupByCol, setGroupByCol] = useState(null);
+  const [viewMode, setViewMode] = useState<ClientCExplorerViewMode>("table"); // 'table' | 'pivot'
+  const [groupByCol, setGroupByCol] = useState<string | null>(null);
 
   // --- FILTER INPUTS (debounced into columnFilters) ---
-  const [filterInputs, setFilterInputs] = useState({});
+  const [filterInputs, setFilterInputs] = useState<ClientCColumnFilters>({});
   const columnFilters = useDebouncedObject(filterInputs, 300);
 
   // --- DATA FROM BACKEND ---
@@ -57,19 +65,18 @@ const ClientCDataExplorer = (
 
   // visible columns (hide + column search)
   const visibleColumns = useMemo(() => {
-    let cols = (allColumns || []).filter((c) => !hiddenColumns.includes(c));
+    let cols = (allColumns || []).filter((c: string) => !hiddenColumns.includes(c));
     if (searchTerm?.trim()) {
       const q = searchTerm.trim().toLowerCase();
-      cols = cols.filter((c) => c.toLowerCase().includes(q));
+      cols = cols.filter((c: string) => c.toLowerCase().includes(q));
     }
     return cols;
   }, [allColumns, hiddenColumns, searchTerm]);
 
-  // reset to page 1 on backend filters change
-  useEffect(() => {
+  const resetPagingSelection = useCallback(() => {
     setCurrentPage(1);
-    setSelectedIndices(new Set());
-  }, [columnFilters, groupByCol, viewMode]);
+    setSelectedIndices(new Set<number>());
+  }, []);
 
   // client-side grouping for pivot view
   const clientSideGroupedData = useClientSideGrouping({
@@ -90,14 +97,14 @@ const ClientCDataExplorer = (
   );
 
   // --- handlers (memoized) ---
-  const toggleColumn = useCallback((col) => {
-    setHiddenColumns((prev) =>
-      prev.includes(col) ? prev.filter((c) => c !== col) : [...prev, col]
+  const toggleColumn = useCallback((col: string) => {
+    setHiddenColumns((prev: string[]) =>
+      prev.includes(col) ? prev.filter((c: string) => c !== col) : [...prev, col]
     );
   }, []);
 
-  const handleRowSelect = useCallback((globalIndex) => {
-    setSelectedIndices((prev) => {
+  const handleRowSelect = useCallback((globalIndex: number) => {
+    setSelectedIndices((prev: Set<number>) => {
       const s = new Set(prev);
       if (s.has(globalIndex)) s.delete(globalIndex);
       else s.add(globalIndex);
@@ -105,7 +112,7 @@ const ClientCDataExplorer = (
     });
   }, []);
 
-  const handleRowClick = useCallback((row) => setSelectedRow(row), []);
+  const handleRowClick = useCallback((row: DataExplorerRow) => setSelectedRow(row), []);
 
   const getRowHeight = useCallback(() => {
     if (density === "compact") return "py-1.5";
@@ -114,7 +121,7 @@ const ClientCDataExplorer = (
   }, [density]);
 
   const getColumnWidth = useCallback(
-    (index) => {
+    (index: number) => {
       if (index === 0) return 50;
       const colName = visibleColumns[index - 1]?.toLowerCase() || "";
       if (colName.includes("id") && !colName.includes("sku")) return 260;
@@ -128,13 +135,14 @@ const ClientCDataExplorer = (
     [visibleColumns]
   );
 
-  const removeFilter = useCallback((key) => {
-    setFilterInputs((prev) => {
-      const next = { ...prev };
+  const removeFilter = useCallback((key: string) => {
+    setFilterInputs((prev: ClientCColumnFilters) => {
+      const next: ClientCColumnFilters = { ...prev };
       delete next[key];
       return next;
     });
-  }, []);
+    resetPagingSelection();
+  }, [resetPagingSelection]);
 
   const resetFilters = useCallback(() => {
     // pivot reset: only reset group selection
@@ -154,7 +162,7 @@ const ClientCDataExplorer = (
     if (hasSearch) setSearchTerm("");
     if (hasSort) setSortConfig({ key: null, direction: "asc" });
     if (hasHiddenCols) setHiddenColumns([]);
-    if (hasSelections) setSelectedIndices(new Set());
+    if (hasSelections) setSelectedIndices(new Set<number>());
     if (hasInputs) setFilterInputs({});
     if (hasGroupBy) setGroupByCol(null);
     if (isNotPage1) setCurrentPage(1);
@@ -169,12 +177,35 @@ const ClientCDataExplorer = (
     currentPage,
   ]);
 
+  const setFilterInputsWithReset = useCallback((updater: React.SetStateAction<ClientCColumnFilters>) => {
+    setFilterInputs(updater);
+    resetPagingSelection();
+  }, [resetPagingSelection]);
+
+  const setViewModeWithReset = useCallback((next: React.SetStateAction<ClientCExplorerViewMode>) => {
+    setViewMode((prev: ClientCExplorerViewMode) =>
+      typeof next === "function"
+        ? (next as (prevState: ClientCExplorerViewMode) => ClientCExplorerViewMode)(prev)
+        : next
+    );
+    resetPagingSelection();
+  }, [resetPagingSelection]);
+
+  const setGroupByWithReset = useCallback((next: React.SetStateAction<string | null>) => {
+    setGroupByCol((prev: string | null) =>
+      typeof next === "function"
+        ? (next as (prevState: string | null) => string | null)(prev)
+        : next
+    );
+    resetPagingSelection();
+  }, [resetPagingSelection]);
+
   const handleDrillDown = useCallback(
-    (group) => {
+    (group: ClientCGroupedRow) => {
       const raw = group?.rawValue;
       const filterVal =
         raw === null || raw === undefined || raw === "" ? "null" : String(raw);
-      setFilterInputs((prev) => ({ ...prev, [groupByCol]: filterVal }));
+      setFilterInputs((prev: ClientCColumnFilters) => ({ ...prev, [String(groupByCol)]: filterVal }));
       setViewMode("table");
     },
     [groupByCol]
@@ -205,7 +236,7 @@ const ClientCDataExplorer = (
       sortConfig={sortConfig}
       setSortConfig={setSortConfig}
       filterInputs={filterInputs}
-      setFilterInputs={setFilterInputs}
+      setFilterInputs={setFilterInputsWithReset}
       columnFilters={columnFilters}
       showFilterRow={showFilterRow}
       setShowFilterRow={setShowFilterRow}
@@ -223,9 +254,9 @@ const ClientCDataExplorer = (
       selectedIndices={selectedIndices}
       setSelectedIndices={setSelectedIndices}
       viewMode={viewMode}
-      setViewMode={setViewMode}
+      setViewMode={setViewModeWithReset}
       groupByCol={groupByCol}
-      setGroupByCol={setGroupByCol}
+      setGroupByCol={setGroupByWithReset}
       // derived
       visibleColumns={visibleColumns}
       tableDataToRender={tableDataToRender}

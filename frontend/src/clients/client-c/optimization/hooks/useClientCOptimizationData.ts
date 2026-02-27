@@ -1,12 +1,26 @@
 import { useEffect, useRef, useState } from "react";
+import type { ApiClient, Capabilities } from "../../../../services/apiClient";
+import type {
+  ApiLikeError,
+  ClientCApiCallOptions,
+  ClientCOptimizationDataResult,
+  ClientCOptimizationFilters,
+  ClientCOptimizationPayload,
+  ClientCOptimizationRawItem,
+} from "../types";
 
-export const useClientCOptimizationData = (api, caps, debouncedFilters, forceRefreshKey) => {
-  const [optimizationData, setOptimizationData] = useState(null);
+export const useClientCOptimizationData = (
+  api: ApiClient | null,
+  caps: Capabilities | null,
+  debouncedFilters: ClientCOptimizationFilters,
+  forceRefreshKey: number,
+): ClientCOptimizationDataResult => {
+  const [optimizationData, setOptimizationData] = useState<ClientCOptimizationPayload | null>(null);
   const [loading, setLoading] = useState(true);
   const [isFiltering, setIsFiltering] = useState(false);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState<string | null>(null);
 
-  const abortControllerRef = useRef(null);
+  const abortControllerRef = useRef<AbortController | null>(null);
   const prevFiltersRef = useRef(debouncedFilters);
   const isInitialMount = useRef(true);
 
@@ -38,32 +52,37 @@ export const useClientCOptimizationData = (api, caps, debouncedFilters, forceRef
 
       try {
         const endpointDef =
-          caps?.modules?.optimization?.enabled &&
-          caps?.modules?.optimization?.endpoints?.opportunities;
+          caps?.modules?.["optimization"]?.enabled &&
+          caps?.modules?.["optimization"]?.endpoints?.["opportunities"];
 
         if (!endpointDef) return;
 
-        const params = {};
+        const params: Record<string, string> = {};
         if (debouncedFilters?.provider && debouncedFilters.provider !== "All")
-          params.provider = debouncedFilters.provider;
+          params["provider"] = debouncedFilters.provider;
         if (debouncedFilters?.service && debouncedFilters.service !== "All")
-          params.service = debouncedFilters.service;
+          params["service"] = debouncedFilters.service;
         if (debouncedFilters?.region && debouncedFilters.region !== "All")
-          params.region = debouncedFilters.region;
+          params["region"] = debouncedFilters.region;
         if (debouncedFilters?.uploadId)
-          params.uploadId = debouncedFilters.uploadId;
+          params["uploadId"] = debouncedFilters.uploadId;
 
         // Fetch optimization data with available endpoints from capabilities map
-        const mod = caps?.modules?.optimization;
+        const mod = caps?.modules?.["optimization"];
         const enabled = !!mod?.enabled;
 
-        const canRec = enabled && !!mod?.endpoints?.recommendations;
-        const canOpp = enabled && !!mod?.endpoints?.opportunities;
+        const canRec = enabled && !!mod?.endpoints?.["recommendations"];
+        const canOpp = enabled && !!mod?.endpoints?.["opportunities"];
+
+        const options: ClientCApiCallOptions = { params };
+        if (abortControllerRef.current?.signal) {
+          options.signal = abortControllerRef.current.signal;
+        }
 
         // Only call the endpoints that are actually defined in capabilities
         const [recRes, oppRes] = await Promise.all([
-          canRec ? api.call("optimization", "recommendations", { params }) : Promise.resolve(null),
-          canOpp ? api.call("optimization", "opportunities", { params }) : Promise.resolve(null)
+          canRec ? api.call<ClientCOptimizationRawItem[]>("optimization", "recommendations", options) : Promise.resolve(null),
+          canOpp ? api.call<ClientCOptimizationRawItem[]>("optimization", "opportunities", options) : Promise.resolve(null)
         ]);
 
 
@@ -71,25 +90,25 @@ export const useClientCOptimizationData = (api, caps, debouncedFilters, forceRef
         console.log('Opportunities response:', oppRes);
         if (abortControllerRef.current?.signal.aborted) return;
 
-        const recData = recRes?.data ?? null;
-        const oppData = oppRes?.data ?? null;
+        const recData = recRes ?? null;
+        const oppData = oppRes ?? null;
 
         // Process data from both endpoints
-        let recommendations = [];
-        let opportunities = [];
-        let idleResources = [];
-        let rightSizingRecs = [];
+        let recommendations: ClientCOptimizationRawItem[] = [];
+        let opportunities: ClientCOptimizationRawItem[] = [];
+        let idleResources: ClientCOptimizationRawItem[] = [];
+        let rightSizingRecs: ClientCOptimizationRawItem[] = [];
         
         // Process recommendations data from recommendations endpoint
         if (Array.isArray(recData)) {
           // Store all recommendations data as-is
-          recommendations = recData.map(item => ({
+          recommendations = recData.map((item: ClientCOptimizationRawItem) => ({
             ...item,
             source: 'recommendations'
           }));
           
           // Categorize recommendations by type
-          recData.forEach(item => {
+          recData.forEach((item: ClientCOptimizationRawItem) => {
             if (item.type === 'idle_resource' || item.category === 'idle_resources') {
               idleResources.push({...item, source: 'recommendations'});
             } else if (item.type === 'right_sizing' || item.category === 'rightsizing') {
@@ -104,18 +123,18 @@ export const useClientCOptimizationData = (api, caps, debouncedFilters, forceRef
         // Process opportunities data from opportunities endpoint
         if (Array.isArray(oppData)) {
           // Add opportunities data
-          opportunities = [...opportunities, ...oppData.map(item => ({
+          opportunities = [...opportunities, ...oppData.map((item: ClientCOptimizationRawItem) => ({
             ...item,
             source: 'opportunities'
           }))];
         }
 
-        const payload = {
+        const payload: ClientCOptimizationPayload = {
           opportunities,
           recommendations,
           idleResources,
           rightSizingRecs,
-          totalPotentialSavings: opportunities.reduce((sum, opp) => sum + (opp.savings || 0), 0),
+          totalPotentialSavings: opportunities.reduce((sum: number, opp: ClientCOptimizationRawItem) => sum + (Number(opp.savings) || 0), 0),
         };
 
         console.log(payload)
@@ -125,11 +144,12 @@ export const useClientCOptimizationData = (api, caps, debouncedFilters, forceRef
           setError(null);
           prevFiltersRef.current = { ...debouncedFilters };
         }
-      } catch (error) {
-        if (error?.code !== "NOT_SUPPORTED") {
-          if (error?.name !== "AbortError" && !abortControllerRef.current?.signal.aborted) {
+      } catch (error: unknown) {
+        const apiError = error as ApiLikeError;
+        if (apiError?.code !== "NOT_SUPPORTED") {
+          if (apiError?.name !== "AbortError" && !abortControllerRef.current?.signal.aborted) {
             console.error("Error fetching optimization data:", error);
-            setError(error.message || 'Failed to load optimization data');
+            setError(apiError.message || 'Failed to load optimization data');
           }
         }
       } finally {

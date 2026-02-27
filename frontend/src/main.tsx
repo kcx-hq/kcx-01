@@ -4,8 +4,7 @@ import ReactDOM from 'react-dom/client'
 import App from './App'
 import './index.css'
 import  { Toaster } from 'react-hot-toast';
-import Demo from './Demo';
-import Demo1 from './Demo1';
+
 
 const rootElement = document.getElementById('root')
 if (!rootElement) {
@@ -15,10 +14,8 @@ if (!rootElement) {
 ReactDOM.createRoot(rootElement).render(
   <React.StrictMode>
     <App />
-    {/* <Demo/> */}
-    {/* <Demo1/> */}
     <Toaster 
-      position="center-top"
+      position="top-center"
       reverseOrder={false}
       toastOptions={{
         style: {

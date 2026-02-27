@@ -7,7 +7,11 @@ import { useEffect, useState } from 'react';
  * @returns The debounced value
  */
 export function useDebounce<T>(value: T, delay = 500): T {
+<<<<<<< HEAD
   const [debouncedValue, setDebouncedValue] = useState<T>(value);
+=======
+  const [debouncedValue, setDebouncedValue] = useState(value);
+>>>>>>> deploy
 
   useEffect(() => {
     const handler = setTimeout(() => {

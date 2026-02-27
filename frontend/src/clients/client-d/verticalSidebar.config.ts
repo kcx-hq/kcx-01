@@ -10,10 +10,45 @@ import {
   FileBarChart,
   Crown,
 } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 
-const ClientDSidebarConfig = {
+interface ClientDSidebarItem {
+  to: string;
+  label: string;
+  icon: LucideIcon;
+  end?: boolean;
+  description?: string;
+  isPremium?: boolean;
+}
+
+interface ClientDSidebarGroup {
+  title: string;
+  items: ClientDSidebarItem[];
+}
+
+interface ClientDSidebarConfigShape {
   brand: {
-    logoSrc: "/k&cologo.svg", // change per client if needed
+    logoSrc: string;
+    name: string;
+    subtitle: string;
+  };
+  features: {
+    tooltip: boolean;
+    footerUpload: boolean;
+    maxUploads: number;
+    uploadCountStorageKey: string;
+  };
+  groups: ClientDSidebarGroup[];
+  footer: {
+    uploadRoute: string;
+    uploadLabel: string;
+    lockedLabel: string;
+  };
+}
+
+const ClientDSidebarConfig: ClientDSidebarConfigShape = {
+  brand: {
+    logoSrc: "/KCX.logo.svg", // change per client if needed
     name: "Client D",
     subtitle: "Dashboard",
   },

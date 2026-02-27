@@ -1,8 +1,9 @@
 import React from "react";
 import { Loader2, Inbox, Sparkles } from "lucide-react";
 import { motion } from "framer-motion";
+import type { DataExplorerStatesProps } from "../types";
 
-const DataExplorerStates = ({ type }) => {
+const DataExplorerStates = ({ type }: DataExplorerStatesProps) => {
   // Brand color constant
   const BRAND_EMERALD = "#007758";
 
@@ -57,3 +58,5 @@ const DataExplorerStates = ({ type }) => {
 };
 
 export default DataExplorerStates;
+
+

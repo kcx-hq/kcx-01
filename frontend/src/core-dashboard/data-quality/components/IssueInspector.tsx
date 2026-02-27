@@ -1,15 +1,18 @@
-﻿import { X, AlertTriangle, CheckCircle } from "lucide-react";
+import { X, AlertTriangle, CheckCircle } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { formatCurrency } from "../utils/format";
+import type { IssueInspectorProps } from "../types";
 
-const explainIssue = (issue) => {
+const explainIssue = (issue: string) => {
   if (issue === "Untagged") return " Missing allocation tags. Cost cannot be assigned.";
   if (issue === "Missing ID") return " Resource ID is null. Cannot track lifecycle.";
   if (issue === "Missing Service") return " Service Name is null.";
   return " Value is suspiciously low or negative.";
 };
 
-const IssueInspector = ({ selectedIssue, setSelectedIssue }) => {
+const IssueInspector = ({ selectedIssue, setSelectedIssue }: IssueInspectorProps) => {
+  const issues = selectedIssue?._issues ?? [];
+
   return (
     <AnimatePresence>
       {selectedIssue && (
@@ -48,13 +51,13 @@ const IssueInspector = ({ selectedIssue, setSelectedIssue }) => {
               </div>
 
               <div className="flex-1 space-y-6 overflow-y-auto p-5 md:p-6">
-                {selectedIssue?._issues?.length > 0 ? (
+                {issues.length > 0 ? (
                   <div className="rounded-xl border border-rose-200 bg-rose-50 p-4">
                     <h3 className="mb-2 flex items-center gap-2 text-sm font-bold text-rose-700">
                       <AlertTriangle size={14} /> Diagnosis
                     </h3>
                     <ul className="list-inside list-disc space-y-2 text-xs text-[var(--text-secondary)]">
-                      {selectedIssue._issues.map((issue) => (
+                      {issues.map((issue: string) => (
                         <li key={issue}>
                           <strong className="text-[var(--text-primary)]">{issue}:</strong>
                           {explainIssue(issue)}
@@ -71,11 +74,11 @@ const IssueInspector = ({ selectedIssue, setSelectedIssue }) => {
                 <div>
                   <h3 className="mb-2 text-sm font-bold text-[var(--text-primary)]">Record Details</h3>
                   <div className="divide-y divide-[var(--border-muted)] overflow-hidden rounded-lg border border-[var(--border-light)] bg-[var(--bg-surface)]">
-                    {["ServiceName", "RegionName", "UsageType", "Operation"].map((k) => (
+                    {["ServiceName", "RegionName", "UsageType", "Operation"].map((k: string) => (
                       <div key={k} className="flex justify-between p-3 text-xs">
                         <span className="text-[var(--text-muted)]">{k}</span>
                         <span className="text-right font-mono text-[var(--text-secondary)]">
-                          {selectedIssue?.[k] || "--"}
+                          {String(selectedIssue?.[k] || "--")}
                         </span>
                       </div>
                     ))}
@@ -97,3 +100,6 @@ const IssueInspector = ({ selectedIssue, setSelectedIssue }) => {
 };
 
 export default IssueInspector;
+
+
+

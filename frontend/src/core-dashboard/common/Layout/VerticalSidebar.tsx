@@ -1,21 +1,77 @@
-import React, { useRef, useState, useEffect } from "react";
+import React, { useRef, useState, useEffect, useMemo } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
+import type { NavLinkRenderProps } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Crown, Upload as UploadIcon, Files } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
+
+interface SidebarItem {
+  to: string;
+  label: string;
+  icon: LucideIcon;
+  description?: string;
+  isPremium?: boolean;
+  end?: boolean;
+}
+
+interface SidebarGroup {
+  title: string;
+  items: SidebarItem[];
+}
+
+interface SidebarBrand {
+  name: string;
+  subtitle?: string;
+  logoSrc?: string;
+}
+
+interface SidebarFeatures {
+  tooltip?: boolean;
+  footerUpload?: boolean;
+  maxUploads?: number;
+}
+
+interface SidebarConfig {
+  brand: SidebarBrand;
+  groups: SidebarGroup[];
+  features?: SidebarFeatures;
+}
+
+interface VerticalSidebarProps {
+  config: SidebarConfig;
+  isLocked?: boolean;
+  isPremiumUser?: boolean;
+  uploadCountStorageKey?: string;
+}
 
 export default function VerticalSidebar({
   config,
   isLocked = false,
   isPremiumUser = true,
   uploadCountStorageKey = "csvUploadCount",
-  onUploadClick,
-}) {
-  const navigate = useNavigate();
-
+}: VerticalSidebarProps) {
   if (!config) {
     console.error("VerticalSidebar: config is missing. Pass config={...}");
     return null;
   }
+
+  return (
+    <VerticalSidebarContent
+      config={config}
+      isLocked={isLocked}
+      isPremiumUser={isPremiumUser}
+      uploadCountStorageKey={uploadCountStorageKey}
+    />
+  );
+}
+
+function VerticalSidebarContent({
+  config,
+  isLocked = false,
+  isPremiumUser = true,
+  uploadCountStorageKey = "csvUploadCount",
+}: VerticalSidebarProps) {
+  const navigate = useNavigate();
 
   // Config defaults
   const { brand, groups, features } = config;
@@ -24,18 +80,16 @@ export default function VerticalSidebar({
   const MAX_UPLOADS = features?.maxUploads ?? 5;
   const isUploadLocked = !isPremiumUser && isLocked;
 
-  const [uploadCount, setUploadCount] = useState(0);
-
-  useEffect(() => {
-    const count = parseInt(localStorage.getItem(uploadCountStorageKey) || "0", 10);
-    setUploadCount(count);
-  }, [uploadCountStorageKey]);
+  const uploadCount = useMemo(
+    () => parseInt(localStorage.getItem(uploadCountStorageKey) || "0", 10),
+    [uploadCountStorageKey]
+  );
 
   // Tooltip state
-  const [hoveredItem, setHoveredItem] = useState(null);
+  const [hoveredItem, setHoveredItem] = useState<SidebarItem | null>(null);
   const [tooltipPosition, setTooltipPosition] = useState({ top: 0, left: 0 });
-  const hoverTimeoutRef = useRef(null);
-  const tooltipRef = useRef(null);
+  const hoverTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const tooltipRef = useRef<HTMLDivElement | null>(null);
   const isHoveringTooltipRef = useRef(false);
 
   useEffect(() => {
@@ -44,7 +98,7 @@ export default function VerticalSidebar({
     };
   }, []);
 
-  const updateTooltipPosition = (element) => {
+  const updateTooltipPosition = (element: HTMLElement | null) => {
     if (!element) return;
     requestAnimationFrame(() => {
       const rect = element.getBoundingClientRect();
@@ -59,19 +113,23 @@ export default function VerticalSidebar({
     });
   };
 
-  const NavItem = ({ item }) => {
-    const handleMouseEnter = (e) => {
+  interface NavItemProps {
+    item: SidebarItem;
+  }
+
+  const NavItem = ({ item }: NavItemProps) => {
+    const handleMouseEnter = (e: React.MouseEvent<HTMLAnchorElement>) => {
       if (!showTooltip || !item.description) return;
       if (hoverTimeoutRef.current) clearTimeout(hoverTimeoutRef.current);
       updateTooltipPosition(e.currentTarget);
       setHoveredItem(item);
     };
 
-    const handleMouseLeave = (e) => {
+    const handleMouseLeave = (e: React.MouseEvent<HTMLAnchorElement>) => {
       if (!showTooltip) return;
       if (hoverTimeoutRef.current) clearTimeout(hoverTimeoutRef.current);
       const relatedTarget = e.relatedTarget;
-      if (relatedTarget && tooltipRef.current?.contains(relatedTarget)) {
+      if (relatedTarget instanceof Node && tooltipRef.current?.contains(relatedTarget)) {
         isHoveringTooltipRef.current = true;
         return;
       }
@@ -82,19 +140,20 @@ export default function VerticalSidebar({
     };
 
     const isPremiumItemLocked = item.isPremium && !isPremiumUser;
+    const navLinkEndProps = item.end !== undefined ? { end: item.end } : {};
 
     return (
       <NavLink
         to={isPremiumItemLocked ? "#" : item.to}
-        onClick={(e) => {
+        onClick={(e: React.MouseEvent<HTMLAnchorElement>) => {
           if (isPremiumItemLocked) e.preventDefault();
         }}
         aria-label={item.label}
         title={item.label}
-        end={item.end}
+        {...navLinkEndProps}
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
-        className={({ isActive }) => `
+        className={({ isActive }: NavLinkRenderProps) => `
           group relative flex items-center justify-center lg:justify-between gap-3
           px-3 py-2.5 rounded-lg transition-all duration-200 mb-1
           ${
@@ -105,7 +164,7 @@ export default function VerticalSidebar({
           ${isPremiumItemLocked ? "opacity-50 cursor-not-allowed grayscale" : ""}
         `}
       >
-        {({ isActive }) => (
+        {({ isActive }: NavLinkRenderProps) => (
           <>
             <div className="relative z-10 flex items-center gap-3">
               <item.icon
@@ -214,13 +273,13 @@ export default function VerticalSidebar({
 
         {/* Navigation Groups */}
         <div className="sidebar-scrollbar flex-1 overflow-y-auto px-2 lg:px-4 py-6 space-y-8">
-          {groups.map((group, index) => (
+          {groups.map((group: SidebarGroup, index: number) => (
             <div key={index}>
               <p className="hidden lg:block px-3 text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2">
                 {group.title}
               </p>
               <div className="space-y-0.5">
-                {group.items.map((item) => (
+                {group.items.map((item: SidebarItem) => (
                   <NavItem key={item.to} item={item} />
                 ))}
               </div>
@@ -303,3 +362,6 @@ export default function VerticalSidebar({
     </>
   );
 }
+
+
+

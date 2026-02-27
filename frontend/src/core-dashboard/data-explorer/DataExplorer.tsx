@@ -5,9 +5,15 @@ import { useDebouncedObject } from "./hooks/useDebouncedObject";
 import { useDataExplorerData } from "./hooks/useDataExplorerData";
 import { useClientSideGrouping } from "./hooks/useClientSideGrouping";
 import { useClientSideSort } from "./hooks/useClientSideSort";
+import type {
+  DataExplorerGroupedItem,
+  DataExplorerProps,
+  DataExplorerRow,
+  DataExplorerSortConfig,
+} from "./types";
 
 const DataExplorer = (
-  { filters = { provider: "All", service: "All", region: "All" }, api, caps }
+  { filters = { provider: "All", service: "All", region: "All" }, api, caps }: DataExplorerProps
 ) => {
   const { user } = useAuthStore();
 
@@ -16,11 +22,11 @@ const DataExplorer = (
 
   // --- UI STATE ---
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedRow, setSelectedRow] = useState(null);
+  const [selectedRow, setSelectedRow] = useState<DataExplorerRow | null>(null);
 
-  const [sortConfig, setSortConfig] = useState({ key: null, direction: "asc" });
+  const [sortConfig, setSortConfig] = useState<DataExplorerSortConfig>({ key: null, direction: "asc" });
   const [showFilterRow, setShowFilterRow] = useState(false);
-  const [hiddenColumns, setHiddenColumns] = useState([]);
+  const [hiddenColumns, setHiddenColumns] = useState<string[]>([]);
   const [showColumnMenu, setShowColumnMenu] = useState(false);
 
   const [currentPage, setCurrentPage] = useState(1);
@@ -28,13 +34,13 @@ const DataExplorer = (
   const [density, setDensity] = useState("compact");
   const [showDataBars, setShowDataBars] = useState(true);
 
-  const [selectedIndices, setSelectedIndices] = useState(new Set());
+  const [selectedIndices, setSelectedIndices] = useState<Set<number>>(new Set());
 
-  const [viewMode, setViewMode] = useState("table"); // 'table' | 'pivot'
-  const [groupByCol, setGroupByCol] = useState(null);
+  const [viewMode, setViewMode] = useState<"table" | "pivot">("table"); // 'table' | 'pivot'
+  const [groupByCol, setGroupByCol] = useState<string | null>(null);
 
   // --- FILTER INPUTS (debounced into columnFilters) ---
-  const [filterInputs, setFilterInputs] = useState({});
+  const [filterInputs, setFilterInputs] = useState<Record<string, string>>({});
   const columnFilters = useDebouncedObject(filterInputs, 300);
 
   // --- DATA FROM BACKEND ---
@@ -61,10 +67,10 @@ const DataExplorer = (
 
   // visible columns (hide + column search)
   const visibleColumns = useMemo(() => {
-    let cols = (allColumns || []).filter((c) => !hiddenColumns.includes(c));
+    let cols = (allColumns || []).filter((c: string) => !hiddenColumns.includes(c));
     if (searchTerm?.trim()) {
       const q = searchTerm.trim().toLowerCase();
-      cols = cols.filter((c) => c.toLowerCase().includes(q));
+      cols = cols.filter((c: string) => c.toLowerCase().includes(q));
     }
     return cols;
   }, [allColumns, hiddenColumns, searchTerm]);
@@ -72,7 +78,7 @@ const DataExplorer = (
   // reset to page 1 on backend filters change
   React.useEffect(() => {
     setCurrentPage(1);
-    setSelectedIndices(new Set());
+    setSelectedIndices(new Set<number>());
   }, [columnFilters, groupByCol, viewMode]);
 
   // client-side grouping for pivot view
@@ -94,14 +100,14 @@ const DataExplorer = (
   );
 
   // --- handlers (memoized) ---
-  const toggleColumn = useCallback((col) => {
-    setHiddenColumns((prev) =>
-      prev.includes(col) ? prev.filter((c) => c !== col) : [...prev, col]
+  const toggleColumn = useCallback((col: string) => {
+    setHiddenColumns((prev: string[]) =>
+      prev.includes(col) ? prev.filter((c: string) => c !== col) : [...prev, col]
     );
   }, []);
 
-  const handleRowSelect = useCallback((globalIndex) => {
-    setSelectedIndices((prev) => {
+  const handleRowSelect = useCallback((globalIndex: number) => {
+    setSelectedIndices((prev: Set<number>) => {
       const s = new Set(prev);
       if (s.has(globalIndex)) s.delete(globalIndex);
       else s.add(globalIndex);
@@ -109,7 +115,7 @@ const DataExplorer = (
     });
   }, []);
 
-  const handleRowClick = useCallback((row) => setSelectedRow(row), []);
+  const handleRowClick = useCallback((row: DataExplorerRow) => setSelectedRow(row), []);
 
   const getRowHeight = useCallback(() => {
     if (density === "compact") return "py-1.5";
@@ -118,7 +124,7 @@ const DataExplorer = (
   }, [density]);
 
   const getColumnWidth = useCallback(
-    (index) => {
+    (index: number) => {
       if (index === 0) return 50;
       const colName = visibleColumns[index - 1]?.toLowerCase() || "";
       if (colName.includes("id") && !colName.includes("sku")) return 260;
@@ -129,9 +135,9 @@ const DataExplorer = (
     [visibleColumns]
   );
 
-  const removeFilter = useCallback((key) => {
-    setFilterInputs((prev) => {
-      const next = { ...prev };
+  const removeFilter = useCallback((key: string) => {
+    setFilterInputs((prev: Record<string, string>) => {
+      const next: Record<string, string> = { ...prev };
       delete next[key];
       return next;
     });
@@ -155,7 +161,7 @@ const DataExplorer = (
     if (hasSearch) setSearchTerm("");
     if (hasSort) setSortConfig({ key: null, direction: "asc" });
     if (hasHiddenCols) setHiddenColumns([]);
-    if (hasSelections) setSelectedIndices(new Set());
+    if (hasSelections) setSelectedIndices(new Set<number>());
     if (hasInputs) setFilterInputs({});
     if (hasGroupBy) setGroupByCol(null);
     if (isNotPage1) setCurrentPage(1);
@@ -171,11 +177,11 @@ const DataExplorer = (
   ]);
 
   const handleDrillDown = useCallback(
-    (group) => {
+    (group: DataExplorerGroupedItem) => {
       const raw = group?.rawValue;
       const filterVal =
         raw === null || raw === undefined || raw === "" ? "null" : String(raw);
-      setFilterInputs((prev) => ({ ...prev, [groupByCol]: filterVal }));
+      setFilterInputs((prev: Record<string, string>) => ({ ...prev, [groupByCol as string]: filterVal }));
       setViewMode("table");
     },
     [groupByCol]
@@ -247,3 +253,6 @@ const DataExplorer = (
 };
 
 export default DataExplorer;
+
+
+

@@ -2,6 +2,7 @@ import React from "react";
 import { TrendingUp, Filter, LayoutGrid, List, Crown } from "lucide-react";
 import { PERIOD_OPTIONS } from "../../../../core-dashboard/cost-drivers/utils/constants";
 import { formatDate } from "../../../../core-dashboard/cost-drivers/utils/format";
+import type { CostDriversHeaderProps, SelectChangeEvent } from "../types";
 
 export function CostDriversHeader({
   isMasked,
@@ -13,12 +14,12 @@ export function CostDriversHeader({
   showTreeMap,
   setShowTreeMap,
   periods,
-}) {
+}: CostDriversHeaderProps) {
   return (
     <div className="flex flex-col xl:flex-row justify-between items-start xl:items-center gap-3">
       <div className="min-w-0">
         <h1 className="text-xl font-bold flex items-center gap-2">
-          <TrendingUp className="text-[#a02ff1]" size={20} /> Cost Drivers
+          <TrendingUp className="text-[#007758]" size={20} /> Cost Drivers
         </h1>
 
         {periods?.prev && periods?.current && (
@@ -32,7 +33,7 @@ export function CostDriversHeader({
       <div className="flex flex-wrap items-center gap-2 bg-[#1a1b20] p-1 rounded-xl border border-white/10">
         {/* Period toggle */}
         <div className="flex bg-black/40 rounded-lg p-0.5 border border-white/5 gap-0.5">
-          {PERIOD_OPTIONS.map((d) => {
+          {PERIOD_OPTIONS.map((d: number) => {
             const isPremiumPeriod = isMasked && d === 7;
             const isActive = period === d;
 
@@ -45,7 +46,7 @@ export function CostDriversHeader({
                   "relative px-2.5 py-1 text-[10px] font-bold rounded-md transition-all",
                   isPremiumPeriod ? "opacity-60 cursor-not-allowed" : "cursor-pointer",
                   isActive
-                    ? "bg-[#a02ff1] text-white shadow-[0_0_10px_rgba(160,47,241,0.5)]"
+                    ? "bg-[#007758] text-white shadow-[0_0_10px_rgba(0,119,88,0.5)]"
                     : "bg-white/5 text-gray-400 hover:text-gray-200 hover:bg-white/10 border border-transparent",
                 ].join(" ")}
               >
@@ -75,16 +76,16 @@ export function CostDriversHeader({
 
           <select
             value={activeServiceFilter}
-            onChange={(e) => !isMasked && setActiveServiceFilter(e.target.value)}
+            onChange={(e: SelectChangeEvent) => !isMasked && setActiveServiceFilter(e.target.value)}
             disabled={isMasked}
             className={[
-              "appearance-none bg-[#0f0f11] border border-white/10 hover:border-[#a02ff1]/50 rounded-lg pl-3 pr-8 py-2 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-[#a02ff1]/50 transition-all min-w-[140px] relative",
+              "appearance-none bg-[#0f0f11] border border-white/10 hover:border-[#007758]/50 rounded-lg pl-3 pr-8 py-2 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-[#007758]/50 transition-all min-w-[140px] relative",
               isMasked
                 ? "cursor-not-allowed text-gray-300 opacity-50 pointer-events-none"
                 : "cursor-pointer text-gray-300",
             ].join(" ")}
           >
-            {(availableServices?.length ? availableServices : ["All"]).map((service) => (
+            {(availableServices?.length ? availableServices : ["All"]).map((service: string) => (
               <option key={service} value={service}>
                 {service}
               </option>
@@ -101,11 +102,11 @@ export function CostDriversHeader({
 
         {/* Toggle */}
         <button
-          onClick={() => setShowTreeMap((p) => !p)}
+          onClick={() => setShowTreeMap((p: boolean) => !p)}
           className={[
             "p-2 rounded-lg transition-all border",
             showTreeMap
-              ? "bg-[#a02ff1] text-white border-[#a02ff1]"
+              ? "bg-[#007758] text-white border-[#007758]"
               : "bg-black/40 hover:bg-black/60 text-gray-400 hover:text-gray-200 border-white/10",
           ].join(" ")}
           title="Toggle View"

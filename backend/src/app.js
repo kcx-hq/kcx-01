@@ -1,41 +1,95 @@
-import express from 'express';
-import dotenv from 'dotenv';
-import compression from 'compression';
-import authRoutes from './modules/shared/auth/auth.route.js';
-import inquiryRoutes from './modules/shared/inquiry/inquiry.route.js';
-import etlRoutes from './modules/shared/ETL/etl.route.js'
-import sequelize from './config/db.config.js';
-import cookieParser from 'cookie-parser';
-import cors from 'cors';
-import coreDashboardRoutes from './modules/core-dashboard/core-dashboard.routes.js';
-import capabililitesRoutes from './modules/shared/capabilities/capabilities.routes.js';
-import chatbotRoutes from './modules/shared/chatbot/chat.routes.js'
+import express from "express";
+import compression from "compression";
+import AppError from "./errors/AppError.js";
+import authRoutes from "./modules/shared/auth/auth.route.js";
+import inquiryRoutes from "./modules/shared/inquiry/inquiry.route.js";
+import etlRoutes from "./modules/shared/ETL/etl.route.js";
+import cookieParser from "cookie-parser";
+import cors from "cors";
+import coreDashboardRoutes from "./modules/core-dashboard/core-dashboard.routes.js";
+import capabililitesRoutes from "./modules/shared/capabilities/capabilities.routes.js";
+import chatbotRoutes from "./modules/shared/chatbot/chat.routes.js";
 import cloudRoutes from "./modules/shared/cloud/cloud.route.js";
-import cloudAccountCredentialsRoutes from "./modules/internal/cloud-account-credentials/cloudAccountCredential.route.js"
-import getClientDashboardRoutes from './modules/clients/index.js'
-dotenv.config({
-  path: `.env.${process.env.NODE_ENV || "development"}`
-});
+import cloudAccountCredentialsRoutes from "./modules/internal/cloud-account-credentials/cloudAccountCredential.route.js";
+import clientRoutes from "./modules/clients/index.js";
+import { attachRequestId } from "./middlewares/security/requestId.js";
+import { validateRequest } from "./middlewares/security/requestValidation.js";
+import {
+  createInFlightTracker,
+  requestLogging,
+} from "./middlewares/security/requestLogging.js";
+import {
+  defaultDenyAuth,
+  requireInternalRole,
+} from "./middlewares/security/defaultDenyAuth.js";
+import { successResponseContract } from "./middlewares/responseContract.js";
+import {
+  errorHandler,
+  notFoundHandler,
+  standardizeErrorResponses,
+} from "./middlewares/security/errorHandlers.js";
 
+const API_BASE_PATHS = ["/api", "/api/v1"];
+const INTERNAL_BASE_PATHS = ["/internal", "/api/internal", "/api/v1/internal"];
 
-const app = express();
+function mountApiRouters(app) {
+  for (const basePath of API_BASE_PATHS) {
+    app.use(`${basePath}/auth`, authRoutes);
+    app.use(`${basePath}/inquiry`, inquiryRoutes);
+    app.use(`${basePath}/etl`, etlRoutes);
+    app.use(`${basePath}/capabililites`, capabililitesRoutes);
+    app.use(`${basePath}/dashboard`, coreDashboardRoutes);
+    app.use(`${basePath}/chatbot`, chatbotRoutes);
+    app.use(`${basePath}/cloud`, cloudRoutes);
+    app.use(basePath, clientRoutes);
+  }
+}
 
+async function defaultReadiness() {
+  return {
+    ready: false,
+    error: new AppError(503, "NOT_READY", "Service not ready"),
+  };
+}
 
-// PERFORMANCE: Add compression middleware to reduce response sizes
-app.use(compression({ level: 6, threshold: 1024 })); // Compress responses > 1KB
+export function createApp(deps = {}) {
+  const {
+    readiness = defaultReadiness,
+    inFlightCounterRef = { count: 0 },
+  } = deps;
+  const app = express();
 
-app.use(
-  cors({
-    origin: ["http://localhost:5173", "http://localhost:5174" , "https://kcx-01.vercel.app"], // frontend (supports both ports)
-    credentials: true,               // allow cookies
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"]
-  })
-);
-app.use(express.json({ limit: '10mb' })); // Limit JSON payload size
-app.use(express.urlencoded({ extended: true, limit: '10mb' }));
-app.use(cookieParser());
+  app.disable("x-powered-by");
 
+  app.disable('etag'); // Before compression middleware
+
+  // PERFORMANCE: Add compression middleware to reduce response sizes
+  // app.use(compression({ level: 6, threshold: 1024 })); // Compress responses > 1KB
+
+  app.use(
+    cors({
+      origin: ["http://localhost:5173", "http://localhost:5174" , "https://kcx-01.vercel.app"], // frontend (supports both ports)
+      credentials: true,               // allow cookies
+      methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+      allowedHeaders: ["Content-Type", "Authorization", "X-Signature", "X-Timestamp", "X-Nonce"]
+    })
+  );
+  app.use(
+    express.json({
+      limit: "10mb",
+      verify: (req, _res, buf) => {
+        req.rawBody = Buffer.from(buf);
+      },
+    })
+  ); // Limit JSON payload size
+  app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+  app.use(cookieParser());
+  app.use(attachRequestId);
+  app.use(createInFlightTracker(inFlightCounterRef));
+  app.use(requestLogging);
+  app.use(successResponseContract);
+  app.use(standardizeErrorResponses);
+  
 // // PERFORMANCE: Add HTTP caching headers for static-like API responses
 // app.use((req, res, next) => {
 //   // Cache filter options and static data for 5 minutes
@@ -49,29 +103,42 @@ app.use(cookieParser());
 //   next();
 // });
 
-// Routes
-app.use('/api/auth' , authRoutes);
-app.use('/api/inquiry', inquiryRoutes);
-app.use('/api/etl' , etlRoutes )
-app.use('/api/capabililites' , capabililitesRoutes )
-app.use('/api/dashboard', coreDashboardRoutes);
-app.use('/api/chatbot' , chatbotRoutes)
-app.use("/api/cloud", cloudRoutes);
-app.use("/internal/cloud-account-credentials" , cloudAccountCredentialsRoutes)
+  // Global default deny: every route is authenticated unless explicitly public.
+  app.use(defaultDenyAuth);
+  app.use(requireInternalRole);
+  app.use(validateRequest);
 
-getClientDashboardRoutes(app);
+  app.get("/healthz", (_req, res) => {
+    return res.ok({ status: "ok" });
+  });
 
-// Start server after DB connection
-const PORT = process.env.PORT || 5000;
+  app.get("/readyz", async (_req, res, next) => {
+    const readinessResult = await readiness();
+    if (!readinessResult.ready) {
+      return next(
+        new AppError(503, "NOT_READY", "Service not ready", {
+          cause:
+            readinessResult.error instanceof Error
+              ? readinessResult.error
+              : undefined,
+        })
+      );
+    }
+    return res.ok({ status: "ready" });
+  });
 
-sequelize.authenticate()
-  .then(() => {
-    console.log('Database connected successfully');
-   return sequelize.sync({ force: false   , alter: false}); 
-  })
-  .then(() => {
-    app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
-  })
-  .catch(err => console.error('Database connection error:', err));
+  // Routes
+  mountApiRouters(app);
+  for (const basePath of INTERNAL_BASE_PATHS) {
+    app.use(`${basePath}/cloud-account-credentials`, cloudAccountCredentialsRoutes);
+  }
 
+  app.use(notFoundHandler);
+  app.use(errorHandler);
 
+  return app;
+}
+
+const app = createApp();
+
+export default app;

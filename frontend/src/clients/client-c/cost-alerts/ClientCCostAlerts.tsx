@@ -15,15 +15,25 @@ import {
   Loader2,
   Calendar
 } from "lucide-react";
+import type {
+  AlertItem,
+  AlertsEndpointData,
+  ApiLikeError,
+  BudgetItem,
+  BudgetStatusEndpointData,
+  ClientCCostAlertsProps,
+  CostAlertsApiData,
+  CostAlertsExtractedData,
+} from "./types";
 
-const ClientCCostAlerts = ({ api, caps }) => {
-  const [alertsData, setAlertsData] = useState(null);
+const ClientCCostAlerts = ({ api, caps }: ClientCCostAlertsProps) => {
+  const [alertsData, setAlertsData] = useState<CostAlertsApiData | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchCostAlertsData = async () => {
-      if (!api || !caps.modules?.costAlerts) {
+      if (!api || !caps?.modules?.["costAlerts"]) {
         setError('Cost alerts module not available');
         setLoading(false);
         return;
@@ -35,54 +45,64 @@ const ClientCCostAlerts = ({ api, caps }) => {
 
         // Fetch all cost alerts endpoints
         const [alertsRes, budgetStatusRes] = await Promise.allSettled([
-          api.call('costAlerts', 'alerts'),
-          api.call('costAlerts', 'budgetStatus')
+          api.call<AlertsEndpointData | AlertItem[]>('costAlerts', 'alerts'),
+          api.call<BudgetStatusEndpointData | BudgetItem[]>('costAlerts', 'budgetStatus')
         ]);
 
         console.log('Alerts Response Status:', alertsRes.status);
-        console.log('Alerts Response Value:', alertsRes.value);
+        if (alertsRes.status === "fulfilled") {
+          console.log('Alerts Response Value:', alertsRes.value);
+        }
         console.log('Budget Status Response Status:', budgetStatusRes.status);
-        console.log('Budget Status Response Value:', budgetStatusRes.value);
+        if (budgetStatusRes.status === "fulfilled") {
+          console.log('Budget Status Response Value:', budgetStatusRes.value);
+        }
 
         // Extract data from responses
-        let alertsData = null;
-        let budgetStatusData = null;
+        let alertsRaw: AlertsEndpointData | AlertItem[] = { alerts: [], summary: {} };
+        let budgetStatusRaw: BudgetStatusEndpointData | BudgetItem[] = { budgets: [], status: {} };
 
-        if (alertsRes.status === 'fulfilled' && alertsRes.value?.success) {
-          alertsData = alertsRes.value.data || alertsRes.value;
-          console.log('Raw alerts data:', alertsData);
+        if (alertsRes.status === 'fulfilled' && alertsRes.value) {
+          alertsRaw = alertsRes.value;
+          console.log('Raw alerts data:', alertsRaw);
         } else {
-          alertsData = { alerts: [], summary: {} };
           console.log('Using default alerts data due to failed response');
         }
 
-        if (budgetStatusRes.status === 'fulfilled' && budgetStatusRes.value?.success) {
-          budgetStatusData = budgetStatusRes.value.data || budgetStatusRes.value;
-          console.log('Raw budget status data:', budgetStatusData);
+        if (budgetStatusRes.status === 'fulfilled' && budgetStatusRes.value) {
+          budgetStatusRaw = budgetStatusRes.value;
+          console.log('Raw budget status data:', budgetStatusRaw);
         } else {
-          budgetStatusData = { budgets: [], status: {} };
           console.log('Using default budget status data due to failed response');
         }
 
-        // Ensure we have the expected structure
-        if (!alertsData.alerts) {
-          alertsData.alerts = Array.isArray(alertsData) ? alertsData : [];
-        }
-        
-        if (!budgetStatusData.budgets) {
-          budgetStatusData.budgets = Array.isArray(budgetStatusData) ? budgetStatusData : [];
-        }
+        const normalizedAlertsData: AlertsEndpointData = Array.isArray(alertsRaw)
+          ? { alerts: alertsRaw, summary: {} }
+          : {
+              ...alertsRaw,
+              alerts: Array.isArray(alertsRaw.alerts) ? alertsRaw.alerts : [],
+              summary: alertsRaw.summary || {},
+            };
 
-        console.log('Final processed alerts data:', alertsData);
-        console.log('Final processed budget status data:', budgetStatusData);
+        const normalizedBudgetStatusData: BudgetStatusEndpointData = Array.isArray(budgetStatusRaw)
+          ? { budgets: budgetStatusRaw, status: {} }
+          : {
+              ...budgetStatusRaw,
+              budgets: Array.isArray(budgetStatusRaw.budgets) ? budgetStatusRaw.budgets : [],
+              status: budgetStatusRaw.status || {},
+            };
+
+        console.log('Final processed alerts data:', normalizedAlertsData);
+        console.log('Final processed budget status data:', normalizedBudgetStatusData);
 
         setAlertsData({
-          alerts: alertsData,
-          budgetStatus: budgetStatusData
+          alerts: normalizedAlertsData,
+          budgetStatus: normalizedBudgetStatusData
         });
-      } catch (err) {
+      } catch (err: unknown) {
+        const typedErr = err as ApiLikeError;
         console.error('Error fetching cost alerts data:', err);
-        setError(err.message || 'Failed to fetch cost alerts data');
+        setError(typedErr.message || 'Failed to fetch cost alerts data');
       } finally {
         setLoading(false);
       }
@@ -91,7 +111,7 @@ const ClientCCostAlerts = ({ api, caps }) => {
     fetchCostAlertsData();
   }, [api, caps]);
 
-  const extractedData = useMemo(() => {
+  const extractedData = useMemo<CostAlertsExtractedData>(() => {
     if (!alertsData) {
       return {
         alerts: {
@@ -116,14 +136,22 @@ const ClientCCostAlerts = ({ api, caps }) => {
     // Normalize alerts data
     const alerts = alertsData.alerts || {};
     // Handle case where alertsData.alerts might be an array directly
-    const alertsList = Array.isArray(alertsData.alerts) ? alertsData.alerts : 
-                      Array.isArray(alerts.alerts) ? alerts.alerts : 
+    const alertsList: AlertItem[] = Array.isArray(alertsData.alerts) ? alertsData.alerts : 
+                      (typeof alerts === "object" && alerts !== null && Array.isArray((alerts as AlertsEndpointData).alerts)) ? (alerts as AlertsEndpointData).alerts || [] : 
                       Array.isArray(alerts) ? alerts : [];
     
     console.log('Normalized alerts list:', alertsList);
     
-    const alertMetrics = alertsList.reduce((acc, alert) => {
-      acc[alert.id] = {
+    const alertMetrics = alertsList.reduce<Record<string, {
+      name: string;
+      severity: string;
+      status: string;
+      costImpact: number;
+      triggeredDate: string | null;
+      ruleName: string;
+    }>>((acc, alert, index) => {
+      const key = String(alert.id ?? index);
+      acc[key] = {
         name: alert.name || 'Alert',
         severity: alert.severity || 'medium',
         status: alert.status || 'open',
@@ -137,20 +165,32 @@ const ClientCCostAlerts = ({ api, caps }) => {
     // Normalize budget status data
     const budgetStatus = alertsData.budgetStatus || {};
     // Handle case where budgetStatus might be an array directly
-    const budgets = Array.isArray(alertsData.budgetStatus) ? alertsData.budgetStatus :
-                   Array.isArray(budgetStatus.budgets) ? budgetStatus.budgets :
+    const budgets: BudgetItem[] = Array.isArray(alertsData.budgetStatus) ? alertsData.budgetStatus :
+                   (typeof budgetStatus === "object" && budgetStatus !== null && Array.isArray((budgetStatus as BudgetStatusEndpointData).budgets))
+                     ? (budgetStatus as BudgetStatusEndpointData).budgets || []
+                     :
                    Array.isArray(budgetStatus) ? budgetStatus : [];
     
     console.log('Normalized budgets list:', budgets);
 
-    const status = budgetStatus.status || {};
+    const status =
+      typeof budgetStatus === "object" && budgetStatus !== null && "status" in budgetStatus
+        ? ((budgetStatus as BudgetStatusEndpointData).status || {})
+        : {};
 
-    const budgetMetrics = budgets.reduce((acc, budget) => {
-      acc[budget.id] = {
+    const budgetMetrics = budgets.reduce<Record<string, {
+      name: string;
+      currentSpent: number;
+      budgetAmount: number;
+      percentageUsed: number;
+      status: string;
+    }>>((acc, budget, index) => {
+      const key = String(budget.id ?? index);
+      acc[key] = {
         name: budget.name || 'Budget',
         currentSpent: budget.currentSpent || 0,
         budgetAmount: budget.budgetAmount || 0,
-        percentageUsed: budget.budgetAmount > 0 ? (budget.currentSpent / budget.budgetAmount) * 100 : 0,
+        percentageUsed: (budget.budgetAmount || 0) > 0 ? ((budget.currentSpent || 0) / (budget.budgetAmount || 0)) * 100 : 0,
         status: budget.status || 'active'
       };
       return acc;
@@ -164,7 +204,10 @@ const ClientCCostAlerts = ({ api, caps }) => {
     return {
       alerts: {
         alerts: alertsList,
-        summary: alerts.summary || {},
+        summary:
+          typeof alerts === "object" && alerts !== null && "summary" in alerts
+            ? ((alerts as AlertsEndpointData).summary || {})
+            : {},
         alertMetrics
       },
       budgetStatus: {
@@ -218,7 +261,7 @@ const ClientCCostAlerts = ({ api, caps }) => {
   // Log the final extracted data for debugging
   console.log('Final extracted data:', extractedData);
 
-  const COLORS = ['#a02ff1', '#48bb78', '#f56565', '#ecc94b', '#4fd1c5', '#805ad5', '#ed8936', '#68d391', '#4c77b6', '#d53f8c'];
+  const COLORS = ['#007758', '#48bb78', '#f56565', '#ecc94b', '#4fd1c5', '#059669', '#ed8936', '#68d391', '#4c77b6', '#d53f8c'];
 
   return (
     <div className="animate-in fade-in zoom-in-95 duration-300 flex flex-col h-full">
@@ -239,8 +282,8 @@ const ClientCCostAlerts = ({ api, caps }) => {
                     {extractedData.alerts.alerts?.length || 0}
                   </p>
                 </div>
-                <div className="p-3 bg-[#a02ff1]/20 rounded-lg">
-                  <Bell className="text-[#a02ff1]" size={24} />
+                <div className="p-3 bg-[#007758]/20 rounded-lg">
+                  <Bell className="text-[#007758]" size={24} />
                 </div>
               </div>
               <p className="text-[10px] text-gray-500 mt-2">Active cost alerts</p>
@@ -251,7 +294,7 @@ const ClientCCostAlerts = ({ api, caps }) => {
                 <div>
                   <p className="text-xs text-gray-400 font-semibold uppercase tracking-wider">Critical</p>
                   <p className="text-2xl font-bold text-white mt-1">
-                    {extractedData.alerts.alerts?.filter(alert => alert.severity === 'critical')?.length || 0}
+                    {extractedData.alerts.alerts?.filter((alert: AlertItem) => alert.severity === 'critical')?.length || 0}
                   </p>
                 </div>
                 <div className="p-3 bg-red-500/20 rounded-lg">
@@ -281,7 +324,7 @@ const ClientCCostAlerts = ({ api, caps }) => {
                 <div>
                   <p className="text-xs text-gray-400 font-semibold uppercase tracking-wider">Over Budget</p>
                   <p className="text-2xl font-bold text-white mt-1">
-                    {extractedData.budgetStatus.budgets?.filter(budget => budget.percentageUsed > 100)?.length || 0}
+                    {extractedData.budgetStatus.budgets?.filter((budget: BudgetItem) => (budget.percentageUsed || 0) > 100)?.length || 0}
                   </p>
                 </div>
                 <div className="p-3 bg-orange-500/20 rounded-lg">
@@ -297,19 +340,19 @@ const ClientCCostAlerts = ({ api, caps }) => {
             {/* Alert Distribution */}
             <div className="bg-[#1a1b20]/60 backdrop-blur-md border border-white/5 rounded-2xl p-5 shadow-xl">
               <div className="flex items-center gap-2 mb-4">
-                <PieChartIcon size={16} className="text-[#a02ff1]" />
+                <PieChartIcon size={16} className="text-[#007758]" />
                 <h3 className="text-sm font-bold text-white">Alert Distribution by Severity</h3>
               </div>
               <div className="h-80">
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
                     <Pie
-                      data={extractedData.alerts.alerts.reduce((acc, alert) => {
-                        const existing = acc.find(item => item.name === alert.severity);
+                      data={extractedData.alerts.alerts.reduce<Array<{ name: string; value: number }>>((acc, alert) => {
+                        const existing = acc.find((item) => item.name === alert.severity);
                         if (existing) {
                           existing.value++;
                         } else {
-                          acc.push({ name: alert.severity, value: 1 });
+                          acc.push({ name: alert.severity || "unknown", value: 1 });
                         }
                         return acc;
                       }, [])}
@@ -319,17 +362,17 @@ const ClientCCostAlerts = ({ api, caps }) => {
                       outerRadius={80}
                       fill="#8884d8"
                       dataKey="value"
-                      label={({ name, value }) => `${name}: ${value}`}
+                      label={({ name, value }: { name?: string; value?: number }) => `${name}: ${value}`}
                     >
-                      {extractedData.alerts.alerts.reduce((acc, alert) => {
-                        const existing = acc.find(item => item.name === alert.severity);
+                      {extractedData.alerts.alerts.reduce<Array<{ name: string; value: number }>>((acc, alert) => {
+                        const existing = acc.find((item) => item.name === alert.severity);
                         if (existing) {
                           existing.value++;
                         } else {
-                          acc.push({ name: alert.severity, value: 1 });
+                          acc.push({ name: alert.severity || "unknown", value: 1 });
                         }
                         return acc;
-                      }, []).map((entry, index) => (
+                      }, []).map((entry, index: number) => (
                         <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                       ))}
                     </Pie>
@@ -340,7 +383,7 @@ const ClientCCostAlerts = ({ api, caps }) => {
                         borderRadius: '0.5rem',
                         color: 'white'
                       }}
-                      formatter={(value) => [value, 'Count']}
+                      formatter={(value: number | string) => [value, 'Count']}
                       labelStyle={{ fontWeight: 'bold', color: '#d1d5db' }}
                     />
                   </PieChart>
@@ -351,7 +394,7 @@ const ClientCCostAlerts = ({ api, caps }) => {
             {/* Budget Status */}
             <div className="bg-[#1a1b20]/60 backdrop-blur-md border border-white/5 rounded-2xl p-5 shadow-xl">
               <div className="flex items-center gap-2 mb-4">
-                <DollarSign size={16} className="text-[#a02ff1]" />
+                <DollarSign size={16} className="text-[#007758]" />
                 <h3 className="text-sm font-bold text-white">Budget Status</h3>
               </div>
               <div className="h-80">
@@ -373,7 +416,7 @@ const ClientCCostAlerts = ({ api, caps }) => {
                       fontSize={12}
                       tickLine={false}
                       axisLine={false}
-                      tickFormatter={(value) => `${value}%`}
+                      tickFormatter={(value: number | string) => `${value}%`}
                     />
                     <Tooltip 
                       contentStyle={{ 
@@ -382,17 +425,17 @@ const ClientCCostAlerts = ({ api, caps }) => {
                         borderRadius: '0.5rem',
                         color: 'white'
                       }}
-                      formatter={(value) => [`${value}%`, 'Percentage']}
+                      formatter={(value: number | string) => [`${value}%`, 'Percentage']}
                       labelStyle={{ fontWeight: 'bold', color: '#d1d5db' }}
                     />
                     <Bar 
-                      dataKey={(budget) => Math.min(budget.percentageUsed, 100)} 
+                      dataKey={(budget: BudgetItem) => Math.min(budget.percentageUsed || 0, 100)} 
                       name="Used" 
-                      fill="#a02ff1" 
+                      fill="#007758" 
                       stackId="a" 
                     />
                     <Bar 
-                      dataKey={(budget) => Math.max(0, budget.percentageUsed - 100)} 
+                      dataKey={(budget: BudgetItem) => Math.max(0, (budget.percentageUsed || 0) - 100)} 
                       name="Over" 
                       fill="#f56565" 
                       stackId="a" 
@@ -408,7 +451,7 @@ const ClientCCostAlerts = ({ api, caps }) => {
             {/* Recent Alerts */}
             <div className="bg-[#1a1b20]/60 backdrop-blur-md border border-white/5 rounded-2xl p-5 shadow-xl">
               <div className="flex items-center gap-2 mb-4">
-                <AlertTriangle size={16} className="text-[#a02ff1]" />
+                <AlertTriangle size={16} className="text-[#007758]" />
                 <h3 className="text-sm font-bold text-white">Recent Alerts</h3>
               </div>
               <div className="overflow-x-auto">
@@ -422,7 +465,7 @@ const ClientCCostAlerts = ({ api, caps }) => {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-800">
-                    {extractedData.alerts.alerts.slice(0, 10).map((alert, index) => (
+                    {extractedData.alerts.alerts.slice(0, 10).map((alert: AlertItem, index: number) => (
                       <tr key={index} className={index % 2 === 0 ? 'bg-gray-900/50' : 'bg-gray-800/50'}>
                         <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-300">{alert.ruleName || 'N/A'}</td>
                         <td className="px-4 py-3 whitespace-nowrap">
@@ -453,7 +496,7 @@ const ClientCCostAlerts = ({ api, caps }) => {
             {/* Budget Details */}
             <div className="bg-[#1a1b20]/60 backdrop-blur-md border border-white/5 rounded-2xl p-5 shadow-xl">
               <div className="flex items-center gap-2 mb-4">
-                <DollarSign size={16} className="text-[#a02ff1]" />
+                <DollarSign size={16} className="text-[#007758]" />
                 <h3 className="text-sm font-bold text-white">Budget Details</h3>
               </div>
               <div className="overflow-x-auto">
@@ -467,20 +510,20 @@ const ClientCCostAlerts = ({ api, caps }) => {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-800">
-                    {extractedData.budgetStatus.budgets.slice(0, 10).map((budget, index) => (
+                    {extractedData.budgetStatus.budgets.slice(0, 10).map((budget: BudgetItem, index: number) => (
                       <tr key={index} className={index % 2 === 0 ? 'bg-gray-900/50' : 'bg-gray-800/50'}>
                         <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-300">{budget.name || 'N/A'}</td>
                         <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-300">${budget.currentSpent?.toFixed(2) || '0.00'}</td>
                         <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-300">${budget.budgetAmount?.toFixed(2) || '0.00'}</td>
                         <td className="px-4 py-3 whitespace-nowrap">
                           <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                            budget.percentageUsed > 100 ? 'bg-red-500/20 text-red-400 border border-red-500/30' : 
-                            budget.percentageUsed > 90 ? 'bg-orange-500/20 text-orange-400 border border-orange-500/30' :
-                            budget.percentageUsed > 75 ? 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/30' : 'bg-green-500/20 text-green-400 border border-green-500/30'
+                            (budget.percentageUsed || 0) > 100 ? 'bg-red-500/20 text-red-400 border border-red-500/30' : 
+                            (budget.percentageUsed || 0) > 90 ? 'bg-orange-500/20 text-orange-400 border border-orange-500/30' :
+                            (budget.percentageUsed || 0) > 75 ? 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/30' : 'bg-green-500/20 text-green-400 border border-green-500/30'
                           }`}>
-                            {budget.percentageUsed > 100 ? 'Over Budget' : 
-                             budget.percentageUsed > 90 ? 'Near Limit' :
-                             budget.percentageUsed > 75 ? 'Warning' : 'Good'}
+                            {(budget.percentageUsed || 0) > 100 ? 'Over Budget' : 
+                             (budget.percentageUsed || 0) > 90 ? 'Near Limit' :
+                             (budget.percentageUsed || 0) > 75 ? 'Warning' : 'Good'}
                           </span>
                         </td>
                       </tr>

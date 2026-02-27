@@ -1,7 +1,8 @@
 import React from "react";
 import { AlertTriangle } from "lucide-react";
+import type { CostDriversMessageProps } from "../types";
 
-export function CostDriversMessage({ message }) {
+export function CostDriversMessage({ message }: CostDriversMessageProps) {
   return (
     <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-2xl p-4 flex items-start gap-3">
       <AlertTriangle className="text-yellow-400 flex-shrink-0 mt-0.5" size={20} />

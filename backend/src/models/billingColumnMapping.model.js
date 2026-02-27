@@ -1,6 +1,9 @@
 // models/BillingColumnMapping.js
+import { createRequire } from "module";
 import { DataTypes } from "sequelize";
-import sequelize from "../config/db.config.js";
+
+const require = createRequire(import.meta.url);
+const { sequelize } = require("../db/index.cjs");
 
 const BillingColumnMapping = sequelize.define(
   "BillingColumnMapping",
@@ -37,7 +40,6 @@ const BillingColumnMapping = sequelize.define(
   {
     tableName: "billing_column_mappings",
     timestamps: true,
-    updatedAt: false,
     indexes: [
       {
         name: "billing_column_mappings_clientid_provider_internal_field_source",
@@ -49,3 +51,5 @@ const BillingColumnMapping = sequelize.define(
 );
 
 export default BillingColumnMapping;
+
+

@@ -1,5 +1,8 @@
+import { createRequire } from "module";
 import { DataTypes } from "sequelize";
-import sequelize from "../config/db.config.js";
+
+const require = createRequire(import.meta.url);
+const { sequelize } = require("../db/index.cjs");
 import { UserRole } from "./UserRole.js";
 import bcrypt from "bcrypt"
 
@@ -44,3 +47,5 @@ const User = sequelize.define(
 );
 
 export default User;
+
+

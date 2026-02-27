@@ -2,8 +2,9 @@ import React from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { X } from "lucide-react";
 import { formatCurrency } from "../utils/format";
+import type { OptimizationDivClick, ResourceSidePanelProps } from "../types";
 
-export function ResourceSidePanel({ selectedResource, onClose }) {
+export function ResourceSidePanel({ selectedResource, onClose }: ResourceSidePanelProps) {
   return (
     <AnimatePresence>
       {selectedResource && (
@@ -19,7 +20,7 @@ export function ResourceSidePanel({ selectedResource, onClose }) {
             animate={{ x: 0 }}
             exit={{ x: 300 }}
             className="ml-auto h-[90vh] w-full max-w-md overflow-y-auto rounded-xl border border-[var(--border-light)] bg-white p-6"
-            onClick={(e) => e.stopPropagation()}
+            onClick={(e: OptimizationDivClick) => e.stopPropagation()}
           >
             <div className="mb-4 flex items-center justify-between">
               <h2 className="text-lg font-bold text-[var(--text-primary)] md:text-xl">
@@ -78,7 +79,7 @@ export function ResourceSidePanel({ selectedResource, onClose }) {
                 <div className="mb-3 text-xs font-bold uppercase text-[var(--text-muted)]">Typical Resolution Paths</div>
                 <div className="rounded-lg border border-[var(--border-light)] bg-[var(--bg-surface)] p-4">
                   <ul className="space-y-2">
-                    {(selectedResource.typicalResolutionPaths || []).map((path, idx) => (
+                    {(selectedResource.typicalResolutionPaths || []).map((path: string, idx: number) => (
                       <li key={idx} className="flex items-start gap-2 text-sm text-[var(--text-secondary)]">
                         <span className="mt-1 text-[var(--brand-primary)]">-</span>
                         <span>{path}</span>
@@ -103,3 +104,6 @@ export function ResourceSidePanel({ selectedResource, onClose }) {
 }
 
 export default ResourceSidePanel;
+
+
+

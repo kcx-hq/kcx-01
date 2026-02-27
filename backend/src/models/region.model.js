@@ -1,5 +1,8 @@
+import { createRequire } from "module";
 import { DataTypes } from "sequelize";
-import sequelize from "../config/db.config.js";
+
+const require = createRequire(import.meta.url);
+const { sequelize } = require("../db/index.cjs");
 
 const Region = sequelize.define(
   "Region",
@@ -52,3 +55,5 @@ const Region = sequelize.define(
 );
 
 export default Region;
+
+

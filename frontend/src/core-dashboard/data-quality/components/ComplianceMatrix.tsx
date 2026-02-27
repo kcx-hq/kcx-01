@@ -1,6 +1,7 @@
-﻿import { Tag } from "lucide-react";
+import { Tag } from "lucide-react";
+import type { DataQualityComplianceItem, StatsProps } from "../types";
 
-const ComplianceMatrix = ({ stats }) => {
+const ComplianceMatrix = ({ stats }: StatsProps) => {
   const compliance = Array.isArray(stats?.compliance) ? stats.compliance : [];
 
   return (
@@ -11,7 +12,7 @@ const ComplianceMatrix = ({ stats }) => {
 
       <div className="space-y-3">
         {compliance.length > 0 ? (
-          compliance.map((item) => (
+          compliance.map((item: DataQualityComplianceItem) => (
             <div key={item.key} className="flex items-center gap-3 text-xs">
               <span className="w-24 truncate text-right font-mono text-[var(--text-muted)]">
                 {item.key}
@@ -41,4 +42,7 @@ const ComplianceMatrix = ({ stats }) => {
 
 export { ComplianceMatrix };
 export default ComplianceMatrix;
+
+
+
 

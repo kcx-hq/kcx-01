@@ -1,6 +1,9 @@
 // src/models/ChatSession.model.js
+import { createRequire } from "module";
 import { DataTypes } from "sequelize";
-import sequelize from "../../config/db.config.js";
+
+const require = createRequire(import.meta.url);
+const { sequelize } = require("../../db/index.cjs");
 
 const ChatSession = sequelize.define(
   "ChatSession",
@@ -30,9 +33,34 @@ const ChatSession = sequelize.define(
 
     // Postgres JSONB (perfect for requirement capture)
     requirements: {
-      type: DataTypes.JSONB,
+      type: DataTypes.TEXT,
       allowNull: false,
-      defaultValue: {},
+      defaultValue: "{}",
+      get() {
+        const raw = this.getDataValue("requirements");
+        if (!raw) {
+          return {};
+        }
+        if (typeof raw === "object") {
+          return raw;
+        }
+        try {
+          return JSON.parse(raw);
+        } catch {
+          return {};
+        }
+      },
+      set(value) {
+        if (value === null || typeof value === "undefined") {
+          this.setDataValue("requirements", "{}");
+          return;
+        }
+        if (typeof value === "string") {
+          this.setDataValue("requirements", value);
+          return;
+        }
+        this.setDataValue("requirements", JSON.stringify(value));
+      },
     },
   },
   {
@@ -44,9 +72,9 @@ const ChatSession = sequelize.define(
     indexes: [
       { fields: ["status"] },
       { fields: ["created_at"] },
-      { using: "GIN", fields: ["requirements"] }, // JSONB search
     ],
   },
 );
 
 export default ChatSession;
+

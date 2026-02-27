@@ -23,10 +23,6 @@ interface UseCostAnalysisResult {
 
 const getPayload = (response: unknown): CostAnalysisApiData | null => {
   if (!isObjectRecord(response)) return null;
-  const envelopeData = response.data;
-  if (isObjectRecord(envelopeData)) {
-    return envelopeData as CostAnalysisApiData;
-  }
   return response as CostAnalysisApiData;
 };
 
@@ -115,3 +111,6 @@ export function useCostAnalysis({
 
   return { loading, isRefreshing, apiData, error };
 }
+
+
+

@@ -1,5 +1,7 @@
 import { costAnalysisRepository } from '../../../../modules/core-dashboard/analytics/cost-analysis/cost-analysis.repository.js';
 import { buildClientCResourceInventory } from './resources.service.js';
+import AppError from "../../../../errors/AppError.js";
+import logger from "../../../../lib/logger.js";
 
 /**
  * Extract uploadIds safely (same pattern everywhere)
@@ -24,18 +26,14 @@ function extractUploadIds(req) {
 /**
  * GET /api/client-c/resources/inventory
  */
-export const getClientCResources = async (req, res) => {
+export const getClientCResources = async (req, res, next) => {
   try {
     const uploadIds = extractUploadIds(req);
 
     if (!uploadIds.length) {
-      return res.json({
-        success: true,
-        data: {
-          inventory: [],
-          stats: {}
-        },
-        message: 'Please select at least one upload'
+      return res.ok({
+        inventory: [],
+        stats: {}
       });
     }
 
@@ -54,16 +52,9 @@ export const getClientCResources = async (req, res) => {
       departmentTagKey: 'department'
     });
 
-    return res.json({
-      success: true,
-      data
-    });
+    return res.ok(data);
   } catch (error) {
-    console.error('Client-C Resources Error:', error);
-    return res.status(500).json({
-      success: false,
-      message: 'Failed to load Client-C resources',
-      error: error.message
-    });
+    logger.error({ err: error, requestId: req.requestId }, 'Client-C Resources Error');
+    return next(new AppError(500, "INTERNAL", "Internal server error", { cause: error }));
   }
 };

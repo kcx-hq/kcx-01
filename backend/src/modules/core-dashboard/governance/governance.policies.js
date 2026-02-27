@@ -9,7 +9,7 @@ import { Op } from 'sequelize';
 import { getDateRange } from '../../../common/utils/date.helpers.js';
 import { formatCurrency } from '../../../common/utils/cost.helpers.js';
 import { FINOPS_CONSTANTS } from '../../../common/constants/finops.constants.js';
-import { costSharePercentage, roundTo } from '../../../common/utils/cost.calculations.js';
+import logger from "../../../lib/logger.js";
 
 /**
  * Helpers
@@ -630,7 +630,7 @@ export async function getAccountsWithOwnership(params = {}) {
       providers: Array.from(providerSet).sort()
     };
   } catch (error) {
-    console.error('Error in getAccountsWithOwnership:', error);
+    logger.error({ err: error }, 'Error in getAccountsWithOwnership');
     return {
       accounts: [],
       insights: {

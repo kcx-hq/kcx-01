@@ -6,6 +6,7 @@
 // - DOES NOT control flow. It only extracts/normalizes the user's input for the current step.
 
 import fetch from "node-fetch";
+import logger from "../../../lib/logger.js";
 
 const MODEL = "llama-3.1-8b-instant";
 const GROQ_CHAT_COMPLETIONS_URL = "https://api.groq.com/openai/v1/chat/completions";
@@ -139,7 +140,7 @@ export async function extractForStep({ step, userMessage, currentRequirements })
       return sanitized || null;
     }
   } catch (err) {
-    console.error("Groq SDK call failed, falling back to fetch:", err?.message || err);
+    logger.error("Groq SDK call failed, falling back to fetch:", err?.message || err);
   }
 
   // 2) Fallback: fetch OpenAI-compatible chat completions endpoint
@@ -164,7 +165,7 @@ export async function extractForStep({ step, userMessage, currentRequirements })
     const sanitized = sanitizeExtraction(parsed, step);
     return sanitized || null;
   } catch (err) {
-    console.error("Groq fetch call failed:", err?.message || err);
+    logger.error("Groq fetch call failed:", err?.message || err);
     return null;
   }
 }

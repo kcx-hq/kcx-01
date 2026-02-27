@@ -20,35 +20,45 @@ import {
 } from "lucide-react";
 
 import FilterBar from "../common/widgets/FilterBar";
+import type {
+  AlertItem,
+  BudgetItem,
+  ClientCCostAlertsViewProps,
+  DistributionItem,
+} from "./types";
+
+type CostAlertsTabId = "alerts" | "budget" | "overview";
+interface CostAlertsTab {
+  id: CostAlertsTabId;
+  label: string;
+  icon: React.ComponentType<{ size?: number; className?: string }>;
+  count: number;
+}
 
 const ClientCCostAlertsView = ({
-  api,
-  caps,
   filters,
   filterOptions,
   onFilterChange,
   onReset,
-  loading,
   isFiltering,
   alertsData,
   extractedData,
-  isEmptyState
-}) => {
-  const [activeTab, setActiveTab] = useState('alerts');
-  const COLORS = ['#a02ff1', '#f56565', '#48bb78', '#ecc94b', '#4fd1c5', '#805ad5'];
+}: ClientCCostAlertsViewProps) => {
+  const [activeTab, setActiveTab] = useState<CostAlertsTabId>('alerts');
+  const COLORS = ['#007758', '#f56565', '#48bb78', '#ecc94b', '#4fd1c5', '#059669'];
 
   // Error state handling
   const hasErrors = !extractedData || extractedData.metadata.isEmptyState;
 
   // Tabs for different sections
-  const tabs = [
+  const tabs: CostAlertsTab[] = [
     { id: 'alerts', label: 'Alerts', icon: Bell, count: extractedData?.alerts?.length || 0 },
     { id: 'budget', label: 'Budget Status', icon: DollarSign, count: extractedData?.budgetStatus?.length || 0 },
     { id: 'overview', label: 'Overview', icon: TrendingUp, count: 0 }
   ];
 
   // Severity color mapping
-  const getSeverityColor = (severity) => {
+  const getSeverityColor = (severity: string | undefined) => {
     switch (severity?.toLowerCase()) {
       case 'critical': return 'bg-red-500/20 text-red-400 border border-red-500/30';
       case 'high': return 'bg-orange-500/20 text-orange-400 border border-orange-500/30';
@@ -59,7 +69,7 @@ const ClientCCostAlertsView = ({
   };
 
   // Status color mapping
-  const getStatusColor = (status) => {
+  const getStatusColor = (status: string | undefined) => {
     switch (status?.toLowerCase()) {
       case 'active': return 'bg-red-500/20 text-red-400 border border-red-500/30';
       case 'resolved': return 'bg-green-500/20 text-green-400 border border-green-500/30';
@@ -74,7 +84,7 @@ const ClientCCostAlertsView = ({
       <div className="shrink-0 space-y-4 mb-4">
         <div className="bg-[#1a1b20] border border-white/5 p-4 rounded-xl flex flex-wrap gap-4 items-center shadow-lg relative z-40">
           <div className="flex items-center gap-2 text-sm text-gray-400 font-bold mr-2 uppercase tracking-wider">
-            <Filter size={16} className="text-[#a02ff1]" /> Filters
+            <Filter size={16} className="text-[#007758]" /> Filters
           </div>
           
           <FilterBar
@@ -84,15 +94,13 @@ const ClientCCostAlertsView = ({
             providerOptions={filterOptions?.providers || []}
             serviceOptions={filterOptions?.services || []}
             regionOptions={filterOptions?.regions || []}
-            statusOptions={filterOptions?.status || ['All', 'Active', 'Resolved', 'Suppressed']}
-            severityOptions={filterOptions?.severity || ['All', 'Critical', 'High', 'Medium', 'Low']}
           />
         </div>
       </div>
 
       {/* TABS */}
       <div className="flex gap-1 mb-6 bg-[#1a1b20]/60 backdrop-blur-md border border-white/5 rounded-xl p-1">
-        {tabs.map((tab) => {
+        {tabs.map((tab: CostAlertsTab) => {
           const Icon = tab.icon;
           return (
             <button
@@ -100,7 +108,7 @@ const ClientCCostAlertsView = ({
               onClick={() => setActiveTab(tab.id)}
               className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-lg text-sm font-medium transition-all duration-200 ${
                 activeTab === tab.id
-                  ? 'bg-[#a02ff1] text-white shadow-lg'
+                  ? 'bg-[#007758] text-white shadow-lg'
                   : 'text-gray-400 hover:text-gray-300 hover:bg-white/5'
               }`}
             >
@@ -121,7 +129,7 @@ const ClientCCostAlertsView = ({
       {/* CONTENT */}
       <div className="flex-1 overflow-y-auto relative min-h-0">
         {isFiltering && alertsData && (
-          <div className="absolute top-4 right-4 z-50 flex items-center gap-2 bg-[#1a1b20]/90 backdrop-blur-md border border-[#a02ff1]/30 rounded-lg px-3 py-2 shadow-lg">
+          <div className="absolute top-4 right-4 z-50 flex items-center gap-2 bg-[#1a1b20]/90 backdrop-blur-md border border-[#007758]/30 rounded-lg px-3 py-2 shadow-lg">
             <span className="text-xs text-gray-300 font-medium">Filtering...</span>
           </div>
         )}
@@ -149,8 +157,8 @@ const ClientCCostAlertsView = ({
                           {extractedData.alerts?.length || 0}
                         </p>
                       </div>
-                      <div className="p-3 bg-[#a02ff1]/20 rounded-lg">
-                        <Bell className="text-[#a02ff1]" size={24} />
+                      <div className="p-3 bg-[#007758]/20 rounded-lg">
+                        <Bell className="text-[#007758]" size={24} />
                       </div>
                     </div>
                   </div>
@@ -160,7 +168,7 @@ const ClientCCostAlertsView = ({
                       <div>
                         <p className="text-xs text-gray-400 font-semibold uppercase tracking-wider">Critical</p>
                         <p className="text-2xl font-bold text-red-400 mt-1">
-                          {extractedData.alerts?.filter(a => a.severity === 'Critical').length || 0}
+                          {extractedData.alerts?.filter((a: AlertItem) => a.severity === 'Critical').length || 0}
                         </p>
                       </div>
                       <div className="p-3 bg-red-500/20 rounded-lg">
@@ -174,7 +182,7 @@ const ClientCCostAlertsView = ({
                       <div>
                         <p className="text-xs text-gray-400 font-semibold uppercase tracking-wider">High Severity</p>
                         <p className="text-2xl font-bold text-orange-400 mt-1">
-                          {extractedData.alerts?.filter(a => a.severity === 'High').length || 0}
+                          {extractedData.alerts?.filter((a: AlertItem) => a.severity === 'High').length || 0}
                         </p>
                       </div>
                       <div className="p-3 bg-orange-500/20 rounded-lg">
@@ -188,7 +196,7 @@ const ClientCCostAlertsView = ({
                       <div>
                         <p className="text-xs text-gray-400 font-semibold uppercase tracking-wider">Active</p>
                         <p className="text-2xl font-bold text-yellow-400 mt-1">
-                          {extractedData.alerts?.filter(a => a.status === 'Active').length || 0}
+                          {extractedData.alerts?.filter((a: AlertItem) => a.status === 'Active').length || 0}
                         </p>
                       </div>
                       <div className="p-3 bg-yellow-500/20 rounded-lg">
@@ -203,7 +211,7 @@ const ClientCCostAlertsView = ({
                   {/* CHART - R - charts will be changed latter */}
                   <div className="bg-[#1a1b20]/60 backdrop-blur-md border border-white/5 rounded-2xl p-5 shadow-xl">
                     <div className="flex items-center gap-2 mb-4">
-                      <AlertTriangle size={16} className="text-[#a02ff1]" />
+                      <AlertTriangle size={16} className="text-[#007758]" />
                       <h3 className="text-sm font-bold text-white">Alert Severity Distribution</h3>
                     </div>
                     <div className="h-64">
@@ -214,12 +222,12 @@ const ClientCCostAlertsView = ({
                             cx="50%"
                             cy="50%"
                             labelLine={false}
-                            label={({ name, value }) => `${name}: ${value}`}
+                            label={({ name, value }: { name?: string; value?: number }) => `${name}: ${value}`}
                             outerRadius={80}
                             fill="#8884d8"
                             dataKey="count"
                           >
-                            {extractedData.severityDistribution.map((entry, index) => (
+                            {extractedData.severityDistribution.map((entry: DistributionItem, index: number) => (
                               <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                             ))}
                           </Pie>
@@ -233,7 +241,7 @@ const ClientCCostAlertsView = ({
                   {/* STATUS DISTRIBUTION */}
                   <div className="bg-[#1a1b20]/60 backdrop-blur-md border border-white/5 rounded-2xl p-5 shadow-xl">
                     <div className="flex items-center gap-2 mb-4">
-                      <CheckCircle size={16} className="text-[#a02ff1]" />
+                      <CheckCircle size={16} className="text-[#007758]" />
                       <h3 className="text-sm font-bold text-white">Alert Status Distribution</h3>
                     </div>
                     <div className="h-64">
@@ -250,7 +258,7 @@ const ClientCCostAlertsView = ({
                               color: 'white'
                             }}
                           />
-                          <Bar dataKey="count" fill="#a02ff1" />
+                          <Bar dataKey="count" fill="#007758" />
                         </BarChart>
                       </ResponsiveContainer>
                     </div>
@@ -260,7 +268,7 @@ const ClientCCostAlertsView = ({
                 {/* ALERTS TABLE */}
                 <div className="bg-[#1a1b20]/60 backdrop-blur-md border border-white/5 rounded-2xl p-5 shadow-xl">
                   <div className="flex items-center gap-2 mb-4">
-                    <Bell size={16} className="text-[#a02ff1]" />
+                    <Bell size={16} className="text-[#007758]" />
                     <h3 className="text-sm font-bold text-white">Recent Alerts</h3>
                   </div>
                   <div className="overflow-x-auto">
@@ -275,7 +283,9 @@ const ClientCCostAlertsView = ({
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-gray-800">
-                        {extractedData.alerts?.slice(0, 10).map((alert, index) => (
+                        {extractedData.alerts?.slice(0, 10).map((alert: AlertItem, index: number) => {
+                          const createdAt = alert.createdAt ?? alert.timestamp;
+                          return (
                           <tr key={index} className={index % 2 === 0 ? 'bg-gray-900/50' : 'bg-gray-800/50'}>
                             <td className="px-4 py-3">
                               <div>
@@ -297,10 +307,13 @@ const ClientCCostAlertsView = ({
                               ${alert.costImpact?.toLocaleString() || '0'}
                             </td>
                             <td className="px-4 py-3 text-sm text-gray-500">
-                              {new Date(alert.createdAt || alert.timestamp).toLocaleDateString()}
+                              {createdAt
+                                ? new Date(createdAt).toLocaleDateString()
+                                : "N/A"}
                             </td>
                           </tr>
-                        ))}
+                          );
+                        })}
                       </tbody>
                     </table>
                   </div>
@@ -321,8 +334,8 @@ const ClientCCostAlertsView = ({
                           {extractedData.budgetStatus?.length || 0}
                         </p>
                       </div>
-                      <div className="p-3 bg-[#a02ff1]/20 rounded-lg">
-                        <DollarSign className="text-[#a02ff1]" size={24} />
+                      <div className="p-3 bg-[#007758]/20 rounded-lg">
+                        <DollarSign className="text-[#007758]" size={24} />
                       </div>
                     </div>
                   </div>
@@ -332,7 +345,7 @@ const ClientCCostAlertsView = ({
                       <div>
                         <p className="text-xs text-gray-400 font-semibold uppercase tracking-wider">Over Budget</p>
                         <p className="text-2xl font-bold text-red-400 mt-1">
-                          {extractedData.budgetStatus?.filter(b => b.status === 'Over Budget').length || 0}
+                          {extractedData.budgetStatus?.filter((b: BudgetItem) => b.status === 'Over Budget').length || 0}
                         </p>
                       </div>
                       <div className="p-3 bg-red-500/20 rounded-lg">
@@ -346,7 +359,7 @@ const ClientCCostAlertsView = ({
                       <div>
                         <p className="text-xs text-gray-400 font-semibold uppercase tracking-wider">On Track</p>
                         <p className="text-2xl font-bold text-green-400 mt-1">
-                          {extractedData.budgetStatus?.filter(b => b.status === 'On Track').length || 0}
+                          {extractedData.budgetStatus?.filter((b: BudgetItem) => b.status === 'On Track').length || 0}
                         </p>
                       </div>
                       <div className="p-3 bg-green-500/20 rounded-lg">
@@ -360,7 +373,7 @@ const ClientCCostAlertsView = ({
                       <div>
                         <p className="text-xs text-gray-400 font-semibold uppercase tracking-wider">Near Limit</p>
                         <p className="text-2xl font-bold text-yellow-400 mt-1">
-                          {extractedData.budgetStatus?.filter(b => b.status === 'Near Limit').length || 0}
+                          {extractedData.budgetStatus?.filter((b: BudgetItem) => b.status === 'Near Limit').length || 0}
                         </p>
                       </div>
                       <div className="p-3 bg-yellow-500/20 rounded-lg">
@@ -373,7 +386,7 @@ const ClientCCostAlertsView = ({
                 {/* BUDGET STATUS TABLE */}
                 <div className="bg-[#1a1b20]/60 backdrop-blur-md border border-white/5 rounded-2xl p-5 shadow-xl">
                   <div className="flex items-center gap-2 mb-4">
-                    <DollarSign size={16} className="text-[#a02ff1]" />
+                    <DollarSign size={16} className="text-[#007758]" />
                     <h3 className="text-sm font-bold text-white">Budget Status</h3>
                   </div>
                   <div className="overflow-x-auto">
@@ -388,7 +401,7 @@ const ClientCCostAlertsView = ({
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-gray-800">
-                        {extractedData.budgetStatus?.map((budget, index) => (
+                        {extractedData.budgetStatus?.map((budget: BudgetItem, index: number) => (
                           <tr key={index} className={index % 2 === 0 ? 'bg-gray-900/50' : 'bg-gray-800/50'}>
                             <td className="px-4 py-3 text-sm font-medium text-gray-300">
                               {budget.name || budget.budgetName}
@@ -413,10 +426,10 @@ const ClientCCostAlertsView = ({
                                 <div className="w-24 bg-gray-700 rounded-full h-2 mr-2">
                                   <div 
                                     className={`h-2 rounded-full ${
-                                      budget.percentage >= 90 ? 'bg-red-500' :
-                                      budget.percentage >= 75 ? 'bg-yellow-500' : 'bg-green-500'
+                                      (budget.percentage || 0) >= 90 ? 'bg-red-500' :
+                                      (budget.percentage || 0) >= 75 ? 'bg-yellow-500' : 'bg-green-500'
                                     }`}
-                                    style={{ width: `${Math.min(budget.percentage, 100)}%` }}
+                                    style={{ width: `${Math.min(budget.percentage || 0, 100)}%` }}
                                   ></div>
                                 </div>
                                 <span className="text-xs text-gray-400">{budget.percentage?.toFixed(1) || 0}%</span>
@@ -437,7 +450,7 @@ const ClientCCostAlertsView = ({
                 {/* OVERVIEW SUMMARY */}
                 <div className="bg-[#1a1b20]/60 backdrop-blur-md border border-white/5 rounded-2xl p-5 shadow-xl">
                   <div className="flex items-center gap-2 mb-4">
-                    <TrendingUp size={16} className="text-[#a02ff1]" />
+                    <TrendingUp size={16} className="text-[#007758]" />
                     <h3 className="text-sm font-bold text-white">Cost Alerts Overview</h3>
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -451,13 +464,13 @@ const ClientCCostAlertsView = ({
                         <div className="flex justify-between">
                           <span className="text-sm text-gray-300">Critical Alerts</span>
                           <span className="text-sm font-bold text-red-400">
-                            {extractedData.alerts?.filter(a => a.severity === 'Critical').length || 0}
+                            {extractedData.alerts?.filter((a: AlertItem) => a.severity === 'Critical').length || 0}
                           </span>
                         </div>
                         <div className="flex justify-between">
                           <span className="text-sm text-gray-300">Active Alerts</span>
                           <span className="text-sm font-bold text-yellow-400">
-                            {extractedData.alerts?.filter(a => a.status === 'Active').length || 0}
+                            {extractedData.alerts?.filter((a: AlertItem) => a.status === 'Active').length || 0}
                           </span>
                         </div>
                       </div>
@@ -472,13 +485,13 @@ const ClientCCostAlertsView = ({
                         <div className="flex justify-between">
                           <span className="text-sm text-gray-300">Over Budget</span>
                           <span className="text-sm font-bold text-red-400">
-                            {extractedData.budgetStatus?.filter(b => b.status === 'Over Budget').length || 0}
+                            {extractedData.budgetStatus?.filter((b: BudgetItem) => b.status === 'Over Budget').length || 0}
                           </span>
                         </div>
                         <div className="flex justify-between">
                           <span className="text-sm text-gray-300">On Track</span>
                           <span className="text-sm font-bold text-green-400">
-                            {extractedData.budgetStatus?.filter(b => b.status === 'On Track').length || 0}
+                            {extractedData.budgetStatus?.filter((b: BudgetItem) => b.status === 'On Track').length || 0}
                           </span>
                         </div>
                       </div>

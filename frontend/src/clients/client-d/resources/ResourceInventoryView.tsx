@@ -1,5 +1,6 @@
 // frontend/clients/client-d/dashboards/resources/ResourceInventoryView.jsx
-import React, { useMemo } from "react";
+import React from "react";
+import type { ChangeEvent } from "react";
 import {
   Box,
   Download,
@@ -20,8 +21,15 @@ import ResourceTableView from "../../../core-dashboard/resources/components/Reso
 import GroupedListView from "../../../core-dashboard/resources/components/GroupedList";
 import ZombieListView from "../../../core-dashboard/resources/components/ZombieList";
 import InspectorDrawerView from "../../../core-dashboard/resources/components/InspectorDrawer";
+import type {
+  EmptyStateProps,
+  ResourceInventoryViewProps,
+  ResourceTab,
+  StatPillProps,
+  ToneMap,
+} from "./types";
 
-const EmptyState = ({ title, subtitle }) => (
+const EmptyState = ({ title, subtitle }: EmptyStateProps) => (
   <div className="py-16 flex flex-col items-center justify-center text-center">
     <div className="h-12 w-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center mb-4">
       <Box className="text-gray-500" />
@@ -31,9 +39,9 @@ const EmptyState = ({ title, subtitle }) => (
   </div>
 );
 
-const StatPill = ({ icon: Icon, label, value, tone = "purple" }) => {
-  const toneMap = {
-    purple: "from-[#2a123d]/70 to-[#171820] border-[#a02ff1]/30 text-[#caa3ff]",
+const StatPill = ({ icon: Icon, label, value, tone = "mint" }: StatPillProps) => {
+  const toneMap: ToneMap = {
+    mint: "from-emerald-50 to-white border-emerald-200 text-emerald-700",
     gray: "from-[#1b1c22] to-[#14151a] border-white/10 text-gray-200",
     green: "from-[#0f2a22]/60 to-[#14151a] border-emerald-400/20 text-emerald-200",
   };
@@ -84,10 +92,10 @@ const ResourceInventoryView = ({
   setGrouping,
   setSelectedResource,
   onToggleFlag,
-}) => {
+}: ResourceInventoryViewProps) => {
   if (loading) {
     return (
-      <div className="flex h-96 items-center justify-center text-[#a02ff1]">
+      <div className="flex h-96 items-center justify-center text-[#007758]">
         <Loader2 className="animate-spin" size={48} />
       </div>
     );
@@ -97,13 +105,16 @@ const ResourceInventoryView = ({
     isPremiumMasked && (activeTab === "untagged" || activeTab === "spiking");
   const isZombieGated = isPremiumMasked && activeTab === "zombie";
 
-  const showingLabel = useMemo(() => {
-    if (activeTab === "all") return "Inventory";
-    if (activeTab === "zombie") return "Cleanup";
-    if (activeTab === "untagged") return "Untagged";
-    if (activeTab === "spiking") return "Spiking";
-    return "Inventory";
-  }, [activeTab]);
+  const showingLabel =
+    activeTab === "all"
+      ? "Inventory"
+      : activeTab === "zombie"
+        ? "Cleanup"
+        : activeTab === "untagged"
+          ? "Untagged"
+          : activeTab === "spiking"
+            ? "Spiking"
+            : "Inventory";
 
   const hasRows =
     activeTab === "zombie"
@@ -119,8 +130,8 @@ const ResourceInventoryView = ({
           <div className="flex items-start justify-between gap-4">
             <div className="min-w-0">
               <div className="flex items-center gap-3">
-                <div className="h-10 w-10 rounded-2xl bg-[#a02ff1]/10 border border-[#a02ff1]/25 flex items-center justify-center">
-                  <Box className="text-[#a02ff1]" />
+                <div className="h-10 w-10 rounded-2xl bg-[#007758]/10 border border-[#007758]/25 flex items-center justify-center">
+                  <Box className="text-[#007758]" />
                 </div>
                 <div className="min-w-0">
                   <h1 className="text-2xl font-extrabold tracking-tight">
@@ -135,7 +146,7 @@ const ResourceInventoryView = ({
 
             <button
               onClick={onExportCSV}
-              className="shrink-0 flex items-center gap-2 px-4 py-2 rounded-2xl bg-[#a02ff1]/10 hover:bg-[#a02ff1]/20 border border-[#a02ff1]/30 text-[#caa3ff] font-bold text-xs transition"
+              className="shrink-0 flex items-center gap-2 px-4 py-2 rounded-2xl bg-[#007758]/10 hover:bg-[#007758]/20 border border-[#007758]/30 text-[#86efac] font-bold text-xs transition"
             >
               <Download size={14} /> CSV
             </button>
@@ -145,7 +156,7 @@ const ResourceInventoryView = ({
           <div className="mt-5 grid grid-cols-1 lg:grid-cols-3 gap-3">
             <StatPill
               icon={Server}
-              tone="purple"
+              tone="mint"
               label="Inventory Loaded"
               value={`${stats?.total ?? 0} assets`}
             />
@@ -180,7 +191,6 @@ const ResourceInventoryView = ({
                 count={stats.total}
                 cost={stats.totalCost}
                 icon={Server}
-                color="blue"
                 label="Total Spend"
                 isActive={activeTab === "all"}
                 onClick={() => setActiveTab("all")}
@@ -191,7 +201,6 @@ const ResourceInventoryView = ({
                 count={stats.zombieCount || 0}
                 cost={stats.zombieCost || 0}
                 icon={Ghost}
-                color="orange"
                 label="Wasted Spend"
                 isActive={activeTab === "zombie"}
                 onClick={() => setActiveTab("zombie")}
@@ -205,7 +214,6 @@ const ResourceInventoryView = ({
                       count={stats.untaggedCount}
                       cost={stats.untaggedCost}
                       icon={Tag}
-                      color="red"
                       label="Unallocated"
                       isActive={activeTab === "untagged"}
                       onClick={() => setActiveTab("untagged")}
@@ -217,7 +225,6 @@ const ResourceInventoryView = ({
                     count={stats.untaggedCount}
                     cost={stats.untaggedCost}
                     icon={Tag}
-                    color="red"
                     label="Unallocated"
                     isActive={activeTab === "untagged"}
                     onClick={() => setActiveTab("untagged")}
@@ -233,7 +240,6 @@ const ResourceInventoryView = ({
                       count={stats.spikingCount || 0}
                       cost={stats.spikingCost || 0}
                       icon={TrendingUp}
-                      color="purple"
                       label="Cost at Risk"
                       isActive={activeTab === "spiking"}
                       onClick={() => setActiveTab("spiking")}
@@ -245,7 +251,6 @@ const ResourceInventoryView = ({
                     count={stats.spikingCount || 0}
                     cost={stats.spikingCost || 0}
                     icon={TrendingUp}
-                    color="purple"
                     label="Cost at Risk"
                     isActive={activeTab === "spiking"}
                     onClick={() => setActiveTab("spiking")}
@@ -260,7 +265,7 @@ const ResourceInventoryView = ({
             {/* Tabs row */}
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 px-4 py-3 border-b border-white/10 bg-black/20">
               <div className="flex items-center gap-2">
-                {["all", "zombie", "untagged", "spiking"].map((key) => {
+                {(["all", "zombie", "untagged", "spiking"] as ResourceTab[]).map((key) => {
                   const label =
                     key === "all"
                       ? "Inventory"
@@ -281,7 +286,7 @@ const ResourceInventoryView = ({
                       className={[
                         "relative px-4 py-2 rounded-2xl text-xs font-extrabold transition",
                         isActive
-                          ? "bg-[#a02ff1] text-white shadow-[0_0_18px_rgba(160,47,241,0.35)]"
+                          ? "bg-[#007758] text-white shadow-[0_0_18px_rgba(0,119,88,0.35)]"
                           : "bg-white/5 text-gray-300 hover:bg-white/10",
                       ].join(" ")}
                     >
@@ -329,9 +334,11 @@ const ResourceInventoryView = ({
                           />
                           <input
                             value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
+                            onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                              setSearchTerm(e.target.value)
+                            }
                             placeholder="Search resources..."
-                            className="w-full pl-9 pr-4 py-2 bg-black/30 border border-white/10 rounded-2xl text-xs text-white focus:border-[#a02ff1] outline-none"
+                            className="w-full pl-9 pr-4 py-2 bg-black/30 border border-white/10 rounded-2xl text-xs text-white focus:border-[#007758] outline-none"
                           />
                         </div>
                       )}

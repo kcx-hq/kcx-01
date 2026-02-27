@@ -19,7 +19,11 @@ export const ComponentLoader = () => (
 /**
  * Section-first loader shown immediately on route switch.
  */
-export const SectionLoader = ({ sectionName = "Section" }) => (
+interface SectionLoaderProps {
+  sectionName?: string;
+}
+
+export const SectionLoader = ({ sectionName = "Section" }: SectionLoaderProps) => (
   <div className="animate-in fade-in zoom-in-95 duration-300">
     <div className="flex min-h-[420px] items-center justify-center rounded-2xl border border-[var(--border-light)] bg-white p-6">
       <div className="flex max-w-sm flex-col items-center text-center">
@@ -72,3 +76,6 @@ export const SkeletonLoader = () => (
     </div>
   </div>
 );
+
+
+

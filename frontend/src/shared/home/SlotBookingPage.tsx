@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import axios from "axios";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { motion } from "framer-motion";
@@ -16,8 +15,31 @@ import {
 } from "lucide-react";
 import toast from "react-hot-toast";
 import { DateTime } from "luxon";
+import { apiGet, apiPost } from "../../services/http";
+import { getApiErrorMessageWithRequestId } from "../../services/apiError";
 
-const API_URL = import.meta.env.VITE_API_URL;
+interface SlotApiItem {
+  start: string;
+  end: string;
+}
+
+interface SlotsByDateResponse {
+  slots: SlotApiItem[];
+  businessTimezone: string;
+}
+
+interface SlotTimeRange {
+  start: string;
+  end: string;
+}
+
+interface InquirySubmitPayload {
+  name: string;
+  email: string;
+  message: string;
+  preferred_datetime: string | null;
+  timezone: string;
+}
 
 export default function SlotBookingPage() {
   const navigate = useNavigate();
@@ -51,9 +73,9 @@ export default function SlotBookingPage() {
     if (!inquiry) navigate("/");
   }, [inquiry, navigate]);
 
-  const [selectedDate, setSelectedDate] = useState(null);
-  const [slots, setSlots] = useState([]);
-  const [selectedSlot, setSelectedSlot] = useState(null);
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const [slots, setSlots] = useState<SlotTimeRange[]>([]);
+  const [selectedSlot, setSelectedSlot] = useState<SlotTimeRange | null>(null);
   const [loadingSlots, setLoadingSlots] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
@@ -71,25 +93,28 @@ export default function SlotBookingPage() {
           "yyyy-MM-dd"
         );
 
-        const res = await axios.get(
-          `${API_URL}/api/inquiry/slots/by-date?date=${formattedDate}&timezone=${userTimezone}`
-        );
+        const response = await apiGet<SlotsByDateResponse>("/api/inquiry/slots/by-date", {
+          params: {
+            date: formattedDate,
+            timezone: userTimezone,
+          },
+        });
 
-        const localSlots = res.data.slots.map((slot) => ({
+        const localSlots = response.slots.map((slot) => ({
           start: DateTime.fromFormat(slot.start, "yyyy-MM-dd HH:mm", {
-            zone: res.data.businessTimezone,
+            zone: response.businessTimezone,
           })
             .setZone(userTimezone)
             .toFormat("HH:mm"),
           end: DateTime.fromFormat(slot.end, "yyyy-MM-dd HH:mm", {
-            zone: res.data.businessTimezone,
+            zone: response.businessTimezone,
           })
             .setZone(userTimezone)
             .toFormat("HH:mm"),
         }));
 
         setSlots(localSlots);
-      } catch (err) {
+      } catch (err: unknown) {
         console.error("Failed to fetch slots", err);
         setSlots([]);
       } finally {
@@ -105,6 +130,9 @@ export default function SlotBookingPage() {
       toast("Please select a slot");
       return;
     }
+    if (!selectedDate || !inquiry) {
+      return;
+    }
 
     setSubmitting(true);
 
@@ -118,7 +146,7 @@ export default function SlotBookingPage() {
         })
         .setZone(userTimezone, { keepLocalTime: true });
 
-      const payload = {
+      const payload: InquirySubmitPayload = {
         name: inquiry.name,
         email: inquiry.email,
         message: inquiry.message,
@@ -126,13 +154,13 @@ export default function SlotBookingPage() {
         timezone: userTimezone,
       };
 
-      await axios.post(`${API_URL}/api/inquiry/submit`, payload);
+      await apiPost("/api/inquiry/submit", payload);
 
       toast("Inquiry submitted successfully");
       navigate("/");
-    } catch (err) {
+    } catch (err: unknown) {
       console.error("Failed to submit inquiry", err);
-      toast("Failed to submit inquiry");
+      toast(getApiErrorMessageWithRequestId(err, "Failed to submit inquiry"));
     } finally {
       setSubmitting(false);
     }
@@ -246,7 +274,7 @@ export default function SlotBookingPage() {
                 <div className="relative">
                   <DatePicker
                     selected={selectedDate}
-                    onChange={(date) => setSelectedDate(date)}
+                    onChange={(date: Date | null) => setSelectedDate(date)}
                     minDate={new Date()}
                     dateFormat="MMMM d, yyyy"
                     className="w-full bg-[var(--bg-main)] border border-[var(--border-light)] rounded-[var(--radius-md)] p-3.5 pl-4 text-[var(--text-primary)] text-sm outline-none transition-colors cursor-pointer focus:border-[var(--brand-primary)]"
@@ -328,7 +356,7 @@ export default function SlotBookingPage() {
 
                 {!loadingSlots && slots.length > 0 && (
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                    {slots.map((slot, idx) => {
+                    {slots.map((slot: SlotTimeRange, idx: number) => {
                       const isActive = selectedSlot?.start === slot.start;
 
                       return (

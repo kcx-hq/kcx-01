@@ -1,16 +1,17 @@
 import { ArrowUpRight, ArrowDownRight } from "lucide-react";
 import { formatCurrency } from "../utils/format";
+import type { KpiCardProps } from "../types";
 
-const KpiCard = ({ label, value, icon: Icon, iconColor, subValue, onClick, trend }) => (
+const KpiCard = ({ label, value, icon: Icon, iconColor, subValue, onClick, trend }: KpiCardProps) => (
   <div
     onClick={onClick}
     className={`
       relative overflow-hidden rounded-xl bg-[#1a1b20] border border-white/5 p-4
       transition-all duration-300 ease-out h-28 flex flex-col justify-between group
-      ${onClick ? "cursor-pointer hover:border-[#a02ff1]/30 hover:bg-[#1a1b20]/80 hover:shadow-[0_0_20px_rgba(160,47,241,0.15)] hover:scale-[1.02] hover:-translate-y-1" : ""}
+      ${onClick ? "cursor-pointer hover:border-[#007758]/30 hover:bg-[#1a1b20]/80 hover:shadow-[0_0_20px_rgba(0,119,88,0.15)] hover:scale-[1.02] hover:-translate-y-1" : ""}
     `}
   >
-    <div className={`absolute -right-4 -top-4 h-16 w-16 rounded-full ${iconColor.replace("text-", "bg-")}/10 blur-xl group-hover:bg-[#a02ff1]/20 transition-all duration-500`} />
+    <div className={`absolute -right-4 -top-4 h-16 w-16 rounded-full ${iconColor.replace("text-", "bg-")}/10 blur-xl group-hover:bg-[#007758]/20 transition-all duration-500`} />
     <div className="flex justify-between items-start z-10">
       <span className="text-[10px] font-bold uppercase tracking-widest text-gray-500 group-hover:text-gray-300 transition-colors">
         {label}

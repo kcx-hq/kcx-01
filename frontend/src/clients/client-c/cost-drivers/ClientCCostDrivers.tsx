@@ -1,17 +1,23 @@
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import { useDebounce } from '../../../hooks/useDebounce';
 
 import { useClientCCostDriversData } from './hooks/useClientCCostDriversData';
 import { useClientCDriverDetails } from './hooks/useClientCDriverDetails';
 import { ClientCCostDriversView } from './ClientCCostDriversView';
+import type {
+  ClientCCostDriversProps,
+  CostDriverItem,
+  DriverType,
+  SortListBy,
+} from './types';
 
-export default function ClientCCostDrivers({ api, caps }) {
+export default function ClientCCostDrivers({ api, caps }: ClientCCostDriversProps) {
   // Only period state needed
   const [period, setPeriod] = useState(30);
   const [dimension] = useState('ServiceName');
   const [minChange] = useState(0);
-  const [selectedDriver, setSelectedDriver] = useState(null);
-  const [sortListBy, setSortListBy] = useState('diff');
+  const [selectedDriver, setSelectedDriver] = useState<CostDriverItem | null>(null);
+  const [sortListBy, setSortListBy] = useState<SortListBy>('diff');
   const [showTreeMap, setShowTreeMap] = useState(false);
 
   // Debounce the parameters
@@ -34,17 +40,7 @@ export default function ClientCCostDrivers({ api, caps }) {
   const filteredIncreases = data.increases;
   const filteredDecreases = data.decreases;
 
-  // Use dynamic filter options from the data (after data is available)
-  const dynamicFilterOptions = {
-    providers: ["All"],
-    services: ["All", ...(data.availableServices || [])],
-    regions: ["All"],
-    groupBy: ["ServiceName", "Region", "Provider"],
-  };
-
-  // No filter handlers needed
-
-  const onSelectDriver = useCallback((driver, driverType) => {
+  const onSelectDriver = useCallback((driver: CostDriverItem, driverType: DriverType) => {
     setSelectedDriver({ ...driver, _driverType: driverType });
   }, []);
 

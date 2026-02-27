@@ -1,5 +1,7 @@
 import { formatCurrency } from "../../../../core-dashboard/accounts-ownership/utils/format";
-const BarRow = ({ name, value, percentage }) => {
+import type { BarRowProps } from "../types";
+
+const BarRow = ({ name, value, percentage }: BarRowProps) => {
   const pct = Math.max(0, Math.min(100, Number(percentage || 0)));
   return (
     <div className="rounded-xl bg-white/5 border border-white/10 p-3">
@@ -15,7 +17,7 @@ const BarRow = ({ name, value, percentage }) => {
       </div>
 
       <div className="mt-2 h-2 rounded-full bg-black/30 overflow-hidden border border-white/10">
-        <div className="h-full bg-[#a02ff1]/70" style={{ width: `${pct}%` }} />
+        <div className="h-full bg-[#007758]/70" style={{ width: `${pct}%` }} />
       </div>
     </div>
   );

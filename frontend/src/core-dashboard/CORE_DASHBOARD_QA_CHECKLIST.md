@@ -4,7 +4,7 @@
 - Load `/dashboard` on hard refresh and verify full-screen loader appears.
 - Verify app lands on `Overview` after hard refresh from any `/dashboard/*` route.
 - Verify sidebar + header appear only after dashboard boot completes.
-- Verify light green theme (no dark/purple fallback styles).
+- Verify light green theme (no legacy accent fallback styles).
 
 ## Filters and URL State
 - Apply `provider/service/region` filters and confirm URL query params update.

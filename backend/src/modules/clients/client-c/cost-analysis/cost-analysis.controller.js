@@ -3,6 +3,8 @@
  */
 
 import { generateClientCCostAnalysis, getClientCFilterDropdowns } from './cost-analysis.service.js';
+import AppError from "../../../../errors/AppError.js";
+import logger from "../../../../lib/logger.js";
 
 const ALLOWED_GROUPS = ['ServiceName', 'RegionName', 'ProviderName', 'Department'];
 
@@ -31,10 +33,10 @@ function extractUploadIds(req) {
 /**
  * GET /api/client-c/cost-analysis
  */
-export const getCostAnalysis = async (req, res) => {
+export const getCostAnalysis = async (req, res, next) => {
   try {
     const uploadIds = extractUploadIds(req);
-    console.log('📊 Cost Analysis Request - uploadIds:', uploadIds);
+    logger.info('📊 Cost Analysis Request - uploadIds:', uploadIds);
 
     const filters = {
       provider: req.body?.provider || req.query?.provider || 'All',
@@ -47,7 +49,7 @@ export const getCostAnalysis = async (req, res) => {
       groupBy = 'ServiceName';
     }
 
-    console.log('🎯 Cost Analysis Filters:', { filters, groupBy, uploadIds });
+    logger.info('🎯 Cost Analysis Filters:', { filters, groupBy, uploadIds });
 
     const data = await generateClientCCostAnalysis(
       {
@@ -57,32 +59,28 @@ export const getCostAnalysis = async (req, res) => {
       groupBy
     );
 
-    console.log('✅ Cost Analysis Generated:', {
+    logger.info('✅ Cost Analysis Generated:', {
       totalSpend: data?.kpis?.totalSpend,
       chartDataLength: data?.chartData?.length,
       breakdownLength: data?.breakdown?.length
     });
 
-    res.json({ success: true, data });
+    return res.ok(data);
   } catch (error) {
-    console.error('Client-C Cost Analysis Error:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to generate cost analysis',
-      details: process.env.NODE_ENV === 'development' ? error.message : undefined,
-    });
+    logger.error({ err: error, requestId: req.requestId }, 'Client-C Cost Analysis Error');
+    return next(new AppError(500, "INTERNAL", "Internal server error", { cause: error }));
   }
 };
 
 /**
  * GET /api/client-c/cost-analysis/filters
  */
-export const getFilterOptions = async (req, res) => {
+export const getFilterOptions = async (req, res, next) => {
   try {
     const data = await getClientCFilterDropdowns();
-    res.json({ success: true, data });
+    return res.ok(data);
   } catch (error) {
-    console.error('Filter Error:', error);
-    res.status(500).json({ success: false, error: 'Failed to load filters' });
+    logger.error({ err: error, requestId: req.requestId }, 'Filter Error');
+    return next(new AppError(500, "INTERNAL", "Internal server error", { cause: error }));
   }
 };

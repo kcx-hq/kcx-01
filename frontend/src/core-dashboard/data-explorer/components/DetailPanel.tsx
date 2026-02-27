@@ -1,13 +1,14 @@
 import React from "react";
 import { X, Copy, Info, CheckCircle2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import type { DetailPanelProps, ExplorerCell } from "../types";
 
 const BRAND_EMERALD = "#007758";
 
-const DetailPanel = ({ selectedRow, setSelectedRow, allColumns }) => {
-  const [copiedKey, setCopiedKey] = React.useState(null);
+const DetailPanel = ({ selectedRow, setSelectedRow, allColumns }: DetailPanelProps) => {
+  const [copiedKey, setCopiedKey] = React.useState<string | null>(null);
 
-  const handleCopy = (key, value) => {
+  const handleCopy = (key: string, value: ExplorerCell | unknown) => {
     navigator.clipboard.writeText(String(value));
     setCopiedKey(key);
     setTimeout(() => setCopiedKey(null), 2000);
@@ -63,7 +64,7 @@ const DetailPanel = ({ selectedRow, setSelectedRow, allColumns }) => {
 
             {/* Data Attributes List */}
             <div className="flex-1 overflow-y-auto p-6 space-y-6 scrollbar-thin scrollbar-thumb-slate-200 bg-white">
-              {allColumns.map((col) => {
+              {allColumns.map((col: string) => {
                 const value = selectedRow?.[col];
                 const isNull = value === null || value === undefined || value === "";
 
@@ -133,3 +134,5 @@ const DetailPanel = ({ selectedRow, setSelectedRow, allColumns }) => {
 };
 
 export default DetailPanel;
+
+

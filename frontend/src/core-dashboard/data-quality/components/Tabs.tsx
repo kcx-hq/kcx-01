@@ -1,7 +1,8 @@
-﻿import { Crown } from "lucide-react";
+import { Crown } from "lucide-react";
+import type { DataQualityTab, TabsProps } from "../types";
 
-const Tabs = ({ stats, activeTab, onTabChange, isLocked }) => {
-  const tabs = [
+const Tabs = ({ stats, activeTab, onTabChange, isLocked }: TabsProps) => {
+  const tabs: Array<{ id: DataQualityTab; label: string; premium: boolean }> = [
     { id: "overview", label: "All Records", premium: false },
     { id: "untagged", label: `Untagged (${stats?.buckets?.untagged?.length || 0})`, premium: true },
     { id: "missingMeta", label: `Broken Metadata (${stats?.buckets?.missingMeta?.length || 0})`, premium: true },
@@ -29,4 +30,7 @@ const Tabs = ({ stats, activeTab, onTabChange, isLocked }) => {
 };
 
 export default Tabs;
+
+
+
 

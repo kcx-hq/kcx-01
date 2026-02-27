@@ -1,10 +1,19 @@
 import React, { useMemo, useState } from "react";
-import axios from "axios";
+import type { LucideIcon } from "lucide-react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { Lock, ArrowLeft, CheckCircle2, AlertCircle } from "lucide-react";
 import { toast } from "react-hot-toast";
+import { apiPost } from "../../../services/http";
+import { getApiErrorMessageWithRequestId } from "../../../services/apiError";
 
-const API = import.meta.env.VITE_API_URL;
+interface InputGroupProps extends Omit<React.InputHTMLAttributes<HTMLInputElement>, "onFocus" | "onBlur" | "onChange"> {
+  label: string;
+  icon: LucideIcon;
+  isFocused: boolean;
+  onFocus: React.FocusEventHandler<HTMLInputElement>;
+  onBlur: React.FocusEventHandler<HTMLInputElement>;
+  onChange: React.ChangeEventHandler<HTMLInputElement>;
+}
 
 export default function ResetPassword() {
   const [params] = useSearchParams();
@@ -17,9 +26,9 @@ export default function ResetPassword() {
   const [msg, setMsg] = useState("");
   const [isSuccess, setIsSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [focusedField, setFocusedField] = useState(null);
+  const [focusedField, setFocusedField] = useState<"password" | "confirmPassword" | null>(null);
 
-  const submit = async (e) => {
+  const submit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setMsg("");
     setIsSuccess(false);
@@ -35,18 +44,18 @@ export default function ResetPassword() {
 
     setLoading(true);
     try {
-      const res = await axios.post(`${API}/api/auth/reset-password/${token}`, {
+      const response = await apiPost<{ message?: string }>(`/api/auth/reset-password/${token}`, {
         password,
         confirmPassword,
       });
-      
-      setMsg(res.data.message);
+
+      setMsg(response.message || "Password reset successfully.");
       setIsSuccess(true);
       toast.success("Password reset successfully!");
-      
+
       setTimeout(() => navigate("/login"), 2000);
-    } catch (err) {
-      setMsg(err?.response?.data?.message || "Something went wrong.");
+    } catch (err: unknown) {
+      setMsg(getApiErrorMessageWithRequestId(err, "Something went wrong."));
       setIsSuccess(false);
     } finally {
       setLoading(false);
@@ -55,9 +64,8 @@ export default function ResetPassword() {
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4 bg-[#F7F8F7] relative overflow-hidden">
-      
       {/* ================= BACKGROUND GRID ================= */}
-      <div 
+      <div
         className="absolute inset-0 pointer-events-none"
         style={{
           backgroundImage: `
@@ -67,7 +75,7 @@ export default function ResetPassword() {
           backgroundSize: "40px 40px",
         }}
       />
-      
+
       {/* Ambient Glows */}
       <div className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] bg-[var(--brand-primary)] rounded-full blur-[120px] opacity-10" />
       <div className="absolute bottom-[-10%] right-[-10%] w-[500px] h-[500px] bg-[#0C4A6E] rounded-full blur-[120px] opacity-5" />
@@ -75,7 +83,6 @@ export default function ResetPassword() {
       {/* ================= MAIN CARD ================= */}
       <div className="w-full max-w-[440px] relative z-10">
         <div className="bg-white border border-slate-200/60 rounded-3xl shadow-[0_20px_40px_-12px_rgba(0,0,0,0.1)] p-8 md:p-10">
-          
           {/* Header Icon */}
           <div className="flex justify-center mb-6">
             <div className="w-14 h-14 bg-[var(--brand-primary-soft)] rounded-2xl flex items-center justify-center text-[var(--brand-primary)] shadow-sm">
@@ -91,30 +98,29 @@ export default function ResetPassword() {
           </div>
 
           <form onSubmit={submit} className="space-y-6">
-            
             {/* New Password */}
-            <InputGroup 
+            <InputGroup
               label="New Password"
               type="password"
-              placeholder="••••••••"
+              placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
               value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPassword(e.target.value)}
               icon={Lock}
-              isFocused={focusedField === 'password'}
-              onFocus={() => setFocusedField('password')}
+              isFocused={focusedField === "password"}
+              onFocus={() => setFocusedField("password")}
               onBlur={() => setFocusedField(null)}
             />
 
             {/* Confirm Password */}
-            <InputGroup 
+            <InputGroup
               label="Confirm Password"
               type="password"
-              placeholder="••••••••"
+              placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
               value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setConfirmPassword(e.target.value)}
               icon={Lock}
-              isFocused={focusedField === 'confirmPassword'}
-              onFocus={() => setFocusedField('confirmPassword')}
+              isFocused={focusedField === "confirmPassword"}
+              onFocus={() => setFocusedField("confirmPassword")}
               onBlur={() => setFocusedField(null)}
             />
 
@@ -127,7 +133,11 @@ export default function ResetPassword() {
                     : "bg-red-50 border-red-200 text-red-600"
                 }`}
               >
-                {isSuccess ? <CheckCircle2 size={18} className="mt-0.5 shrink-0" /> : <AlertCircle size={18} className="mt-0.5 shrink-0" />}
+                {isSuccess ? (
+                  <CheckCircle2 size={18} className="mt-0.5 shrink-0" />
+                ) : (
+                  <AlertCircle size={18} className="mt-0.5 shrink-0" />
+                )}
                 <p className="font-medium">{msg}</p>
               </div>
             )}
@@ -162,7 +172,6 @@ export default function ResetPassword() {
                 Back to log in
               </button>
             </div>
-
           </form>
         </div>
       </div>
@@ -170,8 +179,14 @@ export default function ResetPassword() {
   );
 }
 
-// --- Reusable Input Group ---
-const InputGroup = ({ label, icon: Icon, isFocused, onFocus, onBlur, ...props }) => (
+const InputGroup = ({
+  label,
+  icon: Icon,
+  isFocused,
+  onFocus,
+  onBlur,
+  ...props
+}: InputGroupProps) => (
   <div className="space-y-1.5">
     <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider pl-1 block">
       {label}
@@ -183,18 +198,20 @@ const InputGroup = ({ label, icon: Icon, isFocused, onFocus, onBlur, ...props })
         onFocus={onFocus}
         onBlur={onBlur}
         className={`
-          w-full font-medium rounded-xl py-3 pl-11 pr-4 
-          border outline-none text-sm transition-all duration-200 
+          w-full font-medium rounded-xl py-3 pl-11 pr-4
+          border outline-none text-sm transition-all duration-200
           placeholder:text-slate-400
-          ${isFocused 
-            ? 'bg-white border-[var(--brand-primary)] ring-4 ring-[var(--brand-primary-soft)] text-[#192630]' 
-            : 'bg-slate-50 border-slate-200 text-slate-900 hover:border-slate-300 hover:bg-slate-100'}
+          ${
+            isFocused
+              ? "bg-white border-[var(--brand-primary)] ring-4 ring-[var(--brand-primary-soft)] text-[#192630]"
+              : "bg-slate-50 border-slate-200 text-slate-900 hover:border-slate-300 hover:bg-slate-100"
+          }
         `}
       />
-      <div 
+      <div
         className={`
           absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none z-10 transition-colors duration-200
-          ${isFocused ? 'text-[var(--brand-primary)]' : 'text-slate-400'}
+          ${isFocused ? "text-[var(--brand-primary)]" : "text-slate-400"}
         `}
       >
         <Icon size={18} />

@@ -24,6 +24,29 @@ backend/uploads/
 .env
 .env.*
 *.local
+backend/.env*
+!backend/.env.example
+
+####################################
+# Secret and key material
+####################################
+**/service-account.json
+service-account.json
+*.key
+*.pem
+*.p12
+*.pfx
+*.p8
+*.pkcs8
+*.jks
+*.keystore
+*.kdbx
+*.asc
+*.ovpn
+id_rsa
+id_dsa
+id_ecdsa
+id_ed25519
 
 ####################################
 # Logs
@@ -55,3 +78,4 @@ lerna-debug.log*
 Thumbs.db
 
 .vscode
+.vite

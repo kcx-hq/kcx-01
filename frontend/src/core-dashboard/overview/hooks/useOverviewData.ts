@@ -15,12 +15,6 @@ interface UseOverviewDataResult {
 
 const getOverviewPayload = (response: unknown): OverviewApiData | null => {
   if (!isObjectRecord(response)) return null;
-
-  const envelopeData = response.data;
-  if (isObjectRecord(envelopeData)) {
-    return envelopeData as OverviewApiData;
-  }
-
   return response as OverviewApiData;
 };
 

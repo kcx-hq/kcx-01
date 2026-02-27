@@ -1,8 +1,18 @@
 import React, { useMemo } from "react";
+import type { ChangeEvent } from "react";
 import { Crown, AlertTriangle, TrendingUp, Layers, Search } from "lucide-react";
 import PremiumGate from "../../../core-dashboard/common/PremiumGate";
 
 import { fmtCurrency, fmtNumber, fmtPct, fmtDateShort, driftTone } from "./utils/format";
+import type {
+  DriftSummary,
+  RowProps,
+  SkuTableProps,
+  TileProps,
+  UnitEconomicsSkuItem,
+  UnitEconomicsTrendPoint,
+  UnitEconomicsViewProps,
+} from "./types";
 
 /**
  * Client-D layout:
@@ -13,7 +23,7 @@ import { fmtCurrency, fmtNumber, fmtPct, fmtDateShort, driftTone } from "./utils
  * Premium masking:
  * - Non premium can see totals, but drift details + sku breakdown is gated.
  */
-const Tile = ({ label, value, sub }) => (
+const Tile = ({ label, value, sub }: TileProps) => (
   <div className="rounded-2xl border border-white/10 bg-[#121319] p-4 shadow-2xl">
     <div className="text-[10px] uppercase tracking-widest text-gray-500 font-bold">{label}</div>
     <div className="text-xl font-extrabold text-white mt-1">{value}</div>
@@ -21,7 +31,7 @@ const Tile = ({ label, value, sub }) => (
   </div>
 );
 
-const Row = ({ left, right }) => (
+const Row = ({ left, right }: RowProps) => (
   <div className="flex items-center justify-between py-2 border-b border-white/10 last:border-b-0">
     <div className="text-xs text-gray-400">{left}</div>
     <div className="text-xs text-white font-semibold">{right}</div>
@@ -36,10 +46,10 @@ export default function UnitEconomicsView({
   skuEfficiency,
   skuSearch,
   setSkuSearch,
-}) {
+}: UnitEconomicsViewProps) {
   const driftBadgeClass = useMemo(() => driftTone(drift?.status), [drift?.status]);
 
-  const driftSummary = useMemo(() => {
+  const driftSummary = useMemo<DriftSummary | null>(() => {
     if (!drift) return null;
     return {
       baseline: drift?.baselineUnitPrice,
@@ -60,7 +70,7 @@ export default function UnitEconomicsView({
           <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
             <div>
               <div className="text-2xl font-extrabold tracking-tight flex items-center gap-2">
-                <Layers className="text-[#a02ff1]" size={22} />
+                <Layers className="text-[#007758]" size={22} />
                 Unit Economics
               </div>
               <div className="text-sm text-gray-400 mt-1">
@@ -138,7 +148,7 @@ export default function UnitEconomicsView({
       <div className="rounded-2xl border border-white/10 bg-[#121319] shadow-2xl overflow-hidden">
         <div className="px-4 py-3 border-b border-white/10 bg-black/20">
           <div className="text-xs font-extrabold tracking-wide text-gray-200 flex items-center gap-2">
-            <TrendingUp size={14} className="text-[#a02ff1]" />
+            <TrendingUp size={14} className="text-[#007758]" />
             Trend
             <span className="text-[10px] text-gray-500 font-bold">(date / unit price / qty / cost)</span>
           </div>
@@ -146,7 +156,7 @@ export default function UnitEconomicsView({
 
         <div className="p-4 max-h-[260px] overflow-auto space-y-2">
           {trend?.length ? (
-            trend.map((t, idx) => (
+            trend.map((t: UnitEconomicsTrendPoint, idx: number) => (
               <div
                 key={`${t?.date || idx}`}
                 className="flex items-center justify-between gap-4 px-3 py-2 rounded-xl bg-white/5 border border-white/10"
@@ -192,9 +202,9 @@ export default function UnitEconomicsView({
                 <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
                 <input
                   value={skuSearch}
-                  onChange={(e) => setSkuSearch(e.target.value)}
+                  onChange={(e: ChangeEvent<HTMLInputElement>) => setSkuSearch(e.target.value)}
                   placeholder="Search SKU..."
-                  className="w-full pl-9 pr-3 py-2 rounded-xl bg-[#1a1b20] border border-white/10 focus:border-[#a02ff1]/60 outline-none text-xs text-gray-200"
+                  className="w-full pl-9 pr-3 py-2 rounded-xl bg-[#1a1b20] border border-white/10 focus:border-[#007758]/60 outline-none text-xs text-gray-200"
                 />
               </div>
             )}
@@ -213,7 +223,7 @@ export default function UnitEconomicsView({
   );
 }
 
-function SkuTable({ skuEfficiency }) {
+function SkuTable({ skuEfficiency }: SkuTableProps) {
   return (
     <div className="p-4 overflow-auto">
       <div className="min-w-[900px]">
@@ -228,7 +238,7 @@ function SkuTable({ skuEfficiency }) {
 
         <div className="space-y-2 mt-3">
           {skuEfficiency?.length ? (
-            skuEfficiency.map((s, idx) => {
+            skuEfficiency.map((s: UnitEconomicsSkuItem, idx: number) => {
               const list = Number(s?.listUnitPrice || 0);
               const eff = Number(s?.effectiveUnitPrice || 0);
               const diffPct = list > 0 ? ((eff - list) / list) * 100 : 0;

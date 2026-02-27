@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { getCachedCapabilities } from '../services/getCapabilities';
 import { fetchCapabilities } from '../services/capabilities.api';
 import { createApiClient } from '../services/apiClient';
+import type { ApiClient, Capabilities } from '../services/apiClient';
 
 /**
  * Hook to load capabilities and create API client
@@ -13,10 +14,10 @@ import { createApiClient } from '../services/apiClient';
  *   - error: error object if loading failed
  */
 export function useCaps() {
-  const [caps, setCaps] = useState(null);
-  const [api, setApi] = useState(null);
+  const [caps, setCaps] = useState<Capabilities | null>(null);
+  const [api, setApi] = useState<ApiClient | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState<unknown>(null);
 
   useEffect(() => {
     let mounted = true;
@@ -52,7 +53,7 @@ export function useCaps() {
           setApi(createApiClient(fetched));
           setLoading(false);
         }
-      } catch (err) {
+      } catch (err: unknown) {
         console.error('Failed to load capabilities:', err);
         
         // If fetch failed but we have cached capabilities, use them as fallback

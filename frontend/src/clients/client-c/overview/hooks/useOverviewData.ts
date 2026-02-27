@@ -1,11 +1,24 @@
 import { useEffect, useRef, useState } from "react";
+import type { ApiClient, Capabilities } from "../../../../services/apiClient";
+import type {
+  ApiLikeError,
+  ClientCApiCallOptions,
+  OverviewData,
+  OverviewFilters,
+  UseOverviewDataResult,
+} from "../types";
 
-export const useOverviewData = (api, caps, debouncedFilters, forceRefreshKey) => {
-  const [overviewData, setOverviewData] = useState(null);
+export const useOverviewData = (
+  api: ApiClient | null,
+  caps: Capabilities | null,
+  debouncedFilters: OverviewFilters,
+  forceRefreshKey: number,
+): UseOverviewDataResult => {
+  const [overviewData, setOverviewData] = useState<UseOverviewDataResult["overviewData"]>(null);
   const [loading, setLoading] = useState(true);
   const [isFiltering, setIsFiltering] = useState(false);
 
-  const abortControllerRef = useRef(null);
+  const abortControllerRef = useRef<AbortController | null>(null);
   const prevFiltersRef = useRef(debouncedFilters);
   const isInitialMount = useRef(true);
 
@@ -34,29 +47,38 @@ export const useOverviewData = (api, caps, debouncedFilters, forceRefreshKey) =>
 
       try {
         const endpointDef =
-          caps?.modules?.overview?.enabled &&
-          caps?.modules?.overview?.endpoints?.overview;
+          caps?.modules?.["overview"]?.enabled &&
+          caps?.modules?.["overview"]?.endpoints?.["overview"];
 
         if (!endpointDef) return;
 
-        const params = {};
+        const params: Record<string, string> = {};
         if (debouncedFilters?.provider && debouncedFilters.provider !== "All")
-          params.provider = debouncedFilters.provider;
+          params["provider"] = debouncedFilters.provider;
         if (debouncedFilters?.service && debouncedFilters.service !== "All")
-          params.service = debouncedFilters.service;
+          params["service"] = debouncedFilters.service;
         if (debouncedFilters?.region && debouncedFilters.region !== "All")
-          params.region = debouncedFilters.region;
+          params["region"] = debouncedFilters.region;
 
-        const res = await api.call("overview", "overview", { params });
-        const payload = res?.data;
+        const options: ClientCApiCallOptions = { params };
+        if (abortControllerRef.current?.signal) {
+          options.signal = abortControllerRef.current.signal;
+        }
+        const response = await api.call<OverviewData | { data?: OverviewData }>("overview", "overview", options);
+        const payload = (
+          response && typeof response === "object" && "totalSpend" in response
+            ? response
+            : response?.data
+        ) as OverviewData | undefined;
 
         if (!abortControllerRef.current?.signal.aborted && payload) {
           setOverviewData(payload);
           prevFiltersRef.current = { ...debouncedFilters };
         }
-      } catch (error) {
-        if (error?.code !== "NOT_SUPPORTED") {
-          if (error?.name !== "AbortError" && !abortControllerRef.current?.signal.aborted) {
+      } catch (error: unknown) {
+        const apiError = error as ApiLikeError;
+        if (apiError?.code !== "NOT_SUPPORTED") {
+          if (apiError?.name !== "AbortError" && !abortControllerRef.current?.signal.aborted) {
             console.error("Error fetching overview data:", error);
           }
         }

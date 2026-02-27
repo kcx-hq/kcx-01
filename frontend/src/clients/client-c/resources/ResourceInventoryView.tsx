@@ -1,90 +1,58 @@
-import React, { useMemo, useState } from 'react';
-import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
-import { Server, Activity, Ghost, Tag, TrendingUp, Download, Search, List, LayoutGrid, Loader2, AlertCircle } from 'lucide-react';
+import React, { useMemo } from 'react';
+import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip } from 'recharts';
+import { Server, Activity, Ghost, Tag, TrendingUp, Loader2, AlertCircle } from 'lucide-react';
 import { motion } from 'framer-motion';
 
-import FilterBar from '../common/widgets/FilterBar';
 import { Card, CardContent, CardHeader, CardTitle } from '../common/widgets';
+import type {
+  CountDatum,
+  ResourceInventoryItem,
+  ResourceInventoryStats,
+  ResourceInventoryViewProps,
+} from './types';
 
 const ResourceInventoryView = ({
-  api,
-  caps,
-  filters,
-  onFilterChange,
   onReset,
   loading,
   isFiltering,
-  resourceData,
   extractedData,
   isEmptyState,
   error
-}) => {
-  const [selectedCard, setSelectedCard] = useState(null);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [viewMode, setViewMode] = useState('table'); // 'table' or 'chart'
-
+}: ResourceInventoryViewProps) => {
   // Safe destructuring with defaults to prevent crashes
   const {
     inventory = [],
     stats = {}
-  } = extractedData || {};
-
-  // Prepare filter options based on available data
-  const filterOptions = useMemo(() => ({
-    providers: ['All', 'AWS', 'Azure', 'GCP'],
-    services: ['All', ...(stats.availableServices || [])],
-    regions: ['All', 'us-east-1', 'us-west-2', 'eu-west-1', 'ap-southeast-1']
-  }), [stats]);
-
-  // Prepare pie chart data for resource types
-  const resourceTypeData = useMemo(() => {
-    const typeCounts = {};
-    inventory.forEach(resource => {
-      const type = resource.service || 'Unknown';
-      typeCounts[type] = (typeCounts[type] || 0) + 1;
-    });
-    
-    return Object.entries(typeCounts).map(([name, value]) => ({
-      name,
-      value
-    }));
-  }, [inventory]);
+  }: { inventory: ResourceInventoryItem[]; stats: ResourceInventoryStats } = extractedData || { inventory: [], stats: {} };
 
   // Prepare bar chart data for resource status
-  const resourceStatusData = useMemo(() => {
-    const statusCounts = {
-      Active: inventory.filter(r => r.status === 'Active').length,
-      Zombie: inventory.filter(r => r.status === 'Zombie').length,
-      Spiking: inventory.filter(r => r.status === 'Spiking').length,
-      New: inventory.filter(r => r.status === 'New').length
+  const resourceStatusData = useMemo<CountDatum[]>(() => {
+    const statusCounts: Record<string, number> = {
+      Active: inventory.filter((r: ResourceInventoryItem) => r.status === 'Active').length,
+      Zombie: inventory.filter((r: ResourceInventoryItem) => r.status === 'Zombie').length,
+      Spiking: inventory.filter((r: ResourceInventoryItem) => r.status === 'Spiking').length,
+      New: inventory.filter((r: ResourceInventoryItem) => r.status === 'New').length
     };
     
-    return Object.entries(statusCounts).map(([name, value]) => ({
+    return Object.entries(statusCounts).map(([name, value]: [string, number]) => ({
       name,
       value
     }));
   }, [inventory]);
 
   // Prepare department data
-  const departmentData = useMemo(() => {
-    const deptCounts = {};
-    inventory.forEach(resource => {
+  const departmentData = useMemo<CountDatum[]>(() => {
+    const deptCounts: Record<string, number> = {};
+    inventory.forEach((resource: ResourceInventoryItem) => {
       const dept = resource.department || 'Unassigned';
       deptCounts[dept] = (deptCounts[dept] || 0) + 1;
     });
     
-    return Object.entries(deptCounts).map(([name, value]) => ({
+    return Object.entries(deptCounts).map(([name, value]: [string, number]) => ({
       name,
       value
     }));
   }, [inventory]);
-
-  // Colors for charts
-  const COLORS = {
-    services: ['#a02ff1', '#48bb78', '#f56565', '#ecc94b', '#4fd1c5', '#805ad5'],
-    status: ['#10b981', '#ef4444', '#f59e0b', '#8b5cf6'], // Active, Zombie, Spiking, New
-    departments: ['#a02ff1', '#ec4899', '#8b5cf6', '#06b6d4', '#10b981', '#f59e0b']
-  };
 
   // Render loading state
   if (loading || isFiltering) {
@@ -128,7 +96,7 @@ const ResourceInventoryView = ({
         </p>
         <button 
           onClick={onReset}
-          className="mt-6 px-6 py-2 bg-[#a02ff1] hover:bg-[#8b2bd4] text-white rounded-lg transition-colors"
+          className="mt-6 px-6 py-2 bg-[#007758] hover:bg-[#8b2bd4] text-white rounded-lg transition-colors"
         >
           Reset Filters
         </button>
@@ -150,7 +118,7 @@ const ResourceInventoryView = ({
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium text-gray-400">Total Resources</CardTitle>
-            <Server className="w-4 h-4 text-purple-500" />
+            <Server className="w-4 h-4 text-emerald-500" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-white">
@@ -195,10 +163,10 @@ const ResourceInventoryView = ({
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium text-gray-400">Spiking</CardTitle>
-            <TrendingUp className="w-4 h-4 text-purple-500" />
+            <TrendingUp className="w-4 h-4 text-emerald-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-purple-400">
+            <div className="text-2xl font-bold text-emerald-400">
               {stats.spikingCount || 0}
             </div>
             <p className="text-xs text-gray-400 mt-1">
@@ -262,7 +230,7 @@ const ResourceInventoryView = ({
                         borderRadius: '8px'
                       }}
                     />
-                    <Bar dataKey="value" fill="#a02ff1" />
+                    <Bar dataKey="value" fill="#007758" />
                   </BarChart>
                 </ResponsiveContainer>
               </div>
@@ -292,7 +260,7 @@ const ResourceInventoryView = ({
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-800">
-                {inventory.map((resource, index) => (
+                {inventory.map((resource: ResourceInventoryItem, index: number) => (
                   <tr key={index} className={index % 2 === 0 ? 'bg-gray-900' : 'bg-gray-800'}>
                     <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-300 max-w-xs truncate" title={resource.id}>{resource.id}</td>
                     <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-300">{resource.service}</td>
@@ -300,7 +268,7 @@ const ResourceInventoryView = ({
                       <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
                         resource.status === 'Active' ? 'bg-green-800 text-green-100' : 
                         resource.status === 'Zombie' ? 'bg-orange-800 text-orange-100' :
-                        resource.status === 'Spiking' ? 'bg-purple-800 text-purple-100' :
+                        resource.status === 'Spiking' ? 'bg-emerald-800 text-emerald-100' :
                         resource.status === 'New' ? 'bg-blue-800 text-blue-100' : 'bg-gray-800 text-gray-100'
                       }`}>
                         {resource.status}

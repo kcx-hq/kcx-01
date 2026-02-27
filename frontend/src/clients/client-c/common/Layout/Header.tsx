@@ -5,7 +5,22 @@ import { Search, Download, ChevronDown, CheckCircle2, AlertTriangle, X, LogOut, 
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuthStore } from '../../../../store/Authstore';
 
-const Header = ({ title, anomalies = [], anomaliesCount = 0 }) => {
+interface AnomalyItem {
+  ServiceName?: string;
+  ProviderName?: string;
+  RegionName?: string;
+  ResourceId?: string;
+  cost?: number;
+  ChargePeriodStart?: string;
+}
+
+interface HeaderProps {
+  title: string;
+  anomalies?: AnomalyItem[];
+  anomaliesCount?: number;
+}
+
+const Header = ({ title, anomalies = [], anomaliesCount = 0 }: HeaderProps) => {
   const navigate = useNavigate();
   const { logout, user, updateProfile, fetchUser } = useAuthStore();
   const [showDialog, setShowDialog] = useState(false);
@@ -15,22 +30,14 @@ const Header = ({ title, anomalies = [], anomaliesCount = 0 }) => {
   const [fullName, setFullName] = useState('');
   const [isUpdating, setIsUpdating] = useState(false);
   const [updateError, setUpdateError] = useState('');
-  const profileMenuRef = useRef(null);
+  const profileMenuRef = useRef<HTMLDivElement | null>(null);
   const hasAnomalies = anomaliesCount > 0;
-  const formatCurrency = (val) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(val);
-
-  // Initialize form with user data
-  useEffect(() => {
-    if (showProfileSettings && user) {
-      setFullName(user.full_name || '');
-      setUpdateError('');
-    }
-  }, [showProfileSettings, user]);
+  const formatCurrency = (val: number | string | null | undefined) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(Number(val ?? 0));
 
   // Close profile menu when clicking outside
   useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (profileMenuRef.current && !profileMenuRef.current.contains(event.target)) {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (profileMenuRef.current && event.target instanceof Node && !profileMenuRef.current.contains(event.target)) {
         setShowProfileMenu(false);
       }
     };
@@ -49,7 +56,7 @@ const Header = ({ title, anomalies = [], anomaliesCount = 0 }) => {
     try {
       await logout();
       navigate('/sign-in');
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Logout failed:', error);
       // Still navigate to sign-in even if logout fails
       navigate('/sign-in');
@@ -57,7 +64,7 @@ const Header = ({ title, anomalies = [], anomaliesCount = 0 }) => {
   };
 
   // Handle profile update
-  const handleUpdateProfile = async (e) => {
+  const handleUpdateProfile = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsUpdating(true);
     setUpdateError('');
@@ -83,7 +90,7 @@ const Header = ({ title, anomalies = [], anomaliesCount = 0 }) => {
   };
 
   // Reset visible count when dialog opens/closes
-  const handleDialogToggle = (open) => {
+  const handleDialogToggle = (open: boolean) => {
     setShowDialog(open);
     if (!open) {
       setVisibleAnomaliesCount(5); // Reset to initial count when closing
@@ -98,9 +105,11 @@ const Header = ({ title, anomalies = [], anomaliesCount = 0 }) => {
       {/* Left: Title */}
       <div className="flex flex-col justify-center">
         <div className="flex items-center gap-2 text-[10px] text-gray-500 font-medium uppercase tracking-wider mb-0.5">
-          <span className="hover:text-[#a02ff1] cursor-pointer">K&Co.</span>
+          <span className="hover:text-[#007758] cursor-pointer">
+            KCX<span className="text-[#00b889]">.</span>
+          </span>
           <span>/</span>
-          <span className="text-[#a02ff1]">Dashboard</span>
+          <span className="text-[#007758]">Dashboard</span>
         </div>
         <h1 className="text-lg font-bold text-white tracking-tight">{title}</h1>
       </div>
@@ -108,11 +117,11 @@ const Header = ({ title, anomalies = [], anomaliesCount = 0 }) => {
       {/* Center: Search */}
       <div className="hidden md:flex flex-1 justify-center px-8">
         <div className="relative w-full max-w-sm group/search">
-          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 group-focus-within/search:text-[#a02ff1] transition-colors" />
+          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 group-focus-within/search:text-[#007758] transition-colors" />
           <input 
             type="text" 
             placeholder="Search..." 
-            className="w-full bg-[#1a1b20]/50 border border-white/10 rounded-lg pl-9 pr-4 py-2 text-xs text-white outline-none focus:bg-[#0f0f11] focus:border-[#a02ff1] transition-all"
+            className="w-full bg-[#1a1b20]/50 border border-white/10 rounded-lg pl-9 pr-4 py-2 text-xs text-white outline-none focus:bg-[#0f0f11] focus:border-[#007758] transition-all"
           />
         </div>
       </div>
@@ -151,12 +160,12 @@ const Header = ({ title, anomalies = [], anomaliesCount = 0 }) => {
             onClick={() => setShowProfileMenu(!showProfileMenu)}
             className="group flex items-center gap-2 p-1 rounded-full hover:bg-white/5 transition-all"
           >
-            <div className="w-7 h-7 rounded-full bg-gradient-to-tr from-[#a02ff1] to-[#60a5fa] flex items-center justify-center text-white font-bold text-xs shadow-lg ring-1 ring-[#0f0f11]">
+            <div className="w-7 h-7 rounded-full bg-gradient-to-tr from-[#007758] to-[#60a5fa] flex items-center justify-center text-white font-bold text-xs shadow-lg ring-1 ring-[#0f0f11]">
                 {user?.full_name ? user.full_name.charAt(0).toUpperCase() : (user?.email ? user.email.charAt(0).toUpperCase() : 'KC')}
             </div>
             
             <div className="hidden sm:block text-left">
-                <div className="text-xs font-bold text-white group-hover:text-[#a02ff1] transition-colors">
+                <div className="text-xs font-bold text-white group-hover:text-[#007758] transition-colors">
                   {user?.full_name || user?.email || 'Client Admin'}
                 </div>
             </div>
@@ -181,7 +190,7 @@ const Header = ({ title, anomalies = [], anomaliesCount = 0 }) => {
                 {/* User Info */}
                 <div className="p-3 border-b border-white/10">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-[#a02ff1] to-[#60a5fa] flex items-center justify-center text-white font-bold text-sm shadow-lg">
+                    <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-[#007758] to-[#60a5fa] flex items-center justify-center text-white font-bold text-sm shadow-lg">
                       {user?.full_name ? user.full_name.charAt(0).toUpperCase() : (user?.email ? user.email.charAt(0).toUpperCase() : 'KC')}
                     </div>
                     <div className="flex-1 min-w-0">
@@ -200,6 +209,8 @@ const Header = ({ title, anomalies = [], anomaliesCount = 0 }) => {
                   <button
                     onClick={() => {
                       setShowProfileMenu(false);
+                      setFullName(user?.full_name || "");
+                      setUpdateError("");
                       setShowProfileSettings(true);
                     }}
                     className="w-full flex items-center gap-3 px-3 py-2 text-sm text-gray-300 hover:bg-white/5 rounded-lg transition-colors"
@@ -232,7 +243,7 @@ const Header = ({ title, anomalies = [], anomaliesCount = 0 }) => {
       >
         <div 
           className="bg-[#1a1b20] border border-white/10 rounded-2xl shadow-2xl max-w-2xl w-full max-h-[80vh] overflow-hidden"
-          onClick={(e) => e.stopPropagation()}
+          onClick={(e: React.MouseEvent<HTMLDivElement>) => e.stopPropagation()}
         >
           {/* Dialog Header */}
           <div className="p-5 border-b border-white/5 flex items-center justify-between">
@@ -275,7 +286,7 @@ const Header = ({ title, anomalies = [], anomaliesCount = 0 }) => {
                   The following cost anomalies have been detected. These represent unusual cost spikes that may indicate inefficiencies or require investigation.
                 </p>
                 <div className="space-y-2">
-                  {anomalies.slice(0, visibleAnomaliesCount).map((item, index) => (
+                  {anomalies.slice(0, visibleAnomaliesCount).map((item: AnomalyItem, index: number) => (
                     <div 
                       key={index}
                       className="bg-[#0f0f11]/50 border border-white/5 rounded-lg p-3 hover:bg-[#0f0f11] transition-colors"
@@ -312,7 +323,7 @@ const Header = ({ title, anomalies = [], anomaliesCount = 0 }) => {
                   <div className="flex justify-center pt-3">
                     <button
                       onClick={() => setVisibleAnomaliesCount(anomalies.length)}
-                      className="px-4 py-2 bg-[#0f0f11] border border-white/10 hover:border-[#a02ff1]/50 rounded-lg text-xs font-semibold text-gray-300 hover:text-[#a02ff1] transition-all"
+                      className="px-4 py-2 bg-[#0f0f11] border border-white/10 hover:border-[#007758]/50 rounded-lg text-xs font-semibold text-gray-300 hover:text-[#007758] transition-all"
                     >
                       Load More ({anomalies.length - visibleAnomaliesCount} remaining)
                     </button>
@@ -321,7 +332,7 @@ const Header = ({ title, anomalies = [], anomaliesCount = 0 }) => {
                   <div className="flex justify-center pt-3">
                     <button
                       onClick={() => setVisibleAnomaliesCount(5)}
-                      className="px-4 py-2 bg-[#0f0f11] border border-white/10 hover:border-[#a02ff1]/50 rounded-lg text-xs font-semibold text-gray-300 hover:text-[#a02ff1] transition-all"
+                      className="px-4 py-2 bg-[#0f0f11] border border-white/10 hover:border-[#007758]/50 rounded-lg text-xs font-semibold text-gray-300 hover:text-[#007758] transition-all"
                     >
                       Show Less
                     </button>
@@ -356,14 +367,14 @@ const Header = ({ title, anomalies = [], anomaliesCount = 0 }) => {
             initial={{ scale: 0.95, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0.95, opacity: 0 }}
-            onClick={(e) => e.stopPropagation()}
+            onClick={(e: React.MouseEvent<HTMLDivElement>) => e.stopPropagation()}
             className="bg-[#1a1b20] border border-white/10 rounded-2xl shadow-2xl max-w-md w-full overflow-hidden"
           >
             {/* Modal Header */}
             <div className="p-5 border-b border-white/10 flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-[#a02ff1]/10 ring-1 ring-[#a02ff1]/20">
-                  <User size={20} className="text-[#a02ff1]" />
+                <div className="p-2 rounded-lg bg-[#007758]/10 ring-1 ring-[#007758]/20">
+                  <User size={20} className="text-[#007758]" />
                 </div>
                 <div>
                   <h2 className="text-lg font-bold text-white">Profile Settings</h2>
@@ -387,8 +398,8 @@ const Header = ({ title, anomalies = [], anomaliesCount = 0 }) => {
                 <input
                   type="text"
                   value={fullName}
-                  onChange={(e) => setFullName(e.target.value)}
-                  className="w-full bg-[#0f0f11] border border-white/10 rounded-lg px-4 py-3 text-sm text-white focus:outline-none focus:border-[#a02ff1] transition-all"
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFullName(e.target.value)}
+                  className="w-full bg-[#0f0f11] border border-white/10 rounded-lg px-4 py-3 text-sm text-white focus:outline-none focus:border-[#007758] transition-all"
                   placeholder="Enter your full name"
                   required
                 />
@@ -425,7 +436,7 @@ const Header = ({ title, anomalies = [], anomaliesCount = 0 }) => {
                 <button
                   type="submit"
                   disabled={isUpdating}
-                  className="flex-1 px-4 py-2.5 bg-[#a02ff1] hover:bg-[#8e25d9] rounded-lg text-sm font-semibold text-white transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex-1 px-4 py-2.5 bg-[#007758] hover:bg-[#006b4f] rounded-lg text-sm font-semibold text-white transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {isUpdating ? 'Updating...' : 'Save Changes'}
                 </button>

@@ -1,6 +1,3 @@
-import sequelize from "../config/db.config.js";
-import { DataTypes } from "sequelize";
-
 // Import models
 import Client from './Client.js';
 import User from './User.js';
@@ -161,3 +158,5 @@ export {
   ClientS3Integrations,
   CloudAccountCredentials
 };
+
+

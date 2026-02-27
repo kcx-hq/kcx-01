@@ -1,26 +1,25 @@
 import { v4 as uuidv4 } from "uuid";
 import { BillingUpload } from "../../../models/index.js";
 import { ingestBillingCsv } from "./billingIngest.service.js";
-import { getUserById } from "../user/user.service.js";
 import fs from "fs/promises";
 import { ingestS3File } from "./ingestS3File.js";
-import { CloudAccountCredentials } from "../../../models/index.js";
+import { CloudAccountCredentials, ClientS3Integrations } from "../../../models/index.js";
+import AppError from "../../../errors/AppError.js";
+import logger from "../../../lib/logger.js";
+import { buildS3IngestFingerprint, parseAndValidateS3IngestPayload } from "./lib/s3Ingest.utils.js";
+import { transitionUploadStatus } from "./uploadStatus.service.js";
 
-export async function uploadBillingCsv(req, res) {
+export async function uploadBillingCsv(req, res, next) {
   const file = req.file;
+  let upload = null;
 
   if (!file) {
-    return res.status(400).json({ message: "CSV file required" });
+    return next(new AppError(400, "VALIDATION_ERROR", "Invalid request"));
   }
 
   try {
-    // Check if user has already uploaded (free tier logic optional)
-    const existingUpload = await BillingUpload.findOne({
-      where: { uploadedby: req.user.id },
-    });
-
     // 1️⃣ Create upload record with PENDING
-    const upload = await BillingUpload.create({
+    upload = await BillingUpload.create({
       uploadid: uuidv4(),
       clientid: req.client_id,
       uploadedby: req.user.id,
@@ -34,11 +33,14 @@ export async function uploadBillingCsv(req, res) {
     });
 
     if (!req.file || !req.file.path) {
-      return res.status(400).json({ error: "CSV file missing" });
+      return next(new AppError(400, "VALIDATION_ERROR", "Invalid request"));
     }
 
     // 2️⃣ Update to PROCESSING before ETL
-    await upload.update({ status: "PROCESSING" });
+    await transitionUploadStatus({
+      uploadId: upload.uploadid,
+      toStatus: "PROCESSING",
+    });
 
     // 3️⃣ Run ETL
     await ingestBillingCsv({
@@ -48,93 +50,104 @@ export async function uploadBillingCsv(req, res) {
     });
 
     // 4️⃣ Mark COMPLETED
-    await upload.update({ status: "COMPLETED" });
+    await transitionUploadStatus({
+      uploadId: upload.uploadid,
+      toStatus: "COMPLETED",
+    });
 
     try {
       await fs.unlink(req.file.path);
     } catch (err) {
-      console.error("Failed to delete file:", err);
+      logger.error({ err, requestId: req.requestId }, "Failed to delete file");
     }
 
-    return res.status(200).json({
+    return res.ok({
       message: "Billing CSV processed",
       uploadId: upload.uploadid,
       status: "COMPLETED",
     });
 
   } catch (err) {
-    console.error("Upload failed:", err);
+    logger.error({ err, requestId: req.requestId }, "Upload failed");
 
     // 5️⃣ Mark FAILED (if upload was created)
     if (upload?.uploadid) {
-      await BillingUpload.update(
-        { status: "FAILED" },
-        { where: { uploadid: upload.uploadid } }
-      );
+      await transitionUploadStatus({
+        uploadId: upload.uploadid,
+        toStatus: "FAILED",
+      });
     }
 
-    return res.status(500).json({
-      message: "Upload failed",
-      error: err?.message,
-    });
+    return next(new AppError(500, "INTERNAL", "Internal server error"));
   }
 }
 
 
-export async function getAllBillingUploads(req, res) {
+export async function getAllBillingUploads(req, res, next) {
   const uploads = await BillingUpload.findAll({
     where: { clientid: req.client_id },
   });
-  res.json(uploads);
+  return res.ok(uploads);
 }
 
-export async function getUploadById(req, res) {
+export async function getUploadById(req, res, next) {
   const upload = await BillingUpload.findOne({
     where: { clientid: req.client_id, uploadid: req.params.uploadId },
   });
-  res.json(upload);
+  return res.ok(upload);
 }
 
-// controllers/s3Ingest.js
-// controllers/s3Ingest.js
-// Assumes your CloudAccountCredentials model has:
-// - accessKey (encrypted at rest)
-// - secretAccessKey (encrypted at rest)
-// - instance methods (from earlier): getDecryptedAccessKey(), getDecryptedSecretAccessKey()
+function toSafeString(value) {
+  return String(value || "").trim();
+}
 
-export async function s3Ingest(req, res) {
+export async function s3Ingest(req, res, next) {
   try {
-    console.log("Ingesting billing CSV from S3");
-
-    const body = req.body;
-
-    const s3Detail = body?.detail;
-    const rawKey = s3Detail?.object?.key;
-    const size = s3Detail?.object?.size;
-    const bucket = s3Detail?.bucket?.name;
-
-    const account = body?.account;
-    const region = body?.region;
-
-    if (!account || !region || !bucket || !rawKey || typeof size !== "number") {
-      return res.status(400).json({
-        error:
-          "Invalid payload. Required: account, region, detail.bucket.name, detail.object.key, detail.object.size",
-      });
+    if (!req.user?.id || !req.client_id) {
+      return next(new AppError(401, "UNAUTHENTICATED", "Authentication required"));
     }
 
-    const s3Key = decodeURIComponent(String(rawKey).replace(/\+/g, " "));
+    const {
+      account,
+      region,
+      bucket,
+      s3Key,
+      size,
+      etag,
+      sequencer,
+    } = parseAndValidateS3IngestPayload(req.body);
+
+    const integration = await ClientS3Integrations.findOne({
+      where: {
+        clientid: req.client_id,
+        bucket,
+      },
+      attributes: ["prefix"],
+    });
+
+    const configuredPrefix = toSafeString(integration?.prefix);
+    if (configuredPrefix) {
+      const normalizedPrefix = configuredPrefix.endsWith("/")
+        ? configuredPrefix
+        : `${configuredPrefix}/`;
+      if (!s3Key.startsWith(normalizedPrefix)) {
+        return next(new AppError(403, "UNAUTHORIZED", "You do not have permission to perform this action"));
+      }
+    }
 
     // Fetch credentials row
     const credentials = await CloudAccountCredentials.findOne({
-      where: { accountid: account },
+      where: {
+        clientId: req.client_id,
+        accountId: account,
+      },
     });
 
     if (!credentials) {
-      return res.status(404).json({ error: `No credentials found for account=${account}` });
+      return next(new AppError(403, "UNAUTHORIZED", "You do not have permission to perform this action"));
     }
 
-    const clientid = credentials.clientid;
+    const clientid = credentials.clientId;
 
     // Decrypt keys (DO NOT LOG)
     const accessKeyId =
@@ -148,15 +161,11 @@ export async function s3Ingest(req, res) {
         : null;
 
     if (!accessKeyId || !secretAccessKey) {
-      return res.status(500).json({
-        error: "Credentials missing or decryption helpers not available",
-      });
+      return next(new AppError(500, "INTERNAL", "Internal server error"));
     }
 
     // fingerprint for dedupe
-    const etag = s3Detail?.object?.etag ? String(s3Detail.object.etag).replace(/"/g, "") : "";
-    const sequencer = s3Detail?.object?.sequencer ? String(s3Detail.object.sequencer) : "";
-    const tempChecksum = `${etag}:${sequencer}`;
+    const tempChecksum = buildS3IngestFingerprint(etag, sequencer);
 
     // dedupe
     const exists = await BillingUpload.findOne({
@@ -170,7 +179,7 @@ export async function s3Ingest(req, res) {
     });
 
     if (exists) {
-      return res.status(200).json({
+      return res.ok({
         status: "duplicate_ignored",
         uploadId: exists.uploadid,
         uploadStatus: exists.status,
@@ -192,7 +201,7 @@ export async function s3Ingest(req, res) {
     });
 
     // ✅ Respond immediately (202 Accepted)
-    res.status(202).json({
+    res.accepted({
       status: "accepted",
       uploadId: upload.uploadid,
       message: "ETL started in background",
@@ -202,11 +211,11 @@ export async function s3Ingest(req, res) {
     setImmediate(async () => {
       try {
 
-        console.log("Background ETL started");
-        await BillingUpload.update(
-          { status: "PROCESSING" },
-          { where: { uploadid: upload.uploadid } }
-        );
+        logger.info("Background ETL started");
+        await transitionUploadStatus({
+          uploadId: upload.uploadid,
+          toStatus: "PROCESSING",
+        });
 
         await ingestS3File({
           region,
@@ -217,30 +226,33 @@ export async function s3Ingest(req, res) {
           clientcreds: { accessKeyId, secretAccessKey },
         });
 
-        await BillingUpload.update(
-          { status: "COMPLETED" },
-          { where: { uploadid: upload.uploadid } }
-        );
+        await transitionUploadStatus({
+          uploadId: upload.uploadid,
+          toStatus: "COMPLETED",
+        });
 
-        console.log("Background ETL completed");
+        logger.info("Background ETL completed");
       } catch (err) {
-        console.error("Background ETL failed:", err);
+        logger.error({ err, requestId: req.requestId }, "Background ETL failed");
 
-        await BillingUpload.update(
-          { status: "FAILED" },
-          { where: { uploadid: upload.uploadid } }
-        );
+        try {
+          await transitionUploadStatus({
+            uploadId: upload.uploadid,
+            toStatus: "FAILED",
+          });
+        } catch {
+          // no-op: keep response lifecycle isolated from background failures
+        }
       }
     });
 
     // IMPORTANT: we already responded above
     return;
   } catch (e) {
-    console.error("s3Ingest error:", e);
-    return res.status(500).json({ error: "Internal error", message: e?.message });
+    if (e?.message?.startsWith("Invalid") || e?.message?.includes("required")) {
+      return next(new AppError(400, "VALIDATION_ERROR", "Invalid request"));
+    }
+    logger.error({ err: e, requestId: req.requestId }, "s3Ingest error");
+    return next(new AppError(500, "INTERNAL", "Internal server error"));
   }
 }
-
-
-
-

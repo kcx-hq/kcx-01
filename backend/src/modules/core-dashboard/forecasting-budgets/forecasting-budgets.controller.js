@@ -1,3 +1,5 @@
+import AppError from "../../../errors/AppError.js";
+import logger from "../../../lib/logger.js";
 import { forecastingBudgetsService } from "./forecasting-budgets.service.js";
 
 const normalizeUploadIds = (value) => {
@@ -11,7 +13,7 @@ const normalizeUploadIds = (value) => {
   return [];
 };
 
-export const getForecastingBudgetsSummary = async (req, res) => {
+export const getForecastingBudgetsSummary = async (req, res, next) => {
   try {
     const uploadIds = normalizeUploadIds(
       req.query.uploadIds ??
@@ -34,14 +36,10 @@ export const getForecastingBudgetsSummary = async (req, res) => {
       costBasis: req.query.costBasis || req.body?.costBasis || "actual",
     });
 
-    res.json({ success: true, data });
+    return res.ok(data);
   } catch (error) {
-    console.error("Forecasting & Budgets Summary Error:", error);
-    res.status(500).json({
-      success: false,
-      error: "Failed to build Forecasting & Budgets summary",
-      message: error.message,
-    });
+    logger.error({ err: error, requestId: req.requestId }, "Forecasting & Budgets Summary Error");
+    return next(new AppError(500, "INTERNAL", "Internal server error", { cause: error }));
   }
 };
 

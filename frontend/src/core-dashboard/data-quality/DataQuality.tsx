@@ -1,5 +1,6 @@
 import DataQualityView from "./DataQualityView";
 import { useDataQuality } from "./hooks/useDataQuality";
+import type { DataQualityIssueRow, DataQualityProps, DataQualityTab } from "./types";
 
 const DataQuality = ({ filters, api, caps }) => {
   const isEnabled = Boolean(api && caps && caps.modules?.dataQuality?.enabled);

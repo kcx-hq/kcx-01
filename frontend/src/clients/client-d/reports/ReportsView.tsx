@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React from "react";
 import { FileText, Calendar, TrendingUp, Layers, MapPin } from "lucide-react";
 
 import LoadingState from "../../../core-dashboard/reports/components/LoadingState";
@@ -7,9 +7,10 @@ import Panel from "./components/Panel";
 import MiniStat from "./components/MiniStat";
 import BarRow from "./components/BarRow";
 import SplitBar from "./components/SplitBar";
+import type { ReportMetricItem, ReportsViewProps } from "./types";
 
 
-const ReportsView = ({ fetchingData, isLocked, reportData }) => {
+const ReportsView = ({ fetchingData, isLocked, reportData }: ReportsViewProps) => {
   if (fetchingData) return <LoadingState />;
 
   const data = reportData || {};
@@ -17,14 +18,13 @@ const ReportsView = ({ fetchingData, isLocked, reportData }) => {
   const topServices = Array.isArray(data?.topServices) ? data.topServices : [];
   const topRegions = Array.isArray(data?.topRegions) ? data.topRegions : [];
 
-  const peak = useMemo(() => {
-    if (!daily.length) return null;
-    let max = daily[0];
+  let peak = null;
+  if (daily.length) {
+    peak = daily[0];
     for (const d of daily) {
-      if ((d?.cost ?? 0) > (max?.cost ?? 0)) max = d;
+      if ((d?.cost ?? 0) > (peak?.cost ?? 0)) peak = d;
     }
-    return max;
-  }, [daily]);
+  }
 
   return (
     <div className="p-6 space-y-6 min-h-screen bg-[#0f0f11] text-white font-sans animate-in fade-in duration-500">
@@ -34,7 +34,7 @@ const ReportsView = ({ fetchingData, isLocked, reportData }) => {
           <div className="flex items-start justify-between gap-4 flex-wrap">
             <div>
               <h1 className="text-2xl font-extrabold flex items-center gap-2">
-                <FileText className="text-[#a02ff1]" size={22} />
+                <FileText className="text-[#007758]" size={22} />
                 Reports Summary
               </h1>
               <p className="text-sm text-gray-400 mt-1">
@@ -124,7 +124,7 @@ const ReportsView = ({ fetchingData, isLocked, reportData }) => {
         <div className="p-6 md:p-7 grid grid-cols-1 lg:grid-cols-2 gap-4">
           <Panel title="Top Services">
             <div className="space-y-3">
-              {topServices.slice(0, 8).map((s) => (
+              {topServices.slice(0, 8).map((s: ReportMetricItem) => (
                 <BarRow key={s.name} name={s.name} value={s.value} percentage={s.percentage} />
               ))}
               {!topServices.length && (
@@ -135,7 +135,7 @@ const ReportsView = ({ fetchingData, isLocked, reportData }) => {
 
           <Panel title="Top Regions">
             <div className="space-y-3">
-              {topRegions.slice(0, 8).map((r) => (
+              {topRegions.slice(0, 8).map((r: ReportMetricItem) => (
                 <BarRow key={r.name} name={r.name} value={r.value} percentage={r.percentage} />
               ))}
               {!topRegions.length && (

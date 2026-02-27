@@ -1,7 +1,14 @@
 /**
  * Normalizes department cost data from backend to standardized format for UI components
  */
-export const normalizeDepartmentCostData = (rawData) => {
+import type {
+  DepartmentMetric,
+  DepartmentCostSourceData,
+  DepartmentOverviewItem,
+  NormalizedDepartmentCostData,
+} from "../types";
+
+export const normalizeDepartmentCostData = (rawData: DepartmentCostSourceData | null | undefined): NormalizedDepartmentCostData => {
   if (!rawData) {
     return {
       overview: {
@@ -25,9 +32,9 @@ export const normalizeDepartmentCostData = (rawData) => {
 
   // Normalize overview data
   const overview = rawData.overview || {};
-  const departments = Array.isArray(overview.departments) ? overview.departments : [];
+  const departments: DepartmentOverviewItem[] = Array.isArray(overview.departments) ? overview.departments : [];
   
-  const departmentMetrics = departments.reduce((acc, dept) => {
+  const departmentMetrics = departments.reduce<Record<string, DepartmentMetric>>((acc, dept) => {
     acc[dept.name] = {
       totalCost: dept.totalCost || 0,
       percentage: dept.percentage || 0,

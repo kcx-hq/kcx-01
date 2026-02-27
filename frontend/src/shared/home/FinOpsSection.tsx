@@ -1,6 +1,23 @@
 import React from "react";
+import type { LucideIcon } from "lucide-react";
 import { TrendingUp, AlertTriangle, Target, Search } from "lucide-react";
 import { motion } from "framer-motion";
+
+type Tone = "warning" | "success" | "info" | "brand";
+
+interface FeatureRowProps {
+  icon: LucideIcon;
+  title: string;
+  desc: string;
+  tone: Tone;
+  variants: React.ComponentProps<typeof motion.div>["variants"];
+}
+
+interface ToneStyle {
+  bg: string;
+  border: string;
+  icon: string;
+}
 
 const FinOpsSection = () => {
   // Animation Variants for Parent Container (The Grid)
@@ -105,9 +122,9 @@ const FinOpsSection = () => {
 };
 
 // Extracted Component
-const FeatureRow = ({ icon: Icon, title, desc, tone, variants }) => {
+const FeatureRow = ({ icon: Icon, title, desc, tone, variants }: FeatureRowProps) => {
   // map tones to provided theme tokens
-  const toneMap = {
+  const toneMap: Record<Tone, ToneStyle> = {
     warning: {
       bg: "bg-[var(--highlight-yellow)]",
       border: "border-[var(--border-light)]",

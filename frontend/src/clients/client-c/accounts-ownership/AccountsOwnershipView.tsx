@@ -1,30 +1,23 @@
 import React from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '../common/widgets';
-import FilterBar from '../common/widgets/FilterBar';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
+import type { AccountItem, AccountsOwnershipViewProps, DepartmentMergedItem } from "./types";
 
 const AccountsOwnershipView = ({
-  filters,
-  onFilterChange,
-  onReset,
   loading,
   isFiltering,
   accountsData,
   complianceData,
-  summaryData,
   departmentData
-}) => {
-  const COLORS = ['#a02ff1', '#48bb78', '#f56565', '#ecc94b', '#4fd1c5', '#805ad5'];
-
+}: AccountsOwnershipViewProps) => {
   // Format currency
-  const formatCurrency = (val) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(val);
+  const formatCurrency = (val: number | string | null | undefined) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(Number(val ?? 0));
 
   if (loading && !accountsData.accounts) {
     return (
       <div className="animate-in fade-in zoom-in-95 duration-300 flex flex-col h-full">
         <div className="flex items-center justify-center h-full">
           <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#a02ff1] mx-auto mb-4"></div>
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#007758] mx-auto mb-4"></div>
             <p className="text-gray-400">Loading accounts data...</p>
           </div>
         </div>
@@ -38,7 +31,7 @@ const AccountsOwnershipView = ({
       {/* CONTENT */}
       <div className="flex-1 overflow-y-auto relative min-h-0">
         {isFiltering && (
-          <div className="absolute top-4 right-4 z-50 flex items-center gap-2 bg-[#1a1b20]/90 backdrop-blur-md border border-[#a02ff1]/30 rounded-lg px-3 py-2 shadow-lg">
+          <div className="absolute top-4 right-4 z-50 flex items-center gap-2 bg-[#1a1b20]/90 backdrop-blur-md border border-[#007758]/30 rounded-lg px-3 py-2 shadow-lg">
             <span className="text-xs text-gray-300 font-medium">Filtering...</span>
           </div>
         )}
@@ -160,7 +153,7 @@ const AccountsOwnershipView = ({
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-800">
-                    {departmentData.map((dept, index) => (
+                    {departmentData.map((dept: DepartmentMergedItem, index: number) => (
                       <tr key={index} className={index % 2 === 0 ? 'bg-gray-900' : 'bg-gray-800'}>
                         <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-300">{dept.name}</td>
                         <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-300">{formatCurrency(dept.totalCost)}</td>
@@ -208,7 +201,7 @@ const AccountsOwnershipView = ({
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-800">
-                    {accountsData.accounts.map((account, index) => (
+                    {accountsData.accounts.map((account: AccountItem, index: number) => (
                       <tr key={index} className={index % 2 === 0 ? 'bg-gray-900' : 'bg-gray-800'}>
                         <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-300">{account.accountId}</td>
                         <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-300">{account.accountName}</td>

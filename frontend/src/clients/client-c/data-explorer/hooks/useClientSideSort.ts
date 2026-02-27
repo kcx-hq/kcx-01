@@ -1,11 +1,18 @@
-export const useClientSideSort = ({ data, sortConfig }) => {
+import type { DataExplorerRow, DataExplorerSortConfig } from "../types";
+
+interface UseClientSideSortParams {
+  data: DataExplorerRow[];
+  sortConfig: DataExplorerSortConfig;
+}
+
+export const useClientSideSort = ({ data, sortConfig }: UseClientSideSortParams): DataExplorerRow[] => {
   if (!data || !Array.isArray(data) || !sortConfig || !sortConfig.key) {
     return data || [];
   }
 
   const { key, direction } = sortConfig;
   
-  return [...data].sort((a, b) => {
+  return [...data].sort((a: DataExplorerRow, b: DataExplorerRow) => {
     const aVal = a[key];
     const bVal = b[key];
     

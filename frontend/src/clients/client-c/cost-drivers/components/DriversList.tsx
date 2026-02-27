@@ -1,8 +1,9 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '../../common/widgets';
 import { TrendingUp, TrendingDown, Minus } from 'lucide-react';
+import type { CostDriverItem, LegacyDriversListProps, NumericLike } from '../types';
 
-const DriversList = ({ drivers, onDriverSelect, selectedDriver }) => {
+const DriversList = ({ drivers, onDriverSelect, selectedDriver }: LegacyDriversListProps) => {
   if (!drivers || drivers.length === 0) {
     return (
       <Card>
@@ -18,17 +19,17 @@ const DriversList = ({ drivers, onDriverSelect, selectedDriver }) => {
     );
   }
 
-  const formatCurrency = (value) => {
+  const formatCurrency = (value: NumericLike | null | undefined): string => {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
       currency: 'USD',
       notation: 'compact',
       maximumFractionDigits: 1
-    }).format(value);
+    }).format(Number(value || 0));
   };
 
-  const formatPercent = (value) => {
-    return `${(value * 100).toFixed(1)}%`;
+  const formatPercent = (value: NumericLike | null | undefined): string => {
+    return `${(Number(value || 0) * 100).toFixed(1)}%`;
   };
 
   return (
@@ -38,16 +39,16 @@ const DriversList = ({ drivers, onDriverSelect, selectedDriver }) => {
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
-          {drivers.map((driver, index) => {
+          {drivers.map((driver: CostDriverItem, index: number) => {
             const isSelected = selectedDriver?.name === driver.name;
-            const changeValue = driver.absoluteChange || (driver.currentValue - driver.previousValue) || 0;
+            const changeValue = driver.absoluteChange || ((driver.currentValue || 0) - (driver.previousValue || 0)) || 0;
             
             return (
               <div
                 key={index}
                 className={`p-4 rounded-lg border cursor-pointer transition-all ${
                   isSelected 
-                    ? 'border-[#a02ff1] bg-[#a02ff1]/10' 
+                    ? 'border-[#007758] bg-[#007758]/10' 
                     : 'border-gray-700 hover:border-gray-600 bg-gray-800/50'
                 }`}
                 onClick={() => onDriverSelect(driver)}
@@ -89,7 +90,7 @@ const DriversList = ({ drivers, onDriverSelect, selectedDriver }) => {
                   </div>
                   <div className="w-full bg-gray-700 rounded-full h-2">
                     <div
-                      className="bg-gradient-to-r from-purple-500 to-pink-500 h-2 rounded-full transition-all duration-300"
+                      className="bg-gradient-to-r from-emerald-500 to-pink-500 h-2 rounded-full transition-all duration-300"
                       style={{
                         width: `${Math.min(driver.impactPercentage ? Math.abs(driver.impactPercentage) * 100 : 0, 100)}%`
                       }}

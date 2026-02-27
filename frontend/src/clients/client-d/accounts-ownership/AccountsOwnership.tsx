@@ -3,23 +3,33 @@ import { useAuthStore } from "../../../store/Authstore";
 import { useDebounce } from "../../../hooks/useDebounce";
 import { AccountsOwnershipView } from "./AccountsOwnershipView";
 import { formatCurrency } from "../../../core-dashboard/accounts-ownership/utils/format";
+import type {
+  AccountsOwnershipProps,
+  AccountsOwnershipSortField,
+  AccountsOwnershipSortOrder,
+  TagCoverageRow,
+} from "./types";
 
 // ✅ reuse core hook, but response is normalized differently on client-d
 import { useAccountsOwnershipData } from "./hooks/useAccountsOwnershipData";
 import { normalizeTagCoverageResponse } from "./utils/normalizeTagCoverageResponse";
 
-export default function AccountsOwnership({ filters = {}, api, caps }) {
+export default function AccountsOwnership({ filters = {}, api, caps }: AccountsOwnershipProps) {
+  // module guard
+  if (!api || !caps || !caps.modules?.["governance"]?.enabled) return null;
+
+  return <AccountsOwnershipContent filters={filters} api={api} caps={caps} />;
+}
+
+function AccountsOwnershipContent({ filters = {}, api, caps }: AccountsOwnershipProps) {
   const { user } = useAuthStore();
   const isPremiumMasked = !user?.is_premium;
-
-  // module guard
-  if (!api || !caps || !caps.modules?.governance?.enabled) return null;
 
   // UI state
   const [searchTerm, setSearchTerm] = useState("");
   const [filterProvider, setFilterProvider] = useState("All"); // optional if you want UI control
-  const [sortBy, setSortBy] = useState("cost"); // only for table
-  const [sortOrder, setSortOrder] = useState("desc");
+  const [sortBy, setSortBy] = useState<AccountsOwnershipSortField>("cost"); // only for table
+  const [sortOrder, setSortOrder] = useState<AccountsOwnershipSortOrder>("desc");
 
   // provider precedence (filters first, then local)
   const currentFilters = useMemo(() => {
@@ -48,7 +58,7 @@ export default function AccountsOwnership({ filters = {}, api, caps }) {
     api,
     caps,
     debouncedFilters,
-    uploadId: filters.uploadId,
+    ...(filters.uploadId ? { uploadId: filters.uploadId } : {}),
   });
 
   // normalize to new response structure
@@ -62,7 +72,7 @@ export default function AccountsOwnership({ filters = {}, api, caps }) {
     const q = searchTerm.trim().toLowerCase();
     let out = !q
       ? list
-      : list.filter((r) => {
+      : list.filter((r: TagCoverageRow) => {
           const id = String(r.resourceId || "").toLowerCase();
           const name = String(r.resourceName || "").toLowerCase();
           const tags = (r.missingTags || []).join(",").toLowerCase();
@@ -71,7 +81,7 @@ export default function AccountsOwnership({ filters = {}, api, caps }) {
         });
 
     // sort
-    out = [...out].sort((a, b) => {
+    out = [...out].sort((a: TagCoverageRow, b: TagCoverageRow) => {
       const dir = sortOrder === "asc" ? 1 : -1;
 
       if (sortBy === "cost") return (Number(a.cost || 0) - Number(b.cost || 0)) * dir;
@@ -87,7 +97,7 @@ export default function AccountsOwnership({ filters = {}, api, caps }) {
   }, [data.missingTags, searchTerm, sortBy, sortOrder]);
 
   const onSortChange = useCallback(
-    (field) => {
+    (field: AccountsOwnershipSortField) => {
       if (sortBy === field) setSortOrder(sortOrder === "asc" ? "desc" : "asc");
       else {
         setSortBy(field);
@@ -105,14 +115,14 @@ export default function AccountsOwnership({ filters = {}, api, caps }) {
     }
 
     const headers = ["Resource ID", "Resource Name", "Missing Tags", "Cost"];
-    const csvRows = rowsToExport.map((r) => [
+    const csvRows = rowsToExport.map((r: TagCoverageRow) => [
       r.resourceId || "",
       r.resourceName || "",
       (r.missingTags || []).join(" | "),
       Number(r.cost || 0).toFixed(2),
     ]);
 
-    const csvContent = [headers.join(","), ...csvRows.map((r) => r.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(","))].join("\n");
+    const csvContent = [headers.join(","), ...csvRows.map((r: string[]) => r.map((c: string) => `"${String(c).replace(/"/g, '""')}"`).join(","))].join("\n");
 
     const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
     const link = document.createElement("a");

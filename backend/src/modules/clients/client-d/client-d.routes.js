@@ -9,7 +9,7 @@ import unitEconomicsRoutes from './unit-economics/unit-economics.routes.js';
 const router = express.Router();
 
 router.get('/' , (req, res) => {
-  res.send('Client D API is working');
+  return res.ok({ message: "Client D API is working" });
 });
 
 router.use('/overview' ,  overviewRoutes)

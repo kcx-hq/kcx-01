@@ -1,10 +1,12 @@
-export const uploadGridStyle = {
+import type { UploadGridStyle, UploadTheme } from "./types";
+
+export const uploadGridStyle: UploadGridStyle = {
   backgroundImage:
     "linear-gradient(to right, rgba(28, 35, 33, 0.05) 1px, transparent 1px), linear-gradient(to bottom, rgba(28, 35, 33, 0.05) 1px, transparent 1px)",
   backgroundSize: "40px 40px",
 };
 
-export const uploadTheme = {
+export const uploadTheme: UploadTheme = {
   pageShell:
     "min-h-screen bg-[var(--bg-main)] text-[var(--text-primary)] font-sans relative overflow-hidden",
   pageContainer: "relative z-10 max-w-7xl mx-auto px-4 sm:px-6 py-8 md:py-12",

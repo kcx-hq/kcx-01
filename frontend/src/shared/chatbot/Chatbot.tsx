@@ -13,11 +13,50 @@ import {
   SkipForward 
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { apiPost } from "../../services/http";
+import { getApiErrorMessageWithRequestId } from "../../services/apiError";
 
-const API_BASE = `${import.meta.env.VITE_API_URL}/api/chatbot`;
+const API_BASE = "/api/chatbot";
+
+interface SummaryCardProps {
+  summary?: Record<string, unknown>;
+}
+
+interface ChatbotProps {
+  onClose: () => void;
+  autoFocus?: boolean;
+}
+
+type Sender = "bot" | "user";
+
+interface ChatMessage {
+  sender: Sender;
+  text?: string;
+  summary?: Record<string, unknown>;
+}
+
+interface StartSessionResponse {
+  sessionId: string;
+  stepId?: string | null;
+  question?: string;
+}
+
+interface MessageResponse {
+  stepId?: string | null;
+  reply?: string;
+  summary?: Record<string, unknown>;
+  question?: string;
+  meeting?: Record<string, unknown>;
+  redirect?: Record<string, unknown>;
+}
+
+interface QuickReply {
+  label: string;
+  value: string;
+}
 
 // --- SUMMARY CARD COMPONENT ---
-function SummaryCard({ summary }) {
+function SummaryCard({ summary }: SummaryCardProps) {
   const entries = summary && typeof summary === "object" ? Object.entries(summary) : [];
 
   if (!entries.length) return null;
@@ -69,15 +108,15 @@ const TypingIndicator = () => (
 );
 
 // --- MAIN CHATBOT COMPONENT ---
-export default function Chatbot({ onClose, autoFocus = true }) {
+export default function Chatbot({ onClose, autoFocus = true }: ChatbotProps) {
   const navigate = useNavigate();
-  const inputRef = useRef(null);
-  const endRef = useRef(null);
+  const inputRef = useRef<HTMLInputElement | null>(null);
+  const endRef = useRef<HTMLDivElement | null>(null);
   
   // State
-  const [sessionId, setSessionId] = useState(null);
-  const [stepId, setStepId] = useState(null);
-  const [messages, setMessages] = useState([]);
+  const [sessionId, setSessionId] = useState<string | null>(null);
+  const [stepId, setStepId] = useState<string | null>(null);
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
@@ -96,47 +135,54 @@ export default function Chatbot({ onClose, autoFocus = true }) {
   const startSession = useCallback(async () => {
     try {
       setIsTyping(true);
-      const res = await fetch(`${API_BASE}/session`, { method: "POST" });
-      if (!res.ok) throw new Error("Failed");
-      const data = await res.json();
+      const data = await apiPost<StartSessionResponse>(`${API_BASE}/session`);
       
       setSessionId(data.sessionId);
       setStepId(data.stepId || null);
       
       // Artificial delay for realism
       setTimeout(() => {
-        setMessages([{ sender: "bot", text: data.question }]);
+        setMessages([
+          data.question
+            ? { sender: "bot", text: data.question }
+            : { sender: "bot" },
+        ]);
         setIsTyping(false);
       }, 800);
 
-    } catch (e) {
-      setMessages([{ sender: "bot", text: "Connection error. Please restart the chat." }]);
+    } catch (error: unknown) {
+      const message = getApiErrorMessageWithRequestId(error, "Connection error. Please restart the chat.");
+      setMessages([{ sender: "bot", text: message }]);
       setIsTyping(false);
     }
   }, []);
 
-  useEffect(() => { startSession(); }, [startSession]);
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      void startSession();
+    }, 0);
 
-  const sendMessage = async (overrideText = null) => {
+    return () => {
+      window.clearTimeout(timer);
+    };
+  }, [startSession]);
+
+  const sendMessage = async (overrideText: string | null = null) => {
     const text = overrideText || input.trim();
     if (!text || loading) return;
 
     if (!overrideText) setInput(""); // Clear input only if typing
     
     // Optimistic Update
-    setMessages(prev => [...prev, { sender: "user", text }]);
+    setMessages((prev) => [...prev, { sender: "user", text }]);
     setLoading(true);
     setIsTyping(true);
 
     try {
-      const res = await fetch(`${API_BASE}/message`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ sessionId, message: text }),
+      const data = await apiPost<MessageResponse>(`${API_BASE}/message`, {
+        sessionId,
+        message: text,
       });
-
-      if (!res.ok) throw new Error("Failed");
-      const data = await res.json();
 
       setStepId(data.stepId || null);
 
@@ -147,25 +193,26 @@ export default function Chatbot({ onClose, autoFocus = true }) {
       // Process Bot Response
       setTimeout(() => {
         setIsTyping(false);
-        const newMessages = [];
+        const newMessages: ChatMessage[] = [];
         if (data.reply) newMessages.push({ sender: "bot", text: data.reply });
         if (data.summary) newMessages.push({ sender: "bot", summary: data.summary });
         if (data.question && data.question !== data.reply) newMessages.push({ sender: "bot", text: data.question });
         
-        setMessages(prev => [...prev, ...newMessages]);
+        setMessages((prev) => [...prev, ...newMessages]);
         setLoading(false);
         setTimeout(() => inputRef.current?.focus(), 100);
       }, 600); // Small delay for "thinking" feel
 
-    } catch (e) {
+    } catch (error: unknown) {
+      const message = getApiErrorMessageWithRequestId(error, "Sorry, I encountered an error. Please try again.");
       setIsTyping(false);
       setLoading(false);
-      setMessages(prev => [...prev, { sender: "bot", text: "Sorry, I encountered an error. Please try again." }]);
+      setMessages((prev) => [...prev, { sender: "bot", text: message }]);
     }
   };
 
   // --- QUICK REPLIES DATA ---
-  const QUICK_REPLIES = {
+  const QUICK_REPLIES: Record<string, QuickReply[]> = {
     service: [
       { label: "Dashboard", value: "Dashboard customization" },
       { label: "Cost optimization", value: "Cost optimization" },
@@ -195,7 +242,7 @@ export default function Chatbot({ onClose, autoFocus = true }) {
     ],
   };
 
-  const quickButtons = QUICK_REPLIES[stepId] || [];
+  const quickButtons = stepId ? QUICK_REPLIES[stepId] || [] : [];
 
   return (
     <div className="h-full flex flex-col font-sans">
@@ -320,7 +367,7 @@ export default function Chatbot({ onClose, autoFocus = true }) {
             
             {/* Context Menu (Help/Reset) */}
             <div className="absolute -top-10 right-0 flex gap-2">
-               {["back", "help", "skip"].map(cmd => (
+               {(["back", "help", "skip"] as const).map((cmd) => (
                  <button 
                     key={cmd}
                     onClick={() => sendMessage(cmd)}
@@ -344,8 +391,8 @@ export default function Chatbot({ onClose, autoFocus = true }) {
               "
               placeholder="Type your message..."
               value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && sendMessage()}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setInput(e.target.value)}
+              onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => e.key === "Enter" && sendMessage()}
               disabled={loading}
             />
             

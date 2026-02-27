@@ -9,6 +9,8 @@
 
 import { reportsService } from "./reports.service.js";
 import { generatePDFReport } from "./reports.pdf.js";
+import AppError from "../../../errors/AppError.js";
+import logger from "../../../lib/logger.js";
 
 /**
  * Normalize uploadIds from body or query
@@ -50,7 +52,7 @@ function extractFilters(req) {
 /**
  * GET /api/reports/summary
  */
-export const getSummary = async (req, res) => {
+export const getSummary = async (req, res, next) => {
   try {
     const uploadIds = extractUploadIds(req);
     const filters = extractFilters(req);
@@ -62,21 +64,17 @@ export const getSummary = async (req, res) => {
       uploadIds,
     });
 
-    return res.json({ success: true, data });
+    return res.ok(data);
   } catch (error) {
-    console.error("Error in getSummary:", error);
-    return res.status(500).json({
-      success: false,
-      error: "Failed to generate dashboard summary",
-      details: process.env.NODE_ENV === "development" ? error.message : undefined,
-    });
+    logger.error({ err: error, requestId: req.requestId }, "Error in getSummary");
+    return next(new AppError(500, "INTERNAL", "Internal server error", { cause: error }));
   }
 };
 
 /**
  * GET /api/reports/top-services
  */
-export const getTopServices = async (req, res) => {
+export const getTopServices = async (req, res, next) => {
   try {
     const uploadIds = extractUploadIds(req);
     const filters = extractFilters(req);
@@ -92,21 +90,17 @@ export const getTopServices = async (req, res) => {
       uploadIds,
     });
 
-    return res.json({ success: true, data });
+    return res.ok(data);
   } catch (error) {
-    console.error("Error in getTopServices:", error);
-    return res.status(500).json({
-      success: false,
-      error: "Failed to fetch top services",
-      details: process.env.NODE_ENV === "development" ? error.message : undefined,
-    });
+    logger.error({ err: error, requestId: req.requestId }, "Error in getTopServices");
+    return next(new AppError(500, "INTERNAL", "Internal server error", { cause: error }));
   }
 };
 
 /**
  * GET /api/reports/top-regions
  */
-export const getTopRegions = async (req, res) => {
+export const getTopRegions = async (req, res, next) => {
   try {
     const uploadIds = extractUploadIds(req);
     const filters = extractFilters(req);
@@ -122,21 +116,17 @@ export const getTopRegions = async (req, res) => {
       uploadIds,
     });
 
-    return res.json({ success: true, data });
+    return res.ok(data);
   } catch (error) {
-    console.error("Error in getTopRegions:", error);
-    return res.status(500).json({
-      success: false,
-      error: "Failed to fetch top regions",
-      details: process.env.NODE_ENV === "development" ? error.message : undefined,
-    });
+    logger.error({ err: error, requestId: req.requestId }, "Error in getTopRegions");
+    return next(new AppError(500, "INTERNAL", "Internal server error", { cause: error }));
   }
 };
 
 /**
  * GET /api/reports/monthly-spend
  */
-export const getMonthlySpend = async (req, res) => {
+export const getMonthlySpend = async (req, res, next) => {
   try {
     const uploadIds = extractUploadIds(req);
     const filters = extractFilters(req);
@@ -154,21 +144,17 @@ export const getMonthlySpend = async (req, res) => {
       uploadIds,
     });
 
-    return res.json({ success: true, data });
+    return res.ok(data);
   } catch (error) {
-    console.error("Error in getMonthlySpend:", error);
-    return res.status(500).json({
-      success: false,
-      error: "Failed to fetch monthly spend",
-      details: process.env.NODE_ENV === "development" ? error.message : undefined,
-    });
+    logger.error({ err: error, requestId: req.requestId }, "Error in getMonthlySpend");
+    return next(new AppError(500, "INTERNAL", "Internal server error", { cause: error }));
   }
 };
 
 /**
  * GET /api/reports/tag-compliance
  */
-export const getTagCompliance = async (req, res) => {
+export const getTagCompliance = async (req, res, next) => {
   try {
     const uploadIds = extractUploadIds(req);
     const filters = extractFilters(req);
@@ -181,21 +167,17 @@ export const getTagCompliance = async (req, res) => {
       uploadIds,
     });
 
-    return res.json({ success: true, data });
+    return res.ok(data);
   } catch (error) {
-    console.error("Error in getTagCompliance:", error);
-    return res.status(500).json({
-      success: false,
-      error: "Failed to fetch tag compliance",
-      details: process.env.NODE_ENV === "development" ? error.message : undefined,
-    });
+    logger.error({ err: error, requestId: req.requestId }, "Error in getTagCompliance");
+    return next(new AppError(500, "INTERNAL", "Internal server error", { cause: error }));
   }
 };
 
 /**
  * GET /api/reports/environment-breakdown
  */
-export const getEnvironmentBreakdown = async (req, res) => {
+export const getEnvironmentBreakdown = async (req, res, next) => {
   try {
     const uploadIds = extractUploadIds(req);
     const filters = extractFilters(req);
@@ -208,21 +190,17 @@ export const getEnvironmentBreakdown = async (req, res) => {
       uploadIds,
     });
 
-    return res.json({ success: true, data });
+    return res.ok(data);
   } catch (error) {
-    console.error("Error in getEnvironmentBreakdown:", error);
-    return res.status(500).json({
-      success: false,
-      error: "Failed to fetch environment breakdown",
-      details: process.env.NODE_ENV === "development" ? error.message : undefined,
-    });
+    logger.error({ err: error, requestId: req.requestId }, "Error in getEnvironmentBreakdown");
+    return next(new AppError(500, "INTERNAL", "Internal server error", { cause: error }));
   }
 };
 
 /**
  * POST /api/reports/download
  */
-export const downloadPDF = async (req, res) => {
+export const downloadPDF = async (req, res, next) => {
   try {
     const reportData = req.body;
 
@@ -236,21 +214,17 @@ export const downloadPDF = async (req, res) => {
     doc.pipe(res);
 
     doc.on("error", (error) => {
-      console.error("PDF generation error:", error);
+      logger.error({ err: error, requestId: req.requestId }, "PDF generation error");
       if (!res.headersSent) {
-        res.status(500).json({ success: false, error: "Failed to generate PDF" });
+        return next(new AppError(500, "INTERNAL", "Internal server error"));
       }
     });
 
     doc.end();
   } catch (error) {
-    console.error("Error in downloadPDF:", error);
+    logger.error({ err: error, requestId: req.requestId }, "Error in downloadPDF");
     if (!res.headersSent) {
-      return res.status(500).json({
-        success: false,
-        error: "Failed to generate report",
-        details: process.env.NODE_ENV === "development" ? error.message : undefined,
-      });
+      return next(new AppError(500, "INTERNAL", "Internal server error", { cause: error }));
     }
   }
 };

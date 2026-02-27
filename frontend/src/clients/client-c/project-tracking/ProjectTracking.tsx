@@ -1,15 +1,21 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '../common/widgets';
+import type {
+  ApiLikeError,
+  ProjectBudgetComparisonRow,
+  ProjectOverviewWidget,
+  ProjectTrackingProps,
+} from './types';
 
-const ProjectTracking = ({ filters, api, caps, uploadId }) => {
-  const [overviewData, setOverviewData] = useState({});
-  const [budgetComparisonData, setBudgetComparisonData] = useState([]);
+const ProjectTracking = ({ filters, api, caps, uploadId }: ProjectTrackingProps) => {
+  const [overviewData, setOverviewData] = useState<ProjectOverviewWidget>({});
+  const [budgetComparisonData, setBudgetComparisonData] = useState<ProjectBudgetComparisonRow[]>([]);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        if (api && caps.modules?.projectTracking?.endpoints?.overview) {
-          const overviewResponse = await api.call('projectTracking', 'overview', {
+        if (api && caps?.modules?.['projectTracking']?.endpoints?.['overview']) {
+          const overviewResponse = await api.call<{ overview?: ProjectOverviewWidget }>('projectTracking', 'overview', {
             params: {
               provider: filters.provider !== 'All' ? filters.provider : undefined,
               service: filters.service !== 'All' ? filters.service : undefined,
@@ -17,27 +23,27 @@ const ProjectTracking = ({ filters, api, caps, uploadId }) => {
               uploadId: uploadId
             }
           });
-          
-          if (overviewResponse?.success) {
-            setOverviewData(overviewResponse.data.overview || {});
-          }
+
+          setOverviewData(overviewResponse?.overview || {});
         }
 
-        if (api && caps.modules?.projectTracking?.endpoints?.budgetComparison) {
-          const budgetComparisonResponse = await api.call('projectTracking', 'budgetComparison', {
+        if (api && caps?.modules?.['projectTracking']?.endpoints?.['budgetComparison']) {
+          const budgetComparisonResponse = await api.call<{ budgetComparison?: ProjectBudgetComparisonRow[] }>('projectTracking', 'budgetComparison', {
             params: {
               provider: filters.provider !== 'All' ? filters.provider : undefined,
               service: filters.service !== 'All' ? filters.service : undefined,
               region: filters.region !== 'All' ? filters.region : undefined,
             }
           });
-          
-          if (budgetComparisonResponse?.success) {
-            setBudgetComparisonData(budgetComparisonResponse.data.budgetComparison || []);
-          }
+
+          setBudgetComparisonData(budgetComparisonResponse?.budgetComparison || []);
         }
-      } catch (error) {
+      } catch (error: unknown) {
+        const apiError = error as ApiLikeError;
         console.error('Error fetching project tracking data:', error);
+        if (apiError.message) {
+          console.error(apiError.message);
+        }
       }
     };
 
@@ -106,7 +112,7 @@ const ProjectTracking = ({ filters, api, caps, uploadId }) => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-800">
-                {budgetComparisonData.map((project, index) => (
+                {budgetComparisonData.map((project: ProjectBudgetComparisonRow, index: number) => (
                   <tr key={index} className={index % 2 === 0 ? 'bg-gray-900' : 'bg-gray-800'}>
                     <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-300">{project.project}</td>
                     <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-300">${project.budget?.toLocaleString()}</td>
@@ -114,11 +120,11 @@ const ProjectTracking = ({ filters, api, caps, uploadId }) => {
                     <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-300">${project.remaining?.toLocaleString()}</td>
                     <td className="px-4 py-3 whitespace-nowrap">
                       <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                        project.remaining >= project.budget * 0.2 ? 'bg-green-800 text-green-100' : 
-                        project.remaining >= project.budget * 0.1 ? 'bg-yellow-800 text-yellow-100' : 'bg-red-800 text-red-100'
+                        (project.remaining ?? 0) >= (project.budget ?? 0) * 0.2 ? 'bg-green-800 text-green-100' : 
+                        (project.remaining ?? 0) >= (project.budget ?? 0) * 0.1 ? 'bg-yellow-800 text-yellow-100' : 'bg-red-800 text-red-100'
                       }`}>
-                        {project.remaining >= project.budget * 0.2 ? 'Good' : 
-                         project.remaining >= project.budget * 0.1 ? 'Warning' : 'Critical'}
+                        {(project.remaining ?? 0) >= (project.budget ?? 0) * 0.2 ? 'Good' : 
+                         (project.remaining ?? 0) >= (project.budget ?? 0) * 0.1 ? 'Warning' : 'Critical'}
                       </span>
                     </td>
                   </tr>

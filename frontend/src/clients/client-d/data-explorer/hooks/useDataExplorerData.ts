@@ -1,5 +1,17 @@
 // frontend/clients/client-d/dashboards/overview/data-explorer/hooks/useDataExplorerData.js
 import { useEffect, useRef, useState } from "react";
+import type {
+  ApiLikeError,
+  ColumnFilters,
+  ColumnMaxValues,
+  DataExplorerPayload,
+  DataExplorerQuickStats,
+  DataExplorerRow,
+  SummaryData,
+  UseDataExplorerDataParams,
+  UseDataExplorerDataResult,
+} from "../types";
+import type { ApiCallOptions } from "../../../../services/apiClient";
 
 export const useDataExplorerData = ({
   api,
@@ -9,19 +21,19 @@ export const useDataExplorerData = ({
   rowsPerPage,
   sortConfig,
   columnFilters,
-}) => {
+}: UseDataExplorerDataParams): UseDataExplorerDataResult => {
   const [loading, setLoading] = useState(true);
   const [isInitialLoad, setIsInitialLoad] = useState(true);
   const [isFiltering, setIsFiltering] = useState(false);
 
-  const [data, setData] = useState([]);
+  const [data, setData] = useState<DataExplorerRow[]>([]);
   const [totalCount, setTotalCount] = useState(0);
-  const [allColumns, setAllColumns] = useState([]);
-  const [quickStats, setQuickStats] = useState(null);
-  const [summaryData, setSummaryData] = useState({});
-  const [columnMaxValues, setColumnMaxValues] = useState({});
+  const [allColumns, setAllColumns] = useState<string[]>([]);
+  const [quickStats, setQuickStats] = useState<DataExplorerQuickStats | null>(null);
+  const [summaryData, setSummaryData] = useState<SummaryData>({});
+  const [columnMaxValues, setColumnMaxValues] = useState<ColumnMaxValues>({});
 
-  const prevColumnFiltersRef = useRef({});
+  const prevColumnFiltersRef = useRef<ColumnFilters>({});
   const prevPageRef = useRef(currentPage);
 
   useEffect(() => {
@@ -44,12 +56,12 @@ export const useDataExplorerData = ({
         if (!api || !caps) return;
 
         const endpointDef =
-          caps?.modules?.overview?.enabled &&
-          caps?.modules?.overview?.endpoints?.dataExplorer;
+          caps?.modules?.["overview"]?.enabled &&
+          caps?.modules?.["overview"]?.endpoints?.["dataExplorer"];
 
         if (!endpointDef) return;
 
-        const res = await api.call("overview", "dataExplorer", {
+        const requestOptions = {
           params: {
             provider: filters?.provider !== "All" ? filters.provider : undefined,
             service: filters?.service !== "All" ? filters.service : undefined,
@@ -62,25 +74,16 @@ export const useDataExplorerData = ({
             // columnFilters,
           },
           signal: abortController.signal,
-        });
+        } as unknown as ApiCallOptions;
 
-        // ✅ unwrap: { success, data }
-        const payload = res?.data;
-        const ok = payload?.success === true;
-        const body = payload;
-
+        const body = (await api.call<unknown>("overview", "dataExplorer", requestOptions)) as
+          | DataExplorerPayload
+          | null
+          | undefined;
 
         if (!isMounted) return;
 
-        if (ok && body) {
-          setData(body.data || []);
-          setTotalCount(body.pagination?.total || 0);
-          setAllColumns(body.allColumns || []);
-          setQuickStats(body.quickStats || null);
-          setSummaryData(body.summaryData || {});
-          setColumnMaxValues(body.columnMaxValues || {});
-        } else if (body) {
-          // tolerate non-wrapped response
+        if (body) {
           setData(body.data || []);
           setTotalCount(body.pagination?.total || 0);
           setAllColumns(body.allColumns || []);
@@ -88,10 +91,11 @@ export const useDataExplorerData = ({
           setSummaryData(body.summaryData || {});
           setColumnMaxValues(body.columnMaxValues || {});
         }
-      } catch (err) {
-        if (err?.code === "NOT_SUPPORTED") return;
-        if (isMounted && err?.name !== "AbortError") {
-          console.error("Error fetching data explorer data:", err);
+      } catch (err: unknown) {
+        const apiError = err as ApiLikeError;
+        if (apiError?.code === "NOT_SUPPORTED") return;
+        if (isMounted && apiError?.name !== "AbortError") {
+          console.error("Error fetching data explorer data:", apiError);
         }
       } finally {
         if (!isMounted) return;

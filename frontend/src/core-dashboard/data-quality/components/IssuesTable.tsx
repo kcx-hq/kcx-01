@@ -1,7 +1,8 @@
-﻿import { CheckCircle, ShieldAlert, Tag, FileWarning } from "lucide-react";
+import { CheckCircle, ShieldAlert, Tag, FileWarning } from "lucide-react";
 import { formatCurrency } from "../utils/format";
+import type { DataQualityIssueRow, IssuesTableProps } from "../types";
 
-const getBadge = (issues) => {
+const getBadge = (issues: string[] | undefined) => {
   if (!issues || issues.length === 0)
     return (
       <span className="flex items-center gap-1 text-xs text-emerald-700">
@@ -30,7 +31,7 @@ const getBadge = (issues) => {
   );
 };
 
-const IssuesTable = ({ rows, isLocked, onRowClick }) => {
+const IssuesTable = ({ rows, isLocked, onRowClick }: IssuesTableProps) => {
   return (
     <div className={`dq-scrollbar relative overflow-x-auto ${isLocked ? "h-[420px] overflow-hidden" : "max-h-full overflow-auto"}`}>
       <table className="min-w-[920px] w-full text-left text-xs">
@@ -46,7 +47,8 @@ const IssuesTable = ({ rows, isLocked, onRowClick }) => {
 
         <tbody className="divide-y divide-[var(--border-muted)]">
           {rows.length > 0 ? (
-            rows.map((row, i) => (
+            rows.map((row: DataQualityIssueRow, i: number) => (
+              
               <tr
                 key={i}
                 onClick={() => {
@@ -58,7 +60,7 @@ const IssuesTable = ({ rows, isLocked, onRowClick }) => {
                     : "cursor-pointer hover:bg-[var(--bg-surface)]"
                 }`}
               >
-                <td className="px-4 py-3 md:px-6">{getBadge(row?._issues)}</td>
+                <td className="px-4 py-3 md:px-6">{getBadge(row?._issues ?? [])}</td>
                 <td className="px-4 py-3 text-[var(--text-primary)] md:px-6">
                   {row?.ServiceName || "Unknown"}
                 </td>
@@ -66,9 +68,9 @@ const IssuesTable = ({ rows, isLocked, onRowClick }) => {
                   {row?.ResourceId || row?.ResourceName || <span className="italic opacity-60">--</span>}
                 </td>
                 <td className="px-4 py-3 md:px-6">
-                  {row?._issues?.length > 0 ? (
+                  {(row?._issues ?? []).length > 0 ? (
                     <div className="flex gap-1">
-                      {row._issues.slice(0, 2).map((iss) => (
+                      {(row._issues ?? []).slice(0, 2).map((iss: string) => (
                         <span
                           key={iss}
                           className="rounded border border-rose-200 bg-rose-50 px-1.5 py-0.5 text-[10px] text-rose-700"
@@ -76,9 +78,9 @@ const IssuesTable = ({ rows, isLocked, onRowClick }) => {
                           {iss}
                         </span>
                       ))}
-                      {row._issues.length > 2 && (
+                      {(row._issues ?? []).length > 2 && (
                         <span className="self-center text-[10px] text-[var(--text-muted)]">
-                          +{row._issues.length - 2}
+                          +{(row._issues ?? []).length - 2}
                         </span>
                       )}
                     </div>
@@ -93,7 +95,7 @@ const IssuesTable = ({ rows, isLocked, onRowClick }) => {
             ))
           ) : (
             <tr>
-              <td colSpan="5" className="p-10 text-center text-[var(--text-muted)]">
+              <td colSpan={5} className="p-10 text-center text-[var(--text-muted)]">
                 No records found for this category.
               </td>
             </tr>
@@ -105,4 +107,7 @@ const IssuesTable = ({ rows, isLocked, onRowClick }) => {
 };
 
 export default IssuesTable;
+
+
+
 

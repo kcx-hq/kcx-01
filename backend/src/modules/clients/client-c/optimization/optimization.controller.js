@@ -3,6 +3,8 @@
  */
 
 import { clientCOptimizationService } from './optimization.service.js';
+import AppError from "../../../../errors/AppError.js";
+import logger from "../../../../lib/logger.js";
 
 function extractUploadIds(req) {
   const raw = req.query.uploadIds ?? req.query.uploadId ?? req.body?.uploadIds ?? req.body?.uploadId;
@@ -12,23 +14,24 @@ function extractUploadIds(req) {
   return [];
 }
 
-export const getRecommendations = async (req, res) => {
+export const getRecommendations = async (req, res, next) => {
   try {
     const uploadIds = extractUploadIds(req);
     const data = await clientCOptimizationService.getRecommendations({ ...req.query, uploadIds });
-    res.json({ success: true, data });
+    return res.ok(data);
   } catch (error) {
-    console.error('Client-C Optimization Error:', error);
-    res.status(500).json({ success: false, error: error.message });
+    logger.error({ err: error, requestId: req.requestId }, 'Client-C Optimization Error');
+    return next(new AppError(500, "INTERNAL", "Internal server error", { cause: error }));
   }
 };
 
-export const getOpportunities = async (req, res) => {
+export const getOpportunities = async (req, res, next) => {
   try {
     const uploadIds = extractUploadIds(req);
     const data = await clientCOptimizationService.getOpportunities({ ...req.query, uploadIds });
-    res.json({ success: true, data });
+    return res.ok(data);
   } catch (error) {
-    res.status(500).json({ success: false, error: error.message });
+    logger.error({ err: error, requestId: req.requestId }, 'Client-C Opportunities Error');
+    return next(new AppError(500, "INTERNAL", "Internal server error", { cause: error }));
   }
 };

@@ -5,7 +5,7 @@ const router = express.Router();
 
 // Test route to verify routing is working
 router.get('/test', (req, res) => {
-  res.json({ success: true, message: 'Drivers route is working!' });
+  return res.ok({ message: 'Drivers route is working!' });
 });
 
 // GET /api/drivers/analysis?provider=AWS&period=30&dimension=ServiceName&minChange=0&activeServiceFilter=All

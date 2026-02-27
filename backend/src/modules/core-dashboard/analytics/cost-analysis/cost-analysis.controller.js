@@ -1,4 +1,5 @@
 import { Op, Sequelize } from "sequelize";
+import logger from "../../../../lib/logger.js";
 import {
   BillingUsageFact,
   Resource,
@@ -6,11 +7,14 @@ import {
   Region,
   CloudAccount,
 } from "../../../../models/index.js";
+import AppError from "../../../../errors/AppError.js";
+import { extractUploadIdsBodyFirst } from "../../utils/uploadIds.utils.js";
 
 import {
   generateCostAnalysis,
   getFilterDropdowns,
 } from "./cost-analysis.service.js";
+import { assertUploadScope } from "../../utils/uploadScope.service.js";
 
 // Whitelist allowed grouping columns for security
 const ALLOWED_GROUPS = [
@@ -24,35 +28,15 @@ const ALLOWED_GROUPS = [
   "CostCategory",
 ];
 
-/**
- * Normalize uploadIds from body or query
- */
-function extractUploadIds(req) {
-  const bodyValue = req.body?.uploadIds || req.body?.uploadId;
-  const queryValue = req.query?.uploadIds || req.query?.uploadId;
-
-  const source = bodyValue ?? queryValue;
-  if (!source) return [];
-
-  if (Array.isArray(source)) return source;
-
-  if (typeof source === "string") {
-    return source
-      .split(",")
-      .map((id) => id.trim())
-      .filter(Boolean);
-  }
-
-  return [source];
-}
-
-
-export const getCostAnalysis = async (req, res) => {
+export const getCostAnalysis = async (req, res, next) => {
   try {
-    const uploadIds = extractUploadIds(req);
+    const uploadIds = await assertUploadScope({
+      uploadIds: extractUploadIdsBodyFirst(req),
+      clientId: req.client_id,
+    });
 
     if (!uploadIds.length) {
-      return res.status(400).json({ error: "uploadIds is required" });
+      return next(new AppError(400, "VALIDATION_ERROR", "Invalid request"));
     }
 
     const source =
@@ -92,28 +76,33 @@ export const getCostAnalysis = async (req, res) => {
       groupBy
     );
 
-    res.json(data);
+    return res.ok(data);
 
   } catch (error) {
-    console.error("Cost Analysis Error:", error);
-    res.status(500).json({
-      error: "Failed to generate cost analysis",
-      details:
-        process.env.NODE_ENV === "development" ? error.message : undefined,
-    });
+    if (error instanceof AppError) {
+      return next(error);
+    }
+    logger.error({ err: error, requestId: req.requestId }, "Cost analysis error");
+    return next(new AppError(500, "INTERNAL", "Internal server error", { cause: error }));
   }
 };
 
 
 
 
-export const getFilterOptions = async (req, res) => {
+export const getFilterOptions = async (req, res, next) => {
   try {
-    const uploadIds = extractUploadIds(req);
+    const uploadIds = await assertUploadScope({
+      uploadIds: extractUploadIdsBodyFirst(req),
+      clientId: req.client_id,
+    });
     const options = await getFilterDropdowns(uploadIds);
-    res.json(options);
+    return res.ok(options);
   } catch (error) {
-    console.error("Filter Error:", error);
-    res.status(500).json({ error: "Failed to load filters" });
+    if (error instanceof AppError) {
+      return next(error);
+    }
+    logger.error({ err: error, requestId: req.requestId }, "Filter options error");
+    return next(new AppError(500, "INTERNAL", "Internal server error", { cause: error }));
   }
 };

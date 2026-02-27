@@ -3,8 +3,9 @@ import { Calendar, Download, Loader2 } from "lucide-react";
 import { motion } from "framer-motion";
 import { getColorClasses } from "../utils/reportUtils";
 import PremiumGate from "../../common/PremiumGate";
+import type { ReportCardProps } from "../types";
 
-const ReportCard = ({ report, index, onDownload, downloading, canDownload }) => {
+const ReportCard = ({ report, index, onDownload, downloading, canDownload }: ReportCardProps) => {
   const Icon = report.icon;
 
   const content = (
@@ -39,7 +40,7 @@ const ReportCard = ({ report, index, onDownload, downloading, canDownload }) => 
             <div className="rounded-lg border border-[var(--border-light)] bg-[var(--bg-surface)] p-4">
               <div className="mb-2 text-xs font-bold uppercase text-[var(--text-muted)]">Includes</div>
               <ul className="space-y-1.5">
-                {report.includes.map((item, idx) => (
+                {report.includes.map((item: string, idx: number) => (
                   <li key={idx} className="flex items-start gap-2 text-sm text-[var(--text-secondary)]">
                     <span className="mt-1 text-[var(--brand-primary)]">-</span>
                     <span>{item}</span>
@@ -81,3 +82,6 @@ const ReportCard = ({ report, index, onDownload, downloading, canDownload }) => 
 };
 
 export default ReportCard;
+
+
+

@@ -1,4 +1,5 @@
 import React from "react";
+import type { MouseEvent } from "react";
 import { motion } from "framer-motion";
 import {
   Activity,
@@ -20,6 +21,7 @@ import {
 } from "recharts";
 import { formatCurrency } from "../utils/format";
 import PremiumGate from "../../common/PremiumGate";
+import type { DriverDetailsDrawerProps, DriverDetailRow } from "../types";
 
 export function DriverDetailsDrawer({
   driver,
@@ -28,7 +30,7 @@ export function DriverDetailsDrawer({
   isSavingsDriver,
   loadingDetails,
   stats,
-}) {
+}: DriverDetailsDrawerProps) {
   if (!driver) return null;
 
   const content = (
@@ -116,10 +118,10 @@ export function DriverDetailsDrawer({
                   dataKey="date"
                   stroke="#8a9a94"
                   fontSize={10}
-                  tickFormatter={(str) => str?.slice?.(5) ?? str}
+                  tickFormatter={(str: string) => str?.slice?.(5) ?? str}
                   minTickGap={30}
                 />
-                <YAxis stroke="#8a9a94" fontSize={10} tickFormatter={(val) => `$${val}`} width={40} />
+                <YAxis stroke="#8a9a94" fontSize={10} tickFormatter={(val: number) => `$${val}`} width={40} />
                 <RechartsTooltip
                   cursor={{ fill: "rgba(0,119,88,0.08)" }}
                   contentStyle={{
@@ -153,7 +155,7 @@ export function DriverDetailsDrawer({
                 </thead>
                 <tbody className="divide-y divide-[var(--border-muted)]">
                   {stats?.subDrivers?.length ? (
-                    stats.subDrivers.map((sub, idx) => (
+                    stats.subDrivers.map((sub: DriverDetailRow, idx: number) => (
                       <tr key={idx}>
                         <td className="px-4 py-3 text-[var(--text-secondary)]">{sub.name}</td>
                         <td className="px-4 py-3 text-right font-mono text-[var(--text-primary)]">
@@ -217,7 +219,7 @@ export function DriverDetailsDrawer({
       >
         <div
           className="relative flex max-h-[92vh] w-full max-w-2xl flex-col overflow-hidden rounded-2xl border border-[var(--border-light)] bg-white shadow-2xl"
-          onClick={(e) => e.stopPropagation()}
+          onClick={(e: MouseEvent<HTMLDivElement>) => e.stopPropagation()}
         >
           {isMasked && isSavingsDriver ? (
             <PremiumGate variant="full" minHeight="100%">
@@ -231,3 +233,6 @@ export function DriverDetailsDrawer({
     </>
   );
 }
+
+
+

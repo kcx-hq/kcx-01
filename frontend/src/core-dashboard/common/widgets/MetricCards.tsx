@@ -5,8 +5,14 @@ const BRAND = "#007758";
 const BRAND_SOFT = "#00c592";
 const HIGHLIGHT = "#e5f9f4";
 
-const MetricCards = ({ totalSpend, leakageCost, efficiency }) => {
-  const formatCurrency = (val) =>
+interface MetricCardsProps {
+  totalSpend: number;
+  leakageCost: number;
+  efficiency: number;
+}
+
+const MetricCards = ({ totalSpend, leakageCost, efficiency }: MetricCardsProps) => {
+  const formatCurrency = (val: number) =>
     new Intl.NumberFormat("en-US", {
       style: "currency",
       currency: "USD",

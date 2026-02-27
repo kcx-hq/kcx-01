@@ -2,9 +2,10 @@ import React from "react";
 import { TrendingUp, Shield, FileText, Target } from "lucide-react";
 import { motion } from "framer-motion";
 import { getColorClasses } from "../utils/reportUtils";
+import type { ComingSoonReportItem } from "../types";
 
 const ComingSoonReports = () => {
-  const items = [
+  const items: ComingSoonReportItem[] = [
     {
       title: "Departmental Cost Allocation",
       description: "Breakdown of costs by department, team, or business unit",
@@ -45,7 +46,7 @@ const ComingSoonReports = () => {
       </div>
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-        {items.map((r, index) => {
+        {items.map((r: ComingSoonReportItem, index: number) => {
           const Icon = r.icon;
           return (
             <motion.div
@@ -73,3 +74,6 @@ const ComingSoonReports = () => {
 };
 
 export default ComingSoonReports;
+
+
+

@@ -24,8 +24,7 @@ const router = express.Router();
 
 // Health check
 router.get('/', (req, res) => {
-  res.json({ 
-    success: true, 
+  res.ok({
     message: 'Client-C Dashboard API',
     version: '1.0.0',
     description: 'Governance-focused operational dashboard'

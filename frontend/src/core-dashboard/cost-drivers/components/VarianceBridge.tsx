@@ -1,11 +1,12 @@
 import React from 'react';
 import { formatCurrency } from '../utils/format';
+import type { VarianceBridgeProps } from '../types';
 
-export function VarianceBridge({ overallStats }) {
+export function VarianceBridge({ overallStats }: VarianceBridgeProps) {
   if (!overallStats?.totalPrev) return null;
 
   const maxVal = Math.max(overallStats.totalPrev, overallStats.totalCurr) * 1.3;
-  const getHeight = (val) => `${Math.max(4, (Math.abs(val) / maxVal) * 100)}%`;
+  const getHeight = (val: number) => `${Math.max(4, (Math.abs(val) / maxVal) * 100)}%`;
 
   return (
     <div className="relative flex h-36 select-none items-end justify-between gap-2 rounded-xl border border-[var(--border-light)] bg-[var(--bg-surface)] p-3 pb-2 md:h-40 md:gap-3 md:px-4">
@@ -49,3 +50,6 @@ export function VarianceBridge({ overallStats }) {
     </div>
   );
 }
+
+
+

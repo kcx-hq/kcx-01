@@ -1,8 +1,9 @@
 import {BillingUsageFact} from "../../../../models/index.js";
 import { toNumber, toDate, toText , safeParseJSON } from "../../../../utils/sanitize.js";
+import logger from "../../../../lib/logger.js";
 
 
-const BATCH_SIZE = 500;
+const BATCH_SIZE = 1000;
 let buffer = [];
 
 export async function pushFact(uploadId, row, dims) {
@@ -57,15 +58,20 @@ export async function flushFacts() {
   const data = buffer;
   buffer = [];
 
- try{
-   await BillingUsageFact.bulkCreate(data, {
+  try {
+    await BillingUsageFact.bulkCreate(data, {
     ignoreDuplicates: true,
     validate: false,
     logging: false,
-   
   });
-
- }catch(err){
-   console.error("Error bulk creating billing usage facts:", err.message);
- }
+  } catch (err) {
+    logger.error(
+      {
+        err,
+        rowCount: data.length,
+      },
+      "ETL bulk insert failed for billing usage facts",
+    );
+    throw err;
+  }
 }

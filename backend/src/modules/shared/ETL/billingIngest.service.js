@@ -45,23 +45,21 @@ export async function ingestBillingCsv({ uploadId, filePath, clientid }) {
   }
 
   const maps = await preloadDimensionMaps();
+for await (const row of mappedRows) {
+  const dimensionIds = resolveDimensionIdsFromMaps(row, maps);
 
-  for await (const row of mappedRows) {
-    const dimensionIds = resolveDimensionIdsFromMaps(row, maps);
-
-    // Keep ingestion permissive: only core dimensions are mandatory.
-    // Optional dimensions (resource, sku, commitment discount) can be null.
-    if (
-      !dimensionIds.regionid ||
-      !dimensionIds.cloudaccountid ||
-      !dimensionIds.serviceid
-    ) {
-      continue;
-    }
-
-    await pushFact(uploadId, row, dimensionIds);
-    
+  // Only core dimensions are mandatory as per BillingUsageFact model:
+  // uploadid (provided), cloudaccountid, serviceid, regionid
+  if (
+    !dimensionIds.regionid ||
+    !dimensionIds.cloudaccountid ||
+    !dimensionIds.serviceid
+  ) {
+    continue;
   }
 
-  await flushFacts();
+  await pushFact(uploadId, row, dimensionIds);
+}
+
+await flushFacts();
 }

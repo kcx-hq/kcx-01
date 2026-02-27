@@ -1,12 +1,24 @@
 import { useEffect, useRef, useState } from "react";
+import type { ApiClient, Capabilities } from "../../../../services/apiClient";
+import type {
+  ApiLikeError,
+  DataQualityApiPayload,
+  DataQualityFilters,
+  UseClientCDataQualityDataResult,
+} from "../types";
 
-export const useClientCDataQualityData = (api, caps, debouncedFilters, forceRefreshKey) => {
-  const [qualityData, setQualityData] = useState(null);
+export const useClientCDataQualityData = (
+  api: ApiClient | null,
+  caps: Capabilities | null,
+  debouncedFilters: DataQualityFilters = {},
+  forceRefreshKey = 0,
+): UseClientCDataQualityDataResult => {
+  const [qualityData, setQualityData] = useState<DataQualityApiPayload>(null);
   const [loading, setLoading] = useState(true);
   const [isFiltering, setIsFiltering] = useState(false);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState<string | null>(null);
 
-  const abortControllerRef = useRef(null);
+  const abortControllerRef = useRef<AbortController | null>(null);
   const prevFiltersRef = useRef(debouncedFilters);
   const isInitialMount = useRef(true);
 
@@ -22,7 +34,7 @@ export const useClientCDataQualityData = (api, caps, debouncedFilters, forceRefr
 
     const isFilterChange = filtersChanged && !isInitialMount.current;
 
-    const fetchData = async () => {
+    const fetchData = async (): Promise<void> => {
       // Loading behavior
       if (isInitialMount.current) {
         setLoading(true);
@@ -35,12 +47,12 @@ export const useClientCDataQualityData = (api, caps, debouncedFilters, forceRefr
 
       try {
         const endpointDef =
-          caps?.modules?.dataQuality?.enabled &&
-          caps?.modules?.dataQuality?.endpoints?.analysis;
+          caps?.modules?.["dataQuality"]?.enabled &&
+          caps?.modules?.["dataQuality"]?.endpoints?.["analysis"];
 
         if (!endpointDef) return;
 
-        const params = {};
+        const params: Partial<DataQualityFilters> = {};
         if (debouncedFilters?.provider && debouncedFilters.provider !== "All")
           params.provider = debouncedFilters.provider;
         if (debouncedFilters?.service && debouncedFilters.service !== "All")
@@ -51,30 +63,28 @@ export const useClientCDataQualityData = (api, caps, debouncedFilters, forceRefr
           params.uploadId = debouncedFilters.uploadId;
 
         // Use capabilities API
-        let res;
-        
+        let payload: DataQualityApiPayload | null = null;
+
         try {
-          res = await api.call("dataQuality", "analysis", { 
-            params
+          payload = await api.call<DataQualityApiPayload>("dataQuality", "analysis", {
+            params,
           });
-        } catch (error) {
-          console.error('🔍 Data Quality API call failed:', error);
-          throw error;
+        } catch (callError: unknown) {
+          console.error("Data Quality API call failed:", callError);
+          throw callError;
         }
-        
-        const payload = res?.data || res;
-        
-        
+
         if (!abortControllerRef.current?.signal.aborted) {
           setQualityData(payload || null);
           setError(null);
           prevFiltersRef.current = { ...debouncedFilters };
         }
-      } catch (error) {
-        if (error?.code !== "NOT_SUPPORTED") {
-          if (error?.name !== "AbortError" && !abortControllerRef.current?.signal.aborted) {
-            console.error("Error fetching data quality data:", error);
-            setError(error.message || 'Failed to load data quality data');
+      } catch (caughtError: unknown) {
+        const typedError = caughtError as ApiLikeError;
+        if (typedError?.code !== "NOT_SUPPORTED") {
+          if (typedError?.name !== "AbortError" && !abortControllerRef.current?.signal.aborted) {
+            console.error("Error fetching data quality data:", caughtError);
+            setError(typedError.message || "Failed to load data quality data");
           }
         }
       } finally {
@@ -85,7 +95,7 @@ export const useClientCDataQualityData = (api, caps, debouncedFilters, forceRefr
       }
     };
 
-    fetchData();
+    void fetchData();
 
     return () => {
       if (abortControllerRef.current) abortControllerRef.current.abort();

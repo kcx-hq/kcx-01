@@ -1,7 +1,6 @@
 // src/components/VerticalSidebar.jsx
 import React, { useRef, useState, useEffect } from "react";
-import { NavLink, useNavigate, useLocation } from "react-router-dom";
-import axios from "axios";
+import { NavLink, useNavigate } from "react-router-dom";
 import {
   BarChart3,
   TrendingUp,
@@ -12,111 +11,107 @@ import {
   ShieldAlert,
   Table,
   Upload as UploadIcon,
-  Play,
   FileBarChart,
-  Loader2,
-  AlertCircle,
   Crown,
 } from "lucide-react";
 import { useAuthStore } from '../../../../store/Authstore';
 import { motion, AnimatePresence } from "framer-motion";
+import type { ComponentType } from "react";
+import type { NavLinkRenderProps } from "react-router-dom";
 
-const VerticalSidebar = ({ onCsvSelected, caps = {} }) => {
+interface ModuleCapability {
+  enabled?: boolean;
+}
+
+interface ClientCCaps {
+  modules?: {
+    overview?: ModuleCapability;
+    dataExplorer?: ModuleCapability;
+    costAnalysis?: ModuleCapability;
+    costDrivers?: ModuleCapability;
+    resources?: ModuleCapability;
+    dataQuality?: ModuleCapability;
+    governance?: ModuleCapability;
+    optimization?: ModuleCapability;
+    departmentCost?: ModuleCapability;
+    projectTracking?: ModuleCapability;
+    reports?: ModuleCapability;
+  };
+}
+
+interface VerticalSidebarProps {
+  caps?: ClientCCaps;
+}
+
+interface NavigationItem {
+  to: string;
+  label: string;
+  icon: ComponentType<{ size?: number; className?: string }>;
+  end?: boolean | undefined;
+  description?: string | undefined;
+  enabled?: boolean | undefined;
+  isPremium?: boolean | undefined;
+}
+
+interface NavigationGroup {
+  title: string;
+  items: NavigationItem[];
+}
+
+interface TooltipPosition {
+  top: number;
+  left: number;
+}
+
+const PreviewContent = ({ item }: { item: NavigationItem }) => {
+  if (item.to.includes('overview') || item.to === '/client-c/overview') {
+    return (
+      <div className="space-y-2">
+        <div className="grid grid-cols-2 gap-2">
+          <div className="bg-[#0f0f11] border border-white/10 rounded p-2">
+            <div className="text-[8px] text-gray-500 mb-1">Total Spend</div>
+            <div className="text-xs font-bold text-white">$125k</div>
+          </div>
+          <div className="bg-[#0f0f11] border border-white/10 rounded p-2">
+            <div className="text-[8px] text-gray-500 mb-1">Forecast</div>
+            <div className="text-xs font-bold text-[#007758]">+12%</div>
+          </div>
+        </div>
+        <div className="flex items-center gap-2 text-[8px] text-gray-400 mt-2">
+          <div className="w-1.5 h-1.5 rounded-full bg-[#007758]"></div>
+          <span>Real-time Metrics</span>
+        </div>
+      </div>
+    );
+  }
+  return (
+    <div className="space-y-2">
+      <div className="bg-[#0f0f11] border border-white/10 rounded p-2">
+        <div className="text-[8px] text-gray-500 mb-1">Active View</div>
+        <div className="text-xs font-bold text-white">{item.label}</div>
+      </div>
+      <div className="flex items-center gap-2 text-[8px] text-gray-400">
+        <div className="w-1.5 h-1.5 rounded-full bg-blue-500"></div>
+        <span>Detailed Analysis</span>
+      </div>
+    </div>
+  );
+};
+
+const VerticalSidebar = ({ caps = {} }: VerticalSidebarProps) => {
   const { user } = useAuthStore();
   const isPremium = !user?.is_premium; // Show crown if user is NOT premium
   
-  const fileInputRef = useRef(null);
   const navigate = useNavigate(); // Hook for navigation
   
   // UI States
-  const [selectedFileName, setSelectedFileName] = useState("");
-  const [selectedFile, setSelectedFile] = useState(null);
-  const [uploading, setUploading] = useState(false);
-  const [uploadError, setUploadError] = useState("");
-  const [uploadCount, setUploadCount] = useState(0);
+  const [uploadCount] = useState(() =>
+    parseInt(localStorage.getItem('csvUploadCount') || '0', 10)
+  );
   const MAX_UPLOADS = 5; // Increased limit for easier testing
 
-  // Load upload count from local storage
-  useEffect(() => {
-    const count = parseInt(localStorage.getItem('csvUploadCount') || '0', 10);
-    setUploadCount(count);
-  }, []);
-
-  // --- 1. HANDLE FILE SELECTION ---
-  const openFilePicker = () => {
-    if (uploadCount >= MAX_UPLOADS) {
-      setUploadError(`Limit reached.`);
-      return;
-    }
-    fileInputRef.current?.click();
-  };
-
-  const handleFileChange = (e) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      if (uploadCount >= MAX_UPLOADS) {
-        setUploadError(`Limit reached.`);
-        return;
-      }
-      setSelectedFileName(file.name);
-      setSelectedFile(file);
-      setUploadError("");
-      if (onCsvSelected) onCsvSelected(file);
-    }
-  };
-
-  // --- 2. PROCESS UPLOAD (THE FIX) ---
-  const handleProcessUpload = async () => {
-    if (!selectedFile) return;
-
-    setUploading(true);
-    setUploadError("");
-
-    const formData = new FormData();
-    formData.append('file', selectedFile);
-
-    try {
-      // API CALL: Sends file to backend
-      const API_URL = import.meta.env.VITE_API_URL;
-      const response = await axios.post(`${API_URL}/api/etl`, formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-        withCredentials: true 
-      });
-
-      if (response.status === 200) {
-         // A. Extract the new Upload ID from backend response
-         const { uploadId } = response.data;
-
-         // B. Update Local UI Counters
-         const newCount = uploadCount + 1;
-         localStorage.setItem('csvUploadCount', newCount.toString());
-         setUploadCount(newCount);
-
-         // C. Reset Input UI
-         setSelectedFile(null);
-         setSelectedFileName("");
-         if (fileInputRef.current) fileInputRef.current.value = '';
-         setUploading(false);
-
-         // D. NAVIGATE WITH STATE (Crucial Step)
-         // Instead of reloading, we push the new ID to the router state.
-         // DashboardPage.jsx will pick this up immediately.
-         navigate('/client-c', { 
-           state: { uploadId: uploadId },
-           replace: true // Replaces history so "Back" button works better
-         });
-      }
-      
-    } catch (error) {
-      console.error("Upload failed:", error);
-      setUploading(false);
-      const serverError = error.response?.data?.error || "Upload failed. Check console.";
-      setUploadError(serverError);
-    }
-  };
-
   // --- 3. NAVIGATION CONFIGURATION ---
-  const navigationGroups = [
+  const navigationGroups: NavigationGroup[] = [
     {
       title: "CORE",
       items: [
@@ -219,10 +214,10 @@ const VerticalSidebar = ({ onCsvSelected, caps = {} }) => {
   ];
 
   // --- 4. TOOLTIP LOGIC ---
-  const [hoveredItem, setHoveredItem] = useState(null);
-  const [tooltipPosition, setTooltipPosition] = useState({ top: 0, left: 0 });
-  const hoverTimeoutRef = useRef(null);
-  const tooltipRef = useRef(null);
+  const [hoveredItem, setHoveredItem] = useState<NavigationItem | null>(null);
+  const [tooltipPosition, setTooltipPosition] = useState<TooltipPosition>({ top: 0, left: 0 });
+  const hoverTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const tooltipRef = useRef<HTMLDivElement | null>(null);
   const isHoveringTooltipRef = useRef(false);
 
   // Cleanup timeout
@@ -232,7 +227,7 @@ const VerticalSidebar = ({ onCsvSelected, caps = {} }) => {
     };
   }, []);
 
-  const updateTooltipPosition = (element) => {
+  const updateTooltipPosition = (element: HTMLElement | null) => {
     if (!element) return;
     requestAnimationFrame(() => {
       const rect = element.getBoundingClientRect();
@@ -248,45 +243,8 @@ const VerticalSidebar = ({ onCsvSelected, caps = {} }) => {
     });
   };
 
-  // Preview Content Switcher (Pure UI)
-  const PreviewContent = ({ item }) => {
-    // Simplified preview logic for brevity - purely visual
-    if (item.to.includes('overview') || item.to === '/client-c/overview') {
-        return (
-            <div className="space-y-2">
-              <div className="grid grid-cols-2 gap-2">
-                <div className="bg-[#0f0f11] border border-white/10 rounded p-2">
-                  <div className="text-[8px] text-gray-500 mb-1">Total Spend</div>
-                  <div className="text-xs font-bold text-white">$125k</div>
-                </div>
-                <div className="bg-[#0f0f11] border border-white/10 rounded p-2">
-                  <div className="text-[8px] text-gray-500 mb-1">Forecast</div>
-                  <div className="text-xs font-bold text-[#a02ff1]">+12%</div>
-                </div>
-              </div>
-              <div className="flex items-center gap-2 text-[8px] text-gray-400 mt-2">
-                 <div className="w-1.5 h-1.5 rounded-full bg-[#a02ff1]"></div>
-                 <span>Real-time Metrics</span>
-              </div>
-            </div>
-        );
-    }
-    return (
-        <div className="space-y-2">
-           <div className="bg-[#0f0f11] border border-white/10 rounded p-2">
-              <div className="text-[8px] text-gray-500 mb-1">Active View</div>
-              <div className="text-xs font-bold text-white">{item.label}</div>
-           </div>
-           <div className="flex items-center gap-2 text-[8px] text-gray-400">
-               <div className="w-1.5 h-1.5 rounded-full bg-blue-500"></div>
-               <span>Detailed Analysis</span>
-           </div>
-        </div>
-    );
-  };
-
-  const NavItem = ({ item }) => {
-    const handleMouseEnter = (e) => {
+  const NavItem = ({ item }: { item: NavigationItem }) => {
+    const handleMouseEnter = (e: React.MouseEvent<HTMLAnchorElement>) => {
       if (item.description) {
         if (hoverTimeoutRef.current) clearTimeout(hoverTimeoutRef.current);
         updateTooltipPosition(e.currentTarget);
@@ -294,11 +252,11 @@ const VerticalSidebar = ({ onCsvSelected, caps = {} }) => {
       }
     };
 
-    const handleMouseLeave = (e) => {
+    const handleMouseLeave = (e: React.MouseEvent<HTMLAnchorElement>) => {
         if (hoverTimeoutRef.current) clearTimeout(hoverTimeoutRef.current);
         // Check if moving to tooltip
         const relatedTarget = e.relatedTarget;
-        if (relatedTarget && tooltipRef.current && typeof tooltipRef.current.contains === 'function' && tooltipRef.current.contains(relatedTarget)) {
+        if (relatedTarget instanceof Node && tooltipRef.current && typeof tooltipRef.current.contains === 'function' && tooltipRef.current.contains(relatedTarget)) {
             isHoveringTooltipRef.current = true;
             return;
         }
@@ -309,20 +267,20 @@ const VerticalSidebar = ({ onCsvSelected, caps = {} }) => {
     };
 
     return (
-      <NavLink
+        <NavLink
         to={item.to}
-        end={item.end}
+        end={item.end ?? false}
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
-        className={({ isActive }) => `
+        className={({ isActive }: NavLinkRenderProps) => `
           group flex items-center justify-center lg:justify-between gap-0 lg:gap-3 px-2 lg:px-3 py-2.5 lg:py-2 mb-1 rounded-lg transition-all duration-200 border border-transparent
           ${isActive 
-            ? "bg-[#a02ff1]/10 text-[#a02ff1] border-[#a02ff1]/20 shadow-[0_0_15px_rgba(160,47,241,0.1)]" 
+            ? "bg-[#007758]/10 text-[#007758] border-[#007758]/20 shadow-[0_0_15px_rgba(0,119,88,0.1)]" 
             : "text-gray-400 hover:bg-white/5 hover:text-white"}
         `}
       >
         <div className="flex items-center gap-0 lg:gap-3">
-          <item.icon size={20} className="lg:w-4 lg:h-4 group-[.active]:text-[#a02ff1] group-hover:text-white transition-colors" />
+          <item.icon size={20} className="lg:w-4 lg:h-4 group-[.active]:text-[#007758] group-hover:text-white transition-colors" />
           <span className="hidden lg:inline text-sm font-medium">{item.label}</span>
         </div>
         {isPremium && item.isPremium && (
@@ -349,10 +307,10 @@ const VerticalSidebar = ({ onCsvSelected, caps = {} }) => {
             onMouseLeave={() => { isHoveringTooltipRef.current = false; setHoveredItem(null); }}
           >
              {/* Tooltip UI Card */}
-             <div className="bg-[#1a1b20] border border-[#a02ff1]/40 rounded-xl shadow-2xl overflow-hidden backdrop-blur-xl w-[280px] ring-1 ring-[#a02ff1]/20">
-                <div className="bg-gradient-to-r from-[#25262b] to-[#1f2025] border-b border-[#a02ff1]/20 px-4 py-2.5 flex items-center justify-between">
+             <div className="bg-[#1a1b20] border border-[#007758]/40 rounded-xl shadow-2xl overflow-hidden backdrop-blur-xl w-[280px] ring-1 ring-[#007758]/20">
+                <div className="bg-gradient-to-r from-[#25262b] to-[#1f2025] border-b border-[#007758]/20 px-4 py-2.5 flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                        <hoveredItem.icon size={14} className="text-[#a02ff1]" />
+                        <hoveredItem.icon size={14} className="text-[#007758]" />
                         <span className="text-xs font-bold text-white">{hoveredItem.label}</span>
                     </div>
                 </div>
@@ -362,7 +320,7 @@ const VerticalSidebar = ({ onCsvSelected, caps = {} }) => {
                 <div className="px-4 py-2 bg-[#1a1b20]">
                     <p className="text-[10px] text-gray-400 leading-relaxed">{hoveredItem.description}</p>
                 </div>
-                <div className="absolute left-0 top-1/2 -translate-x-1 -translate-y-1/2 w-3 h-3 bg-[#1a1b20] border-l border-b border-[#a02ff1]/40 rotate-45"></div>
+                <div className="absolute left-0 top-1/2 -translate-x-1 -translate-y-1/2 w-3 h-3 bg-[#1a1b20] border-l border-b border-[#007758]/40 rotate-45"></div>
              </div>
           </motion.div>
         )}
@@ -373,22 +331,24 @@ const VerticalSidebar = ({ onCsvSelected, caps = {} }) => {
          
          {/* Logo */}
          <div className="px-2 lg:px-5 py-6 mb-2 flex items-center justify-center lg:justify-start gap-3">
-           <img src="/k&cologo.svg" alt="Logo" className="w-10 h-10 object-contain" />
+           <img src="/KCX.logo.svg" alt="Logo" className="w-10 h-10 object-contain" />
            <div className="hidden lg:block">
-             <h1 className="text-base font-bold text-white">K&Co.</h1>
+             <h1 className="text-base font-bold text-white">
+               KCX<span className="text-[#00b889]">.</span>
+             </h1>
              <p className="text-[10px] text-gray-500 font-mono">FINOPS OS v2.4</p>
            </div>
          </div>
 
          {/* Navigation */}
          <div className="flex-1 overflow-y-auto px-2 lg:px-3 space-y-6 scrollbar-hide">
-           {navigationGroups.map((group, index) => (
+           {navigationGroups.map((group: NavigationGroup, index: number) => (
              <div key={index}>
                <p className="hidden lg:block px-3 text-[10px] font-bold text-gray-600 uppercase mb-2">{group.title}</p>
                <div className="space-y-1">
                  {group.items
-                   .filter(item => item.enabled !== false)
-                   .map((item) => <NavItem key={item.to} item={item} />)}
+                   .filter((item: NavigationItem) => item.enabled !== false)
+                   .map((item: NavigationItem) => <NavItem key={item.to} item={item} />)}
                </div>
              </div>
            ))}
@@ -398,7 +358,7 @@ const VerticalSidebar = ({ onCsvSelected, caps = {} }) => {
          <div className="p-3 mt-auto bg-[#0f0f11] border-t border-white/5">
             <div className={`
                 group relative border border-dashed rounded-lg p-3 transition-all
-                ${uploadCount >= MAX_UPLOADS ? "border-red-500/50 bg-red-500/5" : "border-gray-700 hover:border-[#a02ff1] bg-[#1a1b20]/50 hover:bg-[#a02ff1]/5"}
+                ${uploadCount >= MAX_UPLOADS ? "border-red-500/50 bg-red-500/5" : "border-gray-700 hover:border-[#007758] bg-[#1a1b20]/50 hover:bg-[#007758]/5"}
             `}>
                <div className="flex items-center justify-center">
                  <button

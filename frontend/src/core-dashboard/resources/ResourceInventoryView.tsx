@@ -18,6 +18,10 @@ import GroupedListView from "./components/GroupedList";
 import ZombieListView from "./components/ZombieList";
 import InspectorDrawerView from "./components/InspectorDrawer";
 import { SectionLoading } from "../common/SectionStates";
+import type {
+  ResourceInputChange,
+  ResourceInventoryViewProps,
+} from "./types";
 
 const ResourceInventoryView = ({
   loading,
@@ -46,7 +50,7 @@ const ResourceInventoryView = ({
   setGrouping,
   setSelectedResource,
   onToggleFlag,
-}) => {
+}: ResourceInventoryViewProps) => {
   if (loading) {
     return <SectionLoading label="Analyzing Resources..." />;
   }
@@ -201,13 +205,13 @@ const ResourceInventoryView = ({
                     className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)]"
                     size={14}
                   />
-                  <input
-                    type="text"
-                    placeholder="Search resources..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full rounded-xl border border-[var(--border-light)] bg-white py-2 pl-9 pr-4 text-xs text-[var(--text-primary)] outline-none transition-all focus:border-emerald-200 focus:ring-2 focus:ring-emerald-100"
-                  />
+                    <input
+                      type="text"
+                      placeholder="Search resources..."
+                      value={searchTerm}
+                      onChange={(e: ResourceInputChange) => setSearchTerm(e.target.value)}
+                      className="w-full rounded-xl border border-[var(--border-light)] bg-white py-2 pl-9 pr-4 text-xs text-[var(--text-primary)] outline-none transition-all focus:border-emerald-200 focus:ring-2 focus:ring-emerald-100"
+                    />
                 </div>
               )}
             </div>
@@ -307,3 +311,6 @@ const ResourceInventoryView = ({
 };
 
 export default ResourceInventoryView;
+
+
+

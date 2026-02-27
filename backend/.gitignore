@@ -1,4 +1,11 @@
 node_modules
 .env.*
+!.env.example
 service-account.json
 kandco-482118-9b56a0f07340.json
+*.key
+*.pem
+*.p12
+*.pfx
+*.p8
+/src/db/migrations

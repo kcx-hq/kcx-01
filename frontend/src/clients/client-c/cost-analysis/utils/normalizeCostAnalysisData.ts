@@ -1,4 +1,18 @@
-export function normalizeCostAnalysisData(costAnalysisData, groupBy = 'ServiceName') {
+import type {
+  ClientCCostAnalysisRawData,
+  CostBreakdownItem,
+  CostChartPoint,
+  GroupByValue,
+  NormalizedCostAnalysisData,
+  SpendLevel,
+  TrendDirection,
+  VolatilityLevel,
+} from "../types";
+
+export function normalizeCostAnalysisData(
+  costAnalysisData: ClientCCostAnalysisRawData | null,
+  groupBy: GroupByValue = 'ServiceName',
+): NormalizedCostAnalysisData {
   // Handle empty/invalid data
   if (!costAnalysisData || typeof costAnalysisData !== "object") {
     return createEmptyNormalizedData();
@@ -23,21 +37,27 @@ export function normalizeCostAnalysisData(costAnalysisData, groupBy = 'ServiceNa
   const forecastTotal = validateNumber(kpis.forecastTotal, 0);
   
   // Enhanced KPI calculations for better insights
-  const kpiInsights = {
+  const kpiInsights: {
+    spendLevel: SpendLevel;
+    trendDirection: TrendDirection;
+    volatility: VolatilityLevel;
+  } = {
     spendLevel: getSpendLevel(totalSpend),
     trendDirection: trend >= 0 ? 'increasing' : 'decreasing',
     volatility: Math.abs(trend) > 15 ? 'high' : Math.abs(trend) > 5 ? 'moderate' : 'stable'
   };
 
   // Chart data processing - Handle different data structures
-  let chartData = Array.isArray(costAnalysisData.chartData) ? [...costAnalysisData.chartData] : [];
+  let chartData: CostChartPoint[] = Array.isArray(costAnalysisData.chartData)
+    ? [...costAnalysisData.chartData].map((item) => ({
+        ...item,
+        date: String(item.date || 'Unknown'),
+        total: item.total !== undefined ? validateNumber(item.total, 0) : validateNumber(item.value, 0),
+      }))
+    : [];
   
   // Ensure chart data has required structure
-  chartData = chartData.map(item => ({
-    ...item,
-    date: item.date || 'Unknown',
-    total: item.total !== undefined ? item.total : (item.value || 0)
-  })).filter(item => item.date !== 'Unknown');
+  chartData = chartData.filter((item) => item.date !== 'Unknown');
 
   // Active keys - Handle department grouping specially
   let activeKeys = Array.isArray(costAnalysisData.activeKeys) 
@@ -46,26 +66,28 @@ export function normalizeCostAnalysisData(costAnalysisData, groupBy = 'ServiceNa
   
   // If no active keys but we have breakdown data, derive from breakdown
   if (activeKeys.length === 0 && Array.isArray(costAnalysisData.breakdown)) {
-    activeKeys = costAnalysisData.breakdown.map(item => item.name || item.label).filter(Boolean);
+    activeKeys = costAnalysisData.breakdown
+      .map((item) => item.name || item.label)
+      .filter((value): value is string => Boolean(value));
   }
 
   // Breakdown data - Enhanced processing
-  let breakdown = Array.isArray(costAnalysisData.breakdown) 
-    ? [...costAnalysisData.breakdown] 
+  let breakdown: CostBreakdownItem[] = Array.isArray(costAnalysisData.breakdown)
+    ? [...costAnalysisData.breakdown].map((item) => ({
+        name: String(item.name || item.label || 'Unknown'),
+        value: validateNumber(item.value, 0),
+        label: String(item.label || item.name || 'Unknown'),
+        percentage: 0,
+      }))
     : [];
   
   // Ensure breakdown has consistent structure
-  breakdown = breakdown.map(item => ({
-    name: item.name || item.label || 'Unknown',
-    value: validateNumber(item.value, 0),
-    label: item.label || item.name || 'Unknown',
-    percentage: 0 // Will calculate below
-  })).filter(item => item.value > 0);
+  breakdown = breakdown.filter((item) => item.value > 0);
   
   // Calculate percentages
   const breakdownTotal = breakdown.reduce((sum, item) => sum + item.value, 0);
   if (breakdownTotal > 0) {
-    breakdown = breakdown.map(item => ({
+    breakdown = breakdown.map((item) => ({
       ...item,
       percentage: ((item.value / breakdownTotal) * 100)
     }));
@@ -125,17 +147,17 @@ export function normalizeCostAnalysisData(costAnalysisData, groupBy = 'ServiceNa
     metadata,
     
     // Preserve original message if exists
-    message: costAnalysisData.message
+    ...(costAnalysisData.message ? { message: costAnalysisData.message } : {})
   };
 }
 
 // Helper functions
-function validateNumber(value, defaultValue = 0) {
+function validateNumber(value: unknown, defaultValue = 0): number {
   const num = Number(value);
   return isNaN(num) ? defaultValue : num;
 }
 
-function getSpendLevel(amount) {
+function getSpendLevel(amount: number): SpendLevel {
   if (amount >= 100000) return 'enterprise';
   if (amount >= 50000) return 'high';
   if (amount >= 10000) return 'moderate';
@@ -143,7 +165,7 @@ function getSpendLevel(amount) {
   return 'minimal';
 }
 
-function createEmptyNormalizedData() {
+function createEmptyNormalizedData(): NormalizedCostAnalysisData {
   return {
     kpis: {
       totalSpend: 0,

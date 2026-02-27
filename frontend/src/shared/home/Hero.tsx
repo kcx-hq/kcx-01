@@ -1,5 +1,6 @@
 // src/components/Hero.jsx
 import React, { useState, useEffect, useRef } from "react";
+import type { LucideIcon } from "lucide-react";
 import {
   ArrowRight,
   Sparkles,
@@ -21,6 +22,47 @@ import {
 } from "framer-motion";
 import { AuthModal } from "../auth";
 
+interface HeroProps {
+  isCTAActivated?: boolean;
+  showAttentionGrabber?: boolean;
+  deactivateCTA?: () => void;
+}
+
+interface ProviderIconProps {
+  top?: string;
+  bottom?: string;
+  left?: string;
+  right?: string;
+  icon: string;
+  color: string;
+  delay: number;
+}
+
+interface FloatingDataLabelProps {
+  top?: string;
+  left?: string;
+  right?: string;
+  bottom?: string;
+  value: string;
+  colorVar?: string;
+  delay: number;
+  icon?: LucideIcon;
+}
+
+type PillarTone = "green" | "yellow" | "brand";
+
+interface PillarIconProps {
+  icon: LucideIcon;
+  tone?: PillarTone;
+  delay: number;
+}
+
+interface PillarToneStyle {
+  bg: string;
+  fg: string;
+  border: string;
+}
+
 // Add CSS for grid animation
 const gridPulseStyle = `
   @keyframes gridPulse {
@@ -30,17 +72,15 @@ const gridPulseStyle = `
 `;
 
 const Hero = ({
-  onOpenAuth,
   isCTAActivated = false,
   showAttentionGrabber = false,
   deactivateCTA = () => {},
-  showJourney = () => {},
-}) => {
+}: HeroProps) => {
   const [isAuthOpen, setIsAuthOpen] = useState(false);
   const [showOnboardingHint, setShowOnboardingHint] = useState(false);
 
   // --- Physics-based Mouse Tracking ---
-  const cardRef = useRef(null);
+  const cardRef = useRef<HTMLDivElement | null>(null);
   const x = useMotionValue(0);
   const y = useMotionValue(0);
 
@@ -56,7 +96,7 @@ const Hero = ({
   const spotX = useTransform(mouseX, [-0.5, 0.5], ["0%", "100%"]);
   const spotY = useTransform(mouseY, [-0.5, 0.5], ["0%", "100%"]);
 
-  const handleMouseMove = (e) => {
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
     const rect = cardRef.current?.getBoundingClientRect();
     if (rect) {
       const width = rect.width;
@@ -120,6 +160,7 @@ const Hero = ({
     <>
       <style>{gridPulseStyle}</style>
       <AuthModal
+        key={isAuthOpen ? "auth-open" : "auth-closed"}
         isOpen={isAuthOpen}
         onClose={() => setIsAuthOpen(false)}
         initialView="signup"
@@ -132,7 +173,7 @@ const Hero = ({
         {/* Background grid */}
         <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(0,0,0,0.06)_1px,transparent_1px),linear-gradient(to_bottom,rgba(0,0,0,0.06)_1px,transparent_1px)] bg-[size:40px_40px] [mask-image:radial-gradient(ellipse_80%_55%_at_50%_0%,#000_70%,transparent_100%)] pointer-events-none" />
 
-        {/* Soft blobs (theme updated: no purple) */}
+        {/* Soft blobs (emerald light theme) */}
         <motion.div
           animate={{ scale: [1, 1.2, 1], opacity: [0.22, 0.4, 0.22] }}
           transition={{ duration: 8, repeat: Infinity }}
@@ -276,11 +317,11 @@ const Hero = ({
                     style={{
                       backgroundColor: "var(--brand-primary)",
                     }}
-                    onMouseEnter={(e) => {
+                    onMouseEnter={(e: React.MouseEvent<HTMLButtonElement>) => {
                       e.currentTarget.style.backgroundColor =
                         "var(--brand-primary-hover)";
                     }}
-                    onMouseLeave={(e) => {
+                    onMouseLeave={(e: React.MouseEvent<HTMLButtonElement>) => {
                       e.currentTarget.style.backgroundColor =
                         "var(--brand-primary)";
                     }}
@@ -318,7 +359,7 @@ const Hero = ({
                       </span>
                       {/* theme updated */}
                       <span className="text-[var(--brand-primary)] font-medium flex items-center gap-1.5">
-                        See how K&amp;Co works
+                        See how KCX. works
                       </span>
                     </p>
                   </motion.div>
@@ -351,7 +392,7 @@ const Hero = ({
               <motion.div
                 className="absolute inset-0 pointer-events-none opacity-40 z-0"
                 style={{
-                  background: useTransform([spotX, spotY], ([sx, sy]) => {
+                  background: useTransform([spotX, spotY], ([sx, sy]: [string, string]) => {
                     return `radial-gradient(600px circle at ${sx} ${sy}, rgba(0,198,147,0.12), transparent 45%)`;
                   }),
                 }}
@@ -365,7 +406,7 @@ const Hero = ({
                   <div className="w-3 h-3 rounded-full bg-black/10 border border-black/15"></div>
                 </div>
                 <div className="text-[10px] font-mono text-[var(--text-disabled)] uppercase tracking-widest">
-                  K&amp;Co FinOps Platform
+                  KCX<span className="text-[var(--brand-primary)]">.</span> FinOps Platform
                 </div>
               </div>
 
@@ -545,8 +586,8 @@ const Hero = ({
                       />
 
                       <motion.img
-                        src="/k&coicon.svg"
-                        alt="K&Co Logo"
+                        src="/KCX.logo.svg"
+                        alt="KCX. Logo"
                         className="w-16 h-16 object-contain relative z-20"
                         animate={{
                           filter: [
@@ -610,7 +651,7 @@ const Hero = ({
                     }}
                     transition={{ duration: 3, repeat: Infinity }}
                   >
-                    K&amp;Co.
+                    KCX<span className="text-[var(--brand-primary)]">.</span>
                   </motion.div>
 
                   <div className="flex items-center justify-center gap-6 mb-3">
@@ -631,7 +672,7 @@ const Hero = ({
                   </motion.div>
                 </div>
 
-                {/* Corner accents (theme updated: no purple) */}
+                {/* Corner accents (emerald light theme) */}
                 <div className="absolute top-0 right-0 w-16 h-16 pointer-events-none">
                   <div className="w-full h-full bg-gradient-to-bl from-[var(--highlight-green)] to-transparent rounded-bl-full border-l border-b border-[var(--border-light)]" />
                 </div>
@@ -650,7 +691,7 @@ const Hero = ({
 // --- HELPER COMPONENTS ---
 
 // Provider Icon (kept provider brand colors, but light-mode glass container)
-const ProviderIcon = ({ top, bottom, left, right, icon, color, delay }) => {
+const ProviderIcon = ({ top, bottom, left, right, icon, color, delay }: ProviderIconProps) => {
   const isAws = icon.includes("aws");
   const isAzure = icon.includes("azure");
 
@@ -704,7 +745,7 @@ const FloatingDataLabel = ({
   colorVar = "--brand-secondary",
   delay,
   icon: Icon,
-}) => (
+}: FloatingDataLabelProps) => (
   <motion.div
     className="absolute px-2.5 py-1.5 rounded-md bg-[var(--bg-surface)]/85 border border-[var(--border-light)] flex items-center gap-1.5 text-[10px] font-mono font-bold backdrop-blur-md z-20"
     style={{
@@ -729,8 +770,8 @@ const FloatingDataLabel = ({
   </motion.div>
 );
 
-const PillarIcon = ({ icon: Icon, tone = "brand", delay }) => {
-  const map = {
+const PillarIcon = ({ icon: Icon, tone = "brand", delay }: PillarIconProps) => {
+  const map: Record<PillarTone, PillarToneStyle> = {
     green: {
       bg: "var(--highlight-green)",
       fg: "var(--brand-primary)",

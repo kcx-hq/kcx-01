@@ -1,7 +1,12 @@
 import { useEffect, useState } from 'react';
-import axios from 'axios';
 import { useAuthStore } from '../../../../store/Authstore';
 import { useDashboardStore } from '../../../../store/Dashboard.store';
+import { apiGet } from '../../../../services/http';
+
+interface BillingUpload {
+  uploadid: string;
+  uploadedat: string;
+}
 
 const useDashboardInit = () => {
   const { fetchUser } = useAuthStore();
@@ -16,19 +21,18 @@ const useDashboardInit = () => {
       // If no uploadIds are set, fetch the latest uploadId
       if (uploadIds.length === 0) {
         try {
-          const API_URL = import.meta.env.VITE_API_URL;
-          const res = await axios.get(`${API_URL}/api/etl/get-billing-uploads`, {
-            withCredentials: true,
-          });
+          const response = await apiGet<BillingUpload[]>("/api/etl/get-billing-uploads");
           
-          const data = Array.isArray(res.data) ? res.data : [];
+          const data = Array.isArray(response) ? response : [];
           if (data.length > 0) {
             // Sort by uploadedat descending to get the latest upload
-            data.sort((a, b) => new Date(b.uploadedat) - new Date(a.uploadedat));
-            const latestUploadId = data[0].uploadid;
-            setUploadIds([latestUploadId]);
+            data.sort((a: BillingUpload, b: BillingUpload) => new Date(b.uploadedat).getTime() - new Date(a.uploadedat).getTime());
+            const latestUploadId = data[0]?.uploadid;
+            if (latestUploadId) {
+              setUploadIds([latestUploadId]);
+            }
           }
-        } catch (err) {
+        } catch (err: unknown) {
           console.error("Failed to fetch latest uploadId:", err);
         }
       }

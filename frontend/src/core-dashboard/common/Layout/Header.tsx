@@ -6,8 +6,21 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useAuthStore } from '../../../store/Authstore';
 import { useDashboardStore } from '../../../store/Dashboard.store';
 
+interface HeaderAnomaly {
+  ServiceName?: string;
+  ProviderName?: string;
+  RegionName?: string;
+  cost?: number;
+  ChargePeriodStart?: string;
+}
 
-const Header = ({ title, anomalies = [], anomaliesCount = 0 }) => {
+interface HeaderProps {
+  title: string;
+  anomalies?: HeaderAnomaly[];
+  anomaliesCount?: number;
+}
+
+const Header = ({ title, anomalies = [], anomaliesCount = 0 }: HeaderProps) => {
   const navigate = useNavigate();
   const { logout, user, updateProfile, fetchUser } = useAuthStore();
   const uploadIds = useDashboardStore((s) => s.uploadIds);
@@ -30,19 +43,19 @@ const Header = ({ title, anomalies = [], anomaliesCount = 0 }) => {
   ];
 
   const hasAnomalies = anomaliesCount > 0;
-  const formatCurrency = (val) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(val);
+  const formatCurrency = (val: number) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(val);
   const activeSource = useMemo(() => {
     if (!uploadIds.length) {
       return { label: '', chips: [], remainingCount: 0, fullText: '' };
     }
 
     const selectedNames = uploadIds
-      .map((id) => {
+      .map((id: string) => {
         const entry = selectedUploads.find((item) => item.uploadId === id);
         const filePath = entry?.filename || '';
         return filePath.split(/[\\/]/).pop();
       })
-      .filter(Boolean);
+      .filter((name): name is string => Boolean(name));
 
     if (!selectedNames.length) {
       const fallback = `${uploadIds.length} files selected`;
@@ -70,17 +83,10 @@ const Header = ({ title, anomalies = [], anomaliesCount = 0 }) => {
     [activeSource.label, activeSource.fullText],
   );
 
-  useEffect(() => {
-    if (showProfileSettings && user) {
-      setFullName(user.full_name || "");
-      setUpdateError("");
-    }
-  }, [showProfileSettings, user]);
-
   // Click outside to close menu
   useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (profileMenuRef.current && !profileMenuRef.current.contains(event.target)) {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (profileMenuRef.current && event.target instanceof Node && !profileMenuRef.current.contains(event.target)) {
         setShowProfileMenu(false);
       }
     };
@@ -92,12 +98,12 @@ const Header = ({ title, anomalies = [], anomaliesCount = 0 }) => {
     try {
       await logout();
       navigate("/sign-in");
-    } catch (error) {
+    } catch {
       navigate("/sign-in");
     }
   };
 
-  const handleUpdateProfile = async (e) => {
+  const handleUpdateProfile = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsUpdating(true);
     setUpdateError("");
@@ -120,7 +126,7 @@ const Header = ({ title, anomalies = [], anomaliesCount = 0 }) => {
     setIsUpdating(false);
   };
 
-  const handleDialogToggle = (open) => {
+  const handleDialogToggle = (open: boolean) => {
     setShowDialog(open);
     if (!open) setVisibleAnomaliesCount(5);
   };
@@ -291,7 +297,7 @@ const Header = ({ title, anomalies = [], anomaliesCount = 0 }) => {
           >
             <motion.div 
               initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }}
-              onClick={(e) => e.stopPropagation()}
+              onClick={(e: React.MouseEvent<HTMLDivElement>) => e.stopPropagation()}
               className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full overflow-hidden border border-slate-100"
             >
               <div className="p-6 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
@@ -319,14 +325,14 @@ const Header = ({ title, anomalies = [], anomaliesCount = 0 }) => {
               <div className="p-6 max-h-[60vh] overflow-y-auto custom-scrollbar">
                 {hasAnomalies ? (
                   <div className="space-y-3">
-                    {anomalies.slice(0, visibleAnomaliesCount).map((item, i) => (
+                    {anomalies.slice(0, visibleAnomaliesCount).map((item: HeaderAnomaly, i: number) => (
                       <div key={i} className="flex items-center justify-between p-4 rounded-xl border border-slate-100 bg-white hover:border-slate-200 hover:shadow-sm transition-all">
                         <div>
                           <p className="font-semibold text-[#192630]">{item.ServiceName || "Unknown Service"}</p>
                           <p className="text-xs text-slate-500 mt-1">{item.ProviderName} • {item.RegionName}</p>
                         </div>
                         <div className="text-right">
-                          <p className="text-sm font-bold text-amber-600">{formatCurrency(item.cost)}</p>
+                          <p className="text-sm font-bold text-amber-600">{formatCurrency(item.cost ?? 0)}</p>
                           <p className="text-[10px] text-slate-400 mt-1">{item.ChargePeriodStart?.split(" ")[0]}</p>
                         </div>
                       </div>
@@ -374,7 +380,7 @@ const Header = ({ title, anomalies = [], anomaliesCount = 0 }) => {
           >
             <motion.div 
               initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }}
-              onClick={(e) => e.stopPropagation()}
+              onClick={(e: React.MouseEvent<HTMLDivElement>) => e.stopPropagation()}
               className="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden"
             >
               <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
@@ -387,7 +393,7 @@ const Header = ({ title, anomalies = [], anomaliesCount = 0 }) => {
                   <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Full Name</label>
                   <input 
                     value={fullName}
-                    onChange={(e) => setFullName(e.target.value)}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFullName(e.target.value)}
                     className="w-full p-3 bg-white border border-slate-200 rounded-xl text-sm font-medium text-[#192630] focus:border-[var(--brand-primary)] focus:ring-4 focus:ring-[var(--brand-primary-soft)] outline-none transition-all"
                     placeholder="Jane Doe"
                   />
@@ -424,3 +430,7 @@ const Header = ({ title, anomalies = [], anomaliesCount = 0 }) => {
 };
 
 export default Header;
+
+
+
+

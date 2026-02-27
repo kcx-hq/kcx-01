@@ -1,3 +1,4 @@
+import logger from "../../../lib/logger.js";
 import {
   sendInquiryAcknowledgementEmail,
   sendInquiryEmailToCompany,
@@ -11,16 +12,24 @@ import { scheduleEvent, getFreeSlots } from "../../../utils/calenderSchedular.js
 import { DateTime } from "luxon";
 import { toZonedTime } from "date-fns-tz";
 import { fromZonedTime } from "date-fns-tz";
-const BUSINESS_TZ = "Asia/Kolkata"; // Company timezone
+import AppError from "../../../errors/AppError.js";
+import {
+  buildInquiryActionLinks,
+  DEFAULT_BUSINESS_TIMEZONE,
+  formatSlotsForViewer,
+  hasRequiredInquirySubmitFields,
+  resolveViewerTimezone,
+  toUtcIsoRange,
+  validateInquiryActionState,
+} from "./inquiry.utils.js";
+const BUSINESS_TZ = DEFAULT_BUSINESS_TIMEZONE; // Company timezone
 
-export const submitInquiry = async (req, res) => {
+export const submitInquiry = async (req, res, next) => {
   try {
     const { name, email, message, preferred_datetime, timezone } = req.body;
 
-    if (!preferred_datetime || !timezone) {
-      return res.status(400).json({
-        message: "Preferred date, time, and timezone are required",
-      });
+    if (!hasRequiredInquirySubmitFields({ preferred_datetime, timezone })) {
+      return next(new AppError(400, "VALIDATION_ERROR", "Invalid request"));
     }
 
     // ✅ Convert client local time → UTC
@@ -37,8 +46,11 @@ export const submitInquiry = async (req, res) => {
     const actionToken = generateJWT({ inquiryId: newInquiry.id });
     await newInquiry.update({ action_token: actionToken });
 
-    const acceptLink = `${process.env.BACKEND_URL}/api/inquiry/accept/${newInquiry.id}?token=${actionToken}`;
-    const rejectLink = `${process.env.BACKEND_URL}/api/inquiry/reject/${newInquiry.id}?token=${actionToken}`;
+    const { acceptLink, rejectLink } = buildInquiryActionLinks({
+      backendUrl: process.env.BACKEND_URL,
+      inquiryId: newInquiry.id,
+      actionToken,
+    });
 
     const businessPreferredDateTime = toZonedTime(
       new Date(utcPreferredDateTime),
@@ -62,32 +74,25 @@ export const submitInquiry = async (req, res) => {
       timezone
     );
 
-    return res.status(201).json({
+    return res.created({
       message: "Inquiry submitted successfully",
       data: newInquiry,
     });
   } catch (error) {
-    console.error(error);
-    return res.status(500).json({ message: "Server error" });
+    logger.error({ err: error, requestId: req.requestId }, "submitInquiry failed");
+    return next(new AppError(500, "INTERNAL", "Internal server error", { cause: error }));
   }
 };
 
-export const acceptInquiry = async (req, res) => {
+export const acceptInquiry = async (req, res, next) => {
   try {
     const { id } = req.params;
     const { token } = req.query;
 
-    if (!token) return res.status(400).send("Invalid request");
-
     const inquiry = await Inquiry.findByPk(id);
-    if (!inquiry) return res.status(404).send("Inquiry not found");
-
-    if (inquiry.status !== "PENDING") {
-      return res.send("This inquiry has already been processed.");
-    }
-
-    if (token !== inquiry.action_token) {
-      return res.status(403).send("Invalid or expired link.");
+    const actionError = validateInquiryActionState({ token, inquiry });
+    if (actionError) {
+      return next(actionError);
     }
 
     verifyJWT(token);
@@ -101,7 +106,7 @@ export const acceptInquiry = async (req, res) => {
     );
 
     if (!event.success) {
-      return res.status(500).send(event.message);
+      return next(new AppError(500, "INTERNAL", "Internal server error"));
     }
 
     await inquiry.update({
@@ -140,35 +145,35 @@ export const acceptInquiry = async (req, res) => {
       </html>`
     );
   } catch (error) {
-    console.error(error);
-    return res.status(500).send("Something went wrong");
+    logger.error({ err: error, requestId: req.requestId }, "acceptInquiry failed");
+    return next(new AppError(500, "INTERNAL", "Internal server error", { cause: error }));
   }
 };
 
-export const rejectInquiry = async (req, res) => {
+export const rejectInquiry = async (req, res, next) => {
   try {
     const { id } = req.params;
     const { token } = req.query;
 
     if (!token) {
-      return res.status(400).send("Invalid request");
+      return next(new AppError(400, "VALIDATION_ERROR", "Invalid request"));
     }
 
     // 1️⃣ Find inquiry
     const inquiry = await Inquiry.findByPk(id);
 
     if (!inquiry) {
-      return res.status(404).send("Inquiry not found");
+      return next(new AppError(404, "NOT_FOUND", "Not found"));
     }
 
     // 2️⃣ Already processed
     if (inquiry.status !== "PENDING") {
-      return res.send("This inquiry has already been processed.");
+      return next(new AppError(409, "CONFLICT", "Conflict"));
     }
 
     // 3️⃣ Validate token
     if (token !== inquiry.action_token) {
-      return res.status(403).send("Invalid or expired link.");
+      return next(new AppError(403, "UNAUTHORIZED", "You do not have permission to perform this action"));
     }
 
     // 4️⃣ Verify JWT expiry
@@ -230,8 +235,8 @@ export const rejectInquiry = async (req, res) => {
   </html>
 `);
   } catch (error) {
-    console.error(error);
-    return res.status(500).send("Something went wrong");
+    logger.error({ err: error, requestId: req.requestId }, "rejectInquiry failed");
+    return next(new AppError(500, "INTERNAL", "Internal server error", { cause: error }));
   }
 };
 
@@ -241,16 +246,13 @@ export const rejectInquiry = async (req, res) => {
  *  - date (YYYY-MM-DD) [required]
  *  - slotMinutes (default 60)
  */
-export async function getSlotsByDate(req, res) {
+export async function getSlotsByDate(req, res, next) {
   try {
     const { date, userTimezone } = req.query;
     const slotMinutes = Number(req.query.slotMinutes) || 60;
 
     if (!date) {
-      return res.status(400).json({
-        success: false,
-        message: "date query param is required (YYYY-MM-DD)",
-      });
+      return next(new AppError(400, "VALIDATION_ERROR", "Invalid request"));
     }
 
     // 1️⃣ Build business-day window IN BUSINESS TZ
@@ -274,8 +276,7 @@ export async function getSlotsByDate(req, res) {
     }
 
     if (start >= end) {
-      return res.json({
-        success: true,
+      return res.ok({
         date,
         businessTimezone: BUSINESS_TZ,
         slots: [],
@@ -283,36 +284,23 @@ export async function getSlotsByDate(req, res) {
     }
 
     // 3️⃣ Convert ONCE to UTC
-    const fromUTC = start.toUTC().toISO();
-    const toUTC = end.toUTC().toISO();
+    const { fromUTC, toUTC } = toUtcIsoRange({ start, end });
 
     // 4️⃣ Get free slots (UTC)
     const freeSlots = await getFreeSlots(fromUTC, toUTC, slotMinutes);
 
     // 5️⃣ Convert slots to USER timezone for response
-    const viewerTZ = userTimezone || BUSINESS_TZ;
+    const viewerTZ = resolveViewerTimezone(userTimezone, BUSINESS_TZ);
+    const slots = formatSlotsForViewer(freeSlots, viewerTZ);
 
-    const slots = freeSlots.map((slot) => ({
-      start: DateTime.fromISO(slot.start)
-        .setZone(viewerTZ)
-        .toFormat("yyyy-MM-dd HH:mm"),
-      end: DateTime.fromISO(slot.end)
-        .setZone(viewerTZ)
-        .toFormat("yyyy-MM-dd HH:mm"),
-    }));
-
-    return res.json({
-      success: true,
+    return res.ok({
       date,
       businessTimezone: BUSINESS_TZ,
       userTimezone: viewerTZ,
       slots,
     });
   } catch (error) {
-    console.error(error);
-    return res.status(500).json({
-      success: false,
-      message: error.message,
-    });
+    logger.error({ err: error, requestId: req.requestId }, "getSlotsByDate failed");
+    return next(new AppError(500, "INTERNAL", "Internal server error", { cause: error }));
   }
 }

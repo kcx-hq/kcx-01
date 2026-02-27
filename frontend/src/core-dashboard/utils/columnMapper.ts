@@ -3,11 +3,14 @@
  * Maps different CSV column name variations to standardized field names
  * Works with backend column mapping to ensure consistency
  */
+type ColumnValue = string | number | boolean | null | undefined;
+type DashboardRow = Record<string, ColumnValue>;
+type Rows = DashboardRow[] | null | undefined;
 
 /**
  * Find a column in a row by checking multiple possible names (case-insensitive)
  */
-const findColumn = (row, possibleNames) => {
+const findColumn = (row: DashboardRow | null | undefined, possibleNames: string[]): ColumnValue => {
   if (!row || typeof row !== 'object') return null;
   
   const rowKeys = Object.keys(row);
@@ -20,7 +23,7 @@ const findColumn = (row, possibleNames) => {
     
     // Case-insensitive match
     const foundKey = rowKeys.find(
-      key => key.toLowerCase() === possibleName.toLowerCase()
+      (key: string) => key.toLowerCase() === possibleName.toLowerCase()
     );
     if (foundKey && row[foundKey] !== undefined && row[foundKey] !== null) {
       return row[foundKey];
@@ -28,7 +31,7 @@ const findColumn = (row, possibleNames) => {
     
     // Partial match (contains the keyword)
     const foundPartial = rowKeys.find(
-      key => key.toLowerCase().includes(possibleName.toLowerCase()) ||
+      (key: string) => key.toLowerCase().includes(possibleName.toLowerCase()) ||
              possibleName.toLowerCase().includes(key.toLowerCase())
     );
     if (foundPartial && row[foundPartial] !== undefined && row[foundPartial] !== null) {
@@ -42,7 +45,7 @@ const findColumn = (row, possibleNames) => {
 /**
  * Get cost value from a row (handles multiple column name variations)
  */
-export const getCost = (row) => {
+export const getCost = (row: DashboardRow | null | undefined): number => {
   const costValue = findColumn(row, [
     'BilledCost', 'Cost', 'Amount', 'Charges', 'TotalCost',
     'UnblendedCost', 'BlendedCost', 'LineItem/UnblendedCost',
@@ -59,7 +62,7 @@ export const getCost = (row) => {
 /**
  * Get service name from a row
  */
-export const getService = (row) => {
+export const getService = (row: DashboardRow | null | undefined): ColumnValue => {
   return findColumn(row, [
     'ServiceName', 'Product', 'Service', 'ProductName',
     'LineItem/ProductCode', 'MeterCategory'
@@ -69,7 +72,7 @@ export const getService = (row) => {
 /**
  * Get region from a row
  */
-export const getRegion = (row) => {
+export const getRegion = (row: DashboardRow | null | undefined): ColumnValue => {
   return findColumn(row, [
     'RegionName', 'Region', 'Location', 'AvailabilityZone',
     'LineItem/AvailabilityZone', 'ResourceLocation', 'Zone'
@@ -79,7 +82,7 @@ export const getRegion = (row) => {
 /**
  * Get resource ID from a row
  */
-export const getResourceId = (row) => {
+export const getResourceId = (row: DashboardRow | null | undefined): ColumnValue => {
   return findColumn(row, [
     'ResourceId', 'ResourceIdentifier', 'LineItem/ResourceId',
     'InstanceId', 'ResourceGuid'
@@ -89,7 +92,7 @@ export const getResourceId = (row) => {
 /**
  * Get resource name from a row
  */
-export const getResourceName = (row) => {
+export const getResourceName = (row: DashboardRow | null | undefined): ColumnValue => {
   return findColumn(row, [
     'ResourceName', 'ResourceDescription', 'ItemDescription',
     'DisplayName'
@@ -99,7 +102,7 @@ export const getResourceName = (row) => {
 /**
  * Get date from a row
  */
-export const getDate = (row) => {
+export const getDate = (row: DashboardRow | null | undefined): ColumnValue => {
   return findColumn(row, [
     'BillingPeriodStart', 'UsageStartDate', 'Date', 'UsageDate',
     'LineItem/UsageStartDate', 'BillingPeriodStartDate', 'UsageDateTime'
@@ -109,7 +112,7 @@ export const getDate = (row) => {
 /**
  * Get provider from a row
  */
-export const getProvider = (row) => {
+export const getProvider = (row: DashboardRow | null | undefined): ColumnValue => {
   return findColumn(row, [
     'ProviderName', 'Provider', 'CloudProvider', 'PayerAccountName',
     'BillingAccountName', 'Cloud'
@@ -119,7 +122,7 @@ export const getProvider = (row) => {
 /**
  * Get account from a row
  */
-export const getAccount = (row) => {
+export const getAccount = (row: DashboardRow | null | undefined): ColumnValue => {
   return findColumn(row, [
     'SubAccountName', 'AccountName', 'AccountId', 'PayerAccountId',
     'LinkedAccountId', 'BillingAccountId', 'SubscriptionId'
@@ -129,20 +132,20 @@ export const getAccount = (row) => {
 /**
  * Get usage quantity from a row
  */
-export const getUsage = (row) => {
+export const getUsage = (row: DashboardRow | null | undefined): number => {
   const usageValue = findColumn(row, [
     'UsageQuantity', 'Quantity', 'Usage', 'ConsumedQuantity',
     'LineItem/UsageAmount', 'Amount'
   ]);
   
   if (usageValue === null || usageValue === undefined) return 0;
-  return parseFloat(usageValue) || 0;
+  return parseFloat(String(usageValue)) || 0;
 };
 
 /**
  * Get discount/commitment status from a row
  */
-export const getDiscountStatus = (row) => {
+export const getDiscountStatus = (row: DashboardRow | null | undefined): ColumnValue => {
   return findColumn(row, [
     'CommitmentDiscountStatus', 'ReservationId', 'SavingsPlanId',
     'DiscountType', 'PricingModel'
@@ -153,11 +156,11 @@ export const getDiscountStatus = (row) => {
  * Normalize a row to have consistent field names
  * This ensures backward compatibility with existing code
  */
-export const normalizeRow = (row) => {
+export const normalizeRow = (row: DashboardRow | null | undefined): DashboardRow | null | undefined => {
   if (!row || typeof row !== 'object') return row;
   
   // If row already has normalized fields (from backend), use them
-  if (row.BilledCost !== undefined && row.ServiceName !== undefined) {
+  if (row['BilledCost'] !== undefined && row['ServiceName'] !== undefined) {
     return row;
   }
   
@@ -181,13 +184,13 @@ export const normalizeRow = (row) => {
 /**
  * Get all available columns from data
  */
-export const getAllColumns = (data) => {
+export const getAllColumns = (data: Rows): string[] => {
   if (!data || !Array.isArray(data) || data.length === 0) return [];
   
-  const allColumns = new Set();
-  data.forEach(row => {
+  const allColumns = new Set<string>();
+  data.forEach((row: DashboardRow) => {
     if (row && typeof row === 'object') {
-      Object.keys(row).forEach(key => {
+      Object.keys(row).forEach((key: string) => {
         if (key && !key.startsWith('_')) { // Exclude internal fields
           allColumns.add(key);
         }
@@ -201,7 +204,7 @@ export const getAllColumns = (data) => {
 /**
  * Find cost column name in data
  */
-export const findCostColumn = (data) => {
+export const findCostColumn = (data: Rows): string => {
   if (!data || !Array.isArray(data) || data.length === 0) return 'BilledCost';
   
   const firstRow = data[0];
@@ -217,11 +220,14 @@ export const findCostColumn = (data) => {
     if (firstRow[name] !== undefined) return name;
     
     const found = Object.keys(firstRow).find(
-      key => key.toLowerCase() === name.toLowerCase()
+      (key: string) => key.toLowerCase() === name.toLowerCase()
     );
     if (found) return found;
   }
   
   return 'BilledCost'; // Default fallback
 };
+
+
+
 

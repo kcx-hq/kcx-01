@@ -1,4 +1,4 @@
-export const formatCurrency = (val) => {
+export const formatCurrency = (val: number | null | undefined) => {
   if (val === undefined || val === null) return '$0.00';
   return new Intl.NumberFormat('en-US', {
     style: 'currency',
@@ -7,5 +7,10 @@ export const formatCurrency = (val) => {
   }).format(val);
 };
 
-export const formatDate = (date) =>
-  new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+export const formatDate = (date: string | Date | null | undefined) => {
+  if (!date) return "N/A";
+  return new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+};
+
+
+

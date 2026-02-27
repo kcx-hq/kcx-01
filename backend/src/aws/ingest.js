@@ -4,20 +4,21 @@ import csv from "csv-parser";
 import assumeRole from "./assumeRole.js";
 import RawAwsBillingRow from "../models/RawAwsBillingRow.js";
 import sequelize from "../config/db.config.js";
+import logger from "../lib/logger.js";
 
 async function ingest() {
   try {
     const s3Key = process.argv[2];
 
     if (!s3Key) {
-      console.error("❌ Please provide S3 key as argument.");
-      console.log(
+      logger.error("❌ Please provide S3 key as argument.");
+      logger.info(
         "Usage: node src/aws/ingest.js demo/kcx-msu/data/.../file.csv.gz"
       );
       process.exit(1);
     }
 
-    console.log("🔐 Assuming role...");
+    logger.info("🔐 Assuming role...");
     const creds = await assumeRole();
 
     const s3 = new S3Client({
@@ -31,7 +32,7 @@ async function ingest() {
 
     const Bucket = "kcx-msu-billing";
 
-    console.log("📥 Fetching object:", s3Key);
+    logger.info("📥 Fetching object:", s3Key);
 
     const response = await s3.send(
       new GetObjectCommand({
@@ -56,13 +57,13 @@ async function ingest() {
       insertCount++;
     }
 
-    console.log(`✅ Ingestion complete. Inserted ${insertCount} rows.`);
+    logger.info(`✅ Ingestion complete. Inserted ${insertCount} rows.`);
 
     await sequelize.close();
     process.exit(0);
   } catch (err) {
-    console.error("❌ Ingestion failed:");
-    console.error(err);
+    logger.error("❌ Ingestion failed:");
+    logger.error(err);
 
     await sequelize.close();
     process.exit(1);

@@ -1,10 +1,26 @@
 import { useEffect, useMemo, useState } from "react";
-import { Users, Settings, MapPin, Cloud } from "lucide-react";
+import type { ApiClient, Capabilities } from "../../../../services/apiClient";
+import type {
+  ApiLikeError,
+  ClientCCostAnalysisFilterOptions,
+  GroupByOption,
+  UseClientCCostAnalysisFiltersResult,
+} from "../types";
 
-export const useClientCCostAnalysisFilters = (api, caps) => {
-  const [rawOptions, setRawOptions] = useState(null);
+interface RawCostAnalysisFilterOptions {
+  providers?: string[];
+  services?: string[];
+  regions?: string[];
+  groupByOptions?: GroupByOption[];
+}
+
+export const useClientCCostAnalysisFilters = (
+  api: ApiClient | null,
+  caps: Capabilities | null,
+): UseClientCCostAnalysisFiltersResult => {
+  const [rawOptions, setRawOptions] = useState<RawCostAnalysisFilterOptions | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!api || !caps) return;
@@ -14,30 +30,27 @@ export const useClientCCostAnalysisFilters = (api, caps) => {
         setLoading(true);
         setError(null);
         
-        const endpointDef = caps?.modules?.costAnalysis?.enabled &&
-          caps?.modules?.costAnalysis?.endpoints?.costFilters;
+        const endpointDef = caps?.modules?.["costAnalysis"]?.enabled &&
+          caps?.modules?.["costAnalysis"]?.endpoints?.["costFilters"];
 
         if (!endpointDef) return;
 
         // Use capabilities API - endpoint key is "costFilters"
-        const res = await api.call("costAnalysis", "filters", {});
+        const res = await api.call<RawCostAnalysisFilterOptions>("costAnalysis", "filters", {});
         console.log('Cost Analysis filter options response:', res);
         
-        // ✅ unwrap { success, data }
-        const payload = res?.data;
-
-        console.log('Cost Analysis filter options payload:', payload);
-        const data = payload?.data ?? payload;
+        const data = res as RawCostAnalysisFilterOptions | undefined;
         
         if (data) {
           setRawOptions(data);
         } else {
           throw new Error('No data received from filters endpoint');
         }
-      } catch (err) {
-        if (err?.code !== "NOT_SUPPORTED") {
+      } catch (err: unknown) {
+        const typedError = err as ApiLikeError;
+        if (typedError?.code !== "NOT_SUPPORTED") {
           console.error('Failed to fetch cost analysis filters:', err);
-          setError(err.message || 'Failed to load filter options');
+          setError(typedError.message || 'Failed to load filter options');
           // Provide fallback options on error
           setRawOptions({
             providers: ['All', 'AWS', 'Azure', 'GCP'],
@@ -59,7 +72,7 @@ export const useClientCCostAnalysisFilters = (api, caps) => {
     fetchOptions();
   }, [api, caps]);
 
-  const filterOptions = useMemo(() => {
+  const filterOptions = useMemo<ClientCCostAnalysisFilterOptions>(() => {
     if (!rawOptions) {
       return { 
         providers: ['All'], 
@@ -75,7 +88,7 @@ export const useClientCCostAnalysisFilters = (api, caps) => {
     }
 
     // Normalize and enhance groupBy options from backend
-    const groupByOptions = rawOptions.groupByOptions || [
+    const groupByOptions: GroupByOption[] = rawOptions.groupByOptions || [
       { value: 'ServiceName', label: 'Service' },
       { value: 'RegionName', label: 'Region' },
       { value: 'ProviderName', label: 'Provider' },
@@ -83,9 +96,9 @@ export const useClientCCostAnalysisFilters = (api, caps) => {
     ];
 
     // Normalize filter arrays - ensure 'All' is present without duplicates
-    const normalizeFilterArray = (arr) => {
+    const normalizeFilterArray = (arr: unknown): string[] => {
       if (!Array.isArray(arr)) return ['All'];
-      const filtered = arr.filter(item => item && item !== 'All');
+      const filtered = arr.filter((item): item is string => Boolean(item) && item !== 'All');
       return ['All', ...filtered];
     };
 
@@ -93,7 +106,7 @@ export const useClientCCostAnalysisFilters = (api, caps) => {
       providers: normalizeFilterArray(rawOptions.providers),
       services: normalizeFilterArray(rawOptions.services),
       regions: normalizeFilterArray(rawOptions.regions),
-      groupBy: groupByOptions.map(option => ({
+      groupBy: groupByOptions.map((option): GroupByOption => ({
         ...option,
         icon: option.value === 'Department' ? 'Users' : 
               option.value === 'ServiceName' ? 'Settings' :

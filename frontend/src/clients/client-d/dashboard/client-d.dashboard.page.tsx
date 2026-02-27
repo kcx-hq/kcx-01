@@ -10,6 +10,7 @@ import { useLocation } from "react-router-dom";
 
 import VerticalSidebar from "../../../core-dashboard/common/Layout/VerticalSidebar";
 import Header from "../../../core-dashboard/common/Layout/Header";
+import type { DashboardFilters } from "../../../core-dashboard/dashboard/types";
 
 import { ComponentLoader } from "../../../core-dashboard/dashboard/components/Loaders";
 import KeepAlive from "../../../core-dashboard/dashboard/components/KeepAlive";
@@ -67,10 +68,23 @@ function useClientDRoutes() {
   }, [location.pathname]);
 }
 
+interface ClientDRouteFlags {
+  isOverview: boolean;
+  isDataExplorer: boolean;
+  isCostAnalysis: boolean;
+  isCostDrivers: boolean;
+  isResources: boolean;
+  isDataQuality: boolean;
+  isOptimization: boolean;
+  isReports: boolean;
+  isAccountsOwnership: boolean;
+  isUnitEconomics: boolean;
+}
+
 const DashboardClientDPage = () => {
-  const route = useClientDRoutes();
-  const { fetchUser, user } = useAuthStore();
-  const { caps, api, loading: capsLoading, error: capsError } = useCaps();
+  const route: ClientDRouteFlags = useClientDRoutes();
+  const { fetchUser } = useAuthStore();
+  const { caps, api } = useCaps();
 
   useEffect(() => {
     const init = async () => {
@@ -92,20 +106,17 @@ const DashboardClientDPage = () => {
     return "Overview";
   }, [route]);
 
-  const [filters, setFilters] = useState({
+  const [filters, setFilters] = useState<DashboardFilters>({
     provider: "All",
     service: "All",
     region: "All",
   });
 
-  const handleFilterChange = useCallback((newFilters) => {
-    setFilters((prev) => ({ ...prev, ...newFilters }));
+  const handleFilterChange = useCallback((newFilters: Partial<DashboardFilters>) => {
+    setFilters((prev: DashboardFilters) => ({ ...prev, ...newFilters }));
   }, []);
   
-  const memoizedFilters = useMemo(
-      () => filters,
-      [filters.provider, filters.service, filters.region, filters.uploadId],
-    );
+  const memoizedFilters = filters;
 
   return (
     <div className="min-h-screen bg-[#0f0f11] text-white font-sans">

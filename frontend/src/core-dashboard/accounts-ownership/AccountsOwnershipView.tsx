@@ -6,6 +6,7 @@ import Toolbar from "./components/Toolbar";
 import AccountsTable from "./components/AccountsTable";
 import PremiumGate from "../common/PremiumGate";
 import { SectionLoading } from "../common/SectionStates";
+import type { AccountsOwnershipViewProps } from "./types";
 
 export function AccountsOwnershipView({
   isPremiumMasked,
@@ -26,7 +27,7 @@ export function AccountsOwnershipView({
   onReset,
   onExport,
   hasData,
-}) {
+}: AccountsOwnershipViewProps) {
   if (error && !hasData) return <ErrorState error={error} />;
   if (loading && !hasData) {
     return <SectionLoading label="Analyzing Accounts & Ownership..." />;

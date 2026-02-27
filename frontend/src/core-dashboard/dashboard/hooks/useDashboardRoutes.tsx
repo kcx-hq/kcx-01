@@ -1,7 +1,8 @@
 import { useMemo } from 'react';
 import { useLocation } from 'react-router-dom';
+import type { DashboardRouteFlags } from '../types';
 
-export function useDashboardRoute() {
+export function useDashboardRoute(): DashboardRouteFlags {
   const location = useLocation();
 
   return useMemo(() => {

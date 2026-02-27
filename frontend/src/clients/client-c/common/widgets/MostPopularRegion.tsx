@@ -1,8 +1,24 @@
 import React from 'react';
 import { MapPin, TrendingUp } from 'lucide-react';
 
-const MostPopularRegion = ({ data, totalSpend, billingPeriod }) => {
-  const formatCurrency = (val) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(val);
+interface RegionDatum {
+  name: string;
+  value: number;
+}
+
+interface BillingPeriod {
+  start?: string;
+  end?: string;
+}
+
+interface MostPopularRegionProps {
+  data?: RegionDatum[];
+  totalSpend?: number;
+  billingPeriod?: BillingPeriod | null;
+}
+
+const MostPopularRegion = ({ data = [], totalSpend = 0, billingPeriod = null }: MostPopularRegionProps) => {
+  const formatCurrency = (val: number | string) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(Number(val));
   
   if (!data || data.length === 0) {
     return (
@@ -16,7 +32,7 @@ const MostPopularRegion = ({ data, totalSpend, billingPeriod }) => {
   }
 
   // Sort by cost descending
-  const sortedData = [...data].sort((a, b) => b.value - a.value);
+  const sortedData = [...data].sort((a: RegionDatum, b: RegionDatum) => b.value - a.value);
   
   return (
     <div className="bg-[#1a1b20]/60 backdrop-blur-md border border-white/5 rounded-2xl p-5 shadow-xl">
@@ -27,7 +43,7 @@ const MostPopularRegion = ({ data, totalSpend, billingPeriod }) => {
       </div>
 
       <div className="space-y-3">
-        {sortedData.map((region, index) => {
+        {sortedData.map((region: RegionDatum, index: number) => {
           const percentage = totalSpend > 0 ? (region.value / totalSpend) * 100 : 0;
           const barWidth = `${Math.min(percentage, 100)}%`;
           

@@ -124,7 +124,7 @@ export function useDriverDetails({
 
       setLoading(true);
       try {
-        const response = (await api.call('costDrivers', 'driverDetails', {
+        const payload = await api.call<unknown>('costDrivers', 'driverDetails', {
           data: {
             driver,
             driverKey,
@@ -139,14 +139,9 @@ export function useDriverDetails({
             previousEndDate,
             filters,
           },
-        })) as { success?: boolean; data?: unknown };
+        });
 
-        const payload =
-          response && typeof response === 'object' && response.success && response.data
-            ? response.data
-            : response?.data || response || EMPTY_STATS;
-
-        const normalized = normalizeStats(payload);
+        const normalized = normalizeStats(payload ?? EMPTY_STATS);
         setStats(normalized);
         cacheRef.current.set(cacheKey, normalized);
       } catch (error) {
@@ -160,7 +155,6 @@ export function useDriverDetails({
     };
 
     run();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     api,
     caps,
@@ -178,3 +172,6 @@ export function useDriverDetails({
 
   return { loading, stats };
 }
+
+
+

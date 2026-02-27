@@ -8,9 +8,9 @@ export const useDashboardRoutes = () => {
   const actualPath = pathname.replace(/^\/client-c/, '') || '/';
 
   // Exact path matching for each route - these are relative paths within the client-c route
-  const isOverview = actualPath === '/overview' || actualPath === '/overview/' || actualPath === '/';
   const isDataExplorer = actualPath.startsWith('/data-explorer');
   const isCostAnalysis = actualPath.startsWith('/cost-analysis');
+  const isCostAlerts = actualPath.startsWith('/cost-alerts');
   const isCostDrivers = actualPath.startsWith('/cost-drivers');
   const isResources = actualPath.startsWith('/resources');
   const isDataQuality = actualPath.startsWith('/data-quality');
@@ -22,7 +22,7 @@ export const useDashboardRoutes = () => {
   const isProjectTracking = actualPath.startsWith('/project-tracking');
 
   // Default to overview if no specific route matches
-  const hasSpecificRoute = isDataExplorer || isCostAnalysis || isCostDrivers || 
+  const hasSpecificRoute = isDataExplorer || isCostAnalysis || isCostAlerts || isCostDrivers || 
                            isResources || isDataQuality || isOptimization || 
                            isReports || isAccounts || isDepartmentCost || 
                            isProjectTracking;

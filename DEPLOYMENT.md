@@ -56,7 +56,7 @@ This guide will help you deploy the master-001 project to Render.
    - **Region**: Choose closest to your users
    - **Branch**: `main` (or your default branch)
    - **Build Command**: `cd backend && npm install`
-   - **Start Command**: `cd backend && npm start`
+   - **Start Command**: `cd backend && npm run start:release`
    - **Plan**: Free (or choose paid plan)
 
 4. Add Environment Variables (click "Advanced"):
@@ -67,6 +67,17 @@ This guide will help you deploy the master-001 project to Render.
    - Add other required variables
 
 5. Click "Create Web Service"
+
+#### Backend Release Step (Required)
+
+Run migrations before serving traffic:
+
+```bash
+cd backend
+npm run db:migrate
+```
+
+`npm run start:release` executes `db:migrate` before `start` to prevent runtime schema drift.
 
 #### Step 2: Create Frontend Service
 

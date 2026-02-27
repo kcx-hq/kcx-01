@@ -12,9 +12,9 @@ import {
   FileBarChart,
 } from "lucide-react";
 
-const VerticalSidebarConfig = {
+const VerticalSidebarConfig: CoreDashboardValue = {
   brand: {
-    logoSrc: "/k&cologo.svg",
+    logoSrc: "/KCX.logo.svg",
     name: "KCX",
     subtitle: "FINOPS OS v2.4",
   },
@@ -123,3 +123,6 @@ const VerticalSidebarConfig = {
 };
 
 export default VerticalSidebarConfig;
+
+
+

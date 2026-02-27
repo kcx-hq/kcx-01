@@ -1,7 +1,8 @@
 import React from "react";
 import { formatCurrency } from "../utils/format";
+import type { KpiCardProps, KpiCardToneStyles } from "../types";
 
-const toneStyles = {
+const toneStyles: KpiCardToneStyles = {
   neutral: {
     icon: "border-emerald-100 bg-emerald-50 text-[var(--brand-primary)]",
     active: "border-emerald-200 bg-emerald-50/60",
@@ -29,7 +30,7 @@ const KpiCard = ({
   isActive,
   onClick,
   label,
-}) => {
+}: KpiCardProps) => {
   const style = toneStyles[tone] || toneStyles.neutral;
 
   return (
@@ -69,3 +70,6 @@ const KpiCard = ({
 };
 
 export default KpiCard;
+
+
+

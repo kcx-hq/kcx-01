@@ -3,8 +3,9 @@ import { motion } from "framer-motion";
 import { Target } from "lucide-react";
 import { formatCurrency } from "../utils/format";
 import { getPriorityColor } from "../utils/helpers";
+import type { OpportunitiesTabProps, Opportunity } from "../types";
 
-export function OpportunitiesTab({ opportunities = [], onSelectInsight }) {
+export function OpportunitiesTab({ opportunities = [], onSelectInsight }: OpportunitiesTabProps) {
   if (!opportunities || opportunities.length === 0) {
     return (
       <div className="rounded-xl border border-[var(--border-light)] bg-white p-8 text-center">
@@ -20,7 +21,7 @@ export function OpportunitiesTab({ opportunities = [], onSelectInsight }) {
 
   return (
     <div className="space-y-4">
-      {opportunities.map((opp, index) => (
+      {opportunities.map((opp: Opportunity, index: number) => (
         <motion.div
           key={opp.id ?? `${opp.title}-${index}`}
           initial={{ opacity: 0, x: -20 }}
@@ -65,4 +66,7 @@ export function OpportunitiesTab({ opportunities = [], onSelectInsight }) {
 }
 
 export default OpportunitiesTab;
+
+
+
 

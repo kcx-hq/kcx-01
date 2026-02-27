@@ -1,16 +1,27 @@
 import { useState, useEffect } from 'react';
+import type { ApiClient, Capabilities } from "../../../../services/apiClient";
+import type {
+  ApiLikeError,
+  DepartmentCostFilters,
+  DepartmentCostSourceData,
+  UseClientCDepartmentCostDataResult,
+} from "../types";
 
-export const useClientCDepartmentCostData = (api, caps, filters = {}, forceRefreshKey = 0) => {
-  const [departmentData, setDepartmentData] = useState(null);
+export const useClientCDepartmentCostData = (
+  api: ApiClient | null,
+  caps: Capabilities | null,
+  filters: Partial<DepartmentCostFilters> = {},
+  forceRefreshKey: number = 0,
+): UseClientCDepartmentCostDataResult => {
+  const [departmentData, setDepartmentData] = useState<DepartmentCostSourceData | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [isFiltering, setIsFiltering] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     let isActive = true;
 
     const fetchData = async () => {
-      if (!api || !caps.modules?.departmentCost) {
+      if (!api || !caps?.modules?.["departmentCost"]) {
         setLoading(false);
         return;
       }
@@ -19,7 +30,7 @@ export const useClientCDepartmentCostData = (api, caps, filters = {}, forceRefre
         setLoading(true);
         setError(null);
         
-        const params = {
+        const params: Record<string, string | undefined> = {
           provider: filters.provider !== 'All' ? filters.provider : undefined,
           service: filters.service !== 'All' ? filters.service : undefined,
           region: filters.region !== 'All' ? filters.region : undefined,
@@ -28,21 +39,21 @@ export const useClientCDepartmentCostData = (api, caps, filters = {}, forceRefre
 
         // Fetch all department cost endpoints
         const [overviewRes, trendRes, drilldownRes] = await Promise.allSettled([
-          api.call('departmentCost', 'overview', { params }),
-          api.call('departmentCost', 'trend', { params }),
-          api.call('departmentCost', 'drilldown', { params })
+          api.call<DepartmentCostSourceData["overview"]>('departmentCost', 'overview', { params }),
+          api.call<DepartmentCostSourceData["trend"]>('departmentCost', 'trend', { params }),
+          api.call<DepartmentCostSourceData["drilldown"]>('departmentCost', 'drilldown', { params })
         ]);
 
-        const overviewData = overviewRes.status === 'fulfilled' && overviewRes.value?.success 
-          ? overviewRes.value.data 
+        const overviewData = overviewRes.status === 'fulfilled'
+          ? (overviewRes.value ?? { departments: [], totalCost: 0 })
           : { departments: [], totalCost: 0 };
 
-        const trendData = trendRes.status === 'fulfilled' && trendRes.value?.success 
-          ? trendRes.value.data 
+        const trendData = trendRes.status === 'fulfilled'
+          ? (trendRes.value ?? { daily: [], totalCost: 0 })
           : { daily: [], totalCost: 0 };
 
-        const drilldownData = drilldownRes.status === 'fulfilled' && drilldownRes.value?.success 
-          ? drilldownRes.value.data 
+        const drilldownData = drilldownRes.status === 'fulfilled'
+          ? (drilldownRes.value ?? { services: [], resources: [] })
           : { services: [], resources: [] };
 
         if (isActive) {
@@ -53,9 +64,10 @@ export const useClientCDepartmentCostData = (api, caps, filters = {}, forceRefre
           });
           setError(null);
         }
-      } catch (err) {
+      } catch (err: unknown) {
+        const apiError = err as ApiLikeError;
         if (isActive) {
-          setError(err.message || 'Failed to fetch department cost data');
+          setError(apiError.message || 'Failed to fetch department cost data');
         }
       } finally {
         if (isActive) {
@@ -75,6 +87,6 @@ export const useClientCDepartmentCostData = (api, caps, filters = {}, forceRefre
     departmentData,
     loading,
     error,
-    isFiltering
+    isFiltering: false
   };
 };

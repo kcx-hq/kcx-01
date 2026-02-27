@@ -1,11 +1,14 @@
-export const parseCurrency = (val) => {
+export const parseCurrency = (val: number | string | null | undefined) => {
   if (typeof val === "number") return val;
   if (!val) return 0;
   return parseFloat(val.toString().replace(/[$,]/g, "")) || 0;
 };
 
-export const parsePercentage = (val) => {
+export const parsePercentage = (val: number | string | null | undefined) => {
   if (typeof val === "number") return val;
   if (!val) return 0;
   return parseFloat(val.toString().replace(/%/g, "")) || 0;
 };
+
+
+

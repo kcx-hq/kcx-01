@@ -1,6 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   FileText,
@@ -17,16 +16,36 @@ import {
 } from "lucide-react";
 import { useDashboardStore } from "../../store/Dashboard.store";
 import { uploadGridStyle, uploadTheme } from "./theme";
+import { apiGet } from "../../services/http";
+import { getApiErrorMessageWithRequestId } from "../../services/apiError";
+import type {
+  BillingUploadRecord,
+  DashboardUploadMeta,
+} from "./types";
+
+type LoadStatus = "loading" | "success" | "error";
+type PrimitiveDateInput = string | number | Date | null | undefined;
+type SizeInput = number | string | null | undefined;
+
+const isBillingUploadRecord = (value: unknown): value is BillingUploadRecord => {
+  if (!value || typeof value !== "object") {
+    return false;
+  }
+  const candidate = value as Record<string, unknown>;
+  return typeof candidate["uploadid"] === "string";
+};
+
+const getErrorMessage = (error: unknown): string => {
+  return getApiErrorMessageWithRequestId(error, "Failed to load uploads.");
+};
 
 const BillingUploads = () => {
   const navigate = useNavigate();
 
-  const [status, setStatus] = useState("loading");
-  const [uploads, setUploads] = useState([]);
+  const [status, setStatus] = useState<LoadStatus>("loading");
+  const [uploads, setUploads] = useState<BillingUploadRecord[]>([]);
   const [errorMessage, setErrorMessage] = useState("");
   const [query, setQuery] = useState("");
-
-  const API_URL = import.meta.env.VITE_API_URL;
 
   const uploadIds = useDashboardStore((s) => s.uploadIds);
   const toggleUploadId = useDashboardStore((s) => s.toggleUploadId);
@@ -35,7 +54,7 @@ const BillingUploads = () => {
   const setSelectedUploads = useDashboardStore((s) => s.setSelectedUploads);
   const dashboardPath = useDashboardStore((s) => s.dashboardPath);
 
-  const formatBytes = (bytes) => {
+  const formatBytes = (bytes: SizeInput) => {
     if (bytes == null) return "--";
     const sizes = ["B", "KB", "MB", "GB"];
     let v = Number(bytes);
@@ -47,7 +66,7 @@ const BillingUploads = () => {
     return `${v.toFixed(i === 0 ? 0 : 2)} ${sizes[i]}`;
   };
 
-  const formatDate = (isoOrDate) => {
+  const formatDate = (isoOrDate: PrimitiveDateInput) => {
     if (!isoOrDate) return "--";
     const d = new Date(isoOrDate);
     if (Number.isNaN(d.getTime())) return String(isoOrDate);
@@ -60,7 +79,7 @@ const BillingUploads = () => {
     });
   };
 
-  const formatDay = (yyyyMmDd) => {
+  const formatDay = (yyyyMmDd: string | null | undefined) => {
     if (!yyyyMmDd) return "--";
     const d = new Date(`${yyyyMmDd}T00:00:00`);
     if (Number.isNaN(d.getTime())) return String(yyyyMmDd);
@@ -75,23 +94,26 @@ const BillingUploads = () => {
     setStatus("loading");
     setErrorMessage("");
     try {
-      const res = await axios.get(`${API_URL}/api/etl/get-billing-uploads`, {
-        withCredentials: true,
-      });
-      const data = Array.isArray(res.data) ? res.data : [];
-      data.sort((a, b) => new Date(b.uploadedat) - new Date(a.uploadedat));
+      const response = await apiGet<unknown>("/api/etl/get-billing-uploads");
+      const data = Array.isArray(response) ? response.filter(isBillingUploadRecord) : [];
+      data.sort((a, b) => new Date(b.uploadedat ?? "").getTime() - new Date(a.uploadedat ?? "").getTime());
       setUploads(data);
       setStatus("success");
-    } catch (err) {
+    } catch (err: unknown) {
       console.error("Failed to fetch uploads:", err);
-      setErrorMessage(err?.response?.data?.message || "Failed to load uploads.");
+      setErrorMessage(getErrorMessage(err));
       setStatus("error");
     }
   };
 
   useEffect(() => {
-    fetchUploads();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    const timer = window.setTimeout(() => {
+      void fetchUploads();
+    }, 0);
+
+    return () => {
+      window.clearTimeout(timer);
+    };
   }, []);
 
   useEffect(() => {
@@ -112,7 +134,7 @@ const BillingUploads = () => {
           filename: row.filename || "",
         };
       })
-      .filter(Boolean);
+      .filter((item): item is DashboardUploadMeta => item !== null);
 
     setSelectedUploads(selectedMeta);
   }, [uploadIds, uploads, setSelectedUploads]);
@@ -136,7 +158,7 @@ const BillingUploads = () => {
     });
   }, [uploads, query]);
 
-  const toggleRow = (id) => toggleUploadId(id);
+  const toggleRow = (id: string) => toggleUploadId(id);
 
   const isAllSelected =
     filteredUploads.length > 0 && filteredUploads.every((u) => uploadIds.includes(u.uploadid));
@@ -194,7 +216,7 @@ const BillingUploads = () => {
             <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--text-muted)] transition-colors group-focus-within:text-[var(--brand-primary)]" />
             <input
               value={query}
-              onChange={(e) => setQuery(e.target.value)}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setQuery(e.target.value)}
               placeholder="Search files, dates, or IDs..."
               className="w-full rounded-xl border border-[var(--border-light)] bg-white py-3 pl-10 pr-4 text-[var(--text-primary)] placeholder:text-[var(--text-muted)] outline-none transition-all focus:border-[var(--brand-primary)] focus:ring-4 focus:ring-[var(--brand-primary-soft)] shadow-sm"
             />

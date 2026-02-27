@@ -2,14 +2,20 @@
 import chatService from "./chat.service.js";
 import { buildSessionResponse, getCurrentStep } from "./flowHelpers.js";
 import { FLOW } from "./flow.js";
+import AppError from "../../../errors/AppError.js";
+import logger from "../../../lib/logger.js";
+import {
+  createSessionForClient,
+  getSessionForClient,
+} from "./chat.integration.service.js";
 
 const chatController = {
   async createSession(req, res, next) {
     try {
-      const session = await chatService.createSession();
+      const session = await createSessionForClient(req.client_id);
       const first = FLOW[0];
 
-      res.json({
+      return res.ok({
         sessionId: session.id,
         question: first.question,
         stepId: first.id,
@@ -18,21 +24,29 @@ const chatController = {
         progress: { current: 1, total: FLOW.length },
       });
     } catch (err) {
-      console.error("Error creating session:", err);
-      next({ status: 500, message: "Failed to create session" });
+      logger.error({ err, requestId: req.requestId }, "Error creating session");
+      if (err instanceof AppError) {
+        return next(err);
+      }
+      return next(new AppError(500, "INTERNAL", "Internal server error", { cause: err }));
     }
   },
 
   async getSession(req, res, next) {
     try {
       const { sessionId } = req.params;
-      const session = await chatService.getSession(sessionId);
-      if (!session) return next({ status: 404, message: "Session not found" });
+      const session = await getSessionForClient({
+        sessionId,
+        clientId: req.client_id,
+      });
 
-      res.json(buildSessionResponse(session));
+      return res.ok(buildSessionResponse(session));
     } catch (err) {
-      console.error("Error fetching session:", err);
-      next({ status: 500, message: "Failed to fetch session" });
+      logger.error({ err, requestId: req.requestId }, "Error fetching session");
+      if (err instanceof AppError) {
+        return next(err);
+      }
+      return next(new AppError(500, "INTERNAL", "Internal server error", { cause: err }));
     }
   },
 
@@ -40,35 +54,40 @@ const chatController = {
     try {
       const { sessionId, message } = req.body || {};
       if (!sessionId || typeof message !== "string") {
-        return next({ status: 400, message: "Missing sessionId or message" });
+        return next(new AppError(400, "VALIDATION_ERROR", "Invalid request"));
       }
 
-      const session = await chatService.getSession(sessionId);
-      if (!session) return next({ status: 404, message: "Session not found" });
+      const session = await getSessionForClient({
+        sessionId,
+        clientId: req.client_id,
+      });
 
       const raw = message.trim();
       const cmd = raw.toLowerCase();
 
-      if (cmd === "help") return res.json(await chatService.handleHelp(sessionId, session));
-      if (cmd === "back") return res.json(await chatService.handleBack(sessionId, session));
-      if (cmd === "skip") return res.json(await chatService.handleSkip(sessionId, session));
-      if (cmd === "summary") return res.json(await chatService.handleSummary(sessionId, session));
-      if (cmd === "restart") return res.json(await chatService.handleRestart(sessionId));
+      if (cmd === "help") return res.ok(await chatService.handleHelp(sessionId, session));
+      if (cmd === "back") return res.ok(await chatService.handleBack(sessionId, session));
+      if (cmd === "skip") return res.ok(await chatService.handleSkip(sessionId, session));
+      if (cmd === "summary") return res.ok(await chatService.handleSummary(sessionId, session));
+      if (cmd === "restart") return res.ok(await chatService.handleRestart(sessionId));
 
       // ✅ confirm should finalize ONLY at done step
       if (cmd === "confirm") {
         const current = getCurrentStep(session.step_index);
         if (current?.id === "done" || current?.type === "done") {
-          return res.json(await chatService.handleConfirm(sessionId, session));
+          return res.ok(await chatService.handleConfirm(sessionId, session));
         }
         // otherwise treat confirm as a normal message
-        return res.json(await chatService.handleMessage(sessionId, session, raw));
+        return res.ok(await chatService.handleMessage(sessionId, session, raw));
       }
 
-      return res.json(await chatService.handleMessage(sessionId, session, raw));
+      return res.ok(await chatService.handleMessage(sessionId, session, raw));
     } catch (err) {
-      console.error("Error processing message:", err);
-      next({ status: 500, message: "Failed to process message" });
+      logger.error({ err, requestId: req.requestId }, "Error processing message");
+      if (err instanceof AppError) {
+        return next(err);
+      }
+      return next(new AppError(500, "INTERNAL", "Internal server error", { cause: err }));
     }
   },
 };

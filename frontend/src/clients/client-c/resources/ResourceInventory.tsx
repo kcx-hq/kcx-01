@@ -3,10 +3,15 @@ import { useDebounce } from '../../../hooks/useDebounce';
 
 import ResourceInventoryView from './ResourceInventoryView';
 import { useClientCResourceInventoryData } from './hooks/useClientCResourceInventoryData';
+import type {
+  ResourceInventoryData,
+  ResourceInventoryFilters,
+  ResourceInventoryProps,
+} from './types';
 
-const ResourceInventory = ({ api, caps }) => {
+const ResourceInventory = ({ api, caps }: ResourceInventoryProps) => {
   // Local filters
-  const [filters, setFilters] = useState({
+  const [filters, setFilters] = useState<ResourceInventoryFilters>({
     provider: "All",
     service: "All",
     region: "All"
@@ -23,8 +28,8 @@ const ResourceInventory = ({ api, caps }) => {
   } = useClientCResourceInventoryData(debouncedFilters, api, caps);
 
   // Handle filter changes (LOCAL ONLY)
-  const handleFilterChange = useCallback((newFilters) => {
-    setFilters(prev => ({
+  const handleFilterChange = useCallback((newFilters: Partial<ResourceInventoryFilters>) => {
+    setFilters((prev: ResourceInventoryFilters) => ({
       ...prev,
       ...newFilters
     }));
@@ -40,7 +45,7 @@ const ResourceInventory = ({ api, caps }) => {
   }, []);
 
   // Extract data for view
-  const extractedData = useMemo(() => {
+  const extractedData = useMemo<ResourceInventoryData | null>(() => {
     if (!resourceData) return null;
 
     return {

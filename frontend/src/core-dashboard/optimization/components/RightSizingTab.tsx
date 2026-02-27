@@ -1,8 +1,9 @@
 import React from "react";
 import { TrendingDown, Info } from "lucide-react";
 import { formatCurrency } from "../utils/format";
+import type { RightSizingRecommendation, RightSizingTabProps } from "../types";
 
-export function RightSizingTab({ rightSizingRecs = [], onSelectInsight }) {
+export function RightSizingTab({ rightSizingRecs = [], onSelectInsight }: RightSizingTabProps) {
   if (!rightSizingRecs || rightSizingRecs.length === 0) {
     return (
       <div className="rounded-xl border border-[var(--border-light)] bg-white p-8 text-center">
@@ -18,7 +19,7 @@ export function RightSizingTab({ rightSizingRecs = [], onSelectInsight }) {
 
   return (
     <div className="space-y-4">
-      {rightSizingRecs.map((rec) => (
+      {rightSizingRecs.map((rec: RightSizingRecommendation) => (
         <div
           key={rec.id}
           className="cursor-pointer rounded-xl border border-[var(--border-light)] bg-white p-6 transition-all hover:border-emerald-200"
@@ -69,4 +70,7 @@ export function RightSizingTab({ rightSizingRecs = [], onSelectInsight }) {
 }
 
 export default RightSizingTab;
+
+
+
 

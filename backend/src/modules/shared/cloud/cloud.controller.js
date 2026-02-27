@@ -1,3 +1,4 @@
+import AppError from "../../../errors/AppError.js";
 import {
   connectAwsCloud,
   listCloudFiles,
@@ -5,7 +6,7 @@ import {
   verifyAwsConnection,
 } from "./cloud.service.js";
 
-export async function verifyAwsRoleConnection(req, res) {
+export async function verifyAwsRoleConnection(req, res, next) {
   try {
     const { accountId, roleName, bucketPrefix, region } = req.body || {};
     const result = await verifyAwsConnection({
@@ -14,16 +15,13 @@ export async function verifyAwsRoleConnection(req, res) {
       bucketPrefix,
       region,
     });
-    return res.status(200).json(result);
+    return res.ok(result);
   } catch (error) {
-    return res.status(400).json({
-      ok: false,
-      message: error?.message || "AWS connection verification failed",
-    });
+    return next(new AppError(400, "VALIDATION_ERROR", "Invalid request", { cause: error }));
   }
 }
 
-export async function connectAwsRole(req, res) {
+export async function connectAwsRole(req, res, next) {
   try {
     const { accountId, roleName, bucketPrefix, region } = req.body || {};
     const result = await connectAwsCloud({
@@ -32,16 +30,13 @@ export async function connectAwsRole(req, res) {
       bucketPrefix,
       region,
     });
-    return res.status(200).json(result);
+    return res.ok(result);
   } catch (error) {
-    return res.status(400).json({
-      ok: false,
-      message: error?.message || "AWS connection setup failed",
-    });
+    return next(new AppError(400, "VALIDATION_ERROR", "Invalid request", { cause: error }));
   }
 }
 
-export async function getCloudConnectionFiles(req, res) {
+export async function getCloudConnectionFiles(req, res, next) {
   try {
     const { accountId, roleName, bucketPrefix, region, path } = req.body || {};
     const result = await listCloudFiles({
@@ -51,16 +46,13 @@ export async function getCloudConnectionFiles(req, res) {
       region,
       path: path || "",
     });
-    return res.status(200).json(result);
+    return res.ok(result);
   } catch (error) {
-    return res.status(400).json({
-      ok: false,
-      message: error?.message || "Unable to load cloud files",
-    });
+    return next(new AppError(400, "VALIDATION_ERROR", "Invalid request", { cause: error }));
   }
 }
 
-export async function selectCloudFile(req, res) {
+export async function selectCloudFile(req, res, next) {
   try {
     const { accountId, roleName, bucketPrefix, region, filePath } = req.body || {};
     const result = await selectCloudFileForIngestion({
@@ -72,11 +64,8 @@ export async function selectCloudFile(req, res) {
       region,
       filePath,
     });
-    return res.status(200).json(result);
+    return res.ok(result);
   } catch (error) {
-    return res.status(400).json({
-      ok: false,
-      message: error?.message || "Unable to select file for ingestion",
-    });
+    return next(new AppError(400, "VALIDATION_ERROR", "Invalid request", { cause: error }));
   }
 }

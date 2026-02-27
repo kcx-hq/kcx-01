@@ -1,6 +1,23 @@
 // frontend/core/dashboards/overview/data-explorer/hooks/useDataExplorerData.js
 
 import { useEffect, useRef, useState } from "react";
+import type {
+  ApiLikeError,
+  DataExplorerRow,
+  DataExplorerSortConfig,
+  UseDataExplorerDataParams,
+  UseDataExplorerDataResult,
+} from "../types";
+
+interface DataExplorerApiResponse {
+  data?: DataExplorerRow[];
+  pagination?: { total?: number };
+  allColumns?: string[];
+  quickStats?: { totalCost: number; avgCost: number };
+  summaryData?: Record<string, number | string | undefined>;
+  columnMaxValues?: Record<string, number>;
+  [key: string]: unknown;
+}
 
 export const useDataExplorerData = ({
   api,
@@ -10,20 +27,20 @@ export const useDataExplorerData = ({
   rowsPerPage,
   sortConfig,
   columnFilters,
-}) => {
+}: UseDataExplorerDataParams): UseDataExplorerDataResult => {
   const [loading, setLoading] = useState(true);
   const [isInitialLoad, setIsInitialLoad] = useState(true);
   const [isFiltering, setIsFiltering] = useState(false);
   const [isPaginating, setIsPaginating] = useState(false);
 
-  const [data, setData] = useState([]);
+  const [data, setData] = useState<DataExplorerRow[]>([]);
   const [totalCount, setTotalCount] = useState(0);
-  const [allColumns, setAllColumns] = useState([]);
-  const [quickStats, setQuickStats] = useState(null);
-  const [summaryData, setSummaryData] = useState({});
-  const [columnMaxValues, setColumnMaxValues] = useState({});
+  const [allColumns, setAllColumns] = useState<string[]>([]);
+  const [quickStats, setQuickStats] = useState<{ totalCost: number; avgCost: number } | null>(null);
+  const [summaryData, setSummaryData] = useState<Record<string, number | string | undefined>>({});
+  const [columnMaxValues, setColumnMaxValues] = useState<Record<string, number>>({});
 
-  const prevColumnFiltersRef = useRef({});
+  const prevColumnFiltersRef = useRef<Record<string, string>>({});
   const prevPageRef = useRef(currentPage);
 
   useEffect(() => {
@@ -48,8 +65,8 @@ export const useDataExplorerData = ({
         if (!api || !caps) return;
 
         const endpointDef =
-          caps?.modules?.overview?.enabled &&
-          caps?.modules?.overview?.endpoints?.dataExplorer;
+          caps?.modules?.["overview"]?.enabled &&
+          caps?.modules?.["overview"]?.endpoints?.["dataExplorer"];
 
         if (!endpointDef) return;
 
@@ -68,31 +85,25 @@ export const useDataExplorerData = ({
               : undefined,
           },
           signal: abortController.signal,
-        });
+        } as unknown as Parameters<NonNullable<typeof api>["call"]>[2]);
 
-        const payload = res?.data?.data || res?.data;
+        const payload = (res as DataExplorerApiResponse | null | undefined) ?? null;
 
         if (!isMounted) return;
 
-        if (res?.success && res?.data) {
-          setData(res.data.data || []);
-          setTotalCount(res.data.pagination?.total || 0);
-          setAllColumns(res.data.allColumns || []);
-          setQuickStats(res.data.quickStats || null);
-          setSummaryData(res.data.summaryData || {});
-          setColumnMaxValues(res.data.columnMaxValues || {});
-        } else if (payload) {
-          setData(payload.data || []);
-          setTotalCount(payload.pagination?.total || 0);
-          setAllColumns(payload.allColumns || []);
-          setQuickStats(payload.quickStats || null);
-          setSummaryData(payload.summaryData || {});
-          setColumnMaxValues(payload.columnMaxValues || {});
-        }
-      } catch (err) {
-        if (err?.code === "NOT_SUPPORTED") return;
-        if (isMounted && err?.name !== "AbortError") {
-          console.error("Error fetching data explorer data:", err);
+        if (!payload) return;
+
+        setData(payload.data || []);
+        setTotalCount(payload.pagination?.total || 0);
+        setAllColumns(payload.allColumns || []);
+        setQuickStats(payload.quickStats || null);
+        setSummaryData(payload.summaryData || {});
+        setColumnMaxValues(payload.columnMaxValues || {});
+      } catch (err: unknown) {
+        const error = err as ApiLikeError;
+        if (error?.code === "NOT_SUPPORTED") return;
+        if (isMounted && error?.name !== "AbortError") {
+          console.error("Error fetching data explorer data:", error);
         }
       } finally {
         if (!isMounted) return;
@@ -127,3 +138,6 @@ export const useDataExplorerData = ({
     columnMaxValues,
   };
 };
+
+
+

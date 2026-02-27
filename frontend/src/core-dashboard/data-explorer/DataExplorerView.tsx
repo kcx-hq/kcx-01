@@ -1,5 +1,5 @@
 // frontend/core/dashboards/overview/data-explorer/DataExplorerView.jsx
-import React, { memo, useCallback } from "react";
+import React from "react";
 import {
   Download,
   Search,
@@ -33,11 +33,18 @@ import DetailPanel from "./components/DetailPanel";
 import TableRow from "./components/TableRow";
 import { downloadCsvFromBackend } from "./utils/downloadCsvFromBackend";
 import { SectionLoading } from "../common/SectionStates";
+import type {
+  DataExplorerGroupedItem,
+  DataExplorerRow,
+  DataExplorerViewProps,
+  ExplorerInputChange,
+  ExplorerSelectChange,
+} from "./types";
 
 const BRAND_EMERALD = "#007758";
 
 const DataExplorerView = ({
-  api, caps, loading, isInitialLoad, isFiltering, isPaginating, data, totalCount, allColumns, quickStats,
+  api, caps, loading, isFiltering, isPaginating, data, totalCount, allColumns, quickStats,
   summaryData, columnMaxValues, totalPages, isLocked, searchTerm, setSearchTerm,
   selectedRow, setSelectedRow, sortConfig, setSortConfig, filterInputs, setFilterInputs,
   columnFilters, showFilterRow, setShowFilterRow, hiddenColumns, showColumnMenu,
@@ -46,7 +53,13 @@ const DataExplorerView = ({
   setViewMode, groupByCol, setGroupByCol, visibleColumns, tableDataToRender,
   clientSideGroupedData, getRowHeight, getColumnWidth, toggleColumn, handleRowSelect,
   handleRowClick, removeFilter, resetFilters, handleDrillDown, filters,
-}) => {
+}: DataExplorerViewProps) => {
+
+  const downloadCSV = async () => {
+    await downloadCsvFromBackend({
+      api, caps, filters, currentPage, rowsPerPage, sortConfig, selectedIndices,
+    });
+  };
 
   if (loading && (!data || data.length === 0)) {
     return <SectionLoading label="Analyzing Data Explorer..." />;
@@ -55,12 +68,6 @@ const DataExplorerView = ({
   if (!loading && (!data || data.length === 0)) {
     return <DataExplorerStates type="empty" />;
   }
-
-  const downloadCSV = useCallback(async () => {
-    await downloadCsvFromBackend({
-      api, caps, filters, currentPage, rowsPerPage, sortConfig, selectedIndices,
-    });
-  }, [api, caps, filters, currentPage, rowsPerPage, sortConfig, selectedIndices]);
 
   return (
     <div className="relative flex h-[calc(100vh-120px)] min-h-[560px] w-full flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-[0_8px_30px_rgb(0,0,0,0.04)] animate-in fade-in zoom-in-95 duration-500 md:h-[calc(100vh-140px)] md:rounded-[2rem]">
@@ -76,13 +83,13 @@ const DataExplorerView = ({
             {/* Column search */}
             <div className="relative group">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-[#007758] transition-colors" size={14} />
-              <input
-                type="text"
-                placeholder="Search columns..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-44 rounded-xl border border-slate-200 bg-white py-2 pl-9 pr-4 text-xs text-slate-900 shadow-sm transition-all focus:border-[#007758]/30 focus:outline-none focus:ring-4 focus:ring-emerald-50 sm:w-56"
-              />
+                <input
+                  type="text"
+                  placeholder="Search columns..."
+                  value={searchTerm}
+                  onChange={(e: ExplorerInputChange) => setSearchTerm(e.target.value)}
+                  className="w-44 rounded-xl border border-slate-200 bg-white py-2 pl-9 pr-4 text-xs text-slate-900 shadow-sm transition-all focus:border-[#007758]/30 focus:outline-none focus:ring-4 focus:ring-emerald-50 sm:w-56"
+                />
             </div>
 
             <div className="h-8 w-px bg-slate-200 mx-1" />
@@ -113,12 +120,12 @@ const DataExplorerView = ({
                 <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">By</span>
                 <select
                   value={groupByCol || ""}
-                  onChange={(e) => setGroupByCol(e.target.value)}
+                  onChange={(e: ExplorerSelectChange) => setGroupByCol(e.target.value)}
                   disabled={isLocked}
                   className="bg-white border border-slate-200 rounded-xl px-3 py-1.5 text-xs font-bold text-slate-700 focus:ring-4 focus:ring-emerald-50 outline-none shadow-sm disabled:opacity-50 transition-all cursor-pointer hover:border-slate-300"
                 >
                   <option value="" disabled>Select Dimension...</option>
-                  {allColumns.map((col) => <option key={col} value={col}>{col}</option>)}
+                  {allColumns.map((col: string) => <option key={col} value={col}>{col}</option>)}
                 </select>
               </div>
             )}
@@ -143,7 +150,7 @@ const DataExplorerView = ({
                       <div className="p-2 border-b border-slate-50 mb-1">
                         <span className="text-[10px] font-black text-slate-400 uppercase">Active Dimensions</span>
                       </div>
-                      {allColumns.filter(col => !searchTerm || col.toLowerCase().includes(searchTerm.toLowerCase())).map((col) => (
+                      {allColumns.filter((col: string) => !searchTerm || col.toLowerCase().includes(searchTerm.toLowerCase())).map((col: string) => (
                         <button
                           key={col}
                           onClick={() => toggleColumn(col)}
@@ -220,7 +227,7 @@ const DataExplorerView = ({
               <div className="h-6 w-px bg-slate-100" />
 
               <div className="flex items-center gap-3">
-                <div className="p-1.5 rounded-lg bg-indigo-50 text-indigo-600 border border-indigo-100">
+                <div className="p-1.5 rounded-lg bg-emerald-50 text-emerald-600 border border-emerald-100">
                   <Activity size={12} />
                 </div>
                 <div className="flex flex-col">
@@ -241,7 +248,7 @@ const DataExplorerView = ({
 
               {Object.keys(columnFilters || {}).length > 0 && (
                 <div className="flex items-center gap-2 pl-3 border-l border-slate-200">
-                  {Object.entries(columnFilters).map(([key, val]) => (
+                  {Object.entries(columnFilters).map(([key, val]: [string, string]) => (
                     <button
                       key={key}
                       onClick={() => removeFilter(key)}
@@ -273,13 +280,13 @@ const DataExplorerView = ({
               <tr>
                 <th className="px-4 py-4 sticky left-0 z-40 bg-slate-50 border-b border-r border-slate-100 w-[60px] text-center">
                   <button
-                    onClick={() => selectedIndices.size === tableDataToRender.length ? setSelectedIndices(new Set()) : setSelectedIndices(new Set(tableDataToRender.map((_, i) => (currentPage - 1) * rowsPerPage + i)))}
+                    onClick={() => selectedIndices.size === tableDataToRender.length ? setSelectedIndices(new Set<number>()) : setSelectedIndices(new Set(tableDataToRender.map((_: DataExplorerRow, i: number) => (currentPage - 1) * rowsPerPage + i)))}
                     className="text-slate-400 hover:text-[#007758] transition-colors"
                   >
                     <CheckSquare size={16} />
                   </button>
                 </th>
-                {visibleColumns.map((col, idx) => {
+                {visibleColumns.map((col: string, idx: number) => {
                   const isMatched = searchTerm && col.toLowerCase().includes(searchTerm.toLowerCase());
                   return (
                     <th
@@ -305,16 +312,16 @@ const DataExplorerView = ({
               {showFilterRow && (
                 <tr className="bg-white">
                   <th className="sticky left-0 z-40 bg-white border-b border-r border-slate-100"></th>
-                  {visibleColumns.map((col, idx) => (
+                  {visibleColumns.map((col: string, idx: number) => (
                     <th key={`filter-${col}`} className={`p-2 border-b border-r border-slate-100 bg-white ${idx === 0 ? "sticky left-[60px] z-30" : ""}`}>
                       <input
                         type="text"
                         placeholder="Search..."
                         value={filterInputs[col] || ""}
-                        onChange={(e) => {
+                        onChange={(e: ExplorerInputChange) => {
                           const val = e.target.value;
-                          setFilterInputs(prev => {
-                            if (val === "") { const next = { ...prev }; delete next[col]; return next; }
+                          setFilterInputs((prev: Record<string, string>) => {
+                            if (val === "") { const next: Record<string, string> = { ...prev }; delete next[col]; return next; }
                             return { ...prev, [col]: val };
                           });
                         }}
@@ -327,7 +334,7 @@ const DataExplorerView = ({
             </thead>
 
             <tbody className="divide-y divide-slate-50">
-              {tableDataToRender.map((row, rIdx) => {
+              {tableDataToRender.map((row: DataExplorerRow, rIdx: number) => {
                 const globalIndex = (currentPage - 1) * rowsPerPage + rIdx;
                 return (
                   <TableRow
@@ -343,7 +350,7 @@ const DataExplorerView = ({
             <tfoot className="sticky bottom-0 z-30 bg-slate-50 border-t-2 border-[#007758]/10 shadow-[0_-4px_15px_rgba(0,0,0,0.03)]">
               <tr>
                 <td className="sticky left-0 z-40 bg-slate-50 border-r border-slate-100"></td>
-                {visibleColumns.map((col, idx) => {
+                {visibleColumns.map((col: string, idx: number) => {
                   const total = summaryData?.[col];
                   const isNumeric = typeof total === 'number';
                   return (
@@ -367,7 +374,7 @@ const DataExplorerView = ({
           <div className="w-full relative p-6">
             {isLocked ? (
               <div className="max-w-xl mx-auto py-20">
-                <PremiumGate mode="full">
+                <PremiumGate variant="full">
                   <div className="text-center p-10 bg-slate-50 rounded-[2.5rem] border border-slate-200 border-dashed">
                       <Crown size={48} className="mx-auto text-amber-500 mb-4" />
                       <h4 className="text-lg font-black text-slate-800 mb-2">Pivot Intelligence is Locked</h4>
@@ -387,7 +394,7 @@ const DataExplorerView = ({
                     </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100">
-                    {clientSideGroupedData.map((group, idx) => (
+                    {clientSideGroupedData.map((group: DataExplorerGroupedItem, idx: number) => (
                         <tr key={idx} onClick={() => handleDrillDown(group)} className="hover:bg-emerald-50/30 cursor-pointer transition-colors group">
                         <td className="px-6 py-4 font-black text-slate-900 group-hover:text-[#007758]">{group.name}</td>
                         <td className="px-6 py-4 text-right text-slate-500 font-bold">{group.count.toLocaleString()}</td>
@@ -440,7 +447,7 @@ const DataExplorerView = ({
                 <span className="uppercase text-[9px] tracking-widest text-slate-400">Show</span>
                 <select
                 value={rowsPerPage}
-                onChange={(e) => setRowsPerPage(Number(e.target.value))}
+                onChange={(e: ExplorerSelectChange) => setRowsPerPage(Number(e.target.value))}
                 className="bg-white border border-slate-200 rounded-lg px-2 py-1 text-slate-700 outline-none focus:border-[#007758] shadow-sm cursor-pointer transition-all"
                 >
                 <option value={50}>50 Rows</option>
@@ -452,14 +459,14 @@ const DataExplorerView = ({
           
           <div className="mt-3 flex items-center gap-1 md:mt-0">
             <button
-              onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+              onClick={() => setCurrentPage((p: number) => Math.max(1, p - 1))}
               disabled={currentPage === 1 || isPaginating}
               className="p-2 rounded-xl bg-white border border-slate-200 hover:bg-slate-50 hover:border-slate-300 disabled:opacity-20 disabled:grayscale transition-all shadow-sm active:scale-95"
             >
               <ChevronLeft size={16} className="text-slate-600" />
             </button>
             <div className="px-3 flex gap-1">
-                {[...Array(Math.min(5, totalPages))].map((_, i) => {
+                {[...Array(Math.min(5, totalPages))].map((_: unknown, i: number) => {
                     const pgNum = i + 1;
                     return (
                         <button 
@@ -474,7 +481,7 @@ const DataExplorerView = ({
                 })}
             </div>
             <button
-              onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+              onClick={() => setCurrentPage((p: number) => Math.min(totalPages, p + 1))}
               disabled={currentPage === totalPages || isPaginating}
               className="p-2 rounded-xl bg-white border border-slate-200 hover:bg-slate-50 hover:border-slate-300 disabled:opacity-20 disabled:grayscale transition-all shadow-sm active:scale-95"
             >
@@ -488,3 +495,6 @@ const DataExplorerView = ({
 };
 
 export default DataExplorerView;
+
+
+

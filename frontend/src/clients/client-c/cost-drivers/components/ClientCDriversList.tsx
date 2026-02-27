@@ -1,7 +1,8 @@
 import React from 'react';
 import { TrendingUp, TrendingDown, Minus, ChevronRight } from 'lucide-react';
+import type { ClientCDriversListProps, CostDriverItem, NumericLike } from '../types';
 
-export function ClientCDriversList({ title, items, type, onSelect, sortBy }) {
+export function ClientCDriversList({ title, items, type, onSelect, sortBy }: ClientCDriversListProps) {
   if (!items || items.length === 0) {
     return (
       <div className="bg-[#1a1b20] border border-white/10 rounded-xl p-6">
@@ -13,24 +14,24 @@ export function ClientCDriversList({ title, items, type, onSelect, sortBy }) {
     );
   }
 
-  const formatCurrency = (value) => {
+  const formatCurrency = (value: NumericLike | null | undefined): string => {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
       currency: 'USD',
       notation: 'compact',
       maximumFractionDigits: 1
-    }).format(value);
+    }).format(Number(value || 0));
   };
 
-  const formatPercent = (value) => {
-    return `${Math.abs(value).toFixed(1)}%`;
+  const formatPercent = (value: NumericLike | null | undefined): string => {
+    return `${Math.abs(Number(value || 0)).toFixed(1)}%`;
   };
 
-  const sortedItems = [...items].sort((a, b) => {
+  const sortedItems = [...items].sort((a: CostDriverItem, b: CostDriverItem) => {
     if (sortBy === 'pct') {
-      return Math.abs(b.pct) - Math.abs(a.pct);
+      return Math.abs(b.pct || 0) - Math.abs(a.pct || 0);
     }
-    return Math.abs(b.diff) - Math.abs(a.diff);
+    return Math.abs(b.diff || 0) - Math.abs(a.diff || 0);
   });
 
   return (
@@ -45,15 +46,15 @@ export function ClientCDriversList({ title, items, type, onSelect, sortBy }) {
       </h3>
       
       <div className="space-y-3">
-        {sortedItems.slice(0, 10).map((item, index) => (
+        {sortedItems.slice(0, 10).map((item: CostDriverItem, index: number) => (
           <div
             key={index}
             onClick={() => onSelect(item, type)}
-            className="group p-3 bg-[#0f0f11] border border-white/5 rounded-lg hover:border-[#a02ff1]/30 hover:bg-[#a02ff1]/5 transition-all cursor-pointer"
+            className="group p-3 bg-[#0f0f11] border border-white/5 rounded-lg hover:border-[#007758]/30 hover:bg-[#007758]/5 transition-all cursor-pointer"
           >
             <div className="flex justify-between items-start">
               <div className="flex-1 min-w-0">
-                <h4 className="text-sm font-medium text-white truncate group-hover:text-[#a02ff1] transition-colors">
+                <h4 className="text-sm font-medium text-white truncate group-hover:text-[#007758] transition-colors">
                   {item.name}
                 </h4>
                 <p className="text-xs text-gray-400 mt-1 truncate">
@@ -71,11 +72,11 @@ export function ClientCDriversList({ title, items, type, onSelect, sortBy }) {
                     <TrendingDown size={12} className="mr-1" />
                   )}
                   <span className="text-sm font-bold">
-                    {formatCurrency(Math.abs(item.diff))}
+                    {formatCurrency(Math.abs(item.diff || 0))}
                   </span>
                 </div>
                 <div className="text-xs text-gray-500 mt-1">
-                  {formatPercent(item.pct)}
+                  {formatPercent(item.pct || 0)}
                 </div>
               </div>
             </div>
@@ -87,7 +88,7 @@ export function ClientCDriversList({ title, items, type, onSelect, sortBy }) {
                     type === 'inc' ? 'bg-red-400' : 'bg-green-400'
                   }`}
                   style={{
-                    width: `${Math.min(Math.abs(item.pct) * 2, 100)}%`
+                    width: `${Math.min(Math.abs(item.pct || 0) * 2, 100)}%`
                   }}
                 ></div>
               </div>

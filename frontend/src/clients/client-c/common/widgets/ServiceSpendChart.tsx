@@ -1,35 +1,49 @@
 import React from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 import { Server, Settings2 } from 'lucide-react';
+import type { ChangeEvent } from "react";
 
-const ServiceSpendChart = ({ data, title = "Spend by Service", limit = 8, onLimitChange, totalSpend = 0 }) => {
-  const formatCurrency = (val) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(val);
+interface ServiceSpendDatum {
+  name: string;
+  value: number;
+}
+
+interface ServiceSpendChartProps {
+  data?: ServiceSpendDatum[];
+  title?: string;
+  limit?: number;
+  onLimitChange?: (limit: number) => void;
+  totalSpend?: number;
+}
+
+const ServiceSpendChart = ({ data, title = "Spend by Service", limit = 8, onLimitChange, totalSpend = 0 }: ServiceSpendChartProps) => {
+  const formatCurrency = (val: number | string) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(Number(val));
   
   // Ensure limit doesn't exceed available data
   const effectiveLimit = Math.min(limit, data?.length || 0);
   const displayData = data?.slice(0, effectiveLimit) || [];
   
   // Colors for the bars
-  const COLORS = ['#a02ff1', '#48bb78', '#f56565', '#ecc94b', '#4fd1c5', '#805ad5', '#ed8936', '#63b3ed'];
+  const COLORS = ['#007758', '#48bb78', '#f56565', '#ecc94b', '#4fd1c5', '#059669', '#ed8936', '#63b3ed'];
   
   return (
     <div className="bg-[#1a1b20]/60 backdrop-blur-md border border-white/5 rounded-2xl p-5 flex flex-col shadow-xl min-h-[300px]">
       <div className="mb-4 flex justify-between items-center h-8">
         <h3 className="text-sm font-bold text-white flex items-center gap-2">
-          <Server size={16} className="text-[#a02ff1]" /> {title}
+          <Server size={16} className="text-[#007758]" /> {title}
         </h3>
         {onLimitChange && (
           <div className="flex items-center gap-2">
             <Settings2 size={12} className="text-gray-500" />
             <select
               value={effectiveLimit}
-              onChange={(e) => onLimitChange(Number(e.target.value))}
-              className="text-[10px] bg-[#0f0f11] border border-white/10 hover:border-[#a02ff1]/50 rounded px-2 py-1 text-gray-300 focus:outline-none focus:border-[#a02ff1] focus:ring-2 focus:ring-[#a02ff1]/50 focus:shadow-[0_0_15px_rgba(160,47,241,0.4)] transition-all cursor-pointer"
+              onChange={(e: ChangeEvent<HTMLSelectElement>) => onLimitChange(Number(e.target.value))}
+              className="text-[10px] bg-[#0f0f11] border border-white/10 hover:border-[#007758]/50 rounded px-2 py-1 text-gray-300 focus:outline-none focus:border-[#007758] focus:ring-2 focus:ring-[#007758]/50 focus:shadow-[0_0_15px_rgba(0,119,88,0.4)] transition-all cursor-pointer"
               style={{
                 colorScheme: 'dark'
               }}
             >
-              {[5, 8, 10, 15, 20].map(num => (
+              {[5, 8, 10, 15, 20].map((num: number) => (
                 <option key={num} value={num} style={{ backgroundColor: '#0f0f11', color: '#d1d5db' }}>
                   Top {num}
                 </option>
@@ -50,7 +64,7 @@ const ServiceSpendChart = ({ data, title = "Spend by Service", limit = 8, onLimi
               type="number" 
               stroke="#6b7280" 
               fontSize={10} 
-              tickFormatter={(val) => `$${val}`}
+              tickFormatter={(val: number) => `$${val}`}
               axisLine={false} 
               tickLine={false} 
             />
@@ -74,11 +88,11 @@ const ServiceSpendChart = ({ data, title = "Spend by Service", limit = 8, onLimi
                 padding: '8px 12px' 
               }} 
               itemStyle={{ color: '#fff' }} 
-              formatter={(value) => [formatCurrency(value), 'Cost']}
-              labelFormatter={(label) => `Service: ${label}`}
+              formatter={(value: number | string) => [formatCurrency(value), 'Cost']}
+              labelFormatter={(label: string | number) => `Service: ${label}`}
             />
             <Bar dataKey="value" name="Cost">
-              {displayData.map((entry, index) => (
+              {displayData.map((entry: ServiceSpendDatum, index: number) => (
                 <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
               ))}
             </Bar>

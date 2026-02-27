@@ -134,7 +134,7 @@ const OverviewKpi = ({
         title: "Total Billed Cost",
         value: formatCurrency(spend),
         icon: DollarSign,
-        color: "text-[#a02ff1]",
+        color: "text-[#007758]",
         subValue: Math.abs(spendChangePercent) > 0.1 ? formatPercent(spendChangePercent) : null,
         contextLabel: billingPeriod && billingPeriod.start && billingPeriod.end ? `Billing period: ${new Date(billingPeriod.start).toLocaleDateString()} - ${new Date(billingPeriod.end).toLocaleDateString()}` : null,
         showChangeTooltip: Math.abs(spendChangePercent) > 0.1,
@@ -378,3 +378,6 @@ const OverviewKpi = ({
 };
 
 export default OverviewKpi;
+
+
+

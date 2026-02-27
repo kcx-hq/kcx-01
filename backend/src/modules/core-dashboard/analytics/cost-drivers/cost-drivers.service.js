@@ -1,443 +1,116 @@
 import { costGrowthRate, roundTo } from '../../../../common/utils/cost.calculations.js';
 import { costDriversRepository } from './cost-drivers.repository.js';
-import { createHash } from 'crypto';
 
-const DEF_RANGE = '30d';
-const DEF_COMPARE = 'previous_period';
-const DEF_BASIS = 'actual';
-const DEF_DIMENSION = 'service';
-const DEF_ROW_LIMIT = 100;
-const MAX_ROW_LIMIT = 500;
-const DAY_MS = 86400000;
-const UNEXPLAINED_WARN_THRESHOLD_PERCENT = 5;
-const TOP_EXECUTIVE_ROWS = 5;
-const MODEL_VERSION = 'cost_drivers_v2.1';
-const CONTRACT_VERSION = 'cost_drivers_contract_v1';
-
-const DEFAULT_FILTERS = {
-  provider: 'All',
-  service: 'All',
-  region: 'All',
-  account: 'All',
-  subAccount: 'All',
-  team: 'All',
-  app: 'All',
-  env: 'All',
-  costCategory: 'All',
-  tagKey: '',
-  tagValue: '',
-};
-
-const DRIVER_LABELS = {
-  newServicesResources: 'New Services / Resources',
-  usageGrowth: 'Usage Growth',
-  ratePriceChange: 'Rate / Price Change',
-  mixShift: 'Mix Shift',
-  creditsDiscountChange: 'Credits / Discount Change',
-  savingsRemovals: 'Savings / Removals',
-  unexplainedVariance: 'Unexplained Variance',
-};
-
-const DRIVER_TYPES = {
-  newServicesResources: 'new_services_resources',
-  usageGrowth: 'usage_growth',
-  ratePriceChange: 'rate_price_change',
-  mixShift: 'mix_shift',
-  creditsDiscountChange: 'credits_discount_change',
-  savingsRemovals: 'savings_removals',
-  unexplainedVariance: 'unexplained_variance',
-  roundingResidual: 'rounding_residual',
-};
-
-const DRIVER_ORDER = [
-  'newServicesResources',
-  'usageGrowth',
-  'ratePriceChange',
-  'mixShift',
-  'creditsDiscountChange',
-  'savingsRemovals',
-];
-
-const DIMENSION_META = {
-  service: { key: 'service', legacy: 'ServiceName', title: 'Service' },
-  account: { key: 'account', legacy: 'Account', title: 'Account' },
-  region: { key: 'region', legacy: 'RegionName', title: 'Region' },
-  team: { key: 'team', legacy: 'Team', title: 'Team' },
-  sku: { key: 'sku', legacy: 'SkuId', title: 'SKU' },
-};
-const DIMENSION_KEYS = Object.keys(DIMENSION_META);
-
-const PRIORITY = { high: 0, medium: 1, low: 2 };
-
-const toNumber = (value, fallback = 0) => {
-  const n = Number(value);
-  return Number.isFinite(n) ? n : fallback;
-};
-
-const asDate = (value) => {
-  const d = value ? new Date(value) : null;
-  return d && !Number.isNaN(d.getTime()) ? d : null;
-};
-
-const dateKey = (value) => {
-  const d = asDate(value);
-  return d ? d.toISOString().slice(0, 10) : null;
-};
-
-const compareDayKeys = (a, b) => {
-  if (a === b) return 0;
-  return a > b ? 1 : -1;
-};
-
-const shiftMonths = (value, months) => {
-  const d = asDate(value);
-  if (!d) return null;
-  const out = new Date(d);
-  out.setMonth(out.getMonth() + months);
-  return out;
-};
-
-const normalizeUploadIds = (input = {}) => {
-  if (Array.isArray(input.uploadIds)) return input.uploadIds.map(String).map((x) => x.trim()).filter(Boolean);
-  if (Array.isArray(input.uploadid)) return input.uploadid.map(String).map((x) => x.trim()).filter(Boolean);
-  if (input.uploadIds) return String(input.uploadIds).split(',').map((x) => x.trim()).filter(Boolean);
-  if (input.uploadid) return String(input.uploadid).split(',').map((x) => x.trim()).filter(Boolean);
-  if (input.uploadId) return String(input.uploadId).split(',').map((x) => x.trim()).filter(Boolean);
-  return [];
-};
-
-const normalizeTimeRange = (timeRange, period) => {
-  if (typeof timeRange === 'string' && timeRange.trim()) {
-    const r = timeRange.trim().toLowerCase();
-    if (/^\d+d$/.test(r) || ['mtd', 'qtd', 'custom'].includes(r)) return r;
-  }
-  const p = toNumber(period, 30);
-  if (p > 0) return `${Math.round(p)}d`;
-  return DEF_RANGE;
-};
-
-const normalizeCompareTo = (value) => {
-  const v = String(value || DEF_COMPARE).toLowerCase();
-  if (['previous_period', 'same_period_last_month', 'custom_previous', 'none'].includes(v)) return v;
-  return DEF_COMPARE;
-};
-
-const normalizeBasis = (value) => {
-  const v = String(value || DEF_BASIS).toLowerCase();
-  if (['actual', 'amortized', 'net'].includes(v)) return v;
-  return DEF_BASIS;
-};
-
-const normalizeDimension = (value) => {
-  if (!value) return DEF_DIMENSION;
-  const text = String(value).trim();
-  if (DIMENSION_META[text]) return text;
-  const lower = text.toLowerCase();
-  if (DIMENSION_META[lower]) return lower;
-
-  for (const [key, meta] of Object.entries(DIMENSION_META)) {
-    if (String(meta.legacy).toLowerCase() === lower) return key;
+/**
+ * Calculate cost drivers from time series data
+ * This is a lightweight version that works with already-fetched time series data
+ * @param {Array} timeSeriesResult - Array of { date, cost, groupId } objects
+ * @param {Object} nameMap - Map of groupId to display names
+ * @returns {Object} Driver analysis data
+ */
+export function calculateCostDrivers(timeSeriesResult, nameMap) {
+  if (!timeSeriesResult || timeSeriesResult.length === 0) {
+    return {
+      overallStats: {
+        totalCurr: 0,
+        totalPrev: 0,
+        diff: 0,
+        pct: 0,
+        totalIncreases: 0,
+        totalDecreases: 0
+      },
+      dynamics: {
+        newSpend: 0,
+        expansion: 0,
+        deleted: 0,
+        optimization: 0
+      },
+      increases: [],
+      decreases: []
+    };
   }
 
-  if (lower.includes('service')) return 'service';
-  if (lower.includes('account')) return 'account';
-  if (lower.includes('region')) return 'region';
-  if (lower.includes('team')) return 'team';
-  if (lower.includes('sku')) return 'sku';
-  return DEF_DIMENSION;
-};
+  // Group by groupId and calculate current vs previous period
+  const groups = {};
+  const dates = [...new Set(timeSeriesResult.map(r => r.date))].sort();
 
-const clampLimit = (value) => {
-  const n = toNumber(value, DEF_ROW_LIMIT);
-  if (!Number.isFinite(n) || n <= 0) return DEF_ROW_LIMIT;
-  return Math.max(10, Math.min(MAX_ROW_LIMIT, Math.round(n)));
-};
+  if (dates.length === 0) {
+    return {
+      overallStats: {},
+      dynamics: {},
+      increases: [],
+      decreases: []
+    };
+  }
 
-const tagValue = (tags, keys) => {
-  if (!tags || typeof tags !== 'object') return null;
-  const lowerMap = {};
-  Object.keys(tags).forEach((key) => {
-    lowerMap[String(key).toLowerCase()] = tags[key];
+  // Split into current and previous periods (roughly half)
+  const midPoint = Math.floor(dates.length / 2);
+  const prevDates = new Set(dates.slice(0, midPoint));
+  const currDates = new Set(dates.slice(midPoint));
+
+  timeSeriesResult.forEach(row => {
+    const groupId = String(row.groupId || 'unknown');
+    const cost = parseFloat(row.cost || 0);
+    const date = row.date;
+
+    if (!groups[groupId]) {
+      groups[groupId] = {
+        id: groupId,
+        name: nameMap[groupId] || `Unknown (${groupId})`,
+        curr: 0,
+        prev: 0,
+        rows: []
+      };
+    }
+
+    if (currDates.has(date)) {
+      groups[groupId].curr += cost;
+    } else if (prevDates.has(date)) {
+      groups[groupId].prev += cost;
+    }
+
+    groups[groupId].rows.push({ ...row, cost });
   });
-  for (const key of keys) {
-    const value = lowerMap[String(key).toLowerCase()];
-    if (value !== undefined && value !== null && String(value).trim()) return String(value).trim();
-  }
-  return null;
-};
 
-const rowCostByBasis = (row, basis = DEF_BASIS) => {
-  const billed = toNumber(row?.billedcost ?? row?.BilledCost, 0);
-  const effective = toNumber(row?.effectivecost ?? row?.EffectiveCost, billed);
-  const contracted = toNumber(row?.contractedcost ?? row?.ContractedCost, effective);
-  if (basis === 'amortized') return effective;
-  if (basis === 'net') return contracted;
-  return billed;
-};
+  // Calculate differences
+  const allResults = Object.values(groups).map(group => ({
+    name: group.name,
+    id: group.id,
+    curr: group.curr,
+    prev: group.prev,
+    diff: group.curr - group.prev,
+    pct:
+      group.prev === 0
+        ? (group.curr > 0 ? Infinity : 0)
+        : ((group.curr - group.prev) / group.prev) * 100,
+    isNew: group.prev === 0 && group.curr > 0,
+    isDeleted: group.curr === 0 && group.prev > 0,
+    rows: group.rows
+  }));
 
-const getDims = (row) => {
-  const tags = row?.tags && typeof row.tags === 'object' ? row.tags : {};
-  return {
-    provider: row?.cloudAccount?.providername || row?.ProviderName || 'Unknown Provider',
-    service: row?.service?.servicename || row?.ServiceName || 'Unknown Service',
-    region: row?.region?.regionname || row?.RegionName || 'Unknown Region',
-    account:
-      row?.cloudAccount?.billingaccountname ||
-      row?.cloudAccount?.billingaccountid ||
-      row?.BillingAccountName ||
-      row?.BillingAccountId ||
-      'Unallocated Account',
-    subAccount: row?.subAccount?.sub_account_name || row?.SubAccountName || row?.subaccountid || 'Unknown Sub Account',
-    sku: row?.skuid || row?.SkuId || row?.SKU || 'Unknown SKU',
-    resource: row?.resource?.resourcename || row?.ResourceName || row?.resourceid || row?.ResourceId || 'Unknown Resource',
-    costCategory: row?.chargecategory || row?.ChargeCategory || 'Uncategorized',
-    app: tagValue(tags, ['app', 'application', 'service']) || 'Unmapped App',
-    team: tagValue(tags, ['team', 'owner', 'squad', 'business_unit']) || 'Unmapped Team',
-    env: tagValue(tags, ['env', 'environment', 'stage']) || 'Unmapped Env',
+  // Separate increases and decreases
+  const increases = allResults
+    .filter(r => r.diff > 0)
+    .sort((a, b) => b.diff - a.diff)
+    .slice(0, 10);
+
+  const decreases = allResults
+    .filter(r => r.diff < 0)
+    .sort((a, b) => a.diff - b.diff)
+    .slice(0, 10);
+
+  // Calculate totals
+  const totalCurr = allResults.reduce((sum, r) => sum + r.curr, 0);
+  const totalPrev = allResults.reduce((sum, r) => sum + r.prev, 0);
+  const totalDiff = totalCurr - totalPrev;
+
+  // Calculate dynamics
+  const dynamics = {
+    newSpend: allResults.filter(r => r.isNew).reduce((sum, r) => sum + r.diff, 0),
+    expansion: allResults.filter(r => !r.isNew && r.diff > 0).reduce((sum, r) => sum + r.diff, 0),
+    deleted: allResults.filter(r => r.isDeleted).reduce((sum, r) => sum + Math.abs(r.diff), 0),
+    optimization: allResults.filter(r => !r.isDeleted && r.diff < 0).reduce((sum, r) => sum + Math.abs(r.diff), 0)
   };
-};
-
-const isCreditLikeRow = (row) => {
-  const text = [
-    row?.chargecategory,
-    row?.ChargeCategory,
-    row?.chargeclass,
-    row?.ChargeClass,
-    row?.chargedescription,
-    row?.ChargeDescription,
-    row?.ItemDescription,
-    row?.commitmentdiscountid,
-    row?.CommitmentDiscountId,
-  ]
-    .filter(Boolean)
-    .join(' ')
-    .toLowerCase();
-
-  if (!text) return false;
-  const markers = [
-    'credit',
-    'discount',
-    'refund',
-    'savings plan',
-    'savingsplan',
-    'reserved',
-    'commitment',
-    'ri ',
-    'edp',
-  ];
-  return markers.some((marker) => text.includes(marker));
-};
-
-const buildAvailableDayKeys = (rows = []) => {
-  const today = dateKey(new Date());
-  const keys = new Set();
-  for (const row of rows) {
-    const key = dateKey(row?.chargeperiodstart || row?.ChargePeriodStart);
-    if (!key) continue;
-    if (today && compareDayKeys(key, today) > 0) continue;
-    keys.add(key);
-  }
-  return [...keys].sort(compareDayKeys);
-};
-
-const pickCurrentWindowDayKeys = (dayKeys = [], range, startDate, endDate) => {
-  if (!dayKeys.length) return [];
-  const normalized = normalizeTimeRange(range);
-  const latest = dayKeys[dayKeys.length - 1];
-
-  if (normalized === 'custom') {
-    const start = dateKey(startDate);
-    const end = dateKey(endDate);
-    if (!start || !end) return [];
-    const lower = compareDayKeys(start, end) <= 0 ? start : end;
-    const upper = compareDayKeys(start, end) <= 0 ? end : start;
-    return dayKeys.filter((k) => compareDayKeys(k, lower) >= 0 && compareDayKeys(k, upper) <= 0);
-  }
-
-  if (normalized === 'mtd') {
-    const monthPrefix = latest.slice(0, 7);
-    return dayKeys.filter((k) => k.startsWith(monthPrefix));
-  }
-
-  if (normalized === 'qtd') {
-    const ref = asDate(latest);
-    if (!ref) return [];
-    const quarterStartMonth = ref.getUTCMonth() - (ref.getUTCMonth() % 3);
-    const quarterStart = dateKey(new Date(Date.UTC(ref.getUTCFullYear(), quarterStartMonth, 1)));
-    if (!quarterStart) return [];
-    return dayKeys.filter((k) => compareDayKeys(k, quarterStart) >= 0 && compareDayKeys(k, latest) <= 0);
-  }
-
-  const match = normalized.match(/^(\d+)d$/);
-  const days = match ? Math.max(1, parseInt(match[1], 10)) : 30;
-  return dayKeys.slice(-days);
-};
-
-const pickPreviousWindowDayKeys = (
-  dayKeys = [],
-  currentKeys = [],
-  compareTo,
-  previousStartDate,
-  previousEndDate,
-) => {
-  if (!dayKeys.length || !currentKeys.length) return [];
-  const mode = normalizeCompareTo(compareTo);
-  if (mode === 'none') return [];
-
-  if (mode === 'custom_previous') {
-    const start = dateKey(previousStartDate);
-    const end = dateKey(previousEndDate);
-    if (start && end) {
-      const lower = compareDayKeys(start, end) <= 0 ? start : end;
-      const upper = compareDayKeys(start, end) <= 0 ? end : start;
-      return dayKeys.filter((k) => compareDayKeys(k, lower) >= 0 && compareDayKeys(k, upper) <= 0);
-    }
-  }
-
-  if (mode === 'same_period_last_month') {
-    const currentStart = asDate(currentKeys[0]);
-    const currentEnd = asDate(currentKeys[currentKeys.length - 1]);
-    if (currentStart && currentEnd) {
-      const shiftedStart = dateKey(shiftMonths(currentStart, -1));
-      const shiftedEnd = dateKey(shiftMonths(currentEnd, -1));
-      if (shiftedStart && shiftedEnd) {
-        const lower = compareDayKeys(shiftedStart, shiftedEnd) <= 0 ? shiftedStart : shiftedEnd;
-        const upper = compareDayKeys(shiftedStart, shiftedEnd) <= 0 ? shiftedEnd : shiftedStart;
-        const candidates = dayKeys.filter((k) => compareDayKeys(k, lower) >= 0 && compareDayKeys(k, upper) <= 0);
-        if (candidates.length >= currentKeys.length) return candidates.slice(-currentKeys.length);
-      }
-    }
-  }
-
-  const currentFirst = currentKeys[0];
-  const currentStartIndex = dayKeys.findIndex((k) => k === currentFirst);
-  const desired = currentKeys.length;
-  if (currentStartIndex < 0 || desired <= 0) return [];
-  const prevStart = Math.max(0, currentStartIndex - desired);
-  return dayKeys.slice(prevStart, currentStartIndex);
-};
-
-const applyScopeFilters = (rows = [], filters = {}) => {
-  const merged = { ...DEFAULT_FILTERS, ...filters };
-  const normalizedTagKey = String(merged.tagKey || '').trim();
-  const normalizedTagValue = String(merged.tagValue || '').trim().toLowerCase();
-
-  return rows.filter((row) => {
-    const d = getDims(row);
-    if (merged.provider !== 'All' && d.provider !== merged.provider) return false;
-    if (merged.service !== 'All' && d.service !== merged.service) return false;
-    if (merged.region !== 'All' && d.region !== merged.region) return false;
-    if (merged.account !== 'All' && d.account !== merged.account) return false;
-    if (merged.subAccount !== 'All' && d.subAccount !== merged.subAccount) return false;
-    if (merged.team !== 'All' && d.team !== merged.team) return false;
-    if (merged.app !== 'All' && d.app !== merged.app) return false;
-    if (merged.env !== 'All' && d.env !== merged.env) return false;
-    if (merged.costCategory !== 'All' && d.costCategory !== merged.costCategory) return false;
-
-    if (normalizedTagKey && normalizedTagValue) {
-      const tags = row?.tags && typeof row.tags === 'object' ? row.tags : {};
-      const found = Object.keys(tags).some(
-        (tag) =>
-          String(tag).toLowerCase() === normalizedTagKey.toLowerCase() &&
-          String(tags[tag]).trim().toLowerCase() === normalizedTagValue,
-      );
-      if (!found) return false;
-    }
-    return true;
-  });
-};
-
-const ensureMapEntry = (map, key, initFactory) => {
-  if (!map.has(key)) map.set(key, initFactory());
-  return map.get(key);
-};
-
-const createCategoryBucket = () => ({
-  newServicesResources: 0,
-  usageGrowth: 0,
-  ratePriceChange: 0,
-  mixShift: 0,
-  creditsDiscountChange: 0,
-  savingsRemovals: 0,
-});
-
-const addCategoryValue = (bucket, category, amount) => {
-  if (!bucket || !Object.prototype.hasOwnProperty.call(bucket, category)) return;
-  bucket[category] += toNumber(amount, 0);
-};
-
-const sumDriverCategories = (bucket = createCategoryBucket()) =>
-  DRIVER_ORDER.reduce((sum, key) => sum + toNumber(bucket[key], 0), 0);
-
-const pct = (curr, prev) => {
-  if (!toNumber(prev, 0)) return curr > 0 ? 100 : 0;
-  return costGrowthRate(curr, prev);
-};
-
-const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
-
-const confidenceLevel = (score) => {
-  if (score >= 80) return 'high';
-  if (score >= 60) return 'medium';
-  return 'low';
-};
-
-const computeAttributionConfidence = ({
-  quantityCoveragePercent,
-  modelResidualPercentOfNet,
-  missingTagSpendPercent,
-  skuMappingCoveragePercent,
-  periodDataCompletenessPercent,
-  currencyConsistent,
-  providerCount,
-  topProviderCurrentSharePercent,
-}) => {
-  let score = 100;
-
-  if (!currencyConsistent) score -= 25;
-  if (modelResidualPercentOfNet > 5) score -= 20;
-  else if (modelResidualPercentOfNet > 2) score -= 10;
-
-  if (quantityCoveragePercent < 40) score -= 20;
-  else if (quantityCoveragePercent < 70) score -= 10;
-
-  if (missingTagSpendPercent > 20) score -= 15;
-  else if (missingTagSpendPercent > 10) score -= 8;
-
-  if (skuMappingCoveragePercent < 85) score -= 10;
-  if (periodDataCompletenessPercent < 90) score -= 10;
-
-  if (providerCount > 1 && topProviderCurrentSharePercent < 70) score -= 5;
-
-  const normalizedScore = roundTo(clamp(score, 0, 100), 2);
-  const level = confidenceLevel(normalizedScore);
-
-  const rules = [
-    {
-      id: 'currency_consistency',
-      label: 'Currency Consistency',
-      status: currencyConsistent ? 'pass' : 'fail',
-      detail: currencyConsistent ? 'Single reporting currency detected.' : 'Multiple currencies detected.',
-    },
-    {
-      id: 'model_residual',
-      label: 'Model Residual',
-      status: modelResidualPercentOfNet <= 2 ? 'pass' : modelResidualPercentOfNet <= 5 ? 'warn' : 'fail',
-      detail: `${roundTo(modelResidualPercentOfNet, 2)}% of net change remains at model level.`,
-    },
-    {
-      id: 'quantity_coverage',
-      label: 'Usage/Rate Decomposition Coverage',
-      status: quantityCoveragePercent >= 70 ? 'pass' : quantityCoveragePercent >= 40 ? 'warn' : 'fail',
-      detail: `${roundTo(quantityCoveragePercent, 2)}% of non-credit absolute variance is quantity-eligible.`,
-    },
-    {
-      id: 'ownership_mapping',
-      label: 'Ownership Mapping',
-      status: missingTagSpendPercent <= 10 ? 'pass' : missingTagSpendPercent <= 20 ? 'warn' : 'fail',
-      detail: `${roundTo(missingTagSpendPercent, 2)}% spend has unmapped team ownership.`,
-    },
-  ];
 
   return {
     score: normalizedScore,
@@ -1937,7 +1610,7 @@ export const costDriversService = {
             : undefined,
       };
     } catch (error) {
-      console.error('Error in costDriversService.getCostDrivers:', error);
+      console.error('Error in driversService.getCostDrivers:', error.message);
       throw error;
     }
   },

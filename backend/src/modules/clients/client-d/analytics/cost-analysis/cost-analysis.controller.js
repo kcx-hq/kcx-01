@@ -1,12 +1,14 @@
 import { clientDCostAnalysisService } from './cost-analysis.service.js';
 import { extractUploadIds} from '../../helpers/extractUploadId.js';
+import AppError from "../../../../../errors/AppError.js";
+import logger from "../../../../../lib/logger.js";
 
 // Security whitelist (same as core)
 const ALLOWED_GROUPS = ['ServiceName', 'RegionName', 'ProviderName'];
 
 
 
-export const getClientDCostAnalysis = async (req, res) => {
+export const getClientDCostAnalysis = async (req, res, next) => {
   try {
     const uploadIds = extractUploadIds(req);
 
@@ -20,27 +22,20 @@ export const getClientDCostAnalysis = async (req, res) => {
     if (!ALLOWED_GROUPS.includes(groupBy)) groupBy = 'ServiceName';
 
     if (!uploadIds.length) {
-      return res.json({
-        success: true,
-        data: {
-          kpis: { totalSpend: 0, avgDaily: 0 },
-          dailyTrends: [],
-          monthlyTrends: [],
-          breakdown: [],
-          groupBy,
-          message: 'No upload selected. Please select a billing upload to analyze cost.'
-        }
+      return res.ok({
+        kpis: { totalSpend: 0, avgDaily: 0 },
+        dailyTrends: [],
+        monthlyTrends: [],
+        breakdown: [],
+        groupBy,
+        message: 'No upload selected. Please select a billing upload to analyze cost.'
       });
     }
 
     const data = await clientDCostAnalysisService.getCostAnalysis({ filters, uploadIds }, groupBy);
-    return res.json({ success: true, data });
+    return res.ok(data);
   } catch (error) {
-    console.error('ClientD Cost Analysis Error:', error);
-    return res.status(500).json({
-      success: false,
-      error: 'Failed to generate Client-D cost analysis',
-      details: process.env.NODE_ENV === 'development' ? error.message : undefined
-    });
+    logger.error({ err: error, requestId: req.requestId }, 'ClientD Cost Analysis Error');
+    return next(new AppError(500, "INTERNAL", "Internal server error", { cause: error }));
   }
 };

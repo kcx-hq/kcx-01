@@ -1,7 +1,8 @@
 import React from 'react';
 import { Crown, Lock } from 'lucide-react';
+import type { PremiumOverlayProps } from "../types";
 
-const PremiumOverlay = ({ variant = 'card' }) => {
+const PremiumOverlay = ({ variant = 'card' }: PremiumOverlayProps) => {
   if (variant === 'inlineBadge') {
     return (
       <div className="absolute inset-0 z-50 flex items-center justify-center rounded-xl bg-white/75 backdrop-blur-sm">
@@ -44,3 +45,6 @@ const PremiumOverlay = ({ variant = 'card' }) => {
 };
 
 export default PremiumOverlay;
+
+
+

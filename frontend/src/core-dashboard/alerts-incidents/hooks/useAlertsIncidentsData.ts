@@ -90,12 +90,9 @@ export function useAlertsIncidentsData({
 
     (async () => {
       try {
-        const response = (await api.call("alertsIncidents", "summary", { params })) as
-          | { data?: AlertsIncidentsPayload }
-          | AlertsIncidentsPayload;
+        const response = (await api.call("alertsIncidents", "summary", { params })) as AlertsIncidentsPayload | null;
         if (!active) return;
-        const payload = (response as { data?: AlertsIncidentsPayload })?.data ?? (response as AlertsIncidentsPayload);
-        setData(payload || EMPTY_DATA);
+        setData(response || EMPTY_DATA);
       } catch (fetchError) {
         if (!active) return;
         const code = (fetchError as { code?: string })?.code;

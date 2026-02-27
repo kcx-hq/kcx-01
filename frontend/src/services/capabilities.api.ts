@@ -1,10 +1,11 @@
-import { http } from "./http";
+import { apiGet } from "./http";
+import { isCapabilities } from "./apiClient";
+import type { Capabilities } from "./apiClient";
 
-export async function fetchCapabilities() {
-  // Note: Backend has typo in route - using /capabililites (missing 'i')
-  // http baseURL is just the host (e.g., "http://localhost:5000")
-  // So we need the full path: /api/capabililites
-  // If backend is fixed, change to /api/capabilities
-  const res = await http.get("/api/capabililites");
-  return res.data;
+export async function fetchCapabilities(): Promise<Capabilities | null> {
+  // Backend route currently uses /capabililites (typo kept for compatibility)
+  const data = await apiGet<unknown>("/api/capabililites", {
+    suppressLegacyWarning: true,
+  });
+  return isCapabilities(data) ? data : null;
 }

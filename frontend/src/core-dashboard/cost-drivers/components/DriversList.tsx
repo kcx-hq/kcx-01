@@ -2,6 +2,7 @@ import React, { memo, useMemo } from 'react';
 import { ArrowUpRight, ArrowDownRight, Crown, Filter } from 'lucide-react';
 import { useAuthStore } from '../../../store/Authstore';
 import { formatCurrency } from '../utils/format';
+import type { CostDriverItem, DriversListProps } from '../types';
 
 export const DriversList = memo(function DriversList({
   title,
@@ -9,15 +10,15 @@ export const DriversList = memo(function DriversList({
   type,
   onSelect,
   sortBy,
-}) {
+}: DriversListProps) {
   const { user } = useAuthStore();
   const isMasked = !user?.is_premium;
 
   const sortedItems = useMemo(() => {
     if (!items?.length) return [];
-    return [...items].sort((a, b) => {
-      if (sortBy === 'pct') return Math.abs(b.pct) - Math.abs(a.pct);
-      return Math.abs(b.diff) - Math.abs(a.diff);
+    return [...items].sort((a: CostDriverItem, b: CostDriverItem) => {
+      if (sortBy === 'pct') return Math.abs(Number(b.pct) || 0) - Math.abs(Number(a.pct) || 0);
+      return Math.abs(Number(b.diff) || 0) - Math.abs(Number(a.diff) || 0);
     });
   }, [items, sortBy]);
 
@@ -36,7 +37,7 @@ export const DriversList = memo(function DriversList({
       <div className="relative flex h-[380px] flex-col overflow-hidden rounded-xl border border-[var(--border-light)] bg-white md:h-[540px] lg:h-[600px]">
         {visibleItems.length ? (
           <div className="relative h-full divide-y divide-[var(--border-muted)] overflow-y-auto">
-            {visibleItems.map((item, index) => (
+            {visibleItems.map((item: CostDriverItem, index: number) => (
               <div
                 key={`${type}-${item.name || item.id || index}-${index}`}
                 onClick={() => onSelect(item, type)}
@@ -114,3 +115,6 @@ export const DriversList = memo(function DriversList({
     </div>
   );
 });
+
+
+

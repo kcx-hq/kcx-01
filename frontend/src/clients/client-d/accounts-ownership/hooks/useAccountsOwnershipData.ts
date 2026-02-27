@@ -1,6 +1,12 @@
 import { useEffect, useRef, useState } from "react";
 import { buildAccountsParams } from "../utils/buildParams";
 import { normalizeTagCoverageResponse } from "../utils/normalizeTagCoverageResponse";
+import type {
+  ApiLikeError,
+  TagCoverageData,
+  UseAccountsOwnershipDataParams,
+  UseAccountsOwnershipDataResult,
+} from "../types";
 
 /**
  * Client-D: Governance -> Tag Coverage endpoint hook
@@ -10,19 +16,24 @@ import { normalizeTagCoverageResponse } from "../utils/normalizeTagCoverageRespo
  *  data: { taggedCost, untaggedCost, taggedPercent, untaggedPercent, missingTags: [] }
  * }
  */
-export function useAccountsOwnershipData({ api, caps, debouncedFilters, uploadId }) {
-  const abortControllerRef = useRef(null);
-  const prevFiltersRef = useRef(null);
+export function useAccountsOwnershipData({
+  api,
+  caps,
+  debouncedFilters,
+  uploadId,
+}: UseAccountsOwnershipDataParams): UseAccountsOwnershipDataResult {
+  const abortControllerRef = useRef<AbortController | null>(null);
+  const prevFiltersRef = useRef<Record<string, unknown> | null>(null);
   const isInitialMount = useRef(true);
 
-  const [accountsData, setAccountsData] = useState(null);
+  const [accountsData, setAccountsData] = useState<TagCoverageData | null>(null);
   const [loading, setLoading] = useState(true);
   const [isFiltering, setIsFiltering] = useState(false);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!api || !caps) return;
-    if (!caps.modules?.governance?.enabled) return;
+    if (!caps.modules?.["governance"]?.enabled) return;
 
     // cancel in-flight
     if (abortControllerRef.current) abortControllerRef.current.abort();
@@ -42,7 +53,10 @@ export function useAccountsOwnershipData({ api, caps, debouncedFilters, uploadId
       setError(null);
 
       try {
-        const params = buildAccountsParams({ debouncedFilters, uploadId });
+        const params = buildAccountsParams({
+          debouncedFilters,
+          ...(uploadId ? { uploadId } : {}),
+        });
 
         /**
          * IMPORTANT:
@@ -60,16 +74,17 @@ export function useAccountsOwnershipData({ api, caps, debouncedFilters, uploadId
         const normalized = normalizeTagCoverageResponse(res);
         setAccountsData(normalized);
         prevFiltersRef.current = { ...debouncedFilters };
-      } catch (err) {
-        if (err?.code === "NOT_SUPPORTED") return;
-        if (err?.name === "AbortError") return;
+      } catch (err: unknown) {
+        const apiError = err as ApiLikeError;
+        if (apiError?.code === "NOT_SUPPORTED") return;
+        if (apiError?.name === "AbortError") return;
 
-        console.error("Error fetching tag coverage:", err);
+        console.error("Error fetching tag coverage:", apiError);
 
-        if (err?.response?.status === 401) {
+        if (apiError?.status === 401) {
           setError("Your session has expired. Please refresh the page or log in again.");
         } else {
-          setError(`Failed to load tag coverage: ${err?.message || "Unknown error"}`);
+          setError(`Failed to load tag coverage: ${apiError?.message || "Unknown error"}`);
         }
 
         prevFiltersRef.current = { ...debouncedFilters };

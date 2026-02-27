@@ -15,15 +15,24 @@ import {
   Loader2,
   Clock
 } from "lucide-react";
+import type {
+  ApiLikeError,
+  ClientCProjectTrackingProps,
+  ProjectBudgetComparisonRow,
+  ProjectBurnRatePoint,
+  ProjectOverviewItem,
+  ProjectTrackingExtractedData,
+  ProjectTrackingSourceData,
+} from "./types";
 
-const ClientCProjectTracking = ({ api, caps }) => {
-  const [projectData, setProjectData] = useState(null);
+const ClientCProjectTracking = ({ api, caps }: ClientCProjectTrackingProps) => {
+  const [projectData, setProjectData] = useState<ProjectTrackingSourceData | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchProjectTrackingData = async () => {
-      if (!api || !caps.modules?.projectTracking) {
+      if (!api || !caps?.modules?.["projectTracking"]) {
         setError('Project tracking module not available');
         setLoading(false);
         return;
@@ -35,21 +44,21 @@ const ClientCProjectTracking = ({ api, caps }) => {
 
         // Fetch all project tracking endpoints
         const [overviewRes, burnRateRes, budgetComparisonRes] = await Promise.allSettled([
-          api.call('projectTracking', 'overview'),
-          api.call('projectTracking', 'burnRate'),
-          api.call('projectTracking', 'budgetComparison')
+          api.call<ProjectTrackingSourceData["overview"]>('projectTracking', 'overview'),
+          api.call<ProjectTrackingSourceData["burnRate"]>('projectTracking', 'burnRate'),
+          api.call<ProjectTrackingSourceData["budgetComparison"]>('projectTracking', 'budgetComparison')
         ]);
 
-        const overviewData = overviewRes.status === 'fulfilled' && overviewRes.value?.success 
-          ? overviewRes.value.data 
+        const overviewData = overviewRes.status === 'fulfilled'
+          ? (overviewRes.value ?? { projects: [], totalCost: 0 })
           : { projects: [], totalCost: 0 };
 
-        const burnRateData = burnRateRes.status === 'fulfilled' && burnRateRes.value?.success 
-          ? burnRateRes.value.data 
+        const burnRateData = burnRateRes.status === 'fulfilled'
+          ? (burnRateRes.value ?? { dailyRates: [], totalRate: 0 })
           : { dailyRates: [], totalRate: 0 };
 
-        const budgetComparisonData = budgetComparisonRes.status === 'fulfilled' && budgetComparisonRes.value?.success 
-          ? budgetComparisonRes.value.data 
+        const budgetComparisonData = budgetComparisonRes.status === 'fulfilled'
+          ? (budgetComparisonRes.value ?? { budgets: [], comparisons: [] })
           : { budgets: [], comparisons: [] };
 
         setProjectData({
@@ -57,8 +66,9 @@ const ClientCProjectTracking = ({ api, caps }) => {
           burnRate: burnRateData,
           budgetComparison: budgetComparisonData
         });
-      } catch (err) {
-        setError(err.message || 'Failed to fetch project tracking data');
+      } catch (err: unknown) {
+        const apiError = err as ApiLikeError;
+        setError(apiError.message || 'Failed to fetch project tracking data');
       } finally {
         setLoading(false);
       }
@@ -67,7 +77,7 @@ const ClientCProjectTracking = ({ api, caps }) => {
     fetchProjectTrackingData();
   }, [api, caps]);
 
-  const extractedData = useMemo(() => {
+  const extractedData = useMemo<ProjectTrackingExtractedData>(() => {
     if (!projectData) {
       return {
         overview: {
@@ -91,9 +101,9 @@ const ClientCProjectTracking = ({ api, caps }) => {
 
     // Normalize overview data
     const overview = projectData.overview || {};
-    const projects = Array.isArray(overview.projects) ? overview.projects : [];
+    const projects: ProjectOverviewItem[] = Array.isArray(overview.projects) ? overview.projects : [];
     
-    const projectMetrics = projects.reduce((acc, project) => {
+    const projectMetrics = projects.reduce<ProjectTrackingExtractedData["overview"]["projectMetrics"]>((acc, project) => {
       acc[project.name] = {
         name: project.name,
         totalCost: project.totalCost || 0,
@@ -108,12 +118,12 @@ const ClientCProjectTracking = ({ api, caps }) => {
 
     // Normalize burn rate data
     const burnRate = projectData.burnRate || {};
-    const dailyRates = Array.isArray(burnRate.dailyRates) ? burnRate.dailyRates : [];
+    const dailyRates: ProjectBurnRatePoint[] = Array.isArray(burnRate.dailyRates) ? burnRate.dailyRates : [];
 
     // Normalize budget comparison data
     const budgetComparison = projectData.budgetComparison || {};
-    const budgets = Array.isArray(budgetComparison.budgets) ? budgetComparison.budgets : [];
-    const comparisons = Array.isArray(budgetComparison.comparisons) ? budgetComparison.comparisons : [];
+    const budgets: ProjectBudgetComparisonRow[] = Array.isArray(budgetComparison.budgets) ? budgetComparison.budgets : [];
+    const comparisons: ProjectBudgetComparisonRow[] = Array.isArray(budgetComparison.comparisons) ? budgetComparison.comparisons : [];
 
     return {
       overview: {
@@ -175,7 +185,7 @@ const ClientCProjectTracking = ({ api, caps }) => {
     );
   }
 
-  const COLORS = ['#a02ff1', '#48bb78', '#f56565', '#ecc94b', '#4fd1c5', '#805ad5', '#ed8936', '#68d391', '#4c77b6', '#d53f8c'];
+  const COLORS = ['#007758', '#48bb78', '#f56565', '#ecc94b', '#4fd1c5', '#059669', '#ed8936', '#68d391', '#4c77b6', '#d53f8c'];
 
   return (
     <div className="animate-in fade-in zoom-in-95 duration-300 flex flex-col h-full">
@@ -196,8 +206,8 @@ const ClientCProjectTracking = ({ api, caps }) => {
                     ${extractedData.overview.totalCost?.toFixed(2) || 0}
                   </p>
                 </div>
-                <div className="p-3 bg-[#a02ff1]/20 rounded-lg">
-                  <DollarSign className="text-[#a02ff1]" size={24} />
+                <div className="p-3 bg-[#007758]/20 rounded-lg">
+                  <DollarSign className="text-[#007758]" size={24} />
                 </div>
               </div>
               <p className="text-[10px] text-gray-500 mt-2">Overall project spending</p>
@@ -223,7 +233,7 @@ const ClientCProjectTracking = ({ api, caps }) => {
                 <div>
                   <p className="text-xs text-gray-400 font-semibold uppercase tracking-wider">Avg Daily Cost</p>
                   <p className="text-lg font-bold text-white mt-1">
-                    ${extractedData.overview.projects?.reduce((sum, proj) => sum + (proj.avgDailyCost || 0), 0) / (extractedData.overview.projects?.length || 1) || 0}
+                    ${extractedData.overview.projects?.reduce((sum: number, proj: ProjectOverviewItem) => sum + (proj.avgDailyCost || 0), 0) / (extractedData.overview.projects?.length || 1) || 0}
                   </p>
                 </div>
                 <div className="p-3 bg-blue-500/20 rounded-lg">
@@ -244,8 +254,8 @@ const ClientCProjectTracking = ({ api, caps }) => {
                     ${extractedData.overview.projects?.[0]?.totalCost?.toFixed(2) || 0}
                   </p>
                 </div>
-                <div className="p-3 bg-purple-500/20 rounded-lg">
-                  <BarChartIcon className="text-purple-400" size={24} />
+                <div className="p-3 bg-emerald-500/20 rounded-lg">
+                  <BarChartIcon className="text-emerald-400" size={24} />
                 </div>
               </div>
               <p className="text-[10px] text-gray-500 mt-2">Highest spending project</p>
@@ -257,7 +267,7 @@ const ClientCProjectTracking = ({ api, caps }) => {
             {/* Project Cost Distribution */}
             {/* <div className="bg-[#1a1b20]/60 backdrop-blur-md border border-white/5 rounded-2xl p-5 shadow-xl">
               <div className="flex items-center gap-2 mb-4">
-                <PieChartIcon size={16} className="text-[#a02ff1]" />
+                <PieChartIcon size={16} className="text-[#007758]" />
                 <h3 className="text-sm font-bold text-white">Project Cost Distribution</h3>
               </div>
               <div className="h-80">
@@ -295,7 +305,7 @@ const ClientCProjectTracking = ({ api, caps }) => {
             {/* Burn Rate */}
             {/* <div className="bg-[#1a1b20]/60 backdrop-blur-md border border-white/5 rounded-2xl p-5 shadow-xl">
               <div className="flex items-center gap-2 mb-4">
-                <TrendingUp size={16} className="text-[#a02ff1]" />
+                <TrendingUp size={16} className="text-[#007758]" />
                 <h3 className="text-sm font-bold text-white">Daily Burn Rate</h3>
               </div>
               <div className="h-80">
@@ -329,8 +339,8 @@ const ClientCProjectTracking = ({ api, caps }) => {
                     <Area 
                       type="monotone" 
                       dataKey="cost" 
-                      stroke="#a02ff1" 
-                      fill="#a02ff1" 
+                      stroke="#007758" 
+                      fill="#007758" 
                       fillOpacity={0.3}
                       strokeWidth={2}
                     />
@@ -345,7 +355,7 @@ const ClientCProjectTracking = ({ api, caps }) => {
             {/* Project List */}
             <div className="bg-[#1a1b20]/60 backdrop-blur-md border border-white/5 rounded-2xl p-5 shadow-xl">
               <div className="flex items-center gap-2 mb-4">
-                <FolderOpen size={16} className="text-[#a02ff1]" />
+                <FolderOpen size={16} className="text-[#007758]" />
                 <h3 className="text-sm font-bold text-white">Project Details</h3>
               </div>
               <div className="overflow-x-auto">
@@ -359,7 +369,7 @@ const ClientCProjectTracking = ({ api, caps }) => {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-800">
-                    {extractedData.overview.projects.slice(0, 10).map((project, index) => (
+                    {extractedData.overview.projects.slice(0, 10).map((project: ProjectOverviewItem, index: number) => (
                       <tr key={index} className={index % 2 === 0 ? 'bg-gray-900/50' : 'bg-gray-800/50'}>
                         <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-300">{project.name}</td>
                         <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-300">${project.totalCost?.toFixed(2)}</td>
@@ -375,7 +385,7 @@ const ClientCProjectTracking = ({ api, caps }) => {
             {/* Budget Comparison */}
             <div className="bg-[#1a1b20]/60 backdrop-blur-md border border-white/5 rounded-2xl p-5 shadow-xl">
               <div className="flex items-center gap-2 mb-4">
-                <DollarSign size={16} className="text-[#a02ff1]" />
+                <DollarSign size={16} className="text-[#007758]" />
                 <h3 className="text-sm font-bold text-white">Budget Comparison</h3>
               </div>
               <div className="overflow-x-auto">
@@ -389,15 +399,15 @@ const ClientCProjectTracking = ({ api, caps }) => {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-800">
-                    {extractedData.budgetComparison.comparisons.slice(0, 10).map((comparison, index) => (
+                    {extractedData.budgetComparison.comparisons.slice(0, 10).map((comparison: ProjectBudgetComparisonRow, index: number) => (
                       <tr key={index} className={index % 2 === 0 ? 'bg-gray-900/50' : 'bg-gray-800/50'}>
                         <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-300">{comparison.name || 'N/A'}</td>
                         <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-300">${comparison.actual?.toFixed(2) || '0.00'}</td>
                         <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-300">${comparison.budgeted?.toFixed(2) || '0.00'}</td>
                         <td className={`px-4 py-3 whitespace-nowrap text-sm font-medium ${
-                          comparison.variance > 0 ? 'text-red-400' : 'text-green-400'
+                          (comparison.variance ?? 0) > 0 ? 'text-red-400' : 'text-green-400'
                         }`}>
-                          {comparison.variance > 0 ? '+' : ''}
+                          {(comparison.variance ?? 0) > 0 ? '+' : ''}
                           ${comparison.variance?.toFixed(2) || '0.00'}
                         </td>
                       </tr>

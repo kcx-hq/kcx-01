@@ -1,17 +1,22 @@
 import { useMemo } from 'react';
+import type { GroupedResources, ResourceItem, UseGroupedResourcesParams } from "../types";
 
-export function useGroupedResources({ filteredData, grouping }) {
+export function useGroupedResources({ filteredData, grouping }: UseGroupedResourcesParams) {
   return useMemo(() => {
-    const groups = {};
+    const groups: GroupedResources = {};
     if (grouping === 'none') return groups;
 
-    filteredData.forEach((item) => {
+    filteredData.forEach((item: ResourceItem) => {
       const key = grouping === 'service' ? item.service : item.region;
-      if (!groups[key]) groups[key] = { items: [], total: 0 };
-      groups[key].items.push(item);
-      groups[key].total += item.totalCost || 0;
+      const normalizedKey = String(key);
+      if (!groups[normalizedKey]) groups[normalizedKey] = { items: [], total: 0 };
+      groups[normalizedKey].items.push(item);
+      groups[normalizedKey].total += item.totalCost || 0;
     });
 
     return groups;
   }, [filteredData, grouping]);
 }
+
+
+

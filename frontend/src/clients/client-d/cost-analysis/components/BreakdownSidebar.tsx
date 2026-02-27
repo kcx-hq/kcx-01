@@ -1,7 +1,8 @@
 import React, { useCallback } from "react";
-import PremiumGate from "../../common/PremiumGate";
+import PremiumGate from "../../../../core-dashboard/common/PremiumGate";
 import { COLOR_PALETTE } from "../utils/constants";
 import { formatCurrency } from "../utils/format";
+import type { BreakdownSidebarProps, CostBreakdownItem } from "../types";
 
 const BreakdownSidebar = ({
   isLocked,
@@ -9,15 +10,15 @@ const BreakdownSidebar = ({
   hiddenSeries,
   toggleSeries,
   totalSpend,
-}) => {
+}: BreakdownSidebarProps) => {
   const getShare = useCallback(
-    (val) => (totalSpend ? ((val / totalSpend) * 100).toFixed(1) : 0),
+    (val: number) => (totalSpend ? ((val / totalSpend) * 100).toFixed(1) : 0),
     [totalSpend]
   );
 
    const list = (
     <div className={`${isLocked ? 'max-h-[57vh]' : 'overflow-y-auto'} space-y-1 flex-1 pr-1 custom-scrollbar`}>
-      {(breakdown || []).map((b, i) => {
+      {(breakdown || []).map((b: CostBreakdownItem, i: number) => {
         const name = b?.name ?? "";
         const isUnallocated =
           !name || name === "null" || name === "Unallocated Resources";
@@ -47,13 +48,13 @@ const BreakdownSidebar = ({
                   {name || "Unallocated Resources"}
                 </span>
                 <span className="text-[9px] text-gray-600 font-mono">
-                  {getShare(b.value)}%
+                  {getShare(Number(b.value || 0))}%
                 </span>
               </div>
             </div>
 
             <span className="text-xs font-bold text-white font-mono">
-              {formatCurrency(b.value)}
+              {formatCurrency(Number(b.value || 0))}
             </span>
           </div>
         );
@@ -69,7 +70,7 @@ const BreakdownSidebar = ({
         </span>
         <button
           disabled
-          className="text-[#a02ff1] text-[10px] font-bold hover:underline opacity-50 pointer-events-none"
+          className="text-[#007758] text-[10px] font-bold hover:underline opacity-50 pointer-events-none"
         >
           RESET
         </button>

@@ -15,8 +15,33 @@ import { motion, AnimatePresence } from "framer-motion";
 const BRAND_COLOR = "#007758";
 const TOOLTIP_BG = "#192630"; // Matches vertical navbar / service chart tooltip
 
-const CustomTooltip = ({ active, payload, label }) => {
+interface CostTrendDataPoint {
+  date: string;
+  cost: number;
+}
+
+interface TooltipPayloadItem {
+  value: number;
+}
+
+interface CustomTooltipProps {
+  active?: boolean;
+  payload?: TooltipPayloadItem[];
+  label?: string;
+}
+
+interface CostTrendChartProps {
+  data?: CostTrendDataPoint[];
+  limit?: number;
+  onLimitChange?: (limit: number) => void;
+  avgDailySpend?: number;
+}
+
+const CustomTooltip = ({ active, payload, label }: CustomTooltipProps) => {
   if (active && payload && payload.length) {
+    const first = payload[0];
+    if (!first) return null;
+    const value = Number(first.value ?? 0);
     return (
       <div className="p-4 rounded-2xl shadow-2xl border border-white/10 min-w-[180px] animate-in fade-in zoom-in-95 duration-200"
            style={{ backgroundColor: TOOLTIP_BG }}>
@@ -30,7 +55,7 @@ const CustomTooltip = ({ active, payload, label }) => {
                 {new Intl.NumberFormat("en-US", {
                   style: "currency",
                   currency: "USD",
-                }).format(payload[0].value)}
+                }).format(value)}
              </span>
              <span className="text-[10px] font-bold text-emerald-400 pb-1">Live</span>
           </div>
@@ -46,14 +71,14 @@ const CostTrendChart = ({
   limit = 30,
   onLimitChange,
   avgDailySpend = 0,
-}) => {
+}: CostTrendChartProps) => {
   const [isOpen, setIsOpen] = useState(false);
 
   const allDataLength = data?.length || 0;
   const effectiveLimit = Math.min(limit, allDataLength);
   const displayData = data?.slice(-effectiveLimit) || [];
 
-  const handleSelect = (val) => {
+  const handleSelect = (val: number) => {
     if (onLimitChange) onLimitChange(val);
     setIsOpen(false);
   };
@@ -106,11 +131,11 @@ const CostTrendChart = ({
                   exit={{ opacity: 0, y: 8, scale: 0.95 }}
                   className="absolute right-0 mt-3 w-40 bg-white border border-slate-100 rounded-[1.25rem] shadow-2xl z-[100] overflow-hidden p-1.5 ring-1 ring-slate-200/50"
                 >
-                  {[7, 15, 30].map((val) => (
+                  {[7, 15, 30].map((val: number) => (
                     allDataLength >= val && (
                       <button
                         key={val}
-                        onMouseDown={(e) => {
+                        onMouseDown={(e: React.MouseEvent<HTMLButtonElement>) => {
                           e.preventDefault();
                           handleSelect(val);
                         }}
@@ -127,7 +152,7 @@ const CostTrendChart = ({
                   
                   {allDataLength > 30 && (
                     <button
-                      onMouseDown={(e) => {
+                      onMouseDown={(e: React.MouseEvent<HTMLButtonElement>) => {
                         e.preventDefault();
                         handleSelect(allDataLength);
                       }}
@@ -161,7 +186,7 @@ const CostTrendChart = ({
               stroke="#94a3b8"
               fontSize={10}
               fontWeight={700}
-              tickFormatter={(str) => {
+              tickFormatter={(str: string) => {
                   const date = new Date(str);
                   return `${date.getMonth() + 1}/${date.getDate()}`;
               }}
@@ -174,7 +199,7 @@ const CostTrendChart = ({
               stroke="#94a3b8"
               fontSize={10}
               fontWeight={700}
-              tickFormatter={(val) => `$${val >= 1000 ? (val/1000).toFixed(1) + 'k' : val}`}
+              tickFormatter={(val: number) => `$${val >= 1000 ? (val/1000).toFixed(1) + 'k' : val}`}
               axisLine={false}
               tickLine={false}
               tickMargin={10}
@@ -225,3 +250,5 @@ const CostTrendChart = ({
 };
 
 export default CostTrendChart;
+
+

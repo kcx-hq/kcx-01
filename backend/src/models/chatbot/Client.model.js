@@ -1,6 +1,9 @@
 // src/models/Client.model.js
+import { createRequire } from "module";
 import { DataTypes } from "sequelize";
-import sequelize from "../../config/db.config.js";
+
+const require = createRequire(import.meta.url);
+const { sequelize } = require("../../db/index.cjs");
 
 const Client = sequelize.define(
   "Client",
@@ -37,3 +40,5 @@ const Client = sequelize.define(
 );
 
 export default Client;
+
+

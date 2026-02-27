@@ -5,13 +5,15 @@
 
 import { clientDDataQualityService } from './data-quality.service.js';
 import { extractUploadIds } from '../../helpers/extractUploadId.js';
+import AppError from "../../../../../errors/AppError.js";
+import logger from "../../../../../lib/logger.js";
 
 
 
 /**
  * GET /api/client-d/quality/analysis
  */
-export const getClientDQualityAnalysis = async (req, res) => {
+export const getClientDQualityAnalysis = async (req, res, next) => {
   try {
     const filters = {
       provider: req.query.provider || req.body?.provider || 'All',
@@ -31,13 +33,9 @@ export const getClientDQualityAnalysis = async (req, res) => {
       uploadIds
     });
 
-    return res.json({ success: true, data });
+    return res.ok(data);
   } catch (error) {
-    console.error('Client-D getQualityAnalysis Error:', error);
-    return res.status(500).json({
-      success: false,
-      error: 'Failed to analyze Client-D data quality',
-      message: error.message
-    });
+    logger.error({ err: error, requestId: req.requestId }, 'Client-D getQualityAnalysis Error');
+    return next(new AppError(500, "INTERNAL", "Internal server error", { cause: error }));
   }
 };

@@ -19,6 +19,11 @@ import {
 } from "lucide-react";
 
 import StatCard from "./StatCard";
+import type {
+  ExplorerInputChange,
+  ExplorerSelectChange,
+  HeaderBarProps,
+} from "../types";
 
 const HeaderBar = ({
   // meta
@@ -51,7 +56,7 @@ const HeaderBar = ({
 
   // action
   onExportCsv,
-}) => {
+}: HeaderBarProps) => {
   const activeFilters = useMemo(() => Object.entries(columnFilters || {}), [columnFilters]);
 
   const totalCostText = useMemo(() => {
@@ -65,17 +70,17 @@ const HeaderBar = ({
     <div className="px-5 py-4 border-b border-white/10 bg-gradient-to-b from-[#171820] to-[#121319] relative">
       {/* subtle filtering indicator */}
       {isFiltering && !loading && (
-        <div className="absolute top-4 right-5 z-40 flex items-center gap-2 px-3 py-1.5 bg-[#a02ff1]/15 border border-[#a02ff1]/25 rounded-xl backdrop-blur-sm">
-          <Loader2 className="text-[#a02ff1] animate-spin" size={14} />
-          <span className="text-[#a02ff1] text-xs font-semibold">Filtering...</span>
+        <div className="absolute top-4 right-5 z-40 flex items-center gap-2 px-3 py-1.5 bg-[#007758]/15 border border-[#007758]/25 rounded-xl backdrop-blur-sm">
+          <Loader2 className="text-[#007758] animate-spin" size={14} />
+          <span className="text-[#007758] text-xs font-semibold">Filtering...</span>
         </div>
       )}
 
       <div className="flex items-start justify-between gap-4">
         <div className="min-w-0">
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-xl bg-[#a02ff1]/10 border border-[#a02ff1]/20">
-              <TableIcon size={18} className="text-[#a02ff1]" />
+            <div className="p-2 rounded-xl bg-[#007758]/10 border border-[#007758]/20">
+              <TableIcon size={18} className="text-[#007758]" />
             </div>
             <div className="min-w-0">
               <div className="text-white font-extrabold text-lg truncate">Data Explorer</div>
@@ -89,7 +94,7 @@ const HeaderBar = ({
             <button
               onClick={() => setViewMode("table")}
               className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-2 transition ${
-                viewMode === "table" ? "bg-[#a02ff1] text-white" : "text-gray-400 hover:text-white"
+                viewMode === "table" ? "bg-[#007758] text-white" : "text-gray-400 hover:text-white"
               }`}
             >
               <TableIcon size={14} /> List
@@ -97,7 +102,7 @@ const HeaderBar = ({
             <button
               onClick={() => setViewMode("pivot")}
               className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-2 transition ${
-                viewMode === "pivot" ? "bg-[#a02ff1] text-white" : "text-gray-400 hover:text-white"
+                viewMode === "pivot" ? "bg-[#007758] text-white" : "text-gray-400 hover:text-white"
               }`}
             >
               <PieChart size={14} /> Group
@@ -106,7 +111,7 @@ const HeaderBar = ({
 
           <button
             onClick={onExportCsv}
-            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[#a02ff1]/10 hover:bg-[#a02ff1]/20 border border-[#a02ff1]/30 text-[#a02ff1] text-xs font-extrabold transition"
+            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[#007758]/10 hover:bg-[#007758]/20 border border-[#007758]/30 text-[#007758] text-xs font-extrabold transition"
           >
             <Download size={14} />
             Export CSV
@@ -131,8 +136,8 @@ const HeaderBar = ({
               type="text"
               placeholder="Search columns..."
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-9 pr-3 py-2 bg-black/40 border border-white/10 rounded-xl text-xs text-white focus:outline-none focus:border-[#a02ff1] w-56"
+              onChange={(e: ExplorerInputChange) => setSearchTerm(e.target.value)}
+              className="pl-9 pr-3 py-2 bg-black/40 border border-white/10 rounded-xl text-xs text-white focus:outline-none focus:border-[#007758] w-56"
             />
           </div>
 
@@ -145,10 +150,10 @@ const HeaderBar = ({
           </button>
 
           <button
-            onClick={() => setShowDataBars((s) => !s)}
+            onClick={() => setShowDataBars((s: boolean) => !s)}
             className={`px-3 py-2 rounded-xl border text-xs font-bold transition flex items-center gap-2 ${
               showDataBars
-                ? "bg-[#a02ff1]/10 border-[#a02ff1]/30 text-[#a02ff1]"
+                ? "bg-[#007758]/10 border-[#007758]/30 text-[#007758]"
                 : "bg-white/5 border-white/10 text-gray-300 hover:bg-white/10"
             }`}
           >
@@ -157,10 +162,10 @@ const HeaderBar = ({
           </button>
 
           <button
-            onClick={() => setShowFilterRow((s) => !s)}
+            onClick={() => setShowFilterRow((s: boolean) => !s)}
             className={`px-3 py-2 rounded-xl border text-xs font-bold transition flex items-center gap-2 ${
               showFilterRow
-                ? "bg-[#a02ff1] text-white border-[#a02ff1]"
+                ? "bg-[#007758] text-white border-[#007758]"
                 : "bg-white/5 border-white/10 text-gray-300 hover:bg-white/10"
             }`}
           >
@@ -187,7 +192,7 @@ const HeaderBar = ({
               <div className="relative">
                 <select
                   value={groupByCol || ""}
-                  onChange={(e) => setGroupByCol(e.target.value)}
+                  onChange={(e: ExplorerSelectChange) => setGroupByCol(e.target.value)}
                   className="bg-[#0f0f11] border border-white/10 rounded-xl px-3 py-2 text-xs text-gray-300 opacity-50 pointer-events-none"
                   style={{ colorScheme: "dark" }}
                   disabled
@@ -195,7 +200,7 @@ const HeaderBar = ({
                   <option value="" disabled>
                     Select Column...
                   </option>
-                  {allColumns.map((col) => (
+                  {allColumns.map((col: string) => (
                     <option key={col} value={col}>
                       {col}
                     </option>
@@ -208,14 +213,14 @@ const HeaderBar = ({
             ) : (
               <select
                 value={groupByCol || ""}
-                onChange={(e) => setGroupByCol(e.target.value)}
-                className="bg-[#0f0f11] border border-white/10 rounded-xl px-3 py-2 text-xs text-gray-300 focus:border-[#a02ff1] outline-none"
+                onChange={(e: ExplorerSelectChange) => setGroupByCol(e.target.value)}
+                className="bg-[#0f0f11] border border-white/10 rounded-xl px-3 py-2 text-xs text-gray-300 focus:border-[#007758] outline-none"
                 style={{ colorScheme: "dark" }}
               >
                 <option value="" disabled>
                   Select Column...
                 </option>
-                {allColumns.map((col) => (
+                {allColumns.map((col: string) => (
                   <option key={col} value={col}>
                     {col}
                   </option>
@@ -232,11 +237,11 @@ const HeaderBar = ({
           <span className="text-[10px] uppercase tracking-widest text-gray-500 font-bold">
             Active
           </span>
-          {activeFilters.map(([key, val]) => (
+          {activeFilters.map(([key, val]: [string, string]) => (
             <button
               key={key}
               onClick={() => removeFilter(key)}
-              className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[#a02ff1]/15 border border-[#a02ff1]/25 text-[#a02ff1] text-[10px] font-bold hover:bg-[#a02ff1]/25 transition"
+              className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[#007758]/15 border border-[#007758]/25 text-[#007758] text-[10px] font-bold hover:bg-[#007758]/25 transition"
               title="Remove filter"
             >
               {key}: {String(val)}

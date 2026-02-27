@@ -4,6 +4,8 @@
  */
 
 import { governanceService } from './governance.service.js';
+import AppError from "../../../errors/AppError.js";
+import logger from "../../../lib/logger.js";
 
 /**
  * Normalize upload IDs
@@ -53,7 +55,7 @@ function extractUploadIds(req) {
  * GET /api/governance/summary
  * Get complete governance summary
  */
-export const getSummary = async (req, res) => {
+export const getSummary = async (req, res, next) => {
   try {
     const filters = {
       provider: req.query.provider || 'All',
@@ -65,11 +67,7 @@ export const getSummary = async (req, res) => {
     const uploadIds = extractUploadIds(req);
 
     if (uploadIds.length === 0) {
-      return res.json({
-        success: true,
-        data: { summary: null },
-        message: 'No upload selected. Please select a billing upload to view governance summary.'
-      });
+      return res.ok({ summary: null });
     }
 
     const data = await governanceService.getGovernanceSummary({
@@ -78,14 +76,10 @@ export const getSummary = async (req, res) => {
       uploadIds
     });
 
-    return res.json({ success: true, data });
+    return res.ok(data);
   } catch (error) {
-    console.error('Error in getSummary:', error);
-    return res.status(500).json({
-      success: false,
-      error: 'Failed to generate governance summary',
-      message: error.message
-    });
+    logger.error({ err: error, requestId: req.requestId }, 'Error in getSummary');
+    return next(new AppError(500, "INTERNAL", "Internal server error", { cause: error }));
   }
 };
 
@@ -93,7 +87,7 @@ export const getSummary = async (req, res) => {
  * GET /api/governance/compliance
  * Get tag compliance report
  */
-export const getCompliance = async (req, res) => {
+export const getCompliance = async (req, res, next) => {
   try {
     const filters = {
       provider: req.query.provider || 'All',
@@ -110,15 +104,11 @@ export const getCompliance = async (req, res) => {
       .filter(Boolean);
 
     if (uploadIds.length === 0) {
-      return res.json({
-        success: true,
-        data: {
-          taggedCost: 0,
-          untaggedCost: 0,
-          taggedPercent: 0,
-          untaggedPercent: 0
-        },
-        message: 'No upload selected. Please select a billing upload to view compliance data.'
+      return res.ok({
+        taggedCost: 0,
+        untaggedCost: 0,
+        taggedPercent: 0,
+        untaggedPercent: 0
       });
     }
 
@@ -134,14 +124,10 @@ export const getCompliance = async (req, res) => {
         untaggedPercent: 0
       };
 
-    return res.json({ success: true, data });
+    return res.ok(data);
   } catch (error) {
-    console.error('Error in getCompliance:', error);
-    return res.status(500).json({
-      success: false,
-      error: 'Failed to fetch compliance data',
-      message: error.message
-    });
+    logger.error({ err: error, requestId: req.requestId }, 'Error in getCompliance');
+    return next(new AppError(500, "INTERNAL", "Internal server error", { cause: error }));
   }
 };
 
@@ -150,7 +136,7 @@ export const getCompliance = async (req, res) => {
  * GET /api/governance/accounts
  * Get accounts with ownership data
  */
-export const getAccounts = async (req, res) => {
+export const getAccounts = async (req, res, next) => {
   try {
     const filters = {
       provider: req.query.provider || 'All',
@@ -167,11 +153,7 @@ export const getAccounts = async (req, res) => {
     const uploadIds = extractUploadIds(req);
 
     if (uploadIds.length === 0) {
-      return res.json({
-        success: true,
-        data: [],
-        message: 'No upload selected. Please select a billing upload to view accounts.'
-      });
+      return res.ok([]);
     }
 
     const data = await governanceService.getAccountsWithOwnership({
@@ -183,14 +165,10 @@ export const getAccounts = async (req, res) => {
       sortOrder
     });
 
-    return res.json({ success: true, data });
+    return res.ok(data);
   } catch (error) {
-    console.error('Error in getAccounts:', error);
-    return res.status(500).json({
-      success: false,
-      error: 'Failed to fetch accounts data',
-      message: error.message
-    });
+    logger.error({ err: error, requestId: req.requestId }, 'Error in getAccounts');
+    return next(new AppError(500, "INTERNAL", "Internal server error", { cause: error }));
   }
 };
 
@@ -202,16 +180,13 @@ export const getAccounts = async (req, res) => {
  * - owner: string
  * - uploadid / uploadIds / uploadId: string | string[]
  */
-export const updateAccountOwner = async (req, res) => {
+export const updateAccountOwner = async (req, res, next) => {
   try {
     const { accountId } = req.params;
     const owner = (req.body?.owner || '').trim();
 
     if (!owner) {
-      return res.status(400).json({
-        success: false,
-        error: 'Owner is required'
-      });
+      return next(new AppError(400, "VALIDATION_ERROR", "Invalid request"));
     }
 
     // For PUT, upload IDs should come from body (but accept query too just in case)
@@ -220,21 +195,14 @@ export const updateAccountOwner = async (req, res) => {
     );
 
     if (uploadIds.length === 0) {
-      return res.status(400).json({
-        success: false,
-        error: 'uploadid is required'
-      });
+      return next(new AppError(400, "VALIDATION_ERROR", "Invalid request"));
     }
 
     const data = await governanceService.updateAccountOwner(accountId, owner, uploadIds);
 
-    return res.json({ success: true, data });
+    return res.ok(data);
   } catch (error) {
-    console.error('Error in updateAccountOwner:', error);
-    return res.status(500).json({
-      success: false,
-      error: 'Failed to update account owner',
-      message: error.message
-    });
+    logger.error({ err: error, requestId: req.requestId }, 'Error in updateAccountOwner');
+    return next(new AppError(500, "INTERNAL", "Internal server error", { cause: error }));
   }
 };

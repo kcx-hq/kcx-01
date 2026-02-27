@@ -5,8 +5,28 @@ import { Globe, Map, Sparkles, MoveRight } from "lucide-react";
 const BRAND_EMERALD = "#007758";
 const BRAND_SOFT = "rgba(0, 119, 88, 0.05)";
 
-const MostPopularRegion = ({ data, totalSpend = 0, billingPeriod = null }) => {
-  const formatCurrency = (val) =>
+interface RegionDatum {
+  name: string;
+  value: number;
+}
+
+interface RegionWithPercentage extends RegionDatum {
+  percentage: number;
+}
+
+interface BillingPeriod {
+  start?: string | Date;
+  end?: string | Date;
+}
+
+interface MostPopularRegionProps {
+  data?: RegionDatum[];
+  totalSpend?: number;
+  billingPeriod?: BillingPeriod | null;
+}
+
+const MostPopularRegion = ({ data, totalSpend = 0, billingPeriod = null }: MostPopularRegionProps) => {
+  const formatCurrency = (val: number) =>
     new Intl.NumberFormat("en-US", {
       style: "currency",
       currency: "USD",
@@ -17,15 +37,15 @@ const MostPopularRegion = ({ data, totalSpend = 0, billingPeriod = null }) => {
   const allRegions = useMemo(() => {
     if (!data || data.length === 0) return [];
     return data
-      .map(({ name, value }) => ({
+      .map(({ name, value }: RegionDatum) => ({
         name,
         value,
         percentage: totalSpend > 0 ? (value / totalSpend) * 100 : 0,
       }))
-      .sort((a, b) => b.value - a.value);
+      .sort((a: RegionWithPercentage, b: RegionWithPercentage) => b.value - a.value);
   }, [data, totalSpend]);
 
-  const getTierStyles = (percentage, maxPercentage) => {
+  const getTierStyles = (percentage: number, maxPercentage: number): React.CSSProperties => {
     if (percentage === maxPercentage) return { 
         fontSize: "clamp(2rem, 5vw, 3.5rem)", 
         fontWeight: 900, 
@@ -111,7 +131,7 @@ const MostPopularRegion = ({ data, totalSpend = 0, billingPeriod = null }) => {
 
       {/* --- REGION CLOUD --- */}
       <div className="flex-1 flex flex-wrap items-center justify-center gap-x-6 gap-y-4 min-h-[350px] content-center p-6 bg-slate-50/30 rounded-[2.5rem] border border-dashed border-slate-100">
-        {allRegions.map((region, index) => {
+        {allRegions.map((region: RegionWithPercentage, index: number) => {
           const tierStyles = getTierStyles(region.percentage, maxPercentage);
           const isTop = index === 0;
 

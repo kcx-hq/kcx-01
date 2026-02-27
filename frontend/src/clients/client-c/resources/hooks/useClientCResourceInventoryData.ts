@@ -1,13 +1,25 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useDebounce } from '../../../../hooks/useDebounce';
+import type {
+  ApiLikeError,
+  ResourceInventoryData,
+  ResourceInventoryFilters,
+  UseClientCResourceInventoryDataResult,
+} from '../types';
+import type { ApiClient, Capabilities } from '../../../../services/apiClient';
 
 /**
  * Custom hook for fetching resource inventory data for Client-C
  */
-export const useClientCResourceInventoryData = (initialFilters = {}, api, caps, uploadId) => {
-  const [data, setData] = useState(null);
+export const useClientCResourceInventoryData = (
+  initialFilters: Partial<ResourceInventoryFilters> = {},
+  api: ApiClient | null,
+  caps: Capabilities | null,
+  uploadId: string | undefined = undefined,
+): UseClientCResourceInventoryDataResult => {
+  const [data, setData] = useState<ResourceInventoryData | null>(null);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState<string | null>(null);
 
   // Debounce filters to avoid excessive API calls
   const debouncedFilters = useDebounce(initialFilters, 500);
@@ -23,7 +35,7 @@ export const useClientCResourceInventoryData = (initialFilters = {}, api, caps, 
 
     try {
       // Prepare parameters for API call
-      const params = {
+      const params: Record<string, string> = {
         provider: debouncedFilters?.provider || 'All',
         service: debouncedFilters?.service || 'All',
         region: debouncedFilters?.region || 'All'
@@ -31,42 +43,19 @@ export const useClientCResourceInventoryData = (initialFilters = {}, api, caps, 
 
       // Add uploadId if available
       if (uploadId) {
-        params.uploadId = uploadId;
+        params["uploadId"] = uploadId;
       }
 
-      // Try multiple API call approaches to ensure compatibility
-      let res;
-      try {
-        // Primary API call using capabilities system
-        if (process.env.NODE_ENV === 'development') {
-          console.log('🔍 Attempting resources inventory API call with params:', params);
-        }
-        
-        res = await api.call("resources", "inventory", { params });
-      } catch (primaryError) {
-        if (process.env.NODE_ENV === 'development') {
-          console.warn('🔍 Primary API call failed, trying direct HTTP call:', primaryError);
-        }
-
-        // Fallback to direct HTTP call
-        try {
-          res = await api.http.get("/api/client-c/resources/inventory", { params });
-        } catch (httpError) {
-          if (process.env.NODE_ENV === 'development') {
-            console.error('🔍 Direct HTTP call also failed:', httpError);
-          }
-          throw httpError;
-        }
+      if (import.meta.env.DEV) {
+        console.log('Attempting resources inventory API call with params:', params);
       }
 
-      if (res?.success) {
-        setData(res.data);
-      } else {
-        throw new Error(res?.error || 'Failed to fetch resource inventory data');
-      }
-    } catch (err) {
+      const response = await api.call<ResourceInventoryData>("resources", "inventory", { params });
+      setData(response || null);
+    } catch (err: unknown) {
+      const apiError = err as ApiLikeError;
       console.error('Error fetching resource inventory data:', err);
-      setError(err.message || 'Failed to fetch resource inventory data');
+      setError(apiError.message || 'Failed to fetch resource inventory data');
       setData(null);
     } finally {
       setLoading(false);

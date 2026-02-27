@@ -1,11 +1,13 @@
 import { clientDUnitEconomicsService } from "./unit-economics.service.js";
 import { extractUploadIds } from '../helpers/extractUploadId.js';
+import AppError from "../../../../errors/AppError.js";
+import logger from "../../../../lib/logger.js";
 
 /**
  * GET /api/client-d/unit-economics/summary
  * Client-D Unit Economics Summary (includes skuEfficiency)
  */
-export const getClientDUnitEconomicsSummary = async (req, res) => {
+export const getClientDUnitEconomicsSummary = async (req, res, next) => {
   try {
     const filters = {
       provider: req.query.provider || "All",
@@ -17,21 +19,18 @@ export const getClientDUnitEconomicsSummary = async (req, res) => {
     const uploadIds = extractUploadIds(req);
 
     if (uploadIds.length === 0) {
-      return res.json({
-        success: true,
-        data: {
-          kpis: {
-            totalCost: 0,
-            totalQuantity: 0,
-            avgUnitPrice: 0,
-            unitPriceChangePct: 0,
-            driftDetected: false
-          },
-          trend: [],
-          drift: null,
-          skuEfficiency: [],
-          message: "No upload selected. Please select a billing upload."
-        }
+      return res.ok({
+        kpis: {
+          totalCost: 0,
+          totalQuantity: 0,
+          avgUnitPrice: 0,
+          unitPriceChangePct: 0,
+          driftDetected: false
+        },
+        trend: [],
+        drift: null,
+        skuEfficiency: [],
+        message: "No upload selected. Please select a billing upload."
       });
     }
 
@@ -41,12 +40,9 @@ export const getClientDUnitEconomicsSummary = async (req, res) => {
       uploadIds
     });
 
-    return res.json({ success: true, data });
+    return res.ok(data);
   } catch (error) {
-    console.error("Client-D Unit Economics Error:", error);
-    return res.status(500).json({
-      success: false,
-      error: error.message
-    });
+    logger.error({ err: error, requestId: req.requestId }, "Client-D Unit Economics Error");
+    return next(new AppError(500, "INTERNAL", "Internal server error", { cause: error }));
   }
 };

@@ -1,4 +1,6 @@
-const SplitBar = ({ leftLabel, leftPct, rightLabel, rightPct }) => {
+import type { SplitBarProps } from "../types";
+
+const SplitBar = ({ leftLabel, leftPct, rightLabel, rightPct }: SplitBarProps) => {
   const l = Math.max(0, Math.min(100, Number(leftPct || 0)));
   const r = Math.max(0, Math.min(100, Number(rightPct || 0)));
 
@@ -10,7 +12,7 @@ const SplitBar = ({ leftLabel, leftPct, rightLabel, rightPct }) => {
       </div>
 
       <div className="mt-2 h-2 rounded-full bg-black/30 overflow-hidden border border-white/10">
-        <div className="h-full bg-[#a02ff1]/70" style={{ width: `${l}%` }} />
+        <div className="h-full bg-[#007758]/70" style={{ width: `${l}%` }} />
       </div>
 
       <div className="mt-3 flex items-center justify-between text-xs text-gray-300">

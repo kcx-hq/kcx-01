@@ -1,8 +1,9 @@
 import React from "react";
 import { X, AlertCircle } from "lucide-react";
 import { formatCurrency } from "../utils/format";
+import type { BreakdownModalProps, CostBreakdownItem } from "../types";
 
-const BreakdownModal = ({ isOpen, onClose, data }) => {
+const BreakdownModal = ({ isOpen, onClose, data }: BreakdownModalProps) => {
   if (!isOpen) return null;
 
   return (
@@ -17,12 +18,12 @@ const BreakdownModal = ({ isOpen, onClose, data }) => {
 
         <div className="p-6 max-h-[60vh] overflow-y-auto custom-scrollbar">
           <div className="space-y-3">
-            {(data || []).map((item, idx) => {
+            {(data || []).map((item: CostBreakdownItem, idx: number) => {
               const isUnallocated = !item.name || item.name === "null" || item.name === "Unallocated Resources";
               return (
                 <div
                   key={idx}
-                  className="flex justify-between items-center p-3 bg-[#0f0f11] rounded-xl border border-white/5 hover:border-[#a02ff1]/30 transition-colors"
+                  className="flex justify-between items-center p-3 bg-[#0f0f11] rounded-xl border border-white/5 hover:border-[#007758]/30 transition-colors"
                 >
                   <span
                     className={`text-sm font-medium truncate max-w-[200px] flex items-center gap-2 ${
@@ -33,7 +34,7 @@ const BreakdownModal = ({ isOpen, onClose, data }) => {
                     {isUnallocated && <AlertCircle size={12} className="text-yellow-500" />}
                     {item.name}
                   </span>
-                  <span className="text-sm font-mono font-bold text-[#a02ff1]">{formatCurrency(item.value)}</span>
+                  <span className="text-sm font-mono font-bold text-[#007758]">{formatCurrency(item.value)}</span>
                 </div>
               );
             })}
@@ -43,7 +44,7 @@ const BreakdownModal = ({ isOpen, onClose, data }) => {
         <div className="p-4 border-t border-white/5 bg-[#0f0f11]/50 flex justify-end">
           <button
             onClick={onClose}
-            className="bg-[#a02ff1] hover:bg-[#8b25d1] text-white px-6 py-2 rounded-lg text-sm font-bold shadow-[0_0_15px_rgba(160,47,241,0.3)]"
+            className="bg-[#007758] hover:bg-[#006b4f] text-white px-6 py-2 rounded-lg text-sm font-bold shadow-[0_0_15px_rgba(0,119,88,0.3)]"
           >
             Close
           </button>

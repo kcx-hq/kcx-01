@@ -1,14 +1,15 @@
-export const formatCurrency = (val) => {
-  if (val === undefined || val === null) return "$0.00";
-  if (val > 0 && val < 0.01) return `$${val.toFixed(6)}`;
+export const formatCurrency = (val: number | string | null | undefined) => {
+  const numeric = Number(val);
+  if (!Number.isFinite(numeric)) return "$0.00";
+  if (numeric > 0 && numeric < 0.01) return `$${numeric.toFixed(6)}`;
   return new Intl.NumberFormat("en-US", {
     style: "currency",
     currency: "USD",
     minimumFractionDigits: 2,
-  }).format(val);
+  }).format(numeric);
 };
 
-export const formatDate = (dateStr) => {
+export const formatDate = (dateStr: string | Date | null | undefined) => {
   if (!dateStr) return "N/A";
   return new Date(dateStr).toLocaleDateString("en-US", { month: "short", day: "numeric" });
 };

@@ -1,8 +1,9 @@
 import React from "react";
 import { X, Info, Sparkles, Calendar } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import type { InfoModalProps } from "../types";
 
-const InfoModal = ({ isOpen, onClose, title, message, date, highlight, icon: CustomIcon }) => {
+const InfoModal = ({ isOpen, onClose, title, message, date, highlight, icon: CustomIcon }: InfoModalProps) => {
   return (
     <AnimatePresence>
       {isOpen && (
@@ -92,3 +93,5 @@ const InfoModal = ({ isOpen, onClose, title, message, date, highlight, icon: Cus
 };
 
 export default InfoModal;
+
+

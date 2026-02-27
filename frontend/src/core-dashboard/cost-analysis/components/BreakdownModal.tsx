@@ -2,10 +2,11 @@ import React from "react";
 import { X, AlertCircle, BarChart3, Sparkles } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { formatCurrency } from "../utils/format";
+import type { BreakdownModalProps, CostBreakdownItem } from "../types";
 
 const BRAND_EMERALD = "#007758";
 
-const BreakdownModal = ({ isOpen, onClose, data }) => {
+const BreakdownModal = ({ isOpen, onClose, data }: BreakdownModalProps) => {
   return (
     <AnimatePresence>
       {isOpen && (
@@ -53,7 +54,7 @@ const BreakdownModal = ({ isOpen, onClose, data }) => {
             {/* --- CONTENT AREA --- */}
             <div className="p-6 max-h-[60vh] overflow-y-auto custom-scrollbar bg-white">
               <div className="space-y-2.5">
-                {(data || []).map((item, idx) => {
+                {(data || []).map((item: CostBreakdownItem, idx: number) => {
                   const isUnallocated =
                     !item.name ||
                     item.name === "null" ||
@@ -119,3 +120,5 @@ const BreakdownModal = ({ isOpen, onClose, data }) => {
 };
 
 export default BreakdownModal;
+
+

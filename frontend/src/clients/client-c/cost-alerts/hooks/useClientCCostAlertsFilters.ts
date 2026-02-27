@@ -1,9 +1,18 @@
 import { useEffect, useMemo, useState } from "react";
+import type { ApiClient, Capabilities } from "../../../../services/apiClient";
+import type {
+  ApiLikeError,
+  CostAlertsFilterOptions,
+  UseClientCCostAlertsFiltersResult,
+} from "../types";
 
-export const useClientCCostAlertsFilters = (api, caps) => {
-  const [rawOptions, setRawOptions] = useState(null);
+export const useClientCCostAlertsFilters = (
+  api: ApiClient | null,
+  caps: Capabilities | null,
+): UseClientCCostAlertsFiltersResult => {
+  const [rawOptions, setRawOptions] = useState<CostAlertsFilterOptions | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!api || !caps) return;
@@ -13,18 +22,18 @@ export const useClientCCostAlertsFilters = (api, caps) => {
     const fetchFilterOptions = async () => {
       try {
         const endpointDef =
-          caps?.modules?.costAlerts?.enabled &&
-          caps?.modules?.costAlerts?.endpoints?.filters;
+          caps?.modules?.["costAlerts"]?.enabled &&
+          caps?.modules?.["costAlerts"]?.endpoints?.["filters"];
 
         if (!endpointDef) return;
 
-        const res = await api.call("costAlerts", "filters");
-        const payload = res?.data;
+        const payload = await api.call<CostAlertsFilterOptions>("costAlerts", "filters");
         if (active && payload) setRawOptions(payload);
-      } catch (error) {
-        if (error?.code !== "NOT_SUPPORTED") {
+      } catch (error: unknown) {
+        const typedError = error as ApiLikeError;
+        if (typedError?.code !== "NOT_SUPPORTED") {
           console.error("Failed to fetch cost alerts filter options:", error);
-          setError(error.message || 'Failed to load filter options');
+          setError(typedError.message || 'Failed to load filter options');
           // Provide fallback options on error
           setRawOptions({
             providers: ['All', 'AWS', 'Azure', 'GCP'],
@@ -46,7 +55,7 @@ export const useClientCCostAlertsFilters = (api, caps) => {
     };
   }, [api, caps]);
 
-  const filterOptions = useMemo(() => {
+  const filterOptions = useMemo<CostAlertsFilterOptions>(() => {
     if (!rawOptions) {
       return {
         providers: ['All'],

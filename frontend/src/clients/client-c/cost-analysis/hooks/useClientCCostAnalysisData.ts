@@ -1,19 +1,31 @@
 import { useEffect, useRef, useState } from "react";
+import type { ApiClient, Capabilities } from "../../../../services/apiClient";
+import type {
+  ApiLikeError,
+  ClientCCostAnalysisFilters,
+  ClientCCostAnalysisRawData,
+  UseClientCCostAnalysisDataResult,
+} from "../types";
 
 /**
  * Fetches client-c cost analysis payload from backend.
  * - Shows full loader only for initial load or page changes
  * - Shows subtle "isFiltering" when backend filters change
  */
-export const useClientCCostAnalysisData = (api, caps, debouncedFilters, forceRefreshKey) => {
-  const [costAnalysisData, setCostAnalysisData] = useState(null);
+export const useClientCCostAnalysisData = (
+  api: ApiClient | null,
+  caps: Capabilities | null,
+  debouncedFilters: ClientCCostAnalysisFilters,
+  forceRefreshKey: number,
+): UseClientCCostAnalysisDataResult => {
+  const [costAnalysisData, setCostAnalysisData] = useState<ClientCCostAnalysisRawData | null>(null);
   const [loading, setLoading] = useState(true);
   const [isFiltering, setIsFiltering] = useState(false);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState<string | null>(null);
 
 
 
-  const abortControllerRef = useRef(null);
+  const abortControllerRef = useRef<AbortController | null>(null);
   const prevFiltersRef = useRef(debouncedFilters);
   const isInitialMount = useRef(true);
 
@@ -53,23 +65,23 @@ export const useClientCCostAnalysisData = (api, caps, debouncedFilters, forceRef
 
       try {
         // Development logging
-        if (process.env.NODE_ENV === 'development') {
+        if (import.meta.env.DEV) {
           console.log('🔍 Fetching cost analysis with filters:', debouncedFilters);
         }
         
         const endpointDef =
-          caps?.modules?.costAnalysis?.enabled &&
-          caps?.modules?.costAnalysis?.endpoints?.getCostAnalysis;
+          caps?.modules?.["costAnalysis"]?.enabled &&
+          caps?.modules?.["costAnalysis"]?.endpoints?.["getCostAnalysis"];
 
         if (!endpointDef) {
-          if (process.env.NODE_ENV === 'development') {
+          if (import.meta.env.DEV) {
             console.warn('⚠️ Cost Analysis endpoint not defined in capabilities');
           }
           return;
         }
 
         // Prepare parameters to send
-        const params = {
+        const params: Partial<ClientCCostAnalysisFilters> = {
           groupBy: debouncedFilters?.groupBy || 'ServiceName'
         };
         
@@ -88,15 +100,17 @@ export const useClientCCostAnalysisData = (api, caps, debouncedFilters, forceRef
         console.log('📡 Making API call to getCostAnalysis with params:', params);
 
         // Use capabilities API - endpoint key is "getCostAnalysis"
-        const res = await api.call("costAnalysis", "getCostAnalysis", { 
+        const res = await api.call<ClientCCostAnalysisRawData | { data?: ClientCCostAnalysisRawData }>("costAnalysis", "getCostAnalysis", { 
           params
         });
         
         console.log('✅ Cost analysis API response:', res);
         
         // ✅ unwrap { success, data }
-        const payload = res?.data;
-        const data = payload?.data ?? payload;
+        const payload = res;
+        const data = (payload && typeof payload === "object" && "data" in payload
+          ? payload.data
+          : payload) as ClientCCostAnalysisRawData | undefined;
 
         console.log('📦 Final unwrapped data:', {
           hasData: !!data,
@@ -112,11 +126,12 @@ export const useClientCCostAnalysisData = (api, caps, debouncedFilters, forceRef
           prevFiltersRef.current = { ...debouncedFilters };
           console.log('✅ Cost analysis data updated successfully');
         }
-      } catch (error) {
-        if (error?.code !== "NOT_SUPPORTED") {
-          if (error?.name !== "AbortError" && !abortControllerRef.current?.signal.aborted) {
+      } catch (error: unknown) {
+        const typedError = error as ApiLikeError;
+        if (typedError?.code !== "NOT_SUPPORTED") {
+          if (typedError?.name !== "AbortError" && !abortControllerRef.current?.signal.aborted) {
             console.error('Error fetching cost analysis data:', error);
-            setError(error.message || 'Failed to load cost analysis data');
+            setError(typedError.message || 'Failed to load cost analysis data');
           }
         }
       } finally {

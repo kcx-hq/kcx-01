@@ -1,20 +1,22 @@
+import type { ExportResourceInventoryCsvParams, ResourceItem, ResourceTagValue } from "../types";
+
 export function exportResourceInventoryCSV({
   activeTab,
   filteredData,
   flaggedResources,
-}) {
+}: ExportResourceInventoryCsvParams) {
   const dataToExport =
     activeTab === 'all'
       ? filteredData
       : activeTab === 'untagged'
-        ? filteredData.filter((i) => !i.hasTags)
+        ? filteredData.filter((i: ResourceItem) => !i.hasTags)
         : activeTab === 'spiking'
-          ? filteredData.filter((i) => i.status === 'Spiking')
+          ? filteredData.filter((i: ResourceItem) => i.status === 'Spiking')
           : [];
 
   if (!dataToExport.length) return;
 
-  const csvData = dataToExport.map((item) => ({
+  const csvData = dataToExport.map((item: ResourceItem) => ({
     'Resource ID': item.id,
     Service: item.service || '',
     Region: item.region || '',
@@ -23,7 +25,7 @@ export function exportResourceInventoryCSV({
     'Flagged for Review': flaggedResources.has(item.id) ? 'Yes' : 'No',
     Tags: item.tags
       ? Object.entries(item.tags)
-          .map(([k, v]) => `${k}:${v}`)
+          .map(([k, v]: [string, ResourceTagValue]) => `${k}:${String(v ?? "")}`)
           .join('; ')
       : '',
   }));
@@ -31,9 +33,9 @@ export function exportResourceInventoryCSV({
   const headers = Object.keys(csvData[0] || {});
   const csvRows = [
     headers.join(','),
-    ...csvData.map((row) =>
+    ...csvData.map((row: Record<string, string | number>) =>
       headers
-        .map((header) => {
+        .map((header: string) => {
           const value = row[header];
           if (
             typeof value === 'string' &&
@@ -62,3 +64,6 @@ export function exportResourceInventoryCSV({
   link.click();
   document.body.removeChild(link);
 }
+
+
+

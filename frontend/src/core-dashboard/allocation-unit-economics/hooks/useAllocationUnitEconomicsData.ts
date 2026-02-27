@@ -120,11 +120,6 @@ const DEFAULT_VIEW_MODEL: AllocationUnitEconomicsViewModel = {
 
 const parsePayload = (value: unknown): Record<string, unknown> => {
   if (!value || typeof value !== 'object') return {};
-  const root = value as { success?: boolean; data?: unknown };
-  if (root.success && root.data && typeof root.data === 'object') {
-    return root.data as Record<string, unknown>;
-  }
-  if (root.data && typeof root.data === 'object') return root.data as Record<string, unknown>;
   return value as Record<string, unknown>;
 };
 

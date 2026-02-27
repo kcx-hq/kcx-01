@@ -255,7 +255,7 @@ export function useCostDriversData(input: UseCostDriversDataInput): UseCostDrive
       setErrorMessage(null);
 
       try {
-        const data = (await api.call('costDrivers', 'costDrivers', {
+        const data = await api.call<unknown>('costDrivers', 'costDrivers', {
           params: {
             provider: resolvedFilters.provider !== 'All' ? resolvedFilters.provider : undefined,
             service: resolvedFilters.service !== 'All' ? resolvedFilters.service : undefined,
@@ -286,11 +286,9 @@ export function useCostDriversData(input: UseCostDriversDataInput): UseCostDrive
 
         if (abortControllerRef.current?.signal.aborted) return;
 
-        const payload = (
-          data && typeof data === 'object' && data.success && data.data
-            ? data.data
-            : data?.data || data || {}
-        ) as Partial<CostDriversResponse> & {
+        const payload = ((data && typeof data === 'object' ? data : {}) as Partial<CostDriversResponse>) as Partial<
+          CostDriversResponse
+        > & {
           increases?: Array<Record<string, unknown>>;
           decreases?: Array<Record<string, unknown>>;
           overallStats?: typeof DEFAULT_OVERALL_STATS;
@@ -411,3 +409,6 @@ export function useCostDriversData(input: UseCostDriversDataInput): UseCostDrive
     drilldown,
   };
 }
+
+
+

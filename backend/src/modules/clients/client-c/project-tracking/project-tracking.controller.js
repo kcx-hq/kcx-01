@@ -1,4 +1,6 @@
 import { getProjectsOverview, getProjectBurnRate, compareProjectBudget } from './project-tracking.service.js';
+import AppError from "../../../../errors/AppError.js";
+import logger from "../../../../lib/logger.js";
 
 function extractUploadIds(req) {
   const raw = req.query.uploadIds ?? req.query.uploadId ?? req.body?.uploadIds;
@@ -8,39 +10,39 @@ function extractUploadIds(req) {
   return [];
 }
 
-export const getOverview = async (req, res) => {
+export const getOverview = async (req, res, next) => {
   try {
     const uploadIds = extractUploadIds(req);
     const filters = { provider: req.query.provider || 'All' };
     const data = await getProjectsOverview({ uploadIds, filters });
-    res.json({ success: true, data });
+    return res.ok(data);
   } catch (error) {
-    console.error('Projects Overview Error:', error);
-    res.status(500).json({ success: false, error: error.message });
+    logger.error({ err: error, requestId: req.requestId }, 'Projects Overview Error');
+    return next(new AppError(500, "INTERNAL", "Internal server error", { cause: error }));
   }
 };
 
-export const getBurnRate = async (req, res) => {
+export const getBurnRate = async (req, res, next) => {
   try {
     const uploadIds = extractUploadIds(req);
     const project = req.query.project || 'All';
     const data = await getProjectBurnRate({ uploadIds, project });
-    res.json({ success: true, data });
+    return res.ok(data);
   } catch (error) {
-    console.error('Burn Rate Error:', error);
-    res.status(500).json({ success: false, error: error.message });
+    logger.error({ err: error, requestId: req.requestId }, 'Burn Rate Error');
+    return next(new AppError(500, "INTERNAL", "Internal server error", { cause: error }));
   }
 };
 
-export const compareBudget = async (req, res) => {
+export const compareBudget = async (req, res, next) => {
   try {
     const uploadIds = extractUploadIds(req);
     const project = req.query.project || req.body?.project;
     const budget = parseFloat(req.query.budget || req.body?.budget || 0);
     const data = await compareProjectBudget({ uploadIds, project, budget });
-    res.json({ success: true, data });
+    return res.ok(data);
   } catch (error) {
-    console.error('Compare Budget Error:', error);
-    res.status(500).json({ success: false, error: error.message });
+    logger.error({ err: error, requestId: req.requestId }, 'Compare Budget Error');
+    return next(new AppError(500, "INTERNAL", "Internal server error", { cause: error }));
   }
 };

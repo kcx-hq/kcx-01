@@ -1,0 +1,51 @@
+title = "master-01 secret scanning policy"
+
+[extend]
+useDefault = true
+
+[[rules]]
+id = "private-key-block"
+description = "Private key material"
+regex = '''-----BEGIN[[:space:]]+(RSA|DSA|EC|OPENSSH|PGP|PRIVATE)[[:space:]]+KEY-----'''
+keywords = [
+  "BEGIN PRIVATE KEY",
+  "BEGIN RSA PRIVATE KEY",
+  "BEGIN OPENSSH PRIVATE KEY",
+]
+
+[[rules]]
+id = "sensitive-env-assignment"
+description = "Sensitive environment variable assignment"
+regex = '''(?i)(^|[[:space:]])(jwt_secret|database_url|smtp_pass|mailgun_api_key|groq_api_key|zoom_client_secret|zoom_secret_token|cred_enc_key|aws_secret_access_key|aws_access_key_id|google_client_secret|client_secret)[[:space:]]*=[[:space:]]*[^[:space:]#]+'''
+keywords = [
+  "JWT_SECRET=",
+  "DATABASE_URL=",
+  "SMTP_PASS=",
+  "MAILGUN_API_KEY=",
+  "GROQ_API_KEY=",
+  "ZOOM_CLIENT_SECRET=",
+  "ZOOM_SECRET_TOKEN=",
+  "CRED_ENC_KEY=",
+  "AWS_SECRET_ACCESS_KEY=",
+]
+
+[[rules]]
+id = "gcp-service-account-private-key"
+description = "GCP service account private key in JSON"
+regex = '''(?i)"private_key"[[:space:]]*:[[:space:]]*"-----BEGIN[[:space:]]+PRIVATE[[:space:]]+KEY-----'''
+keywords = [
+  "\"private_key\"",
+  "BEGIN PRIVATE KEY",
+]
+
+[[rules]]
+id = "high-entropy-token-assignment"
+description = "Likely secret token assignment"
+regex = '''(?i)(api[_-]?key|token|secret|password)[[:space:]]*[:=][[:space:]]*["']?[a-z0-9_\/+=\.-]{20,}["']?'''
+entropy = 3.4
+keywords = [
+  "api_key",
+  "token",
+  "secret",
+  "password",
+]

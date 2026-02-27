@@ -1,10 +1,11 @@
 import { useState } from 'react';
+import type { UseFlaggedResourcesResult } from "../types";
 
-export function useFlaggedResources() {
-  const [flaggedResources, setFlaggedResources] = useState(new Set());
+export function useFlaggedResources(): UseFlaggedResourcesResult {
+  const [flaggedResources, setFlaggedResources] = useState<Set<string>>(new Set());
 
-  const toggleFlag = (resourceId) => {
-    setFlaggedResources((prev) => {
+  const toggleFlag = (resourceId: string) => {
+    setFlaggedResources((prev: Set<string>) => {
       const next = new Set(prev);
       if (next.has(resourceId)) next.delete(resourceId);
       else next.add(resourceId);
@@ -14,3 +15,6 @@ export function useFlaggedResources() {
 
   return { flaggedResources, toggleFlag };
 }
+
+
+

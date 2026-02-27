@@ -6,10 +6,17 @@ import ClientCCostAnalysisView from "./ClientCCostAnalysisView";
 import { normalizeCostAnalysisData } from "./utils/normalizeCostAnalysisData";
 import { useClientCCostAnalysisFilters } from "./hooks/useClientCCostAnalysisFilters";
 import { useClientCCostAnalysisData } from "./hooks/useClientCCostAnalysisData";
+import type {
+  ClientCCostAnalysisChartFilters,
+  ClientCCostAnalysisFilters,
+  ClientCCostAnalysisProps,
+  CostBreakdownItem,
+  GroupByValue,
+} from "./types";
 
-const ClientCCostAnalysis = ({ api, caps }) => {
+const ClientCCostAnalysis = ({ api, caps }: ClientCCostAnalysisProps) => {
   // Local filters with enhanced state management
-  const [filters, setFilters] = useState({
+  const [filters, setFilters] = useState<ClientCCostAnalysisFilters>({
     provider: "All",
     service: "All",
     region: "All",
@@ -18,7 +25,7 @@ const ClientCCostAnalysis = ({ api, caps }) => {
   });
 
   // Chart configuration
-  const [chartFilters, setChartFilters] = useState({
+  const [chartFilters, setChartFilters] = useState<ClientCCostAnalysisChartFilters>({
     trendChart: { limit: 30 },
     pieChart: { limit: 8 },
     barChart: { limit: 8 },
@@ -97,7 +104,7 @@ const ClientCCostAnalysis = ({ api, caps }) => {
     
     // Sort by value and apply limit
     const filtered = [...breakdown]
-      .sort((a, b) => b.value - a.value)
+      .sort((a: CostBreakdownItem, b: CostBreakdownItem) => b.value - a.value)
       .slice(0, limit);
       
     console.log('✅ Breakdown filtered:', {
@@ -111,22 +118,28 @@ const ClientCCostAnalysis = ({ api, caps }) => {
 
   // Initialize with first available groupBy option
   useEffect(() => {
+    let timer: ReturnType<typeof setTimeout> | null = null;
     if (!hasInitialized && filterOptions?.groupBy?.length > 0) {
       const firstOption = filterOptions.groupBy[0]?.value || "ServiceName";
-      setFilters(prev => ({
-        ...prev,
-        groupBy: firstOption
-      }));
-      setHasInitialized(true);
+      timer = setTimeout(() => {
+        setFilters((prev: ClientCCostAnalysisFilters) => ({
+          ...prev,
+          groupBy: firstOption as GroupByValue
+        }));
+        setHasInitialized(true);
+      }, 0);
     }
+    return () => {
+      if (timer) clearTimeout(timer);
+    };
   }, [filterOptions, hasInitialized]);
 
   // Enhanced filter change handler
   const handleFilterChange = useCallback(
-    (newFilters) => {
+    (newFilters: Partial<ClientCCostAnalysisFilters>) => {
       console.log('🎯 Filter change triggered:', newFilters);
-      setFilters((prev) => {
-        const updated = { ...prev, ...newFilters };
+      setFilters((prev: ClientCCostAnalysisFilters) => {
+        const updated: ClientCCostAnalysisFilters = { ...prev, ...newFilters };
         console.log('🔄 Filters updated from', prev, 'to', updated);
         // Reset dependent filters when main filter changes
         if (newFilters.provider && newFilters.provider !== "All") {
@@ -141,28 +154,29 @@ const ClientCCostAnalysis = ({ api, caps }) => {
 
   // Enhanced reset handler
   const handleReset = useCallback(() => {
-    const reset = { 
+    const reset: ClientCCostAnalysisFilters = { 
       provider: "All", 
       service: "All", 
       region: "All", 
-      groupBy: filterOptions?.groupBy?.[0]?.value || "ServiceName"
+      groupBy: (filterOptions?.groupBy?.[0]?.value || "ServiceName") as GroupByValue,
+      uploadId: null,
     };
     setFilters(reset);
-    setForceRefreshKey((k) => k + 1);
+    setForceRefreshKey((k: number) => k + 1);
   }, [filterOptions]);
 
   // Chart limit handlers
-  const handleTrendChartLimitChange = useCallback((limit) => {
-    setChartFilters((prev) => ({ ...prev, trendChart: { limit } }));
+  const handleTrendChartLimitChange = useCallback((limit: number) => {
+    setChartFilters((prev: ClientCCostAnalysisChartFilters) => ({ ...prev, trendChart: { limit } }));
   }, []);
 
-  const handleBarChartLimitChange = useCallback((limit) => {
-    setChartFilters((prev) => ({ ...prev, barChart: { limit } }));
+  const handleBarChartLimitChange = useCallback((limit: number) => {
+    setChartFilters((prev: ClientCCostAnalysisChartFilters) => ({ ...prev, barChart: { limit } }));
   }, []);
 
-  const handleGroupByChange = useCallback((groupBy) => {
+  const handleGroupByChange = useCallback((groupBy: GroupByValue) => {
     console.log('🏷️ GroupBy changed to:', groupBy);
-    setFilters((prev) => ({ ...prev, groupBy }));
+    setFilters((prev: ClientCCostAnalysisFilters) => ({ ...prev, groupBy }));
   }, []);
   
   // Error state handling
@@ -211,7 +225,7 @@ const ClientCCostAnalysis = ({ api, caps }) => {
           <div className="flex gap-2 justify-center">
             <button 
               onClick={handleReset}
-              className="px-3 py-1 bg-[#a02ff1]/20 hover:bg-[#a02ff1]/30 text-[#a02ff1] rounded text-xs"
+              className="px-3 py-1 bg-[#007758]/20 hover:bg-[#007758]/30 text-[#007758] rounded text-xs"
             >
               Reset Filters
             </button>
@@ -233,9 +247,9 @@ const ClientCCostAnalysis = ({ api, caps }) => {
     <div className="flex flex-col h-full relative">
       {/* Initial Loading overlay - ONLY show on first load */}
       {(dataLoading && !costAnalysisData) && (
-        <div className="absolute inset-0 z-50 flex items-center justify-center bg-[#0f0f11]/90 backdrop-blur-sm rounded-xl border border-[#a02ff1]/30">
+        <div className="absolute inset-0 z-50 flex items-center justify-center bg-[#0f0f11]/90 backdrop-blur-sm rounded-xl border border-[#007758]/30">
           <div className="text-center bg-[#1a1b20] p-6 rounded-xl border border-white/10">
-            <Loader2 className="animate-spin text-[#a02ff1] mx-auto mb-3" size={32} />
+            <Loader2 className="animate-spin text-[#007758] mx-auto mb-3" size={32} />
             <p className="text-sm text-gray-300 font-medium">Loading cost analysis...</p>
             <p className="text-xs text-gray-500 mt-1">Fetching data from backend</p>
           </div>

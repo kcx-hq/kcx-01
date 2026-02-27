@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 
-export const useDebouncedObject = (obj, delay = 300) => {
-  const [debouncedObj, setDebouncedObj] = useState(obj);
+export const useDebouncedObject = <T extends Record<string, string>>(obj: T, delay: number = 300) => {
+  const [debouncedObj, setDebouncedObj] = useState<T>(obj);
 
   useEffect(() => {
     const handler = setTimeout(() => {

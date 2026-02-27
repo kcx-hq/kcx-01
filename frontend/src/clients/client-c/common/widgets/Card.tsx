@@ -1,6 +1,12 @@
 import React from 'react';
+import type { ReactNode } from "react";
 
-const Card = ({ children, className = '' }) => {
+interface CardProps {
+  children: ReactNode;
+  className?: string;
+}
+
+const Card = ({ children, className = '' }: CardProps) => {
   return (
     <div className={`rounded-xl border border-white/10 bg-[#1a1b20]/60 backdrop-blur-xl shadow-lg ${className}`}>
       {children}
@@ -8,7 +14,7 @@ const Card = ({ children, className = '' }) => {
   );
 };
 
-const CardHeader = ({ children, className = '' }) => {
+const CardHeader = ({ children, className = '' }: CardProps) => {
   return (
     <div className={`p-6 pb-4 ${className}`}>
       {children}
@@ -16,7 +22,7 @@ const CardHeader = ({ children, className = '' }) => {
   );
 };
 
-const CardTitle = ({ children, className = '' }) => {
+const CardTitle = ({ children, className = '' }: CardProps) => {
   return (
     <h3 className={`text-lg font-semibold text-white ${className}`}>
       {children}
@@ -24,7 +30,7 @@ const CardTitle = ({ children, className = '' }) => {
   );
 };
 
-const CardContent = ({ children, className = '' }) => {
+const CardContent = ({ children, className = '' }: CardProps) => {
   return (
     <div className={`p-6 pt-0 ${className}`}>
       {children}

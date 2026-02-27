@@ -11,10 +11,11 @@ import {
 import { useAccountsData } from "./hooks/useAccountsData";
 import { useComplianceData } from "./hooks/useComplianceData";
 import { useSummaryData } from "./hooks/useSummaryData";
+import type { AccountsFilters, AccountsOwnershipProps } from "./types";
 
-const AccountsOwnership = ({ api, caps }) => {
+const AccountsOwnership = ({ api, caps }: AccountsOwnershipProps) => {
   // Local filters
-  const [filters, setFilters] = useState({
+  const [filters, setFilters] = useState<AccountsFilters>({
     provider: "All",
     service: "All",
     region: "All",
@@ -74,16 +75,16 @@ const AccountsOwnership = ({ api, caps }) => {
 
   // Handlers
   const handleFilterChange = useCallback(
-    (newFilters) => {
-      setFilters((prev) => ({ ...prev, ...newFilters }));
+    (newFilters: Partial<AccountsFilters>) => {
+      setFilters((prev: AccountsFilters) => ({ ...prev, ...newFilters }));
     },
     []
   );
 
   const handleReset = useCallback(() => {
-    const reset = { provider: "All", service: "All", region: "All" };
+    const reset: AccountsFilters = { provider: "All", service: "All", region: "All" };
     setFilters(reset);
-    setForceRefreshKey((k) => k + 1);
+    setForceRefreshKey((k: number) => k + 1);
   }, []);
 
   const loading = accountsLoading || complianceLoading || summaryLoading;

@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useCallback, useEffect } from "react";
+import React, { useMemo, useState, useCallback } from "react";
 import { useDebounce } from "../../../hooks/useDebounce";
 import { AlertCircle, Loader2, Calendar } from "lucide-react";
 
@@ -6,10 +6,20 @@ import ClientCOptimizationView from "./ClientCOptimizationView";
 import { normalizeOptimizationData } from "./utils/normalizeOptimizationData";
 import { useClientCOptimizationFilters } from "./hooks/useClientCOptimizationFilters";
 import { useClientCOptimizationData } from "./hooks/useClientCOptimizationData";
+import type {
+  ClientCIdleResource,
+  ClientCNormalizedOptimizationData,
+  ClientCOpportunity,
+  ClientCOptimizationFilters,
+  ClientCOptimizationProps,
+  IdleFilter,
+  IdleSort,
+  OptimizationTab,
+} from "./types";
 
-const ClientCOptimization = ({ api, caps }) => {
+const ClientCOptimization = ({ api, caps }: ClientCOptimizationProps) => {
   // Local filters with enhanced state management
-  const [filters, setFilters] = useState({
+  const [filters, setFilters] = useState<ClientCOptimizationFilters>({
     provider: "All",
     service: "All", 
     region: "All",
@@ -17,14 +27,14 @@ const ClientCOptimization = ({ api, caps }) => {
   });
 
   // State for tabs and interactions
-  const [activeTab, setActiveTab] = useState("opportunities");
-  const [expandedItems, setExpandedItems] = useState({});
-  const [selectedInsight, setSelectedInsight] = useState(null);
-  const [selectedResource, setSelectedResource] = useState(null);
+  const [activeTab, setActiveTab] = useState<OptimizationTab | string>("opportunities");
+  const [expandedItems, setExpandedItems] = useState<Record<string, boolean>>({});
+  const [selectedInsight, setSelectedInsight] = useState<ClientCOpportunity | null>(null);
+  const [selectedResource, setSelectedResource] = useState<ClientCIdleResource | null>(null);
 
   // Idle resources controls
-  const [idleFilter, setIdleFilter] = useState("all");
-  const [idleSort, setIdleSort] = useState("savings-desc");
+  const [idleFilter, setIdleFilter] = useState<IdleFilter | string>("all");
+  const [idleSort, setIdleSort] = useState<IdleSort | string>("savings-desc");
   const [idleSearch, setIdleSearch] = useState("");
 
   // Refresh management
@@ -54,7 +64,7 @@ const ClientCOptimization = ({ api, caps }) => {
   );
 
   // Enhanced data normalization
-  const extractedData = useMemo(
+  const extractedData = useMemo<ClientCNormalizedOptimizationData>(
     () => {
       const normalized = normalizeOptimizationData(optimizationData);
       return normalized;
@@ -63,8 +73,8 @@ const ClientCOptimization = ({ api, caps }) => {
   );
 
   // Toggle expand for items
-  const toggleExpand = useCallback((id) => {
-    setExpandedItems((prev) => ({ ...prev, [id]: !prev[id] }));
+  const toggleExpand = useCallback((id: string) => {
+    setExpandedItems((prev: Record<string, boolean>) => ({ ...prev, [id]: !prev[id] }));
   }, []);
 
   // Filter idle resources based on controls
@@ -75,17 +85,17 @@ const ClientCOptimization = ({ api, caps }) => {
     if (idleSearch) {
       const searchLower = idleSearch.toLowerCase();
       filtered = filtered.filter(
-        (r) =>
+        (r: ClientCIdleResource) =>
           r.name?.toLowerCase().includes(searchLower) ||
           r.type?.toLowerCase().includes(searchLower) ||
           r.region?.toLowerCase().includes(searchLower)
       );
     }
 
-    if (idleFilter === "prod") filtered = filtered.filter((r) => r.risk === "Prod");
-    if (idleFilter === "non-prod") filtered = filtered.filter((r) => r.risk === "Non-prod");
+    if (idleFilter === "prod") filtered = filtered.filter((r: ClientCIdleResource) => r.risk === "Prod");
+    if (idleFilter === "non-prod") filtered = filtered.filter((r: ClientCIdleResource) => r.risk === "Non-prod");
 
-    return [...filtered].sort((a, b) => {
+    return [...filtered].sort((a: ClientCIdleResource, b: ClientCIdleResource) => {
       switch (idleSort) {
         case "savings-desc":
           return (b.savings || 0) - (a.savings || 0);
@@ -103,9 +113,9 @@ const ClientCOptimization = ({ api, caps }) => {
 
   // Enhanced filter change handler
   const handleFilterChange = useCallback(
-    (newFilters) => {
-      setFilters((prev) => {
-        const updated = { ...prev, ...newFilters };
+    (newFilters: Partial<ClientCOptimizationFilters>) => {
+      setFilters((prev: ClientCOptimizationFilters) => {
+        const updated: ClientCOptimizationFilters = { ...prev, ...newFilters };
         // Reset dependent filters when main filter changes
         if (newFilters.provider && newFilters.provider !== "All") {
           updated.service = "All";
@@ -119,13 +129,14 @@ const ClientCOptimization = ({ api, caps }) => {
 
   // Enhanced reset handler
   const handleReset = useCallback(() => {
-    const reset = { 
+    const reset: ClientCOptimizationFilters = { 
       provider: "All", 
       service: "All", 
-      region: "All" 
+      region: "All",
+      uploadId: null,
     };
     setFilters(reset);
-    setForceRefreshKey((k) => k + 1);
+    setForceRefreshKey((k: number) => k + 1);
   }, []);
 
   // Error state handling
@@ -172,7 +183,7 @@ const ClientCOptimization = ({ api, caps }) => {
           <div className="flex gap-2 justify-center">
             <button 
               onClick={handleReset}
-              className="px-3 py-1 bg-[#a02ff1]/20 hover:bg-[#a02ff1]/30 text-[#a02ff1] rounded text-xs"
+              className="px-3 py-1 bg-[#007758]/20 hover:bg-[#007758]/30 text-[#007758] rounded text-xs"
             >
               Reset Filters
             </button>
@@ -192,9 +203,9 @@ const ClientCOptimization = ({ api, caps }) => {
     <div className="flex flex-col h-full relative">
       {/* Loading overlay */}
       {(isLoading || (dataLoading && !optimizationData)) && (
-        <div className="absolute inset-0 z-50 flex items-center justify-center bg-[#0f0f11]/90 backdrop-blur-sm rounded-xl border border-[#a02ff1]/30">
+        <div className="absolute inset-0 z-50 flex items-center justify-center bg-[#0f0f11]/90 backdrop-blur-sm rounded-xl border border-[#007758]/30">
           <div className="text-center bg-[#1a1b20] p-6 rounded-xl border border-white/10">
-            <Loader2 className="animate-spin text-[#a02ff1] mx-auto mb-3" size={32} />
+            <Loader2 className="animate-spin text-[#007758] mx-auto mb-3" size={32} />
             <p className="text-sm text-gray-300 font-medium">Loading optimization insights...</p>
             <p className="text-xs text-gray-500 mt-1">Fetching data from backend</p>
           </div>

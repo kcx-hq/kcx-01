@@ -1,20 +1,20 @@
 import { unitEconomicsService } from "./unit-economics.service.js";
+import AppError from "../../../errors/AppError.js";
+import logger from "../../../lib/logger.js";
+import { normalizeUploadIds } from "../utils/uploadIds.utils.js";
+import { assertUploadScope } from "../utils/uploadScope.service.js";
 
-const normalizeUploadIds = (v) =>
-  Array.isArray(v)
-    ? v
-    : typeof v === "string"
-    ? v.split(",").map(x => x.trim()).filter(Boolean)
-    : [];
-
-export const getUnitEconomicsSummary = async (req, res) => {
+export const getUnitEconomicsSummary = async (req, res, next) => {
   try {
-    const uploadIds = normalizeUploadIds(
+    const uploadIds = await assertUploadScope({
+      uploadIds: normalizeUploadIds(
       req.query.uploadIds ?? req.body?.uploadIds ?? req.query?.uploadId ?? req.body?.uploadId
-    );
+      ),
+      clientId: req.client_id,
+    });
 
     if (!uploadIds.length) {
-      return res.json({ success: true, data: {} });
+      return res.ok({});
     }
 
     const filters = {
@@ -31,9 +31,12 @@ export const getUnitEconomicsSummary = async (req, res) => {
       uploadIds
     });
 
-    res.json({ success: true, data });
+    return res.ok(data);
   } catch (e) {
-    console.error("Unit Economics Error", e);
-    res.status(500).json({ success: false, error: e.message });
+    if (e instanceof AppError) {
+      return next(e);
+    }
+    logger.error({ err: e, requestId: req.requestId }, "Unit Economics Error");
+    return next(new AppError(500, "INTERNAL", "Internal server error", { cause: e }));
   }
 };

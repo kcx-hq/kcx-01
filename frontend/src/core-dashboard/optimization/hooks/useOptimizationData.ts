@@ -1,15 +1,29 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { buildParamsFromFilters } from "../utils/helpers";
+import type {
+  ApiLikeError,
+  IdleResource,
+  OptimizationData,
+  OptimizationFilters,
+  Opportunity,
+  RightSizingRecommendation,
+  UseOptimizationDataParams,
+  UseOptimizationDataResult,
+} from "../types";
 
-export function useOptimizationData({ api, caps, parentFilters }) {
-  const [optimizationData, setOptimizationData] = useState(null);
+export function useOptimizationData({
+  api,
+  caps,
+  parentFilters,
+}: UseOptimizationDataParams): UseOptimizationDataResult {
+  const [optimizationData, setOptimizationData] = useState<OptimizationData | null>(null);
   const [loading, setLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState<string | null>(null);
 
   const isInitialMount = useRef(true);
-  const abortControllerRef = useRef(null);
-  const prevFiltersRef = useRef({});
+  const abortControllerRef = useRef<AbortController | null>(null);
+  const prevFiltersRef = useRef<OptimizationFilters>({});
 
   const fetchOptimizationData = useCallback(async () => {
     if (!api || !caps) return;
@@ -33,11 +47,12 @@ export function useOptimizationData({ api, caps, parentFilters }) {
         return;
       }
 
-      const actionCenterRes = await api.call("optimization", "actionCenter", { params });
+      const actionCenterRes = await api.call<unknown>("optimization", "actionCenter", { params });
       if (abortControllerRef.current?.signal.aborted) return;
 
-      const payloadCandidate = actionCenterRes?.data ?? actionCenterRes ?? {};
-      const payload = payloadCandidate?.data ?? payloadCandidate;
+      const payload = (actionCenterRes && typeof actionCenterRes === "object"
+        ? actionCenterRes
+        : {}) as Record<string, unknown>;
       const model = payload?.model ?? null;
       const opportunities = Array.isArray(payload?.opportunities) ? payload.opportunities : [];
       const idleResources = Array.isArray(payload?.idleResources) ? payload.idleResources : [];
@@ -59,10 +74,10 @@ export function useOptimizationData({ api, caps, parentFilters }) {
         actionCenterModel: model,
         totalPotentialSavings: opportunities.reduce((sum, opp) => sum + (opp.savings || 0), 0),
       });
-    } catch (err) {
-      if (err?.code !== "NOT_SUPPORTED" && err?.name !== "AbortError") {
-        // eslint-disable-next-line no-console
-        console.error("Error fetching optimization data:", err);
+    } catch (err: unknown) {
+      const errorObj = err as ApiLikeError;
+      if (errorObj?.code !== "NOT_SUPPORTED" && errorObj?.name !== "AbortError") {
+        console.error("Error fetching optimization data:", errorObj);
         setError("Failed to load optimization data");
       }
     } finally {
@@ -100,3 +115,6 @@ export function useOptimizationData({ api, caps, parentFilters }) {
     refetch: fetchOptimizationData,
   };
 }
+
+
+

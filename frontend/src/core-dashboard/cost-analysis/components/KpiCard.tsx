@@ -1,9 +1,10 @@
 import React from "react";
 import { ArrowUpRight, ArrowDownRight, Sparkles } from "lucide-react";
 import { formatCurrency } from "../utils/format";
+import type { KpiCardProps } from "../types";
 
-const KpiCard = ({ label, value, icon: Icon, iconStyle, subValue, onClick, trend }) => {
-  const isIncrease = trend > 0;
+const KpiCard = ({ label, value, icon: Icon, iconStyle, subValue, onClick, trend }: KpiCardProps) => {
+  const isIncrease = (trend ?? 0) > 0;
   const brandEmerald = "var(--brand-secondary, #007758)";
 
   return (
@@ -68,3 +69,6 @@ const KpiCard = ({ label, value, icon: Icon, iconStyle, subValue, onClick, trend
 };
 
 export default KpiCard;
+
+
+

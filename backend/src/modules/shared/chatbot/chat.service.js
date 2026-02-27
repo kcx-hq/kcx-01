@@ -5,10 +5,11 @@ import { FLOW } from "./flow.js";
 import { setDeep } from "./deepSet.js";
 import { formatSummary, getCurrentStep } from "./flowHelpers.js";
 import aiExtractor from "./aiExtractor.service.js";
+import { assertChatSessionTransition } from "./lib/sessionStatus.utils.js";
 
 /** Always write bot messages via this helper */
 async function sendBot(sessionId, message, transaction) {
-  if (!message) return;
+  if (message === null || typeof message === "undefined") return;
   await ChatMessage.create(
     { session_id: sessionId, sender: "bot", message },
     transaction ? { transaction } : {},
@@ -17,7 +18,7 @@ async function sendBot(sessionId, message, transaction) {
 
 /** Always write user messages via this helper */
 async function sendUser(sessionId, message, transaction) {
-  if (!message) return;
+  if (message === null || typeof message === "undefined") return;
   await ChatMessage.create(
     { session_id: sessionId, sender: "user", message },
     transaction ? { transaction } : {},
@@ -262,6 +263,7 @@ const chatService = {
   async handleConfirm(sessionId, session) {
     const tx = await sequelize.transaction();
     try {
+      assertChatSessionTransition(session.status, "completed");
       await sendUser(sessionId, "confirm", tx);
       await session.update({ status: "completed" }, { transaction: tx });
 
@@ -293,6 +295,7 @@ const chatService = {
         transaction: tx,
       });
       if (!session) throw new Error("Session not found");
+      assertChatSessionTransition(session.status, "active");
 
       await session.update(
         { step_index: 0, requirements: {}, status: "active" },

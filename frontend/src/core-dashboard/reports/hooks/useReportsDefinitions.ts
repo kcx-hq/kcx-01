@@ -1,8 +1,9 @@
 import { useMemo } from "react";
 import { FileText, Target, AlertTriangle, Shield } from "lucide-react";
 import { formatPeriod } from "../utils/reportUtils";
+import type { ReportDefinition, ReportsSummaryData } from "../types";
 
-export function useReportsDefinitions(reportData, isLocked) {
+export function useReportsDefinitions(reportData: ReportsSummaryData | null, isLocked: boolean): ReportDefinition[] {
   return useMemo(() => {
     const period = reportData?.billingPeriod
       ? formatPeriod(reportData.billingPeriod)
@@ -82,3 +83,6 @@ export function useReportsDefinitions(reportData, isLocked) {
     ];
   }, [reportData, isLocked]);
 }
+
+
+

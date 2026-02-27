@@ -1,10 +1,11 @@
 import { useEffect, useRef } from 'react';
+import type { DashboardRouteFlags } from '../types';
 
-export function useKeepAliveRegistry(routeFlags) {
-  const loadedRef = useRef(new Set());
+export function useKeepAliveRegistry(routeFlags: DashboardRouteFlags) {
+  const loadedRef = useRef<Set<string>>(new Set());
 
   useEffect(() => {
-    const map = [
+    const map: Array<[string, boolean]> = [
       ['DataExplorer', routeFlags.isDataExplorer],
       ['CostAnalysis', routeFlags.isCostAnalysis],
       ['CostDrivers', routeFlags.isCostDrivers],
@@ -22,8 +23,11 @@ export function useKeepAliveRegistry(routeFlags) {
     });
   }, [routeFlags]);
 
-  const shouldRender = (isActive, componentName) =>
+  const shouldRender = (isActive: boolean, componentName: string) =>
     isActive || loadedRef.current.has(componentName);
 
   return { shouldRender };
 }
+
+
+

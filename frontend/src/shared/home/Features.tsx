@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import type { LucideIcon } from "lucide-react";
 import {
   Clock,
   Activity,
@@ -11,6 +12,25 @@ import {
   Target,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+
+interface ServiceDetails {
+  process: string[];
+  deliverables: string[];
+  idealFor: string;
+}
+
+type ServiceTone = "snapshot" | "continuous";
+
+interface ServiceCardProps {
+  icon: LucideIcon;
+  title: string;
+  desc: string;
+  tone: ServiceTone;
+  tags: string[];
+  features: string[];
+  variants: React.ComponentProps<typeof motion.div>["variants"];
+  details: ServiceDetails;
+}
 
 const Features = () => {
   // Animation Variants
@@ -32,7 +52,7 @@ const Features = () => {
   };
 
   // --- DETAILED CONTENT DATA ---
-  const snapshotDetails = {
+  const snapshotDetails: ServiceDetails = {
     process: [
       "Data Ingestion (Read-Only Access)",
       "7-Day Cost Analysis",
@@ -47,7 +67,7 @@ const Features = () => {
       "Startups or Scale-ups needing a quick audit before a fundraise or budget cycle.",
   };
 
-  const continuousDetails = {
+  const continuousDetails: ServiceDetails = {
     process: [
       "Real-time Cloud Integration",
       "Automated Waste Detection",
@@ -67,7 +87,7 @@ const Features = () => {
       className="py-24 bg-[var(--bg-main)] text-[var(--text-primary)] relative overflow-hidden"
       id="services"
     >
-      {/* Background Decor (theme: emerald soft, no purple) */}
+      {/* Background decor (soft emerald theme) */}
       <motion.div
         animate={{ scale: [1, 1.1, 1], opacity: [0.18, 0.32, 0.18] }}
         transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
@@ -161,14 +181,14 @@ const ServiceCard = ({
   features,
   variants,
   details,
-}) => {
+}: ServiceCardProps) => {
   const [isOpen, setIsOpen] = useState(false);
 
   /**
    * Theme rules:
    * - primary: var(--brand-primary) (#00c693)
    * - dark: var(--bg-dark) (#192630)
-   * - remove purple highlight usage
+   * - keep neutral/emerald highlight usage
    */
   const isContinuous = tone === "continuous";
 
@@ -272,7 +292,7 @@ const ServiceCard = ({
               </h4>
 
               <button
-                onClick={(e) => {
+                onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
                   e.stopPropagation();
                   setIsOpen(false);
                 }}
@@ -337,7 +357,7 @@ const ServiceCard = ({
 
             {/* Close Action */}
             <button
-              onClick={(e) => {
+              onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
                 e.stopPropagation();
                 setIsOpen(false);
               }}

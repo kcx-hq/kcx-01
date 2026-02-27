@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from "react";
-import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import {
   Upload,
@@ -14,35 +13,92 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useDashboardStore } from "../../store/Dashboard.store";
 import CloudFileManagerPanel from "./CloudFileManagerPanel";
 import { uploadGridStyle, uploadTheme } from "./theme";
+import { apiGet, apiPost } from "../../services/http";
+import { getApiErrorMessageWithRequestId } from "../../services/apiError";
+import type {
+  BillingUploadRecord,
+  CloudConnection,
+  CloudForm,
+  CloudPreview,
+} from "./types";
 
 const MAX_MB = 50;
 
-const CsvUploadInput = ({ uploadUrl, withCredentials = true }) => {
+type InputMode = "csv" | "cloud";
+type CsvStatus = "idle" | "uploading" | "error";
+type CloudStatus = "idle" | "testing" | "tested" | "connecting" | "connected" | "error";
+type CloudAction = "test" | "connect";
+
+interface CsvUploadInputProps {
+  uploadUrl?: string;
+  withCredentials?: boolean;
+}
+
+interface FileDetails {
+  name: string;
+  size: string;
+}
+
+interface VerifyConnectionResponse {
+  assumedRoleArn?: string;
+  bucket?: string;
+  prefix?: string;
+  latestFile?: {
+    key?: string;
+    lastModified?: string;
+  };
+}
+
+interface ConnectResponse {
+  rootPrefix?: string;
+  bucket?: string;
+}
+
+interface UploadResponse {
+  uploadId?: string;
+}
+
+const isBillingUploadRecord = (value: unknown): value is BillingUploadRecord => {
+  if (!value || typeof value !== "object") {
+    return false;
+  }
+  return typeof (value as Record<string, unknown>)["uploadid"] === "string";
+};
+
+const getAxiosMessage = (error: unknown, fallback: string): string => {
+  const message = getApiErrorMessageWithRequestId(error, fallback);
+  if (message) {
+    return message;
+  }
+  return fallback;
+};
+
+const CsvUploadInput = ({ uploadUrl, withCredentials = true }: CsvUploadInputProps) => {
   const navigate = useNavigate();
 
-  const finalUploadUrl = uploadUrl || `${import.meta.env.VITE_API_URL}/api/etl`;
-  const cloudVerifyUrl = `${import.meta.env.VITE_API_URL}/api/cloud/aws/verify-connection`;
-  const cloudConnectUrl = `${import.meta.env.VITE_API_URL}/api/cloud/aws/connect`;
+  const finalUploadUrl = uploadUrl || "/api/etl";
+  const cloudVerifyUrl = "/api/cloud/aws/verify-connection";
+  const cloudConnectUrl = "/api/cloud/aws/connect";
 
-  const [mode, setMode] = useState("csv"); // csv | cloud
-  const [csvStatus, setCsvStatus] = useState("idle"); // idle | uploading | error
+  const [mode, setMode] = useState<InputMode>("csv"); // csv | cloud
+  const [csvStatus, setCsvStatus] = useState<CsvStatus>("idle"); // idle | uploading | error
   const [csvErrorMessage, setCsvErrorMessage] = useState("");
-  const [fileDetails, setFileDetails] = useState(null);
-  const [cloudForm, setCloudForm] = useState({
+  const [fileDetails, setFileDetails] = useState<FileDetails | null>(null);
+  const [cloudForm, setCloudForm] = useState<CloudForm>({
     accountId: "",
     roleName: "",
     bucketPrefix: "",
     region: "ap-south-1",
   });
-  const [cloudStatus, setCloudStatus] = useState("idle"); // idle | testing | tested | connecting | connected | error
+  const [cloudStatus, setCloudStatus] = useState<CloudStatus>("idle"); // idle | testing | tested | connecting | connected | error
   const [cloudMessage, setCloudMessage] = useState("");
-  const [cloudPreview, setCloudPreview] = useState(null);
-  const [cloudConnection, setCloudConnection] = useState(null);
+  const [cloudPreview, setCloudPreview] = useState<CloudPreview | null>(null);
+  const [cloudConnection, setCloudConnection] = useState<CloudConnection | null>(null);
   const [hasExistingUploads, setHasExistingUploads] = useState(false);
   const setUploadIds = useDashboardStore((s) => s.setUploadIds);
   const dashboardPath = useDashboardStore((s) => s.dashboardPath);
 
-  const formatDateTime = (value) => {
+  const formatDateTime = (value: string | number | Date | null | undefined) => {
     if (!value) return "--";
     const d = new Date(value);
     if (Number.isNaN(d.getTime())) return String(value);
@@ -55,7 +111,7 @@ const CsvUploadInput = ({ uploadUrl, withCredentials = true }) => {
     });
   };
 
-  const validate = (file) => {
+  const validate = (file: File | null | undefined) => {
     if (!file) return "No file selected.";
     if (!file.name.toLowerCase().endsWith(".csv")) return "Only CSV files are allowed.";
     if (file.size > MAX_MB * 1024 * 1024) return `File exceeds ${MAX_MB}MB limit.`;
@@ -65,10 +121,8 @@ const CsvUploadInput = ({ uploadUrl, withCredentials = true }) => {
   useEffect(() => {
     const checkExistingUploads = async () => {
       try {
-        const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/etl/get-billing-uploads`, {
-          withCredentials,
-        });
-        const uploads = Array.isArray(res.data) ? res.data : [];
+        const response = await apiGet<unknown>("/api/etl/get-billing-uploads", { withCredentials });
+        const uploads = Array.isArray(response) ? response.filter(isBillingUploadRecord) : [];
         setHasExistingUploads(uploads.length > 0);
       } catch {
         setHasExistingUploads(false);
@@ -78,11 +132,14 @@ const CsvUploadInput = ({ uploadUrl, withCredentials = true }) => {
     checkExistingUploads();
   }, [withCredentials]);
 
-  const uploadFile = async (file) => {
+  const uploadFile = async (file: File | null | undefined) => {
     const msg = validate(file);
     if (msg) {
       setCsvStatus("error");
       setCsvErrorMessage(msg);
+      return;
+    }
+    if (!file) {
       return;
     }
 
@@ -98,46 +155,32 @@ const CsvUploadInput = ({ uploadUrl, withCredentials = true }) => {
     formData.append("file", file);
 
     try {
-      const res = await axios.post(finalUploadUrl, formData, {
+      const response = await apiPost<UploadResponse>(finalUploadUrl, formData, {
         headers: { "Content-Type": "multipart/form-data" },
         withCredentials,
       });
 
-      const nextUploadIds = res?.data?.uploadId ? [res.data.uploadId] : [];
+      const nextUploadIds = response?.uploadId ? [response.uploadId] : [];
       setUploadIds(nextUploadIds);
       navigate(dashboardPath);
-    } catch (err) {
-      let msg2 = "Upload failed.";
-
-      if (err?.response) {
-        msg2 =
-          err.response.data?.error ||
-          err.response.data?.message ||
-          err.response.data?.details ||
-          `Server error (${err.response.status}).`;
-      } else if (err?.request) {
-        msg2 = "Cannot connect to backend server.";
-      } else if (err?.message) {
-        msg2 = err.message;
-      }
-
+    } catch (err: unknown) {
       setCsvStatus("error");
-      setCsvErrorMessage(msg2);
+      setCsvErrorMessage(getAxiosMessage(err, "Upload failed."));
     }
   };
 
-  const handleDrop = (e) => {
+  const handleDrop = (e: React.DragEvent<HTMLLabelElement>) => {
     e.preventDefault();
     const file = e.dataTransfer.files?.[0];
     uploadFile(file);
   };
 
-  const handleChange = (e) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     uploadFile(file);
   };
 
-  const updateCloudField = (field, value) => {
+  const updateCloudField = <K extends keyof CloudForm>(field: K, value: CloudForm[K]) => {
     setCloudForm((prev) => ({ ...prev, [field]: value }));
     setCloudPreview(null);
     setCloudConnection(null);
@@ -155,7 +198,7 @@ const CsvUploadInput = ({ uploadUrl, withCredentials = true }) => {
     return "";
   };
 
-  const handleCloudAction = async (action) => {
+  const handleCloudAction = async (action: CloudAction) => {
     const validationMessage = validateCloud();
     if (validationMessage) {
       setCloudStatus("error");
@@ -168,7 +211,7 @@ const CsvUploadInput = ({ uploadUrl, withCredentials = true }) => {
       setCloudStatus("testing");
       setCloudMessage("");
       try {
-        const res = await axios.post(
+        const data = await apiPost<VerifyConnectionResponse>(
           cloudVerifyUrl,
           {
             accountId: cloudForm.accountId.trim(),
@@ -178,8 +221,6 @@ const CsvUploadInput = ({ uploadUrl, withCredentials = true }) => {
           },
           { withCredentials },
         );
-
-        const data = res?.data || {};
         const latestFileKey = data?.latestFile?.key || "";
         setCloudStatus("tested");
         setCloudMessage(
@@ -193,12 +234,8 @@ const CsvUploadInput = ({ uploadUrl, withCredentials = true }) => {
           prefix: data.prefix || "",
           latestFile: data.latestFile || null,
         });
-      } catch (err) {
-        const msg =
-          err?.response?.data?.message ||
-          err?.response?.data?.error ||
-          err?.message ||
-          "Connection verification failed.";
+      } catch (err: unknown) {
+        const msg = getAxiosMessage(err, "Connection verification failed.");
         setCloudStatus("error");
         setCloudMessage(msg);
         setCloudPreview(null);
@@ -212,18 +249,16 @@ const CsvUploadInput = ({ uploadUrl, withCredentials = true }) => {
     setCloudConnection(null);
 
     try {
-      const res = await axios.post(
+      const data = await apiPost<ConnectResponse>(
         cloudConnectUrl,
         {
           accountId: cloudForm.accountId.trim(),
           roleName: cloudForm.roleName.trim(),
           bucketPrefix: cloudForm.bucketPrefix.trim(),
-          region: cloudForm.region.trim(),
-        },
-        { withCredentials },
+            region: cloudForm.region.trim(),
+          },
+          { withCredentials },
       );
-
-      const data = res?.data || {};
       setCloudStatus("connected");
       setCloudMessage("Cloud connection successful. Opening file manager.");
       setCloudConnection({
@@ -234,12 +269,8 @@ const CsvUploadInput = ({ uploadUrl, withCredentials = true }) => {
         rootPrefix: data.rootPrefix || "",
         bucket: data.bucket || "",
       });
-    } catch (err) {
-      const msg =
-        err?.response?.data?.message ||
-        err?.response?.data?.error ||
-        err?.message ||
-        "Cloud connection failed.";
+    } catch (err: unknown) {
+      const msg = getAxiosMessage(err, "Cloud connection failed.");
       setCloudStatus("error");
       setCloudMessage(msg);
       setCloudConnection(null);
@@ -389,7 +420,7 @@ const CsvUploadInput = ({ uploadUrl, withCredentials = true }) => {
                   <label
                     className="group flex min-h-[300px] w-full flex-1 cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed border-[var(--brand-primary)]/35 bg-[var(--brand-primary-soft)]/10 transition-all hover:border-[var(--brand-primary)] hover:bg-[var(--brand-primary-soft)]/40"
                     onDrop={handleDrop}
-                    onDragOver={(e) => e.preventDefault()}
+                    onDragOver={(e: React.DragEvent<HTMLLabelElement>) => e.preventDefault()}
                   >
                     <input type="file" accept=".csv" onChange={handleChange} className="hidden" />
                     <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-full border border-[var(--border-light)] bg-white shadow-xl transition-transform group-hover:scale-110">
@@ -443,7 +474,7 @@ const CsvUploadInput = ({ uploadUrl, withCredentials = true }) => {
                       <input
                         type="text"
                         value={cloudForm.accountId}
-                        onChange={(e) =>
+                        onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                           updateCloudField("accountId", e.target.value.replace(/\D/g, "").slice(0, 12))
                         }
                         placeholder="123456789012"
@@ -459,7 +490,7 @@ const CsvUploadInput = ({ uploadUrl, withCredentials = true }) => {
                       <input
                         type="text"
                         value={cloudForm.roleName}
-                        onChange={(e) => updateCloudField("roleName", e.target.value)}
+                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateCloudField("roleName", e.target.value)}
                         placeholder="role name e.g. MyBillingAccessRole"
                         className={uploadTheme.input}
                       />
@@ -472,7 +503,7 @@ const CsvUploadInput = ({ uploadUrl, withCredentials = true }) => {
                       <input
                         type="text"
                         value={cloudForm.bucketPrefix}
-                        onChange={(e) => updateCloudField("bucketPrefix", e.target.value)}
+                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateCloudField("bucketPrefix", e.target.value)}
                         placeholder="bucket_Name/demo/data/billing"
                         className={uploadTheme.input}
                       />
@@ -486,7 +517,7 @@ const CsvUploadInput = ({ uploadUrl, withCredentials = true }) => {
                       <input
                         type="text"
                         value={cloudForm.region}
-                        onChange={(e) => updateCloudField("region", e.target.value)}
+                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateCloudField("region", e.target.value)}
                         placeholder="ap-south-1"
                         className={uploadTheme.input}
                       />
@@ -514,11 +545,7 @@ const CsvUploadInput = ({ uploadUrl, withCredentials = true }) => {
                     <button
                       type="button"
                       onClick={() => handleCloudAction("connect")}
-                      disabled={
-                        cloudStatus !== "tested" ||
-                        cloudStatus === "testing" ||
-                        cloudStatus === "connecting"
-                      }
+                      disabled={cloudStatus !== "tested"}
                       className={`flex-1 rounded-xl px-4 py-3 font-semibold transition ${
                         cloudStatus === "tested"
                           ? uploadTheme.primaryButton

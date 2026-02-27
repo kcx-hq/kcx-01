@@ -1,6 +1,9 @@
 // src/models/ChatMessage.model.js
+import { createRequire } from "module";
 import { DataTypes } from "sequelize";
-import sequelize from "../../config/db.config.js";
+
+const require = createRequire(import.meta.url);
+const { sequelize } = require("../../db/index.cjs");
 
 const ChatMessage = sequelize.define(
   "ChatMessage",
@@ -31,10 +34,11 @@ const ChatMessage = sequelize.define(
     underscored: true,
     timestamps: true,
     createdAt: "created_at",
-    updatedAt: false,
+    updatedAt: "updated_at",
     indexes: [{ fields: ["session_id"] }, { fields: ["created_at"] }],
   },
 );
 
 
 export default ChatMessage
+

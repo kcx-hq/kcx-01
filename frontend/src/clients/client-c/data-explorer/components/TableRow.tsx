@@ -1,10 +1,12 @@
 import React from "react";
+import type { MouseEvent } from "react";
+import type { ClientCTableRowProps } from "../types";
 
 /**
  * Safely render ANY value inside a table cell
  * Handles primitives, arrays, objects, React elements
  */
-const renderValue = (value) => {
+const renderValue = (value: unknown) => {
   // 1️⃣ Valid React element → render directly
   if (React.isValidElement(value)) {
     return value;
@@ -35,7 +37,7 @@ const renderValue = (value) => {
       return (
         <span className="text-blue-400">
           {Object.entries(value)
-            .map(([key, val]) => `${key}: ${val}`)
+            .map(([key, val]: [string, unknown]) => `${key}: ${val}`)
             .join(" | ")}
         </span>
       );
@@ -59,7 +61,7 @@ const TableRow = ({
   getColumnWidth,
   showDataBars,
   columnMaxValues
-}) => {
+}: ClientCTableRowProps) => {
   const isSelected = selectedIndices.has(rowIndex);
   const rowHeightClass = getRowHeight();
 
@@ -67,11 +69,12 @@ const TableRow = ({
     <tr
       className={`${rowHeightClass} ${
         isSelected
-          ? "bg-[#a02ff1]/20 border-l-4 border-[#a02ff1]"
+          ? "bg-[#007758]/20 border-l-4 border-[#007758]"
           : "hover:bg-white/5"
       } transition-colors cursor-pointer`}
-      onClick={(e) => {
-        if (e.target.type !== "checkbox") {
+      onClick={(e: MouseEvent<HTMLTableRowElement>) => {
+        const target = e.target as HTMLElement | null;
+        if ((target as HTMLInputElement | null)?.type !== "checkbox") {
           handleRowClick(row);
         }
       }}
@@ -82,12 +85,12 @@ const TableRow = ({
           type="checkbox"
           checked={isSelected}
           onChange={() => handleRowSelect(rowIndex)}
-          className="rounded border-gray-600 bg-gray-800 text-[#a02ff1] focus:ring-[#a02ff1]"
+          className="rounded border-gray-600 bg-gray-800 text-[#007758] focus:ring-[#007758]"
         />
       </td>
 
       {/* Data Cells */}
-      {visibleColumns.map((col, colIndex) => {
+      {visibleColumns.map((col: string, colIndex: number) => {
         const value = row[col];
         const maxValue = columnMaxValues?.[col] ?? 0;
 
@@ -114,7 +117,7 @@ const TableRow = ({
             {/* Data bar */}
             {showDataBars && numericValue !== null && (
               <div
-                className="absolute left-0 top-0 bottom-0 bg-[#a02ff1]/10 rounded-r"
+                className="absolute left-0 top-0 bottom-0 bg-[#007758]/10 rounded-r"
                 style={{ width: `${percentage}%` }}
               />
             )}

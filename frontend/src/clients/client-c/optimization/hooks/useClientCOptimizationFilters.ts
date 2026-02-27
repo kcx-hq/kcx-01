@@ -1,10 +1,19 @@
 import { useEffect, useMemo, useState } from "react";
 import { Users, Settings, MapPin, Cloud } from "lucide-react";
+import type { ApiClient, Capabilities } from "../../../../services/apiClient";
+import type {
+  ApiLikeError,
+  ClientCOptimizationFilterOptions,
+  ClientCOptimizationFiltersResult,
+} from "../types";
 
-export const useClientCOptimizationFilters = (api, caps) => {
-  const [rawOptions, setRawOptions] = useState(null);
+export const useClientCOptimizationFilters = (
+  api: ApiClient | null,
+  caps: Capabilities | null,
+): ClientCOptimizationFiltersResult => {
+  const [rawOptions, setRawOptions] = useState<ClientCOptimizationFilterOptions | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!api || !caps) return;
@@ -14,18 +23,18 @@ export const useClientCOptimizationFilters = (api, caps) => {
     const fetchFilterOptions = async () => {
       try {
         const endpointDef =
-          caps?.modules?.optimization?.enabled &&
-          caps?.modules?.optimization?.endpoints?.filters;
+          caps?.modules?.["optimization"]?.enabled &&
+          caps?.modules?.["optimization"]?.endpoints?.["filters"];
 
         if (!endpointDef) return;
 
-        const res = await api.call("optimization", "filters");
-        const payload = res?.data;
+        const payload = await api.call<ClientCOptimizationFilterOptions>("optimization", "filters");
         if (active && payload) setRawOptions(payload);
-      } catch (error) {
-        if (error?.code !== "NOT_SUPPORTED") {
+      } catch (error: unknown) {
+        const apiError = error as ApiLikeError;
+        if (apiError?.code !== "NOT_SUPPORTED") {
           console.error("Failed to fetch optimization filter options:", error);
-          setError(error.message || 'Failed to load filter options');
+          setError(apiError.message || 'Failed to load filter options');
           // Provide fallback options on error
           setRawOptions({
             providers: ['All', 'AWS', 'Azure', 'GCP'],

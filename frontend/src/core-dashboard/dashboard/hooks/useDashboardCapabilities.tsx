@@ -1,14 +1,24 @@
 import { useMemo } from 'react';
+import type { Capabilities, CapabilityModule } from '../../../services/apiClient';
 
-export function isModuleEnabled(caps, moduleKey) {
-  return caps?.modules?.[moduleKey]?.enabled === true;
+const getModuleConfig = (
+  caps: Capabilities | null | undefined,
+  moduleKey: string,
+): CapabilityModule | undefined => caps?.modules?.[moduleKey];
+
+export function isModuleEnabled(caps: Capabilities | null | undefined, moduleKey: string): boolean {
+  return getModuleConfig(caps, moduleKey)?.enabled === true;
 }
 
-export function hasEndpoint(caps, moduleKey, endpointKey) {
-  return !!caps?.modules?.[moduleKey]?.endpoints?.[endpointKey];
+export function hasEndpoint(
+  caps: Capabilities | null | undefined,
+  moduleKey: string,
+  endpointKey: string,
+): boolean {
+  return !!getModuleConfig(caps, moduleKey)?.endpoints?.[endpointKey];
 }
 
-export function useDashboardCapabilities(caps) {
+export function useDashboardCapabilities(caps: Capabilities | null | undefined) {
   const hasAnyDashboardModule = useMemo(() => {
     if (!caps) return false;
     return (
@@ -27,3 +37,6 @@ export function useDashboardCapabilities(caps) {
 
   return { hasAnyDashboardModule };
 }
+
+
+

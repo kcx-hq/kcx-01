@@ -1,17 +1,26 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '../common/widgets';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell, Legend } from 'recharts';
+import type {
+  DepartmentOverviewData,
+  DepartmentServiceCost,
+  DepartmentTrendPoint,
+  LegacyDepartmentCostProps,
+  NumericValue,
+} from './types';
 
-const DepartmentCost = ({ filters, api, caps, uploadId }) => {
-  const [overviewData, setOverviewData] = useState({});
-  const [trendData, setTrendData] = useState([]);
-  const [drilldownData, setDrilldownData] = useState([]);
+const DepartmentCost = ({ filters, api, caps, uploadId }: LegacyDepartmentCostProps) => {
+  const [overviewData, setOverviewData] = useState<DepartmentOverviewData>({});
+  const [trendData, setTrendData] = useState<DepartmentTrendPoint[]>([]);
+  const [drilldownData, setDrilldownData] = useState<DepartmentServiceCost[]>([]);
+
+  const formatCurrency = (value: NumericValue) => `$${Number(value || 0).toLocaleString()}`;
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        if (api && caps.modules?.departmentCost?.endpoints?.overview) {
-          const overviewResponse = await api.call('departmentCost', 'overview', {
+        if (api && caps?.modules?.["departmentCost"]?.endpoints?.["overview"]) {
+          const overviewResponse = await api.call<{ overview?: DepartmentOverviewData }>('departmentCost', 'overview', {
             params: {
               provider: filters.provider !== 'All' ? filters.provider : undefined,
               service: filters.service !== 'All' ? filters.service : undefined,
@@ -19,14 +28,12 @@ const DepartmentCost = ({ filters, api, caps, uploadId }) => {
               uploadId: uploadId
             }
           });
-          
-          if (overviewResponse?.success) {
-            setOverviewData(overviewResponse.data.overview || {});
-          }
+
+          setOverviewData(overviewResponse?.overview || {});
         }
 
-        if (api && caps.modules?.departmentCost?.endpoints?.trend) {
-          const trendResponse = await api.call('departmentCost', 'trend', {
+        if (api && caps?.modules?.["departmentCost"]?.endpoints?.["trend"]) {
+          const trendResponse = await api.call<{ trend?: DepartmentTrendPoint[] }>('departmentCost', 'trend', {
             params: {
               provider: filters.provider !== 'All' ? filters.provider : undefined,
               service: filters.service !== 'All' ? filters.service : undefined,
@@ -34,14 +41,12 @@ const DepartmentCost = ({ filters, api, caps, uploadId }) => {
               uploadId: uploadId
             }
           });
-          
-          if (trendResponse?.success) {
-            setTrendData(trendResponse.data.trend || []);
-          }
+
+          setTrendData(trendResponse?.trend || []);
         }
 
-        if (api && caps.modules?.departmentCost?.endpoints?.drilldown) {
-          const drilldownResponse = await api.call('departmentCost', 'drilldown', {
+        if (api && caps?.modules?.["departmentCost"]?.endpoints?.["drilldown"]) {
+          const drilldownResponse = await api.call<{ drilldown?: DepartmentServiceCost[] }>('departmentCost', 'drilldown', {
             params: {
               provider: filters.provider !== 'All' ? filters.provider : undefined,
               service: filters.service !== 'All' ? filters.service : undefined,
@@ -49,12 +54,10 @@ const DepartmentCost = ({ filters, api, caps, uploadId }) => {
               uploadId: uploadId
             }
           });
-          
-          if (drilldownResponse?.success) {
-            setDrilldownData(drilldownResponse.data.drilldown || []);
-          }
+
+          setDrilldownData(drilldownResponse?.drilldown || []);
         }
-      } catch (error) {
+      } catch (error: unknown) {
         console.error('Error fetching department cost data:', error);
       }
     };
@@ -65,7 +68,7 @@ const DepartmentCost = ({ filters, api, caps, uploadId }) => {
     }
   }, [filters, api, caps, uploadId]);
 
-  const COLORS = ['#a02ff1', '#48bb78', '#f56565', '#ecc94b', '#4fd1c5', '#805ad5'];
+  const COLORS = ['#007758', '#48bb78', '#f56565', '#ecc94b', '#4fd1c5', '#059669'];
 
   return (
     <div className="space-y-6">
@@ -125,10 +128,10 @@ const DepartmentCost = ({ filters, api, caps, uploadId }) => {
                 <Tooltip 
                   contentStyle={{ backgroundColor: '#1a1b20', borderColor: '#333', color: 'white' }}
                   itemStyle={{ color: 'white' }}
-                  formatter={(value) => [`$${value.toLocaleString()}`, 'Cost']}
+                  formatter={(value: NumericValue) => [formatCurrency(value), 'Cost']}
                 />
                 <Legend />
-                <Line type="monotone" dataKey="totalCost" stroke="#a02ff1" strokeWidth={2} dot={{ r: 4 }} name="Total Cost" />
+                <Line type="monotone" dataKey="totalCost" stroke="#007758" strokeWidth={2} dot={{ r: 4 }} name="Total Cost" />
               </LineChart>
             </ResponsiveContainer>
           </CardContent>
@@ -146,16 +149,16 @@ const DepartmentCost = ({ filters, api, caps, uploadId }) => {
                   cx="50%"
                   cy="50%"
                   labelLine={false}
-                  label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                  label={({ name, percent }: { name?: string; percent?: number }) => `${name}: ${((percent || 0) * 100).toFixed(0)}%`}
                   outerRadius={80}
                   fill="#8884d8"
                   dataKey="cost"
                 >
-                  {drilldownData.map((entry, index) => (
+                  {drilldownData.map((entry: DepartmentServiceCost, index: number) => (
                     <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                   ))}
                 </Pie>
-                <Tooltip formatter={(value) => [`$${value.toLocaleString()}`, 'Cost']} />
+                <Tooltip formatter={(value: NumericValue) => [formatCurrency(value), 'Cost']} />
               </PieChart>
             </ResponsiveContainer>
           </CardContent>
@@ -175,10 +178,10 @@ const DepartmentCost = ({ filters, api, caps, uploadId }) => {
               <Tooltip 
                 contentStyle={{ backgroundColor: '#1a1b20', borderColor: '#333', color: 'white' }}
                 itemStyle={{ color: 'white' }}
-                formatter={(value) => [`$${value.toLocaleString()}`, 'Cost']}
+                formatter={(value: NumericValue) => [formatCurrency(value), 'Cost']}
               />
               <Legend />
-              <Bar dataKey="cost" fill="#a02ff1" name="Cost" />
+              <Bar dataKey="cost" fill="#007758" name="Cost" />
             </BarChart>
           </ResponsiveContainer>
         </CardContent>

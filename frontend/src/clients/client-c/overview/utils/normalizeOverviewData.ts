@@ -1,4 +1,6 @@
-export function normalizeOverviewData(overviewData) {
+import type { NormalizedOverviewData, OverviewData } from "../types";
+
+export function normalizeOverviewData(overviewData: OverviewData | null | undefined): NormalizedOverviewData {
   if (!overviewData || typeof overviewData !== "object") {
     return {
       totalSpend: 0,
@@ -52,6 +54,7 @@ export function normalizeOverviewData(overviewData) {
 
   return {
     totalSpend,
+    trendPercentage: Number(overviewData.trendPercentage ?? 0),
     dailyData,
     groupedData,
     allRegionData,

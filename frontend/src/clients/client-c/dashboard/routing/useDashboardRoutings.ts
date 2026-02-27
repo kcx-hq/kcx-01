@@ -1,10 +1,25 @@
 import { useLocation } from 'react-router-dom';
 import { useMemo } from 'react';
 
+export interface ClientCDashboardRoutes {
+  isOverview: boolean;
+  isOverviewPath: boolean;
+  isDataExplorer: boolean;
+  isCostAnalysis: boolean;
+  isCostDrivers: boolean;
+  isResources: boolean;
+  isDataQuality: boolean;
+  isOptimization: boolean;
+  isReports: boolean;
+  isAccounts: boolean;
+  isDepartmentCost: boolean;
+  isProjectTracking: boolean;
+}
+
 export const useDashboardRoutes = () => {
   const { pathname } = useLocation();
 
-  return useMemo(() => ({
+  return useMemo<ClientCDashboardRoutes>(() => ({
     isOverview: pathname === '/client-c' || pathname === '/client-c/overview',
     isOverviewPath: pathname.startsWith('/client-c') && (pathname === '/client-c' || pathname === '/client-c/overview'),
     isDataExplorer: pathname.includes('/data-explorer'),

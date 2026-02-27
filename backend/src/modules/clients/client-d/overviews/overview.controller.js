@@ -1,5 +1,7 @@
 import { getOverview , clientDDataExplorerService} from './overview.service.js';
 import { extractUploadIds} from '../helpers/extractUploadId.js';
+import AppError from "../../../../errors/AppError.js";
+import logger from "../../../../lib/logger.js";
 
 /**
  * Same normalize helpers (copied from core controller)
@@ -12,7 +14,7 @@ import { extractUploadIds} from '../helpers/extractUploadId.js';
  * - chartData (kept, useful for trends)
  * - serviceBreakdown (NO region breakdown)
  */
-export const getClientDOverview = async (req, res) => {
+export const getClientDOverview = async (req, res, next) => {
   try {
     const filters = {
       provider: req.query.provider || 'All',
@@ -23,26 +25,23 @@ export const getClientDOverview = async (req, res) => {
     const uploadIds = extractUploadIds(req);
 
     if (uploadIds.length === 0) {
-      return res.json({
-        success: true,
-        data: {
-          kpis: {
-            totalSpend: 0,
-            avgDaily: 0,
-            trend: 0
-          },
-          chartData: [],
-          serviceBreakdown: [],
-          message: 'No upload selected. Please select a billing upload.'
-        }
+      return res.ok({
+        kpis: {
+          totalSpend: 0,
+          avgDaily: 0,
+          trend: 0
+        },
+        chartData: [],
+        serviceBreakdown: [],
+        message: 'No upload selected. Please select a billing upload.'
       });
     }
 
     const data = await getOverview(filters, uploadIds);
-    return res.json({ success: true, data });
+    return res.ok(data);
   } catch (error) {
-    console.error('ClientD Overview Error:', error);
-    return res.status(500).json({ success: false, error: error.message });
+    logger.error({ err: error, requestId: req.requestId }, 'ClientD Overview Error');
+    return next(new AppError(500, "INTERNAL", "Internal server error", { cause: error }));
   }
 };
 
@@ -53,7 +52,7 @@ export const getClientDOverview = async (req, res) => {
 
 
 /** ---------- Client-D: Data Explorer ---------- */
-export const getClientDDataExplorer = async (req, res) => {
+export const getClientDDataExplorer = async (req, res, next) => {
   try {
     const filters = {
       provider: req.query.provider || 'All',
@@ -79,28 +78,25 @@ export const getClientDDataExplorer = async (req, res) => {
     const uploadIds = extractUploadIds(req);
 
     if (uploadIds.length === 0) {
-      return res.json({
-        success: true,
-        data: {
-          rows: [],
-          total: 0,
-          page: pagination.page,
-          limit: pagination.limit,
-          message: 'No upload selected. Please select a billing upload.'
-        }
+      return res.ok({
+        rows: [],
+        total: 0,
+        page: pagination.page,
+        limit: pagination.limit,
+        message: 'No upload selected. Please select a billing upload.'
       });
     }
 
     const data = await clientDDataExplorerService.getDataExplorer(filters, pagination, uploadIds);
-    return res.json({ success: true, data });
+    return res.ok(data);
   } catch (error) {
-    console.error('ClientD DataExplorer Error:', error);
-    return res.status(500).json({ success: false, error: error.message });
+    logger.error({ err: error, requestId: req.requestId }, 'ClientD DataExplorer Error');
+    return next(new AppError(500, "INTERNAL", "Internal server error", { cause: error }));
   }
 };
 
 /** ---------- Client-D: CSV Export ---------- */
-export const exportClientDDataExplorerCSV = async (req, res) => {
+export const exportClientDDataExplorerCSV = async (req, res, next) => {
   try {
     const filters = {
       provider: req.query.provider || 'All',
@@ -127,11 +123,7 @@ export const exportClientDDataExplorerCSV = async (req, res) => {
     const uploadIds = extractUploadIds(req);
 
     if (uploadIds.length === 0) {
-      return res.status(400).json({
-        success: false,
-        error: 'uploadIds is required',
-        message: 'No upload selected. Please select a billing upload to export.'
-      });
+      return next(new AppError(400, "VALIDATION_ERROR", "Invalid request"));
     }
 
     const csvData = await clientDDataExplorerService.exportCSV(
@@ -150,8 +142,8 @@ export const exportClientDDataExplorerCSV = async (req, res) => {
 
     return res.send(csvData);
   } catch (error) {
-    console.error('ClientD CSV Export Error:', error);
-    return res.status(500).json({ success: false, error: error.message });
+    logger.error({ err: error, requestId: req.requestId }, 'ClientD CSV Export Error');
+    return next(new AppError(500, "INTERNAL", "Internal server error", { cause: error }));
   }
 };
 

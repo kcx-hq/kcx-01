@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import type { LucideIcon } from "lucide-react";
 import {
   Zap,
   ArrowRight,
@@ -12,6 +13,23 @@ import {
   Lock,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+
+interface StatItemProps {
+  icon: LucideIcon;
+  value: string;
+  label: string;
+  iconColor: string;
+  delay: number;
+}
+
+interface ValueCardProps {
+  icon: LucideIcon;
+  title: string;
+  desc: string;
+  badgeBg: string;
+  iconColor: string;
+  details: string[];
+}
 
 const About = () => {
   // --- ANIMATION VARIANTS ---
@@ -93,7 +111,7 @@ const About = () => {
             variants={fadeInUp}
             className="text-[var(--text-secondary)] text-lg leading-relaxed mb-6"
           >
-            K&amp;Co is a Cloud FinOps platform that helps engineering-led
+            KCX. is a Cloud FinOps platform that helps engineering-led
             companies understand, control, and optimize their cloud spend —
             without slowing down development.
           </motion.p>
@@ -156,7 +174,7 @@ const About = () => {
           />
         </motion.div>
 
-        {/* --- PART 3: THE K&Co. DIFFERENCE --- */}
+        {/* --- PART 3: THE KCX. DIFFERENCE --- */}
         <motion.div
           initial="hidden"
           whileInView="visible"
@@ -224,7 +242,7 @@ const About = () => {
 
 // --- SUB-COMPONENTS ---
 
-const StatItem = ({ icon: Icon, value, label, iconColor, delay }) => (
+const StatItem = ({ icon: Icon, value, label, iconColor, delay }: StatItemProps) => (
   <motion.div
     variants={{
       hidden: { scale: 0.8, opacity: 0 },
@@ -259,7 +277,7 @@ const StatItem = ({ icon: Icon, value, label, iconColor, delay }) => (
 );
 
 // --- INTERACTIVE VALUE CARD ---
-const ValueCard = ({ icon: Icon, title, desc, badgeBg, iconColor, details }) => {
+const ValueCard = ({ icon: Icon, title, desc, badgeBg, iconColor, details }: ValueCardProps) => {
   const [isOpen, setIsOpen] = useState(false);
 
   return (
@@ -371,7 +389,7 @@ const ValueCard = ({ icon: Icon, title, desc, badgeBg, iconColor, details }) => 
                 </h5>
 
                 <button
-                  onClick={(e) => {
+                  onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
                     e.stopPropagation();
                     setIsOpen(false);
                   }}
@@ -397,7 +415,7 @@ const ValueCard = ({ icon: Icon, title, desc, badgeBg, iconColor, details }) => 
               </ul>
 
               <button
-                onClick={(e) => {
+                onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
                   e.stopPropagation();
                   setIsOpen(false);
                 }}

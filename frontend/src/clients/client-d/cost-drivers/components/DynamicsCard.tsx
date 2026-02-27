@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import { ResponsiveContainer, Treemap } from "recharts";
 import { formatCurrency } from "../../../../core-dashboard/cost-drivers/utils/format";
+import type { CostDriverItem, DynamicsCardProps, MetricProps } from "../types";
 
 export function DynamicsCard({
   showTreeMap,
@@ -16,7 +17,7 @@ export function DynamicsCard({
   increases,
   decreases,
   dynamics,
-}) {
+}: DynamicsCardProps) {
   return (
     <div className="bg-[#1a1b20] border border-white/10 rounded-2xl p-4 shadow-lg">
       <div className="flex justify-between items-center mb-3">
@@ -26,11 +27,11 @@ export function DynamicsCard({
         </h3>
 
         <button
-          onClick={() => setShowTreeMap((p) => !p)}
+          onClick={() => setShowTreeMap((p: boolean) => !p)}
           className={[
             "p-1.5 rounded-lg transition-all border",
             showTreeMap
-              ? "bg-[#a02ff1] text-white border-[#a02ff1]"
+              ? "bg-[#007758] text-white border-[#007758]"
               : "bg-black/40 hover:bg-black/60 text-gray-400 hover:text-gray-200 border-white/10",
           ].join(" ")}
           title="Toggle View"
@@ -43,7 +44,7 @@ export function DynamicsCard({
         <div className="h-56">
           <ResponsiveContainer width="100%" height="100%">
             <Treemap
-              data={[...increases.slice(0, 10), ...decreases.slice(0, 10)].map((item) => ({
+              data={[...increases.slice(0, 10), ...decreases.slice(0, 10)].map((item: CostDriverItem) => ({
                 name: item.name,
                 value: Math.abs(item.diff),
                 fill: item.diff > 0 ? "#ef4444" : "#10b981",
@@ -66,7 +67,7 @@ export function DynamicsCard({
   );
 }
 
-function Metric({ label, icon, tone, value }) {
+function Metric({ label, icon, tone, value }: MetricProps) {
   return (
     <div className="bg-black/20 p-3 rounded-xl border border-white/5">
       <div className={`flex items-center gap-1.5 ${tone} mb-1`}>

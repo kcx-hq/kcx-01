@@ -1,10 +1,8 @@
-
+import { createRequire } from "module";
 import { S3Client, GetObjectCommand } from "@aws-sdk/client-s3";
 import { createGunzip } from "zlib";
 import csv from "csv-parser";
 import assumeRole from "../../../aws/assumeRole.js";
-import sequelize from "../../../config/db.config.js";
-
 import { collectDimensions } from "./dimensions/collectDimensions.js";
 import { bulkUpsertDimensions } from "./dimensions/bulkUpsertDimensions.js";
 import { preloadDimensionMaps } from "./dimensions/preloadDimensionsMaps.js";
@@ -19,14 +17,16 @@ import { mapRow } from "../../../utils/sanitize.js";
 import { detectProvider } from "./provider-detect.service.js";
 import { autoSuggest } from "../../../utils/mapping/autoSuggest.js";
 import { internalFields } from "../../../utils/mapping/internalFields.js";
+import logger from "../../../lib/logger.js";
 
-
+const require = createRequire(import.meta.url);
+const { sequelize } = require("../../../db/index.cjs");
 
 async function ingest() {
   try {
     const s3Key = process.argv[2];
     const clientid = "e757b872-9f72-45d0-9003-f48247a580c5";
-    const uploadId = "dc9da399-22a7-4e3e-aaf7-f8c74f158377" // TODO: make create for uploadid
+    const uploadId = "dc9da399-22a7-4e3e-aaf7-f8c74f158377";
     const creds = await assumeRole();
 
     const s3 = new S3Client({
@@ -48,7 +48,7 @@ async function ingest() {
       : response.Body;
 
     const csvStream = inputStream.pipe(csv());
- 
+
     let headers;
     let provider;
     let resolvedMapping;
@@ -70,17 +70,12 @@ async function ingest() {
 
       sampleRows.push(rawRow);
 
-      // Take first 200 rows for suggestion
       if (sampleRows.length === 200 && !resolvedMapping) {
         const suggestions = autoSuggest(headers, sampleRows, internalFields);
 
         await storeAutoSuggestions(provider, uploadId, suggestions, clientid);
 
-        resolvedMapping = await loadResolvedMapping(
-          provider,
-          headers,
-          clientid
-        );
+        resolvedMapping = await loadResolvedMapping(provider, headers, clientid);
       }
 
       if (resolvedMapping) {
@@ -88,10 +83,6 @@ async function ingest() {
         mappedRowsForDims.push(mapped);
       }
     }
-
-    /* ======================
-       DIMENSIONS UPSERT
-    ======================= */
 
     const dims = await collectDimensions(mappedRowsForDims);
 
@@ -105,10 +96,6 @@ async function ingest() {
     }
 
     const maps = await preloadDimensionMaps();
-
-    /* ======================
-       FACT INSERT
-    ======================= */
 
     for (const row of mappedRowsForDims) {
       const dimensionIds = resolveDimensionIdsFromMaps(row, maps);
@@ -125,10 +112,9 @@ async function ingest() {
     }
 
     await flushFacts();
-
-    console.log("✅ Direct ETL complete");
+    logger.info({ uploadId, clientid, bucket: Bucket }, "direct ETL complete");
   } catch (err) {
-    console.error("❌ ETL failed:", err);
+    logger.error({ err }, "direct ETL failed");
   }
 }
 

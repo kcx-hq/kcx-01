@@ -4,7 +4,7 @@ export function getCapabilities(req, res) {
   const clientId = req.clientId;
   const caps = CAPABILITIES_MAP[clientId] || CAPABILITIES_MAP.core;
 
-  return res.json({
+  return res.ok({
     ...caps,
     // Helpful metadata
     serverTime: new Date().toISOString(),

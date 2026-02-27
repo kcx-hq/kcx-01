@@ -5,6 +5,7 @@ import ServiceSpendChart from "../common/widgets/ServiceSpendChart";
 import MostPopularRegion from "../common/widgets/MostPopularRegion";
 
 import OverviewStates from "./components/OverviewStates";
+import type { DepartmentBreakdownItem, OverviewViewProps } from "./types";
 
 const OverviewView = ({
   filters,
@@ -19,7 +20,7 @@ const OverviewView = ({
   chartFilters,
   onTrendLimitChange,
   onBarLimitChange,
-}) => {
+}: OverviewViewProps) => {
   const {
     totalSpend,
     dailyData,
@@ -35,7 +36,6 @@ const OverviewView = ({
     topServicePercent,
     avgDailySpend,
     departmentBreakdown,
-    departmentTrends,
   } = extractedData;
 
   // Special empty case (same as your original)
@@ -65,7 +65,7 @@ const OverviewView = ({
       {/* CONTENT */}
       <div className="flex-1 overflow-y-auto relative min-h-0">
         {isFiltering && overviewData && (
-          <div className="absolute top-4 right-4 z-50 flex items-center gap-2 bg-[#1a1b20]/90 backdrop-blur-md border border-[#a02ff1]/30 rounded-lg px-3 py-2 shadow-lg">
+          <div className="absolute top-4 right-4 z-50 flex items-center gap-2 bg-[#1a1b20]/90 backdrop-blur-md border border-[#007758]/30 rounded-lg px-3 py-2 shadow-lg">
             <span className="text-xs text-gray-300 font-medium">Filtering...</span>
           </div>
         )}
@@ -85,7 +85,6 @@ const OverviewView = ({
               billingPeriod={billingPeriod}
               topRegionPercent={topRegionPercent}
               topServicePercent={topServicePercent}
-              departmentBreakdown={departmentBreakdown}
             />
 
             <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
@@ -121,7 +120,7 @@ const OverviewView = ({
                 <div className="bg-[#1a1b20]/60 backdrop-blur-md border border-white/5 rounded-2xl p-5 shadow-xl">
                   <h3 className="text-sm font-bold text-white mb-4">Department Cost Breakdown</h3>
                   <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-                    {departmentBreakdown.map((dept, index) => (
+                    {departmentBreakdown.map((dept: DepartmentBreakdownItem) => (
                       <div key={dept.name} className="bg-[#0f0f11]/50 p-3 rounded-lg border border-white/5">
                         <div className="text-xs text-gray-400 truncate">{dept.name}</div>
                         <div className="text-lg font-bold text-white mt-1">

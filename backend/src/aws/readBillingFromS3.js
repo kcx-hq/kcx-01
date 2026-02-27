@@ -1,5 +1,6 @@
 import { S3Client, ListObjectsV2Command, GetObjectCommand } from "@aws-sdk/client-s3";
 import assumeRole from "./assumeRole.js";
+import logger from "../lib/logger.js";
 
 async function readBilling() {
   try {
@@ -19,7 +20,7 @@ async function readBilling() {
     const Bucket = "kcx-msu-billing";
     const Prefix = "demo/kcx-msu/data/";
 
-    console.log("Listing objects…");
+    logger.info("Listing objects…");
 
     // 3. List objects
     const list = await s3.send(
@@ -31,7 +32,7 @@ async function readBilling() {
     }
 
     const key = list.Contents[0].Key;
-    console.log("Found file:", key);
+    logger.info("Found file:", key);
 
     // 4. Read object
     const obj = await s3.send(
@@ -39,13 +40,13 @@ async function readBilling() {
     );
 
     const body = await streamToString(obj.Body);
-    console.log("FILE CONTENT (first 500 chars):");
-    console.log(body.slice(0, 500));
+    logger.info("FILE CONTENT (first 500 chars):");
+    logger.info(body.slice(0, 500));
 
-    console.log("S3 READ SUCCESS ✅");
+    logger.info("S3 READ SUCCESS ✅");
   } catch (err) {
-    console.error("S3 READ FAILED ❌");
-    console.error(err);
+    logger.error("S3 READ FAILED ❌");
+    logger.error(err);
   }
 }
 

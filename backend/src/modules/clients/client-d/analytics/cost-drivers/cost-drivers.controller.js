@@ -1,5 +1,7 @@
 import { clientDCostDriversService } from './cost-drivers.service.js';
 import { extractUploadIds } from '../../helpers/extractUploadId.js';
+import AppError from "../../../../../errors/AppError.js";
+import logger from "../../../../../lib/logger.js";
 
 
 
@@ -7,14 +9,10 @@ import { extractUploadIds } from '../../helpers/extractUploadId.js';
  * GET /api/client-d/drivers/analysis
  * Extended cost drivers (adds SKU + commitment attribution summaries)
  */
-export const getClientDCostDrivers = async (req, res) => {
+export const getClientDCostDrivers = async (req, res, next) => {
   try {
     if (!req.user?.id) {
-      return res.status(401).json({
-        success: false,
-        error: 'Authentication required',
-        message: 'Please log in to view cost drivers'
-      });
+      return next(new AppError(401, "UNAUTHENTICATED", "Authentication required"));
     }
 
     const filters = {
@@ -38,26 +36,23 @@ export const getClientDCostDrivers = async (req, res) => {
     const uploadIds = extractUploadIds(req);
 
     if (uploadIds.length === 0) {
-      return res.json({
-        success: true,
-        data: {
-          increases: [],
-          decreases: [],
-          overallStats: {
-            totalCurr: 0,
-            totalPrev: 0,
-            diff: 0,
-            pct: 0,
-            totalIncreases: 0,
-            totalDecreases: 0
-          },
-          dynamics: { newSpend: 0, expansion: 0, deleted: 0, optimization: 0 },
-          periods: { current: null, prev: null, max: null },
-          availableServices: [],
-          skuDrivers: [],
-          commitmentAttribution: { byType: [], totals: {} },
-          message: 'No upload selected. Please select a billing upload to analyze cost drivers.'
-        }
+      return res.ok({
+        increases: [],
+        decreases: [],
+        overallStats: {
+          totalCurr: 0,
+          totalPrev: 0,
+          diff: 0,
+          pct: 0,
+          totalIncreases: 0,
+          totalDecreases: 0
+        },
+        dynamics: { newSpend: 0, expansion: 0, deleted: 0, optimization: 0 },
+        periods: { current: null, prev: null, max: null },
+        availableServices: [],
+        skuDrivers: [],
+        commitmentAttribution: { byType: [], totals: {} },
+        message: 'No upload selected. Please select a billing upload to analyze cost drivers.'
       });
     }
 
@@ -70,14 +65,10 @@ export const getClientDCostDrivers = async (req, res) => {
       uploadIds
     });
 
-    return res.json({ success: true, data });
+    return res.ok(data);
   } catch (error) {
-    console.error('ClientD getCostDrivers Error:', error);
-    return res.status(500).json({
-      success: false,
-      error: 'Failed to analyze Client-D cost drivers',
-      message: error.message
-    });
+    logger.error({ err: error, requestId: req.requestId }, 'ClientD getCostDrivers Error');
+    return next(new AppError(500, "INTERNAL", "Internal server error", { cause: error }));
   }
 };
 
@@ -85,13 +76,10 @@ export const getClientDCostDrivers = async (req, res) => {
  * POST /api/client-d/drivers/details
  * Extended drilldown: includes SKU + commitment breakdown inside details
  */
-export const getClientDDriverDetails = async (req, res) => {
+export const getClientDDriverDetails = async (req, res, next) => {
   try {
     if (!req.user?.id) {
-      return res.status(401).json({
-        success: false,
-        error: 'Authentication required'
-      });
+      return next(new AppError(401, "UNAUTHENTICATED", "Authentication required"));
     }
 
     const { driver } = req.body;
@@ -100,15 +88,12 @@ export const getClientDDriverDetails = async (req, res) => {
       : 30;
 
     if (!driver) {
-      return res.status(400).json({
-        success: false,
-        error: 'Driver data is required'
-      });
+      return next(new AppError(400, "VALIDATION_ERROR", "Invalid request"));
     }
 
     const uploadIds = extractUploadIds(req);
     if (uploadIds.length === 0) {
-      return res.status(400).json({ success: false, error: 'uploadid is required' });
+      return next(new AppError(400, "VALIDATION_ERROR", "Invalid request"));
     }
 
     const data = await clientDCostDriversService.getDriverDetails({
@@ -117,13 +102,9 @@ export const getClientDDriverDetails = async (req, res) => {
       uploadIds
     });
 
-    return res.json({ success: true, data });
+    return res.ok(data);
   } catch (error) {
-    console.error('ClientD getDriverDetails Error:', error);
-    return res.status(500).json({
-      success: false,
-      error: 'Failed to get Client-D driver details',
-      message: error.message
-    });
+    logger.error({ err: error, requestId: req.requestId }, 'ClientD getDriverDetails Error');
+    return next(new AppError(500, "INTERNAL", "Internal server error", { cause: error }));
   }
 };

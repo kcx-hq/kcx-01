@@ -4,6 +4,7 @@ import { DateTime } from "luxon";
 
 
 import { toZonedTime } from "date-fns-tz";
+import logger from "../lib/logger.js";
 
 const BUSINESS_TZ = "Asia/Kolkata"; // Company timezone
 
@@ -76,7 +77,7 @@ export async function scheduleEvent(
       event: response.data,
     };
   } catch (error) {
-    console.error("Schedule error:", error);
+    logger.error("Schedule error:", error);
     return { success: false, message: error.message };
   }
 }

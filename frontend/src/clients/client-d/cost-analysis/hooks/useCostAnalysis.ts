@@ -1,14 +1,20 @@
 import { useEffect, useRef, useState } from "react";
+import type { ApiLikeError, CostAnalysisApiData, UseCostAnalysisParams, UseCostAnalysisResult } from "../types";
 
-export function useCostAnalysis({ api, caps, filters, groupBy }) {
+export function useCostAnalysis({
+  api,
+  caps,
+  filters,
+  groupBy,
+}: UseCostAnalysisParams): UseCostAnalysisResult {
   const [loading, setLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const [apiData, setApiData] = useState(null);
-  const [error, setError] = useState(null);
+  const [apiData, setApiData] = useState<CostAnalysisApiData | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   const prevFiltersRef = useRef(filters);
   const prevGroupByRef = useRef(groupBy);
-  const abortControllerRef = useRef(null);
+  const abortControllerRef = useRef<AbortController | null>(null);
   const isInitialLoadRef = useRef(true);
 
   useEffect(() => {
@@ -33,30 +39,29 @@ export function useCostAnalysis({ api, caps, filters, groupBy }) {
       try {
         if (!api || !caps) return;
 
-        const params = {
+        const params: Record<string, string | undefined> = {
           provider: filters.provider !== "All" ? filters.provider : undefined,
           service: filters.service !== "All" ? filters.service : undefined,
           region: filters.region !== "All" ? filters.region : undefined,
           groupBy,
         };
 
-        const res = await api.call("costAnalytics", "costAnalysis", { params });
+        const res = await api.call<unknown>("costAnalytics", "costAnalysis", { params });
         if (abortController.signal.aborted) return;
 
-        const payload = res?.data ?? res;
-
-        console.log(payload)
-        setApiData(payload);
+        const payload = res as CostAnalysisApiData | null | undefined;
+        setApiData((payload as CostAnalysisApiData | null) ?? null);
         setError(null);
 
         prevFiltersRef.current = { ...filters };
         prevGroupByRef.current = groupBy;
         isInitialLoadRef.current = false;
-      } catch (e) {
-        if (e?.code === "NOT_SUPPORTED") return;
-        if (e?.name !== "AbortError" && !abortController.signal.aborted) {
+      } catch (e: unknown) {
+        const err = e as ApiLikeError;
+        if (err?.code === "NOT_SUPPORTED") return;
+        if (err?.name !== "AbortError" && !abortController.signal.aborted) {
           setError("Failed to load data.");
-          console.error("Cost analysis fetch error:", e);
+          console.error("Cost analysis fetch error:", err);
         }
       } finally {
         if (!abortController.signal.aborted) {

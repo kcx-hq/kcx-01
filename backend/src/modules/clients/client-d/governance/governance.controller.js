@@ -5,6 +5,8 @@
 
 import { clientDGovernanceService } from './governance.service.js';
 import { extractUploadIds } from '../helpers/extractUploadId.js';
+import AppError from "../../../../errors/AppError.js";
+import logger from "../../../../lib/logger.js";
 
 
 /**
@@ -13,7 +15,7 @@ import { extractUploadIds } from '../helpers/extractUploadId.js';
  * - taggedCost, untaggedCost
  * - taggedPercent, untaggedPercent
  */
-export const getClientDCompliance = async (req, res) => {
+export const getClientDCompliance = async (req, res, next) => {
   try {
     const filters = {
       provider: req.query.provider || 'All',
@@ -25,15 +27,11 @@ export const getClientDCompliance = async (req, res) => {
     const uploadIds = extractUploadIds(req);
 
     if (uploadIds.length === 0) {
-      return res.json({
-        success: true,
-        data: {
-          taggedCost: 0,
-          untaggedCost: 0,
-          taggedPercent: 0,
-          untaggedPercent: 0
-        },
-        message: 'No upload selected. Please select a billing upload to view compliance data.'
+      return res.ok({
+        taggedCost: 0,
+        untaggedCost: 0,
+        taggedPercent: 0,
+        untaggedPercent: 0
       });
     }
 
@@ -43,21 +41,16 @@ export const getClientDCompliance = async (req, res) => {
       uploadIds
     });
 
-    return res.json({
-      success: true,
-      data: data || {
+    return res.ok(
+      data || {
         taggedCost: 0,
         untaggedCost: 0,
         taggedPercent: 0,
         untaggedPercent: 0
       }
-    });
+    );
   } catch (error) {
-    console.error('Client-D Governance Compliance Error:', error);
-    return res.status(500).json({
-      success: false,
-      error: 'Failed to fetch Client-D compliance data',
-      message: error.message
-    });
+    logger.error({ err: error, requestId: req.requestId }, 'Client-D Governance Compliance Error');
+    return next(new AppError(500, "INTERNAL", "Internal server error", { cause: error }));
   }
 };

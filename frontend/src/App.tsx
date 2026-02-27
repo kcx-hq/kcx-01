@@ -42,7 +42,6 @@ import Chatbot from "./shared/chatbot/Chatbot";
 import ForgotPassword from "./shared/auth/components/ForgotPassword";
 import ResetPassword from "./shared/auth/components/ResetPassword";
 const Home = () => {
-  const [showJourneySection, setShowJourneySection] = useState(false);
   const [isCTAActivated, setIsCTAActivated] = useState(false);
   const [showAttentionGrabber, setShowAttentionGrabber] = useState(false);
 
@@ -58,8 +57,6 @@ const Home = () => {
     }
   }, [navigate]);
 
-  const showJourney = () => setShowJourneySection(true);
-
   const activateCTA = () => {
     setIsCTAActivated(true);
     setShowAttentionGrabber(true);
@@ -74,14 +71,13 @@ const Home = () => {
 
   return (
     <div className="min-h-screen bg-[var(--bg-main)] font-sans overflow-x-hidden">
-      <Navbar showJourney={showJourney} />
+      <Navbar />
 
       <main>
         <Hero
           isCTAActivated={isCTAActivated}
           deactivateCTA={deactivateCTA}
           showAttentionGrabber={showAttentionGrabber}
-          showJourney={showJourney}
         />
 
         <About />
@@ -114,7 +110,7 @@ const Home = () => {
 
       {/* Floating Chat Button (no gradient, no glow) */}
       <button
-        onClick={() => setIsChatOpen((prev) => !prev)}
+        onClick={() => setIsChatOpen((prev: boolean) => !prev)}
         className="
           fixed bottom-6 right-6 z-50 rounded-full
           px-5 py-3 font-semibold

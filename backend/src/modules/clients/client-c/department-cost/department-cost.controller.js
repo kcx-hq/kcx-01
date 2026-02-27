@@ -1,4 +1,6 @@
 import { getDepartmentOverview, getDepartmentTrend, getDepartmentDrilldown } from './department-cost.service.js';
+import AppError from "../../../../errors/AppError.js";
+import logger from "../../../../lib/logger.js";
 
 function extractUploadIds(req) {
   const raw = req.query.uploadIds ?? req.query.uploadId ?? req.body?.uploadIds;
@@ -8,7 +10,7 @@ function extractUploadIds(req) {
   return [];
 }
 
-export const getOverview = async (req, res) => {
+export const getOverview = async (req, res, next) => {
   try {
     const uploadIds = extractUploadIds(req);
     const filters = {
@@ -16,33 +18,33 @@ export const getOverview = async (req, res) => {
       service: req.query.service || 'All',
     };
     const data = await getDepartmentOverview({ filters, uploadIds });
-    res.json({ success: true, data });
+    return res.ok(data);
   } catch (error) {
-    console.error('Department Overview Error:', error);
-    res.status(500).json({ success: false, error: error.message });
+    logger.error({ err: error, requestId: req.requestId }, 'Department Overview Error');
+    return next(new AppError(500, "INTERNAL", "Internal server error", { cause: error }));
   }
 };
 
-export const getTrend = async (req, res) => {
+export const getTrend = async (req, res, next) => {
   try {
     const uploadIds = extractUploadIds(req);
     const department = req.query.department || 'All';
     const data = await getDepartmentTrend({ uploadIds, department });
-    res.json({ success: true, data });
+    return res.ok(data);
   } catch (error) {
-    console.error('Department Trend Error:', error);
-    res.status(500).json({ success: false, error: error.message });
+    logger.error({ err: error, requestId: req.requestId }, 'Department Trend Error');
+    return next(new AppError(500, "INTERNAL", "Internal server error", { cause: error }));
   }
 };
 
-export const getDrilldown = async (req, res) => {
+export const getDrilldown = async (req, res, next) => {
   try {
     const uploadIds = extractUploadIds(req);
     const department = req.query.department || 'All';
     const data = await getDepartmentDrilldown({ uploadIds, department });
-    res.json({ success: true, data });
+    return res.ok(data);
   } catch (error) {
-    console.error('Department Drilldown Error:', error);
-    res.status(500).json({ success: false, error: error.message });
+    logger.error({ err: error, requestId: req.requestId }, 'Department Drilldown Error');
+    return next(new AppError(500, "INTERNAL", "Internal server error", { cause: error }));
   }
 };

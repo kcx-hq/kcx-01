@@ -1,27 +1,26 @@
 import React, { useState } from "react";
-import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { Mail, ArrowLeft, KeyRound } from "lucide-react";
 import { toast } from "react-hot-toast";
-
-const API = import.meta.env.VITE_API_URL;
+import { apiPost } from "../../../services/http";
+import { getApiErrorMessageWithRequestId } from "../../../services/apiError";
 
 export default function ForgotPassword() {
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
-  const [focusedField, setFocusedField] = useState(null);
+  const [focusedField, setFocusedField] = useState<"email" | null>(null);
   const navigate = useNavigate();
 
-  const submit = async (e) => {
+  const submit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setLoading(true);
 
     try {
-      const res = await axios.post(`${API}/api/auth/forgot-password`, { email });
-      toast.success(res.data.message || "Reset link sent!");
+      const response = await apiPost<{ message?: string }>("/api/auth/forgot-password", { email });
+      toast.success(response.message || "Reset link sent!");
       // Optional: navigate back after success or just show toast
-    } catch (err) {
-      toast.error(err.response?.data?.message || "Something went wrong.");
+    } catch (err: unknown) {
+      toast.error(getApiErrorMessageWithRequestId(err, "Something went wrong."));
     } finally {
       setLoading(false);
     }
@@ -74,7 +73,7 @@ export default function ForgotPassword() {
                 <input
                   type="email"
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEmail(e.target.value)}
                   required
                   onFocus={() => setFocusedField('email')}
                   onBlur={() => setFocusedField(null)}

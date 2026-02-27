@@ -1,7 +1,8 @@
 import React from "react";
 import { LayoutGrid } from "lucide-react";
+import type { CostMapCardProps } from "../types";
 
-export function CostMapCard({ showTreeMap, increases, decreases }) {
+export function CostMapCard({ showTreeMap, increases, decreases }: CostMapCardProps) {
   return (
     <div className="bg-[#1a1b20] border border-white/10 rounded-2xl p-4 shadow-lg">
       <div className="flex items-center justify-between mb-2">

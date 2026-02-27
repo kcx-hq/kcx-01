@@ -17,8 +17,28 @@ const COLORS = [
 const BRAND = "#007758";
 const BRAND_SOFT = "#00c592";
 
-const RegionPieChart = ({ data, limit = 8, onLimitChange, totalSpend = 0 }) => {
-  const formatCurrency = (val) =>
+interface RegionSpendDatum {
+  name: string;
+  value: number;
+}
+
+interface PieLabelRenderProps {
+  percent?: number;
+  cx?: number;
+  cy?: number;
+  midAngle?: number;
+  outerRadius?: number;
+}
+
+interface RegionPieChartProps {
+  data?: RegionSpendDatum[];
+  limit?: number;
+  onLimitChange?: (limit: number) => void;
+  totalSpend?: number;
+}
+
+const RegionPieChart = ({ data, limit = 8, onLimitChange, totalSpend = 0 }: RegionPieChartProps) => {
+  const formatCurrency = (val: number) =>
     new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(val);
 
   // Process data to add "Others" bucket for regions < 2%
@@ -26,15 +46,15 @@ const RegionPieChart = ({ data, limit = 8, onLimitChange, totalSpend = 0 }) => {
     if (!data || data.length === 0) return [];
 
     const threshold = totalSpend * 0.02; // 2% threshold
-    const mainRegions = [];
+    const mainRegions: RegionSpendDatum[] = [];
     let othersTotal = 0;
 
-    data.forEach((item) => {
+    data.forEach((item: RegionSpendDatum) => {
       if (item.value >= threshold) mainRegions.push(item);
       else othersTotal += item.value;
     });
 
-    mainRegions.sort((a, b) => b.value - a.value);
+    mainRegions.sort((a: RegionSpendDatum, b: RegionSpendDatum) => b.value - a.value);
 
     if (othersTotal > 0) {
       mainRegions.push({ name: "Others", value: othersTotal });
@@ -55,24 +75,26 @@ const RegionPieChart = ({ data, limit = 8, onLimitChange, totalSpend = 0 }) => {
             <Settings2 size={12} className="text-gray-500" />
             <select
               value={limit}
-              onChange={(e) => onLimitChange(Number(e.target.value))}
+              onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
+                onLimitChange(Number(e.target.value))
+              }
               className="text-[10px] bg-[#0f0f11] border border-white/10 rounded px-2 py-1 text-gray-300 focus:outline-none transition-all cursor-pointer"
               style={{
                 colorScheme: "dark",
                 borderColor: "rgba(255,255,255,0.10)",
               }}
-              onFocus={(e) => {
+              onFocus={(e: React.FocusEvent<HTMLSelectElement>) => {
                 e.currentTarget.style.borderColor = "rgba(0,197,146,0.55)";
                 e.currentTarget.style.boxShadow = "0 0 0 4px rgba(0,197,146,0.12)";
               }}
-              onBlur={(e) => {
+              onBlur={(e: React.FocusEvent<HTMLSelectElement>) => {
                 e.currentTarget.style.borderColor = "rgba(255,255,255,0.10)";
                 e.currentTarget.style.boxShadow = "none";
               }}
-              onMouseEnter={(e) => {
+              onMouseEnter={(e: React.MouseEvent<HTMLSelectElement>) => {
                 e.currentTarget.style.borderColor = "rgba(0,197,146,0.45)";
               }}
-              onMouseLeave={(e) => {
+              onMouseLeave={(e: React.MouseEvent<HTMLSelectElement>) => {
                 e.currentTarget.style.borderColor = "rgba(255,255,255,0.10)";
               }}
             >
@@ -106,18 +128,22 @@ const RegionPieChart = ({ data, limit = 8, onLimitChange, totalSpend = 0 }) => {
                 cx="50%"
                 cy="50%"
                 labelLine={{ stroke: "#9ca3af", strokeWidth: 1 }}
-                label={({ percent, cx, cy, midAngle, outerRadius }) => {
+                label={({ percent, cx, cy, midAngle, outerRadius }: PieLabelRenderProps) => {
                   const RADIAN = Math.PI / 180;
-                  const radius = outerRadius + 25;
-                  const x = cx + radius * Math.cos(-midAngle * RADIAN);
-                  const y = cy + radius * Math.sin(-midAngle * RADIAN);
+                  const centerX = cx ?? 0;
+                  const centerY = cy ?? 0;
+                  const angle = midAngle ?? 0;
+                  const radius = (outerRadius ?? 0) + 25;
+                  const percentValue = percent ?? 0;
+                  const x = centerX + radius * Math.cos(-angle * RADIAN);
+                  const y = centerY + radius * Math.sin(-angle * RADIAN);
 
                   return (
                     <text
                       x={x}
                       y={y}
                       fill="white"
-                      textAnchor={x > cx ? "start" : "end"}
+                      textAnchor={x > centerX ? "start" : "end"}
                       dominantBaseline="central"
                       fontSize="11"
                       fontWeight="600"
@@ -129,7 +155,7 @@ const RegionPieChart = ({ data, limit = 8, onLimitChange, totalSpend = 0 }) => {
                         MozOsxFontSmoothing: "grayscale",
                       }}
                     >
-                      {`${(percent * 100).toFixed(0)}%`}
+                      {`${(percentValue * 100).toFixed(0)}%`}
                     </text>
                   );
                 }}
@@ -137,7 +163,7 @@ const RegionPieChart = ({ data, limit = 8, onLimitChange, totalSpend = 0 }) => {
                 fill="#8884d8"
                 dataKey="value"
               >
-                {processedData.map((entry, index) => (
+                {processedData.map((entry: RegionSpendDatum, index: number) => (
                   <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                 ))}
               </Pie>
@@ -153,7 +179,10 @@ const RegionPieChart = ({ data, limit = 8, onLimitChange, totalSpend = 0 }) => {
                   boxShadow: "0 0 28px rgba(0,0,0,0.55)",
                 }}
                 itemStyle={{ color: "#fff" }}
-                formatter={(value, name) => [formatCurrency(value), name]}
+                formatter={(value: number | string, name: string) => {
+                  const numericValue = typeof value === "number" ? value : Number(value);
+                  return [formatCurrency(numericValue), name];
+                }}
               />
             </PieChart>
           </ResponsiveContainer>
@@ -162,7 +191,7 @@ const RegionPieChart = ({ data, limit = 8, onLimitChange, totalSpend = 0 }) => {
         {/* Legend */}
         <div className="w-full pt-2 border-t border-white/5">
           <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-            {processedData.map((entry, index) => (
+            {processedData.map((entry: RegionSpendDatum, index: number) => (
               <div key={`legend-${index}`} className="flex items-center gap-2 text-[10px]">
                 <div
                   className="w-3 h-3 rounded-sm flex-shrink-0"

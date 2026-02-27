@@ -1,5 +1,17 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { buildParamsFromFilters } from "../utils/helpers";
+import type {
+  ApiLikeError,
+  OptimizationDataExtended,
+  OptimizationIdlePayload,
+  OptimizationModuleCaps,
+  OptimizationRightSizingPayload,
+  OptimizationSummaryPayload,
+  Opportunity,
+  RecommendationRaw,
+  UseOptimizationDataParams,
+  UseOptimizationDataResult,
+} from "../types";
 
 /**
  * Client-D API Shapes:
@@ -8,19 +20,23 @@ import { buildParamsFromFilters } from "../utils/helpers";
  * - rightSizing: { recommendations, summary }
  * - commitments: commitment object (onDemandPercentage, potentialSavings, pricing...)
  */
-export function useOptimizationData({ api, caps, parentFilters }) {
-  const [optimizationData, setOptimizationData] = useState(null);
+export function useOptimizationData({
+  api,
+  caps,
+  parentFilters,
+}: UseOptimizationDataParams): UseOptimizationDataResult {
+  const [optimizationData, setOptimizationData] = useState<OptimizationDataExtended | null>(null);
   const [loading, setLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState<string | null>(null);
 
   const isInitialMount = useRef(true);
-  const abortControllerRef = useRef(null);
-  const prevFiltersRef = useRef({});
+  const abortControllerRef = useRef<AbortController | null>(null);
+  const prevFiltersRef = useRef(parentFilters);
 
   const fetchOptimizationData = useCallback(async () => {
     if (!api || !caps) return;
-    if (!caps.modules?.optimization?.enabled) return;
+    if (!caps.modules?.["optimization"]?.enabled) return;
 
     if (abortControllerRef.current) abortControllerRef.current.abort();
     abortControllerRef.current = new AbortController();
@@ -33,7 +49,7 @@ export function useOptimizationData({ api, caps, parentFilters }) {
     try {
       const params = buildParamsFromFilters(parentFilters);
 
-      const mod = caps?.modules?.optimization;
+      const mod = caps?.modules?.["optimization"] as OptimizationModuleCaps | undefined;
       const enabled = !!mod?.enabled;
 
       // ✅ Client-D endpoints (update these keys to match your api config names)
@@ -51,17 +67,10 @@ export function useOptimizationData({ api, caps, parentFilters }) {
 
       if (abortControllerRef.current?.signal.aborted) return;
 
-      // unwrap helper
-      const unwrap = (res) => {
-        const raw = res?.data ?? res;
-        if (!raw) return null;
-        return raw?.success && raw?.data ? raw.data : raw?.data ?? raw;
-      };
-
-      const summaryPayload = unwrap(summaryRes);
-      const idlePayload = unwrap(idleRes);
-      const rightPayload = unwrap(rightRes);
-      const commitPayload = unwrap(commitRes);
+      const summaryPayload = (summaryRes as OptimizationSummaryPayload | null) ?? null;
+      const idlePayload = (idleRes as OptimizationIdlePayload | null) ?? null;
+      const rightPayload = (rightRes as OptimizationRightSizingPayload | null) ?? null;
+      const commitPayload = (commitRes as Record<string, unknown> | null) ?? null;
 
       // normalize
       const summary = summaryPayload?.summary || null;
@@ -87,24 +96,27 @@ export function useOptimizationData({ api, caps, parentFilters }) {
 
       // derive "opportunities" for existing UI tab
       // (your current OpportunitiesTab expects an array with savings fields)
-      const opportunities = allRecommendations.map((r) => ({
-        id: r.id,
-        name: r.resourceName || r.name || r.resourceId,
-        type: r.category || r.type || "recommendation",
-        priority: (r.confidence || "Low").toUpperCase(), // can map differently
-        savings: Number(r.potentialSavings ?? r.savings ?? 0),
-        monthlyCost: Number(r.monthlyCost ?? r.currentMonthlyCost ?? 0),
-        recommendation: r.recommendation,
-        whyFlagged: r.whyFlagged,
-        tags: r.tags || [],
-        region: r.region,
-        risk: r.risk,
-        raw: r,
-      }));
+      const opportunities: Opportunity[] = allRecommendations.map(
+        (r: RecommendationRaw) =>
+          ({
+            id: r.id,
+            name: r.resourceName || r.name || r.resourceId,
+            type: r.category || r.type || "recommendation",
+            priority: (r.confidence || "Low").toUpperCase(), // can map differently
+            savings: Number(r.potentialSavings ?? r.savings ?? 0),
+            monthlyCost: Number(r.monthlyCost ?? r.currentMonthlyCost ?? 0),
+            recommendation: r.recommendation,
+            whyFlagged: r.whyFlagged,
+            tags: r.tags || [],
+            region: r.region,
+            risk: r.risk,
+            raw: r,
+          }) as Opportunity,
+      );
 
       const totalPotentialSavings =
-        Number(summary?.totalPotentialSavings ?? 0) ||
-        opportunities.reduce((sum, o) => sum + (o.savings || 0), 0);
+        Number((summary as { totalPotentialSavings?: number } | null)?.totalPotentialSavings ?? 0) ||
+        opportunities.reduce((sum: number, o: Opportunity) => sum + (o.savings || 0), 0);
 
       setOptimizationData({
         // what existing UI expects
@@ -121,9 +133,10 @@ export function useOptimizationData({ api, caps, parentFilters }) {
 
         totalPotentialSavings,
       });
-    } catch (err) {
-      if (err?.code !== "NOT_SUPPORTED" && err?.name !== "AbortError") {
-        console.error("Error fetching optimization data:", err);
+    } catch (err: unknown) {
+      const apiError = err as ApiLikeError;
+      if (apiError?.code !== "NOT_SUPPORTED" && apiError?.name !== "AbortError") {
+        console.error("Error fetching optimization data:", apiError);
         setError("Failed to load optimization data");
       }
     } finally {

@@ -5,17 +5,22 @@ import OverviewView from "./OverviewView";
 import { normalizeOverviewData } from "./utils/normalizeOverviewData";
 import { useOverviewFilters } from "./hooks/useOverviewFilters";
 import { useOverviewData } from "./hooks/useOverviewData";
+import type {
+  OverviewChartFilters,
+  OverviewFilters,
+  OverviewProps,
+} from "./types";
 
-const Overview = ({ onFilterChange, api, caps }) => {
+const Overview = ({ onFilterChange, api, caps }: OverviewProps) => {
   // Local filters
-  const [filters, setFilters] = useState({
+  const [filters, setFilters] = useState<OverviewFilters>({
     provider: "All",
     service: "All",
     region: "All",
   });
 
   // Chart limits
-  const [chartFilters, setChartFilters] = useState({
+  const [chartFilters, setChartFilters] = useState<OverviewChartFilters>({
     trendChart: { limit: 30 },
     pieChart: { limit: 8 },
     barChart: { limit: 8 },
@@ -52,32 +57,30 @@ const Overview = ({ onFilterChange, api, caps }) => {
 
   // Handlers
   const handleFilterChange = useCallback(
-    (newFilters) => {
-      setFilters((prev) => ({ ...prev, ...newFilters }));
+    (newFilters: Partial<OverviewFilters>) => {
+      setFilters((prev: OverviewFilters) => ({ ...prev, ...newFilters }));
       onFilterChange?.(newFilters);
     },
     [onFilterChange]
   );
 
   const handleReset = useCallback(() => {
-    const reset = { provider: "All", service: "All", region: "All" };
+    const reset: OverviewFilters = { provider: "All", service: "All", region: "All" };
     setFilters(reset);
     onFilterChange?.(reset);
-    setForceRefreshKey((k) => k + 1);
+    setForceRefreshKey((k: number) => k + 1);
   }, [onFilterChange]);
 
-  const handleTrendChartLimitChange = useCallback((limit) => {
-    setChartFilters((prev) => ({ ...prev, trendChart: { limit } }));
+  const handleTrendChartLimitChange = useCallback((limit: number) => {
+    setChartFilters((prev: OverviewChartFilters) => ({ ...prev, trendChart: { limit } }));
   }, []);
 
-  const handleBarChartLimitChange = useCallback((limit) => {
-    setChartFilters((prev) => ({ ...prev, barChart: { limit } }));
+  const handleBarChartLimitChange = useCallback((limit: number) => {
+    setChartFilters((prev: OverviewChartFilters) => ({ ...prev, barChart: { limit } }));
   }, []);
 
   return (
     <OverviewView
-      api={api}
-      caps={caps}
       filters={filters}
       filterOptions={filterOptions}
       onFilterChange={handleFilterChange}

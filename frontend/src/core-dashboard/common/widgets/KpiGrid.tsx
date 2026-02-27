@@ -7,6 +7,58 @@ import KpiInsightModal from "../components/KpiInsightModal";
 const BRAND_PRIMARY = "#007758";
 const BRAND_SOFT = "rgba(0, 119, 88, 0.1)";
 
+type TrendType = "up" | "down" | "neutral";
+type KpiCardId = string | number;
+type KpiIcon = React.ElementType<{ size?: number }>;
+
+interface KpiCardData {
+  id?: KpiCardId;
+  title: React.ReactNode;
+  value: React.ReactNode;
+  icon: KpiIcon;
+  style?: string | undefined;
+  subValue?: React.ReactNode | undefined;
+  delay?: number | undefined;
+  contextLabel?: React.ReactNode | undefined;
+  showChangeTooltip?: boolean | undefined;
+  trendType?: TrendType | undefined;
+}
+
+interface KpiInsightMetric {
+  label: React.ReactNode;
+  value: React.ReactNode;
+}
+
+interface KpiInsights {
+  title: React.ReactNode;
+  description?: React.ReactNode | undefined;
+  metrics?: KpiInsightMetric[] | undefined;
+  recommendation?: React.ReactNode | undefined;
+}
+
+interface KpiCardProps {
+  title: React.ReactNode;
+  value: React.ReactNode;
+  icon: KpiIcon;
+  style?: string | undefined;
+  subValue?: React.ReactNode | undefined;
+  delay?: number | undefined;
+  onClick?: (() => void) | undefined;
+  contextLabel?: React.ReactNode | undefined;
+  showChangeTooltip?: boolean | undefined;
+  trendType?: TrendType | undefined;
+}
+
+interface KpiGridProps {
+  cards?: KpiCardData[] | undefined;
+  extraCards?: KpiCardData[] | undefined;
+  locked?: boolean | undefined;
+  onCardClick?: ((id: KpiCardId | undefined, card: KpiCardData) => void) | undefined;
+  getInsights?: ((id: KpiCardId, ctx: unknown) => KpiInsights | null) | undefined;
+  ctx?: unknown;
+  columns?: string | undefined;
+}
+
 /**
  * Small, reusable KPI Card (Emerald Redesign)
  */
@@ -21,7 +73,7 @@ export const KpiCard = ({
   contextLabel,
   showChangeTooltip,
   trendType = "neutral",
-}) => {
+}: KpiCardProps) => {
   const [showTooltip, setShowTooltip] = useState(false);
 
   return (
@@ -104,9 +156,9 @@ const KpiGrid = ({
   getInsights,
   ctx,
   columns = "grid-cols-1 md:grid-cols-2 lg:grid-cols-3",
-}) => {
+}: KpiGridProps) => {
   const [showMoreCards, setShowMoreCards] = useState(false);
-  const [selectedCardId, setSelectedCardId] = useState(null);
+  const [selectedCardId, setSelectedCardId] = useState<KpiCardId | null | undefined>(null);
 
   const insights = useMemo(() => {
     if (!selectedCardId || typeof getInsights !== "function") return null;
@@ -135,7 +187,7 @@ const KpiGrid = ({
     return periodMetric ? String(periodMetric.value || "") : null;
   }, [insights]);
 
-  const handleClick = (card) => {
+  const handleClick = (card: KpiCardData) => {
     onCardClick?.(card.id, card);
     if (typeof getInsights === "function") setSelectedCardId(card.id);
   };
@@ -144,7 +196,7 @@ const KpiGrid = ({
     <>
       <div className="mb-5">
         <div className={`grid ${columns} gap-4 mb-4`}>
-          {cards.map((card, index) => (
+          {cards.map((card: KpiCardData, index: number) => (
             <KpiCard
               key={card.id ?? index}
               delay={card.delay ?? index}
@@ -162,7 +214,7 @@ const KpiGrid = ({
 
           <AnimatePresence>
             {showMoreCards &&
-              extraCards.map((card, index) => (
+              extraCards.map((card: KpiCardData, index: number) => (
                 <motion.div 
                   key={card.id ?? `extra-${index}`} 
                   initial={{ opacity: 0, height: 0 }}

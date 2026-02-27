@@ -1,6 +1,7 @@
-﻿import { getScoreBg, getScoreColor } from "../utils/format";
+import { getScoreBg, getScoreColor } from "../utils/format";
+import type { DataQualityTrendPoint, StatsProps } from "../types";
 
-const ScoreCard = ({ stats }) => {
+const ScoreCard = ({ stats }: StatsProps) => {
   const score = stats?.score ?? 100;
   const trend = Array.isArray(stats?.trendData) ? stats.trendData : [];
 
@@ -33,7 +34,7 @@ const ScoreCard = ({ stats }) => {
             points={
               trend.length > 1
                 ? trend
-                    .map((d, i) => `${(i / (trend.length - 1)) * 100},${100 - d.score}`)
+                    .map((d: DataQualityTrendPoint, i: number) => `${(i / (trend.length - 1)) * 100},${100 - d.score}`)
                     .join(" ")
                 : ""
             }
@@ -48,4 +49,7 @@ const ScoreCard = ({ stats }) => {
 };
 
 export default ScoreCard;
+
+
+
 

@@ -19,12 +19,6 @@ interface UseCostFiltersResult {
 
 const getPayload = (response: unknown): CostAnalysisFilterOptions | null => {
   if (!isObjectRecord(response)) return null;
-
-  const envelopeData = response.data;
-  if (isObjectRecord(envelopeData)) {
-    return envelopeData as CostAnalysisFilterOptions;
-  }
-
   return response as CostAnalysisFilterOptions;
 };
 
@@ -70,3 +64,6 @@ export function useCostFilters({ api, caps }: UseCostFiltersArgs): UseCostFilter
 
   return { filterOptions };
 }
+
+
+

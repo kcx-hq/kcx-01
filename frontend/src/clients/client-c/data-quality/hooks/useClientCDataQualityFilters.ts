@@ -1,9 +1,18 @@
 import { useEffect, useMemo, useState } from "react";
+import type { ApiClient, Capabilities } from "../../../../services/apiClient";
+import type {
+  ApiLikeError,
+  DataQualityFilterOptions,
+  UseClientCDataQualityFiltersResult,
+} from "../types";
 
-export const useClientCDataQualityFilters = (api, caps) => {
-  const [rawOptions, setRawOptions] = useState(null);
+export const useClientCDataQualityFilters = (
+  api: ApiClient | null,
+  caps: Capabilities | null,
+): UseClientCDataQualityFiltersResult => {
+  const [rawOptions, setRawOptions] = useState<DataQualityFilterOptions | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!api || !caps) return;
@@ -13,18 +22,18 @@ export const useClientCDataQualityFilters = (api, caps) => {
     const fetchFilterOptions = async () => {
       try {
         const endpointDef =
-          caps?.modules?.dataQuality?.enabled &&
-          caps?.modules?.dataQuality?.endpoints?.filters;
+          caps?.modules?.["dataQuality"]?.enabled &&
+          caps?.modules?.["dataQuality"]?.endpoints?.["filters"];
 
         if (!endpointDef) return;
 
-        const res = await api.call("dataQuality", "filters");
-        const payload = res?.data;
+        const payload = await api.call<DataQualityFilterOptions>("dataQuality", "filters");
         if (active && payload) setRawOptions(payload);
-      } catch (error) {
-        if (error?.code !== "NOT_SUPPORTED") {
+      } catch (error: unknown) {
+        const typedError = error as ApiLikeError;
+        if (typedError?.code !== "NOT_SUPPORTED") {
           console.error("Failed to fetch data quality filter options:", error);
-          setError(error.message || 'Failed to load filter options');
+          setError(typedError.message || 'Failed to load filter options');
           // Provide fallback options on error
           setRawOptions({
             providers: ['All', 'AWS', 'Azure', 'GCP'],
@@ -44,7 +53,7 @@ export const useClientCDataQualityFilters = (api, caps) => {
     };
   }, [api, caps]);
 
-  const filterOptions = useMemo(() => {
+  const filterOptions = useMemo<DataQualityFilterOptions>(() => {
     if (!rawOptions) {
       return {
         providers: ['All'],

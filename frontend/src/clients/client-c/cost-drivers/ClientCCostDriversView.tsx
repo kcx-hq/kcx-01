@@ -13,10 +13,6 @@ import {
   Trash2,
   Loader2,
   Crown,
-  Cloud,
-  Settings,
-  MapPin,
-  RefreshCw,
 } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { ResponsiveContainer, Treemap } from 'recharts';
@@ -26,6 +22,7 @@ import { PERIOD_OPTIONS } from './utils/constants';
 import { ClientCDriversList } from './components/ClientCDriversList';
 import { ClientCVarianceBridge } from './components/ClientCVarianceBridge';
 import { ClientCDriverDetailsDrawer } from './components/ClientCDriverDetailsDrawer';
+import type { ClientCCostDriversViewProps, CostDriverItem } from './types';
 
 /**
  * Pure View component:
@@ -51,7 +48,6 @@ export function ClientCCostDriversView({
 
   // sorting
   sortListBy,
-  setSortListBy,
 
   // data
   loading,
@@ -63,20 +59,19 @@ export function ClientCCostDriversView({
   filteredDecreases,
   overallStats,
   periods,
-  availableServices,
 
   // details drawer hook result
   details, // { loading, stats }
-}) {
+}: ClientCCostDriversViewProps) {
   // Don't render if module not enabled or API not available
-  if (!api || !caps || !caps.modules?.costDrivers?.enabled) return null;
+  if (!api || !caps || !caps.modules?.["costDrivers"]?.enabled) return null;
 
   // Loading full page (initial)
   if (loading) {
     return (
       <div className="p-10 text-center text-gray-500 flex items-center justify-center min-h-screen">
         <div className="flex flex-col items-center gap-4">
-          <Loader2 className="animate-spin text-[#a02ff1]" size={32} />
+          <Loader2 className="animate-spin text-[#007758]" size={32} />
           <span>Analyzing cost drivers...</span>
         </div>
       </div>
@@ -100,7 +95,7 @@ export function ClientCCostDriversView({
             <div className="flex flex-col xl:flex-row justify-between items-start xl:items-center gap-4">
               <div>
                 <h1 className="text-xl font-bold flex items-center gap-2">
-                  <TrendingUp className="text-[#a02ff1]" size={20} /> Cost Drivers
+                  <TrendingUp className="text-[#007758]" size={20} /> Cost Drivers
                 </h1>
 
                 {periods?.prev && periods?.current && (
@@ -120,7 +115,7 @@ export function ClientCCostDriversView({
 
                 {/* Period toggle */}
                 <div className="flex bg-black/40 rounded-lg p-0.5 border border-white/5 gap-0.5">
-                  {PERIOD_OPTIONS.map((d) => {
+                  {PERIOD_OPTIONS.map((d: number) => {
                     const isActive = period === d;
 
                     return (
@@ -130,7 +125,7 @@ export function ClientCCostDriversView({
                         className={[
                           'relative px-2.5 py-1 text-[10px] font-bold rounded-md transition-all',
                           isActive
-                            ? 'bg-[#a02ff1] text-white shadow-[0_0_10px_rgba(160,47,241,0.5)]'
+                            ? 'bg-[#007758] text-white shadow-[0_0_10px_rgba(0,119,88,0.5)]'
                             : 'bg-white/5 text-gray-400 hover:text-gray-200 hover:bg-white/10 border border-transparent',
                         ].join(' ')}
                       >
@@ -160,9 +155,9 @@ export function ClientCCostDriversView({
             {/* 2) Content Area (refreshing overlay only) */}
             <div className="relative">
               {isRefreshing && (
-                <div className="absolute top-4 right-4 z-50 flex items-center gap-2 px-3 py-1.5 bg-[#a02ff1]/20 border border-[#a02ff1]/30 rounded-lg backdrop-blur-sm">
-                  <Loader2 className="text-[#a02ff1] animate-spin" size={14} />
-                  <span className="text-[#a02ff1] text-xs font-medium">Updating...</span>
+                <div className="absolute top-4 right-4 z-50 flex items-center gap-2 px-3 py-1.5 bg-[#007758]/20 border border-[#007758]/30 rounded-lg backdrop-blur-sm">
+                  <Loader2 className="text-[#007758] animate-spin" size={14} />
+                  <span className="text-[#007758] text-xs font-medium">Updating...</span>
                 </div>
               )}
 
@@ -171,24 +166,24 @@ export function ClientCCostDriversView({
                 <div className="lg:col-span-2 bg-[#1a1b20] border border-white/10 rounded-xl p-4 flex flex-col sm:flex-row gap-6 items-center shadow-lg">
                   <div className="flex-1 min-w-[180px]">
                     <h3 className="text-xs font-bold text-gray-400 uppercase mb-2 flex items-center gap-2">
-                      <Activity size={14} className="text-[#a02ff1]" /> Net Variance
+                      <Activity size={14} className="text-[#007758]" /> Net Variance
                     </h3>
 
                     <div className="flex items-baseline gap-2">
                       <span
                         className={[
                           'text-3xl font-mono font-bold',
-                          overallStats?.diff > 0 ? 'text-red-400' : 'text-green-400',
+                          (overallStats?.diff || 0) > 0 ? 'text-red-400' : 'text-green-400',
                         ].join(' ')}
                       >
-                        {overallStats?.diff > 0 ? '+' : ''}
-                        {formatCurrency(overallStats?.diff)}
+                        {(overallStats?.diff || 0) > 0 ? '+' : ''}
+                        {formatCurrency(overallStats?.diff || 0)}
                       </span>
 
                       <span
                         className={[
                           'text-xs font-bold px-1.5 py-0.5 rounded',
-                          overallStats?.diff > 0 ? 'bg-red-500/10 text-red-400' : 'bg-green-500/10 text-green-400',
+                          (overallStats?.diff || 0) > 0 ? 'bg-red-500/10 text-red-400' : 'bg-green-500/10 text-green-400',
                         ].join(' ')}
                       >
                         {overallStats?.pct ? `${overallStats.pct.toFixed(1)}%` : '0%'}
@@ -212,11 +207,11 @@ export function ClientCCostDriversView({
                     </h3>
 
                     <button
-                      onClick={() => setShowTreeMap((p) => !p)}
+                      onClick={() => setShowTreeMap((p: boolean) => !p)}
                       className={[
                         'p-1.5 rounded-lg transition-all',
                         showTreeMap
-                          ? 'bg-[#a02ff1] text-white border border-[#a02ff1] shadow-[0_0_8px_rgba(160,47,241,0.4)]'
+                          ? 'bg-[#007758] text-white border border-[#007758] shadow-[0_0_8px_rgba(0,119,88,0.4)]'
                           : 'bg-black/40 hover:bg-black/60 text-gray-400 hover:text-gray-200 border border-white/10',
                       ].join(' ')}
                       title="Toggle View"
@@ -229,10 +224,10 @@ export function ClientCCostDriversView({
                     <div className="h-48">
                       <ResponsiveContainer width="100%" height="100%">
                         <Treemap
-                          data={[...increases.slice(0, 10), ...decreases.slice(0, 10)].map((item) => ({
+                          data={[...increases.slice(0, 10), ...decreases.slice(0, 10)].map((item: CostDriverItem) => ({
                             name: item.name,
-                            value: Math.abs(item.diff),
-                            fill: item.diff > 0 ? '#ef4444' : '#10b981',
+                            value: Math.abs(item.diff || 0),
+                            fill: (item.diff || 0) > 0 ? '#ef4444' : '#10b981',
                           }))}
                           dataKey="value"
                           stroke="#1a1b20"

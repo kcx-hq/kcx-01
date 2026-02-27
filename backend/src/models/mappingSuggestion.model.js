@@ -1,6 +1,9 @@
 // models/MappingSuggestion.js
-import sequelize from '../config/db.config.js';
-import { DataTypes } from 'sequelize';
+import { createRequire } from "module";
+import { DataTypes } from "sequelize";
+
+const require = createRequire(import.meta.url);
+const { sequelize } = require("../db/index.cjs");
   const MappingSuggestion = sequelize.define(
     "MappingSuggestion",
     {
@@ -68,3 +71,5 @@ import { DataTypes } from 'sequelize';
   );
 
 export default MappingSuggestion
+
+

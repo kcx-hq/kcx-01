@@ -1,4 +1,4 @@
-export const formatCurrency = (val) => {
+export const formatCurrency = (val: number | string | null | undefined): string => {
   if (val === null || val === undefined || Number.isNaN(val)) return "$0.00";
   const num = typeof val === "string" ? parseFloat(val.replace(/[$,]/g, "")) : val;
   if (Number.isNaN(num)) return "$0.00";

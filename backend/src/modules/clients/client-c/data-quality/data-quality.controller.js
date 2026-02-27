@@ -3,6 +3,8 @@
  */
 
 import { clientCDataQualityService } from './data-quality.service.js';
+import AppError from "../../../../errors/AppError.js";
+import logger from "../../../../lib/logger.js";
 
 function extractUploadIds(req) {
   const raw = req.query.uploadIds ?? req.query.uploadId ?? req.body?.uploadIds ?? req.body?.uploadId;
@@ -12,7 +14,7 @@ function extractUploadIds(req) {
   return [];
 }
 
-export const analyzeDataQuality = async (req, res) => {
+export const analyzeDataQuality = async (req, res, next) => {
   try {
     const uploadIds = extractUploadIds(req);
     const { provider, service, region, startDate, endDate } = req.query;
@@ -25,9 +27,9 @@ export const analyzeDataQuality = async (req, res) => {
     };
 
     const data = await clientCDataQualityService.analyzeDataQuality(options);
-    res.json({ success: true, data });
+    return res.ok(data);
   } catch (error) {
-    console.error('Client-C Data Quality Error:', error);
-    res.status(500).json({ success: false, error: error.message });
+    logger.error({ err: error, requestId: req.requestId }, 'Client-C Data Quality Error');
+    return next(new AppError(500, "INTERNAL", "Internal server error", { cause: error }));
   }
 };
