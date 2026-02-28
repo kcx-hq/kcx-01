@@ -44,6 +44,7 @@ import ResetPassword from "./shared/auth/components/ResetPassword";
 const Home = () => {
   const [isCTAActivated, setIsCTAActivated] = useState(false);
   const [showAttentionGrabber, setShowAttentionGrabber] = useState(false);
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
 
   // ✅ Chat widget state
   const [isChatOpen, setIsChatOpen] = useState(false);
@@ -88,7 +89,7 @@ const Home = () => {
         <HowItWorks activateCTA={activateCTA} />
 
         <AnimatePresence>
-          {isChatOpen && (
+          {!isAuthModalOpen && isChatOpen && (
             <motion.div
               className="fixed bottom-6 right-6 z-[999]"
               initial={{ opacity: 0, y: 20, scale: 0.95 }}

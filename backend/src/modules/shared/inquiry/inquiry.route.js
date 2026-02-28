@@ -20,6 +20,10 @@ router.get('/accept/:id', inquiryRoutes.acceptInquiry);
  */
 router.get('/reject/:id', inquiryRoutes.rejectInquiry);
 
+// Boss review page (token-based)
+router.get('/review/:id', inquiryRoutes.getBossReviewPage);
+router.post('/review/:id/decision', inquiryRoutes.handleBossDecision);
+
 // GET /api/inquiry/slots/by-date?date=YYYY-MM-DD
 
 router.get('/slots/by-date', inquiryRoutes.getSlotsByDate);

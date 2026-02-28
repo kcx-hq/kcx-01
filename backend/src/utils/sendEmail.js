@@ -14,12 +14,10 @@ export const sendEmail = async ({ to, subject, html }) => {
   };
 
   try {
-    const response = await mg.messages.create(
+    return await mg.messages.create(
       process.env.MAILGUN_DOMAIN, // e.g. mg.example.com
       data
     );
-
-    return response;
   } catch (error) {
     logger.error("Mailgun error:", error);
     throw error;
@@ -969,6 +967,68 @@ export const sendInquiryEmailToCompany = async (name, email, message, preferred_
 };
 
 /* ================= MEETING CONFIRMATION EMAIL ================= */
+/* ================= INQUIRY RELAY EMAIL TO BOSS ================= */
+export const sendInquiryRelayEmailToBoss = async ({
+  name,
+  email,
+  message,
+  preferred_datetime,
+  timezone,
+  severity,
+  note,
+  reviewLink,
+}) => {
+  try {
+    const meetingDate = new Date(preferred_datetime);
+    const formattedDateTime = meetingDate.toLocaleString("en-US", {
+      dateStyle: "medium",
+      timeStyle: "short",
+      timeZone: timezone,
+    });
+
+    await sendEmail({
+      to: process.env.COMPANY_EMAIL,
+      subject: "Inquiry Relay – Review Required",
+      html: `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <style>
+            body { font-family: Arial, sans-serif; background:#f8f9fa; color:#111827; }
+            .card { max-width: 560px; margin: 30px auto; background:#fff; border-radius: 12px; padding: 28px; border: 1px solid #e5e7eb; }
+            .title { font-size: 20px; font-weight: 700; margin-bottom: 8px; }
+            .meta { color:#6b7280; font-size: 13px; margin-bottom: 12px; }
+            .label { font-size: 12px; color:#6b7280; text-transform: uppercase; letter-spacing: .6px; margin: 12px 0 4px; }
+            .cta { display:inline-block; margin-top: 16px; padding: 10px 14px; background:#007758; color:#ffffff; border-radius: 8px; text-decoration:none; font-weight:600; }
+            .severity { font-weight:700; color:#b45309; }
+          </style>
+        </head>
+        <body>
+          <div class="card">
+            <div class="title">Inquiry Relay – Review Required</div>
+            <div class="meta">${name} • ${email}</div>
+            <div class="label">Preferred Timeslot</div>
+            <div>${formattedDateTime} (${timezone})</div>
+            <div class="label">Summary</div>
+            <div>${message || "-"}</div>
+            <div class="label">Severity</div>
+            <div class="severity">${severity || "UNKNOWN"}</div>
+            <div class="label">Admin Note</div>
+            <div>${note || "-"}</div>
+            <a class="cta" href="${reviewLink}">Review &amp; Decide</a>
+          </div>
+        </body>
+        </html>
+      `,
+    });
+
+    return { success: true };
+  } catch (error) {
+    console.error("Inquiry relay email error:", error);
+    return { success: false, message: "Failed to send relay email" };
+  }
+};
+
 export const sendMeetingConfirmationEmail = async (email, name, preferred_datetime, timezone, meetLink) => {
   try {
     const meetingDate = new Date(preferred_datetime);
@@ -1401,7 +1461,7 @@ export const sendMeetingConfirmationEmail = async (email, name, preferred_dateti
 };
 
 /* ================= INQUIRY REJECTION EMAIL ================= */
-export const sendInquiryRejectionEmail = async (email, name) => {
+export const sendInquiryRejectionEmail = async (email, name, reason) => {
   try {
     await sendEmail({
       to: email,
@@ -1771,6 +1831,7 @@ export const sendInquiryRejectionEmail = async (email, name) => {
                 <div class="card-content">
                     After careful review, we regret to inform you that your inquiry has been <strong>rejected</strong>.
                 </div>
+                ${reason ? `<div class="card-content">Reason: ${reason}</div>` : ""}
             </div>
             
             <!-- Appreciation Message -->
@@ -1851,4 +1912,39 @@ export const sendInquiryRejectionEmail = async (email, name) => {
   }
 };
 
+/* ================= INQUIRY STANDBY EMAIL ================= */
+export const sendInquiryStandbyEmail = async (email, name, note) => {
+  try {
+    await sendEmail({
+      to: email,
+      subject: "Your Inquiry Status",
+      html: `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <style>
+            body { font-family: Arial, sans-serif; background:#f8f9fa; color:#111827; }
+            .card { max-width: 520px; margin: 30px auto; background:#fff; border-radius: 12px; padding: 28px; border: 1px solid #e5e7eb; }
+            .title { font-size: 20px; font-weight: 700; margin-bottom: 8px; }
+            .meta { color:#6b7280; font-size: 13px; margin-bottom: 12px; }
+            .note { margin-top: 12px; padding: 12px; background:#fef3c7; border-radius: 8px; }
+          </style>
+        </head>
+        <body>
+          <div class="card">
+            <div class="title">Inquiry On Standby</div>
+            <div class="meta">Hello ${name},</div>
+            <p>Your inquiry is currently on standby. We will get back to you shortly.</p>
+            ${note ? `<div class="note">${note}</div>` : ""}
+          </div>
+        </body>
+        </html>
+      `,
+    });
 
+    return { success: true };
+  } catch (error) {
+    console.error("Inquiry standby email error:", error);
+    return { success: false, message: "Failed to send standby email" };
+  }
+};

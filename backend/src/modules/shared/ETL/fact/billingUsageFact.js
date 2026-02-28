@@ -5,6 +5,16 @@ import logger from "../../../../lib/logger.js";
 
 const BATCH_SIZE = 1000;
 let buffer = [];
+let stats = { attempted: 0 };
+
+export function resetFactBuffer() {
+  buffer = [];
+  stats = { attempted: 0 };
+}
+
+export function getFactStats() {
+  return { ...stats };
+}
 
 export async function pushFact(uploadId, row, dims) {
   buffer.push({
@@ -45,6 +55,7 @@ export async function pushFact(uploadId, row, dims) {
     tags: safeParseJSON(row.tags),
     createdat: new Date(),
   });
+  stats.attempted += 1;
 
   if (buffer.length >= BATCH_SIZE) {
     await flushFacts();

@@ -17,7 +17,10 @@ import { validateRequest } from "./middlewares/security/requestValidation.js";
 import {
   createInFlightTracker,
   requestLogging,
+
 } from "./middlewares/security/requestLogging.js";
+import adminRoutes from "./modules/admin/admin.route.js";
+import adminAuthRoutes from "./modules/admin/auth/admin-auth.route.js";
 import {
   defaultDenyAuth,
   requireInternalRole,
@@ -68,7 +71,7 @@ export function createApp(deps = {}) {
 
   app.use(
     cors({
-      origin: ["http://localhost:5173", "http://localhost:5174" , "https://kcx-01.vercel.app"], // frontend (supports both ports)
+      origin: ["http://localhost:5173", "http://localhost:5174" , "http://localhost:5175" , "https://kcx-01.vercel.app"], // frontend (supports both ports)
       credentials: true,               // allow cookies
       methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
       allowedHeaders: ["Content-Type", "Authorization", "X-Signature", "X-Timestamp", "X-Nonce"]

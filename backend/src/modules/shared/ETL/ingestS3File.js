@@ -7,7 +7,7 @@ import { collectDimensions } from "./dimensions/collectDimensions.js";
 import { bulkUpsertDimensions } from "./dimensions/bulkUpsertDimensions.js";
 import { preloadDimensionMaps } from "./dimensions/preloadDimensionsMaps.js";
 import { resolveDimensionIdsFromMaps } from "./dimensions/resolveFromMaps.js";
-import { pushFact, flushFacts } from "./fact/billingUsageFact.js";
+import { pushFact, flushFacts, resetFactBuffer, getFactStats } from "./fact/billingUsageFact.js";
 import {
   loadResolvedMapping,
   storeAutoSuggestions,
@@ -30,9 +30,10 @@ export async function ingestS3File({
   clientcreds = null,
   region = "ap-south-1",
   assumeRoleOptions = null,
-}) {
-  try {
-    const creds = await assumeRole({ region, clientcreds, assumeRoleOptions });
+}){
+  resetFactBuffer();
+  const creds = await assumeRole( {region , clientcreds , assumeRoleOptions  });
+
 
     const s3 = new S3Client({
       region,
@@ -94,6 +95,11 @@ export async function ingestS3File({
 
     const maps = await preloadDimensionMaps();
 
+    /* ======================
+       FACT INSERT
+    ======================= */
+
+    let skippedRows = 0;
     for (const row of mappedRowsForDims) {
       const dimensionIds = resolveDimensionIdsFromMaps(row, maps);
 
@@ -107,6 +113,7 @@ export async function ingestS3File({
         !dimensionIds.serviceid ||
         !dimensionIds.skuid
       ) {
+        skippedRows += 1;
         continue;
       }
 
@@ -114,9 +121,8 @@ export async function ingestS3File({
     }
 
     await flushFacts();
-    logger.info({ uploadId, clientid, bucket: Bucket, s3Key }, "direct ETL complete");
-  } catch (err) {
-    logger.error({ err, uploadId, clientid, bucket: Bucket, s3Key }, "direct ETL failed");
-    throw err;
-  }
+
+    const stats = getFactStats();
+    console.log("✅ Direct ETL complete");
+    return { attempted: stats.attempted, skipped: skippedRows, totalRows: mappedRowsForDims.length };
 }

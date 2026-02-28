@@ -20,6 +20,7 @@ export async function uploadBillingCsv(req, res, next) {
   try {
     // 1️⃣ Create upload record with PENDING
     upload = await BillingUpload.create({
+    upload = await BillingUpload.create({
       uploadid: uuidv4(),
       clientid: req.client_id,
       uploadedby: req.user.id,
@@ -43,11 +44,20 @@ export async function uploadBillingCsv(req, res, next) {
     });
 
     // 3️⃣ Run ETL
-    await ingestBillingCsv({
+    const ingestResult = await ingestBillingCsv({
       uploadId: upload.uploadid,
       filePath: req.file.path,
       clientid: req.client_id,
     });
+
+    if (!ingestResult?.attempted) {
+      await upload.update({ status: "FAILED" });
+      return res.status(422).json({
+        message: "Upload failed: no records ingested",
+        uploadId: upload.uploadid,
+        status: "FAILED",
+      });
+    }
 
     // 4️⃣ Mark COMPLETED
     await transitionUploadStatus({
@@ -217,7 +227,7 @@ export async function s3Ingest(req, res, next) {
           toStatus: "PROCESSING",
         });
 
-        await ingestS3File({
+        const ingestResult = await ingestS3File({
           region,
           Bucket: bucket,
           s3Key,

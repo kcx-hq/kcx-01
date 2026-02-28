@@ -32,7 +32,7 @@ const Inquiry = sequelize.define(
     },
 
     status: {
-      type: DataTypes.ENUM("PENDING", "ACCEPTED", "REJECTED"),
+      type: DataTypes.ENUM("PENDING", "ACCEPTED", "REJECTED", "STANDBY", "HANDLED", "TRASHED"),
       allowNull: false,
       defaultValue: "PENDING",
     },
@@ -58,11 +58,36 @@ const Inquiry = sequelize.define(
       type: DataTypes.STRING,
       allowNull: true,
     },
+    boss_token: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
+    boss_token_expires: {
+      type: DataTypes.DATE,
+      allowNull: true,
+    },
+    relay_severity: {
+      type: DataTypes.ENUM("LOW", "MEDIUM", "HIGH", "CRITICAL"),
+      allowNull: true,
+    },
+    relay_note: {
+      type: DataTypes.TEXT,
+      allowNull: true,
+    },
+    relayed_at: {
+      type: DataTypes.DATE,
+      allowNull: true,
+    },
+    trashed_at: {
+      type: DataTypes.DATE,
+      allowNull: true,
+    },
   },
   {
     tableName: "inquiries",
     timestamps: true,
-    underscored: true, // created_at, updated_at
+    underscored: true, // updated_at
+    createdAt: "activity_time",
   }
 );
 

@@ -1,12 +1,12 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
-export interface SelectedUpload {
+type SelectedUpload = {
   uploadId: string;
   filename: string;
-}
+};
 
-export interface DashboardStoreState {
+type DashboardStore = {
   uploadIds: string[];
   selectedUploads: SelectedUpload[];
   dashboardPath: string;
@@ -19,14 +19,14 @@ export interface DashboardStoreState {
   clearUploadIds: () => void;
   hasUploadId: (id: string) => boolean;
   uploadCount: () => number;
-}
+};
 
 /**
  * Dashboard Global Store
  * - Stores selected uploadIds
  * - Accessible across dashboard pages, widgets, filters
  */
-export const useDashboardStore = create<DashboardStoreState>()(
+export const useDashboardStore = create<DashboardStore>(
   persist(
     (set, get) => ({
       /* =========================

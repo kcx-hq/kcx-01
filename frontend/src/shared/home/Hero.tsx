@@ -75,7 +75,9 @@ const Hero = ({
   isCTAActivated = false,
   showAttentionGrabber = false,
   deactivateCTA = () => {},
-}: HeroProps) => {
+  showJourney = () => {},
+  onAuthModalChange = () => {},
+}) => {
   const [isAuthOpen, setIsAuthOpen] = useState(false);
   const [showOnboardingHint, setShowOnboardingHint] = useState(false);
 
@@ -132,6 +134,10 @@ const Hero = ({
     window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
+
+  useEffect(() => {
+    onAuthModalChange(isAuthOpen);
+  }, [isAuthOpen, onAuthModalChange]);
 
   const handleCTAClick = () => {
     setShowOnboardingHint(false);

@@ -1,18 +1,46 @@
 import { create } from "zustand";
-import { apiGet, apiPost, apiPut } from "../services/http";
-import { getApiErrorMessage, isApiError } from "../services/apiError";
-import type {
-  AuthUser,
-  FetchUserResult,
-  LoginData,
-  SignInResult,
-  SignUpResult,
-  SignupPayload,
-  UpdateProfileInput,
-  UpdateProfileResult,
-  VerifyEmailInput,
-  VerifyEmailResult,
-} from "../shared/auth/types";
+import axios from "axios";
+
+type AuthUser = {
+  full_name?: string;
+  email?: string;
+  role?: string;
+  caps?: unknown;
+  hasUploaded?: boolean;
+};
+
+type AuthStore = {
+  user: AuthUser | null;
+  isSigningIn: boolean;
+  isSigningUp: boolean;
+  isVerifying: boolean;
+  error: string | null;
+  fetchUser: () => Promise<{ success: boolean; user?: AuthUser }>;
+  updateProfile: (args: {
+    full_name: string;
+  }) => Promise<{ success: boolean; message?: string; user?: AuthUser }>;
+  signUp: (payload: unknown) => Promise<{ success: boolean; message?: string }>;
+  signIn: (args: {
+    email: string;
+    password: string;
+  }) => Promise<{
+    success: boolean;
+    message?: string;
+    hasUploaded?: boolean;
+    status?: number;
+    retryAfterSeconds?: number;
+    blockedUntil?: string;
+  }>;
+  verifyEmail: (args: {
+    email: string;
+    otp: string;
+  }) => Promise<{ success: boolean; message?: string }>;
+  logout: () => Promise<void>;
+};
+
+axios.defaults.withCredentials = true;
+
+const API_URL = import.meta.env.VITE_API_URL 
 const CAPS_VERSION = "v1"; // bump when structure changes
 
 interface AuthMessageResponse {
@@ -117,7 +145,11 @@ export const useAuthStore = create<AuthStore>((set) => ({
   /* ================= FETCH USER ================= */
   fetchUser: async () => {
     try {
-      const user = await apiGet<AuthUser>("/api/auth/me");
+      const res = await axios.get(`${API_URL}/api/auth/me`, {
+        withCredentials: true,
+      });
+
+      const user = res.data as AuthUser;
       set({ user });
 
       if (user?.caps) {
@@ -142,11 +174,16 @@ export const useAuthStore = create<AuthStore>((set) => ({
   /* ================= UPDATE PROFILE ================= */
   updateProfile: async ({ full_name }: UpdateProfileInput) => {
     try {
-      const response = await apiPut<UpdateProfileResponse>("/api/auth/profile", { full_name });
-      set({ user: response.user });
-      return { success: true, message: response.message, user: response.user };
-    } catch (err: unknown) {
-      const errorMessage = getAuthErrorMessage(err, "Failed to update profile", "updateProfile");
+      const res = await axios.put(`${API_URL}/api/auth/profile`, { full_name });
+      set({ user: res.data.user as AuthUser });
+      return {
+        success: true,
+        message: res.data.message,
+        user: res.data.user as AuthUser,
+      };
+    } catch (err) {
+      const errorMessage =
+        (err as any).response?.data?.message || "Failed to update profile";
       return { success: false, message: errorMessage };
     }
   },
@@ -159,7 +196,7 @@ export const useAuthStore = create<AuthStore>((set) => ({
       const response = await apiPost<SignUpResponse>("/api/auth/signup", payload);
 
       set({
-        user: response.user,
+        user: res.data.user as AuthUser,
         isSigningUp: false,
       });
 
@@ -168,13 +205,13 @@ export const useAuthStore = create<AuthStore>((set) => ({
       const errorMessage = getAuthErrorMessage(err, "Signup failed", "signUp");
       set({
         isSigningUp: false,
-        error: errorMessage,
+        error:
+          (err as any).response?.data?.message || "Signup failed",
       });
 
       return {
         success: false,
-        message: errorMessage,
-        status: isApiError(err) ? err.status : undefined,
+        message: (err as any).response?.data?.message,
       };
     }
   },
@@ -193,7 +230,7 @@ export const useAuthStore = create<AuthStore>((set) => ({
       try {
         const user = await apiGet<AuthUser>("/api/auth/me");
         set({
-          user,
+          user: userRes.data as AuthUser,
           isSigningIn: false,
         });
         return {
@@ -204,22 +241,27 @@ export const useAuthStore = create<AuthStore>((set) => ({
       } catch {
         // If /me fails, use the basic user data from signin
         set({
-          user: signInResponse.user ?? null,
+          user: res.data.user as AuthUser,
           isSigningIn: false,
         });
         return { success: true, hasUploaded: Boolean(signInResponse.hasUploaded) };
       }
-    } catch (err: unknown) {
-      const errorMessage = getAuthErrorMessage(err, "Login failed", "signIn");
+    } catch (err) {
+      const status = (err as any).response?.status;
+      const retryAfterSeconds = (err as any).response?.data?.retry_after_seconds;
+      const blockedUntil = (err as any).response?.data?.blocked_until;
       set({
         isSigningIn: false,
-        error: errorMessage,
+        error:
+          (err as any).response?.data?.message || "Login failed",
       });
 
       return {
         success: false,
-        message: errorMessage,
-        status: isApiError(err) ? err.status : undefined,
+        message: (err as any).response?.data?.message,
+        status,
+        retryAfterSeconds,
+        blockedUntil,
       };
     }
   },
@@ -244,13 +286,13 @@ export const useAuthStore = create<AuthStore>((set) => ({
       const errorMessage = getAuthErrorMessage(err, "Verification failed", "verifyEmail");
       set({
         isVerifying: false,
-        error: errorMessage,
+        error:
+          (err as any).response?.data?.message || "Verification failed",
       });
 
       return {
         success: false,
-        message: errorMessage,
-        status: isApiError(err) ? err.status : undefined,
+        message: (err as any).response?.data?.message,
       };
     }
   },

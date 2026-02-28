@@ -1,36 +1,33 @@
-import React, { useState } from "react";
-import type { LucideIcon } from "lucide-react";
+import React, { useEffect, useState } from "react";
 import { Mail, Lock, ArrowRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import type { LoginData } from "../types";
 
-interface LoginFormProps {
-  loginData: LoginData;
-  setLoginData: React.Dispatch<React.SetStateAction<LoginData>>;
-  handleLogin: (e: React.FormEvent<HTMLFormElement>) => void | Promise<void>;
-  isSigningIn: boolean;
-  onSwitchToSignup: () => void;
-}
-
-interface InputGroupProps extends Omit<React.InputHTMLAttributes<HTMLInputElement>, "onFocus" | "onBlur" | "onChange"> {
-  label: string;
-  icon: LucideIcon;
-  isFocused: boolean;
-  onFocus: React.FocusEventHandler<HTMLInputElement>;
-  onBlur: React.FocusEventHandler<HTMLInputElement>;
-  onChange: React.ChangeEventHandler<HTMLInputElement>;
-}
-
-const LoginForm = ({
-  loginData,
-  setLoginData,
-  handleLogin,
-  isSigningIn,
-  onSwitchToSignup,
-}: LoginFormProps) => {
+const LoginForm = ({ loginData, setLoginData, handleLogin, isSigningIn, lockoutUntilMs, onSwitchToSignup }) => {
   const navigate = useNavigate();
   const [focusedField, setFocusedField] = useState<"email" | "password" | null>(null);
   const [rememberMe, setRememberMe] = useState(false);
+  const [remainingSeconds, setRemainingSeconds] = useState(0);
+
+  useEffect(() => {
+    if (!lockoutUntilMs) {
+      setRemainingSeconds(0);
+      return;
+    }
+
+    const tick = () => {
+      const seconds = Math.max(0, Math.ceil((lockoutUntilMs - Date.now()) / 1000));
+      setRemainingSeconds(seconds);
+    };
+
+    tick();
+    const id = setInterval(tick, 1000);
+    return () => clearInterval(id);
+  }, [lockoutUntilMs]);
+
+  const isLocked = remainingSeconds > 0;
+  const formattedLockout = `${Math.floor(remainingSeconds / 60)}:${String(
+    remainingSeconds % 60,
+  ).padStart(2, "0")}`;
 
   return (
     <form onSubmit={handleLogin} className="space-y-6">
@@ -80,17 +77,23 @@ const LoginForm = ({
         </label>
         <button
           type="button"
-          onClick={() => navigate("/forgot-password")}
-          className="text-sm font-semibold text-[var(--brand-primary)] hover:underline"
+          onClick={() => navigate('/forgot-password')}
+          className={`text-sm font-semibold text-[var(--brand-primary)] hover:underline ${isLocked ? "text-red-600 animate-pulse underline" : ""}`}
         >
           Forgot password?
         </button>
       </div>
 
+      {isLocked && (
+        <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700" aria-live="polite">
+          Too many failed attempts. Try again in {formattedLockout}.
+        </div>
+      )}
+
       <button
         type="submit"
-        disabled={isSigningIn}
-        className="w-full bg-[var(--brand-primary)] hover:bg-[var(--brand-primary-hover)] text-white font-bold rounded-xl py-3.5 text-sm shadow-lg shadow-[var(--brand-primary)]/30 hover:shadow-xl hover:-translate-y-0.5 transition-all disabled:opacity-50"
+        disabled={isSigningIn || isLocked}
+        className="w-full bg-[var(--brand-primary)] hover:bg-[var(--brand-primary-hover)] text-white font-bold rounded-xl py-3.5 text-sm shadow-lg shadow-[var(--brand-primary)]/30 hover:shadow-xl hover:-translate-y-0.5 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
       >
         <div className="flex items-center justify-center gap-2">
           {isSigningIn ? "Signing In..." : <>Sign In <ArrowRight size={16} /></>}

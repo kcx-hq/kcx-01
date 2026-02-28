@@ -1,6 +1,10 @@
 // Import models
 import Client from './Client.js';
 import User from './User.js';
+import KcxAdmin from './kcxAdmin.model.js';
+import LoginAttempt from './loginAttempt.model.js';
+import AdminActivityLog from "./adminActivityLog.model.js";
+import ClientActivityLog from "./clientActivityLog.model.js";
 import Inquiry from './inquiry.model.js';
 import BillingUpload from './billingUpload.model.js';
 import BillingUsageFact from './billingUsageFact.model.js';
@@ -139,6 +143,10 @@ export {
   
   Client,
   User,
+  KcxAdmin,
+  LoginAttempt,
+  AdminActivityLog,
+  ClientActivityLog,
   Inquiry,
   BillingUpload,
   BillingUsageFact,

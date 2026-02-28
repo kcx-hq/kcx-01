@@ -36,6 +36,18 @@ const AuthModal = ({ isOpen, onClose, initialView = "login" }: AuthModalProps) =
   });
   const [otp, setOtp] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [lockoutUntilMs, setLockoutUntilMs] = useState<number | null>(null);
+
+  // Reset state when modal opens
+  useEffect(() => {
+    if (isOpen) {
+      setView(initialView);
+      setLoginData({ email: "", password: "" });
+      setOtp("");
+      setShowPassword(false);
+      setLockoutUntilMs(null);
+    }
+  }, [isOpen, initialView]);
 
   // --- HANDLERS (Unchanged) ---
   const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -48,6 +60,16 @@ const AuthModal = ({ isOpen, onClose, initialView = "login" }: AuthModalProps) =
       if (response.status === 403) {
         setEmailForVerify(loginData.email);
         setView("verify");
+      } else if (response.status === 429) {
+        const msFromRetry =
+          typeof response.retryAfterSeconds === "number"
+            ? Date.now() + response.retryAfterSeconds * 1000
+            : null;
+        const msFromBlockedUntil = response.blockedUntil
+          ? new Date(response.blockedUntil).getTime()
+          : null;
+        setLockoutUntilMs(msFromRetry || msFromBlockedUntil);
+        toast.error(response.message || "Too many failed attempts. Try again later.");
       } else {
         toast.error(response.message || "Sign in failed");
       }
@@ -162,6 +184,7 @@ const AuthModal = ({ isOpen, onClose, initialView = "login" }: AuthModalProps) =
                   setLoginData={setLoginData}
                   handleLogin={handleLogin}
                   isSigningIn={isSigningIn}
+                  lockoutUntilMs={lockoutUntilMs}
                   onSwitchToSignup={() => setView("signup")}
                 />
               )}

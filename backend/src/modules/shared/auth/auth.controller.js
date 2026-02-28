@@ -1,24 +1,83 @@
 import * as userService from "../user/user.service.js";
 import * as clientService from "../client.service.js";
+import { UserRole } from "../../../models/UserRole.js";
 import { isValidEmail } from "../../../utils/emailValidation.js";
 import bcrypt from "bcrypt";
 import { generateJWT } from "../../../utils/jwt.js";
 import { generateVerificationOTP } from "../../../utils/generateVerificationOTP.js";
 import { sendVerificationEmail, sendEmail } from "../../../utils/sendEmail.js";
-import { BillingUpload, User } from "../../../models/index.js";
+import { BillingUpload, User, LoginAttempt } from "../../../models/index.js";
+import { CAPABILITIES_MAP } from "../../shared/capabilities/capabilities.map.js";
 import crypto from "crypto";
 import { Op } from "sequelize";
-import AppError from "../../../errors/AppError.js";
-import logger from "../../../lib/logger.js";
-import {
-  buildAuthPayload,
-  deriveClientName,
-  getCapabilitiesForClient,
-  isValidProfileName,
-  normalizeEmail,
-  resolveClientEmail,
-} from "./auth.utils.js";
-export const signUp = async (req, res, next) => {
+
+const LOGIN_WINDOW_MS = 150000;
+const LOGIN_MAX_ATTEMPTS = 5;
+const LOGIN_BLOCK_MS = 5 * 60 * 1000;
+
+const buildLockoutResponse = (blockedUntil) => {
+  const until = new Date(blockedUntil);
+  const retryAfterSeconds = Math.max(0, Math.ceil((until.getTime() - Date.now()) / 1000));
+  return {
+    message: "Too many failed attempts. Try again later.",
+    retry_after_seconds: retryAfterSeconds,
+    blocked_until: until.toISOString(),
+  };
+};
+
+const getClientIp = (req) => {
+  const forwarded = req.headers["x-forwarded-for"];
+  if (typeof forwarded === "string" && forwarded.length) {
+    return forwarded.split(",")[0].trim();
+  }
+  return req.ip || req.connection?.remoteAddress || "unknown";
+};
+
+const markFailedAttempt = async (email, ip) => {
+  const now = new Date();
+  const existing = await LoginAttempt.findOne({ where: { email, ip } });
+
+  if (!existing) {
+    const blocked_until =
+      LOGIN_MAX_ATTEMPTS === 1
+        ? new Date(now.getTime() + LOGIN_BLOCK_MS)
+        : null;
+    await LoginAttempt.create({
+      email,
+      ip,
+      failed_count: 1,
+      first_failed_at: now,
+      last_failed_at: now,
+      blocked_until,
+    });
+    return blocked_until;
+  }
+
+  const lastFailedAt = existing.last_failed_at;
+  const withinWindow =
+    lastFailedAt && now.getTime() - new Date(lastFailedAt).getTime() <= LOGIN_WINDOW_MS;
+
+  const nextCount = withinWindow ? existing.failed_count + 1 : 1;
+  const firstFailedAt = withinWindow ? existing.first_failed_at : now;
+  const blocked_until =
+    nextCount >= LOGIN_MAX_ATTEMPTS
+      ? new Date(now.getTime() + LOGIN_BLOCK_MS)
+      : null;
+
+  await existing.update({
+    failed_count: nextCount,
+    first_failed_at: firstFailedAt,
+    last_failed_at: now,
+    blocked_until,
+  });
+
+  return blocked_until;
+};
+
+const clearAttempts = async (email, ip) => {
+  await LoginAttempt.destroy({ where: { email, ip } });
+};
+export const signUp = async (req, res) => {
   try {
     const { email, password, full_name, role, client_name, client_email } =
       req.body;
@@ -30,7 +89,17 @@ export const signUp = async (req, res, next) => {
 
     // Validate email format
     if (!isValidEmail(email)) {
-      return next(new AppError(400, "VALIDATION_ERROR", "Invalid request"));
+      return res.status(400).json({
+        message: "Invalid email format",
+      });
+    }
+
+    // Validate role
+    const validRoles = Object.values(UserRole);
+    if (!validRoles.includes(role)) {
+      return res.status(400).json({
+        message: `Invalid role. Must be one of: ${validRoles.join(", ")}`,
+      });
     }
 
     const normalizedEmail = normalizeEmail(email);
@@ -125,16 +194,36 @@ export const signIn = async (req, res, next) => {
       return next(new AppError(400, "VALIDATION_ERROR", "Invalid request"));
     }
     /* 2. Normalize email */
-    const normalizedEmail = normalizeEmail(email);
+    const normalizedEmail = email.toLowerCase().trim();
+    const ip = getClientIp(req);
+
+    const existingAttempt = await LoginAttempt.findOne({
+      where: { email: normalizedEmail, ip },
+    });
+    if (existingAttempt?.blocked_until && new Date(existingAttempt.blocked_until) > new Date()) {
+      return res.status(429).json(buildLockoutResponse(existingAttempt.blocked_until));
+    }
     /* 3. Find user */
     const user = await userService.getUserByEmail(normalizedEmail);
     if (!user) {
-      return next(new AppError(401, "UNAUTHENTICATED", "Authentication required"));
+      const blockedUntil = await markFailedAttempt(normalizedEmail, ip);
+      if (blockedUntil) {
+        return res.status(429).json(buildLockoutResponse(blockedUntil));
+      }
+      return res.status(401).json({
+        message: "Invalid email or password",
+      });
     }
     /* 4. Check password */
     const isPasswordValid = await bcrypt.compare(password, user.password_hash);
     if (!isPasswordValid) {
-      return next(new AppError(401, "UNAUTHENTICATED", "Authentication required"));
+      const blockedUntil = await markFailedAttempt(normalizedEmail, ip);
+      if (blockedUntil) {
+        return res.status(429).json(buildLockoutResponse(blockedUntil));
+      }
+      return res.status(401).json({
+        message: "Invalid email or password",
+      });
     }
 
     if (!user.is_verified) {
@@ -143,7 +232,11 @@ export const signIn = async (req, res, next) => {
       user.verification_otp_expires = expires;
       await user.save();
       await sendVerificationEmail(user.email, user.full_name, otp);
-      return next(new AppError(403, "UNAUTHORIZED", "You do not have permission to perform this action"));
+      await clearAttempts(normalizedEmail, ip);
+      return res.status(403).json({
+        message:
+          "OTP sent on registered Email.Please verify your email before logging in.",
+      });
     }
     /* 5. Generate JWT */
     const payload = buildAuthPayload(user);
@@ -166,7 +259,8 @@ export const signIn = async (req, res, next) => {
     const hasUploaded = !!existingUpload;
 
     /* 8. Response */
-    return res.ok({
+    await clearAttempts(normalizedEmail, ip);
+    return res.status(200).json({
       message: "Login successful",
       user: {
         id: user.id,

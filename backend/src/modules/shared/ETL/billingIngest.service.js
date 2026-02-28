@@ -3,7 +3,7 @@ import { collectDimensions } from "./dimensions/collectDimensions.js";
 import { bulkUpsertDimensions } from "./dimensions/bulkUpsertDimensions.js";
 import { preloadDimensionMaps } from "./dimensions/preloadDimensionsMaps.js";
 import { resolveDimensionIdsFromMaps } from "./dimensions/resolveFromMaps.js";
-import { pushFact, flushFacts } from "./fact/billingUsageFact.js";
+import { pushFact, flushFacts, resetFactBuffer, getFactStats } from "./fact/billingUsageFact.js";
 import sequelize from "../../../config/db.config.js";
 import {
   loadResolvedMapping,
@@ -15,6 +15,7 @@ import { detectProvider } from "./provider-detect.service.js";
 import { autoSuggest } from "../../../utils/mapping/autoSuggest.js";
 import { internalFields } from "../../../utils/mapping/internalFields.js";
 export async function ingestBillingCsv({ uploadId, filePath, clientid }) {
+  resetFactBuffer();
   // 1️⃣ Detect provider & headers
   const { headers, rows } = await readCsvWithHeaders(filePath);
 

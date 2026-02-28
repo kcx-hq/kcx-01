@@ -20,7 +20,8 @@ const User = sequelize.define(
     password_hash: { type: DataTypes.STRING, allowNull: false },
     role: {
       type: DataTypes.ENUM(...Object.values(UserRole)),
-      defaultValue: UserRole.USER,
+      allowNull: true,
+      defaultValue: null,
     },
     is_active: { type: DataTypes.BOOLEAN, defaultValue: true },
     is_verified: { type: DataTypes.BOOLEAN, defaultValue: false },

@@ -317,7 +317,11 @@ const Header = ({ title, anomalies = [], anomaliesCount = 0 }: HeaderProps) => {
                     </p>
                   </div>
                 </div>
-                <button onClick={() => handleDialogToggle(false)} className="p-2 hover:bg-slate-100 rounded-full text-slate-400 hover:text-slate-600 transition-colors">
+                <button
+                  onClick={() => handleDialogToggle(false)}
+                  aria-label="Close dialog"
+                  className="p-2 hover:bg-slate-100 rounded-full text-slate-400 hover:text-slate-600 transition-colors"
+                >
                   <X size={20} />
                 </button>
               </div>
@@ -385,13 +389,16 @@ const Header = ({ title, anomalies = [], anomaliesCount = 0 }: HeaderProps) => {
             >
               <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
                 <h3 className="font-bold text-lg text-[#192630]">Edit Profile</h3>
-                <button onClick={() => setShowProfileSettings(false)}><X size={20} className="text-slate-400 hover:text-slate-600" /></button>
+                <button onClick={() => setShowProfileSettings(false)} aria-label="Close profile settings">
+                  <X size={20} className="text-slate-400 hover:text-slate-600" />
+                </button>
               </div>
               
               <form onSubmit={handleUpdateProfile} className="p-6 space-y-5">
                 <div>
-                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Full Name</label>
+                  <label htmlFor="profile-full-name" className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Full Name</label>
                   <input 
+                    id="profile-full-name"
                     value={fullName}
                     onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFullName(e.target.value)}
                     className="w-full p-3 bg-white border border-slate-200 rounded-xl text-sm font-medium text-[#192630] focus:border-[var(--brand-primary)] focus:ring-4 focus:ring-[var(--brand-primary-soft)] outline-none transition-all"
@@ -400,8 +407,9 @@ const Header = ({ title, anomalies = [], anomaliesCount = 0 }: HeaderProps) => {
                 </div>
                 
                 <div>
-                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Email Address</label>
+                  <label htmlFor="profile-email" className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Email Address</label>
                   <input 
+                    id="profile-email"
                     value={user?.email || ""}
                     disabled
                     className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-500 cursor-not-allowed"
