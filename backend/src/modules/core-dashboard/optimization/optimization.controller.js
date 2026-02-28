@@ -256,37 +256,7 @@ export const getActionCenter = async (req, res, next) => {
  * GET /api/optimization/action-center
  * Get precomputed action center model for optimization overview
  */
-export const getActionCenter = async (req, res) => {
-  try {
-    const filters = {
-      provider: req.query.provider || 'All',
-      service: req.query.service || 'All',
-      region: req.query.region || 'All',
-    };
 
-    const period = req.query.period || 'last90days';
-
-    let uploadIds = getUploadIdsFromReq(req);
-    if (uploadIds.length === 0) {
-      uploadIds = await getUserUploadIds(req.user?.id);
-    }
-
-    const data = await optimizationService.getActionCenter({
-      filters,
-      period,
-      uploadIds,
-    });
-
-    res.json({ success: true, data });
-  } catch (error) {
-    console.error('Error in getActionCenter:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to build optimization action center',
-      message: error.message,
-    });
-  }
-};
 
 /**
  * GET /api/optimization/right-sizing

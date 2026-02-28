@@ -10,31 +10,35 @@ import {
 import { generateJWT } from "../../../utils/jwt.js";
 import { sendInquiryRelayEmailToBoss } from "../../../utils/sendEmail.js";
 import { logAdminEvent } from "../activity-logs/activity-logs.logger.js";
+import AppError from "../../../errors/AppError.js";
+import logger from "../../../lib/logger.js";
 
-export const getInquiries = async (req, res) => {
+export const getInquiries = async (req, res, next) => {
   try {
     const result = await listInquiries(req.query);
-    return res.status(200).json(result);
+    return res.ok(result);
   } catch (error) {
-    return res.status(500).json({ message: "Internal server error" });
+    logger.error({ err: error, requestId: req.requestId }, "getInquiries failed");
+    return next(new AppError(500, "INTERNAL", "Internal server error", { cause: error }));
   }
 };
 
-export const getInquiry = async (req, res) => {
+export const getInquiry = async (req, res, next) => {
   try {
     const inquiry = await getInquiryById(req.params.id);
-    if (!inquiry) return res.status(404).json({ message: "Inquiry not found" });
-    return res.status(200).json(inquiry);
+    if (!inquiry) return next(new AppError(404, "NOT_FOUND", "Not found"));
+    return res.ok(inquiry);
   } catch (error) {
-    return res.status(500).json({ message: "Internal server error" });
+    logger.error({ err: error, requestId: req.requestId }, "getInquiry failed");
+    return next(new AppError(500, "INTERNAL", "Internal server error", { cause: error }));
   }
 };
 
-export const updateStatus = async (req, res) => {
+export const updateStatus = async (req, res, next) => {
   try {
     const { status, meet_link } = req.body || {};
     if (!status) {
-      return res.status(400).json({ message: "status is required" });
+      return next(new AppError(400, "VALIDATION_ERROR", "Invalid request"));
     }
 
     const normalizedStatus = String(status).toUpperCase();
@@ -44,7 +48,7 @@ export const updateStatus = async (req, res) => {
       req.user?.admin_id,
       meet_link
     );
-    if (!inquiry) return res.status(404).json({ message: "Inquiry not found" });
+    if (!inquiry) return next(new AppError(404, "NOT_FOUND", "Not found"));
 
     if (["HANDLED", "TRASHED", "PENDING"].includes(normalizedStatus)) {
       const eventType =
@@ -63,14 +67,14 @@ export const updateStatus = async (req, res) => {
       });
     }
 
-    return res.status(200).json({
+    return res.ok({
       id: inquiry.id,
       status: inquiry.status,
       meet_link: inquiry.meet_link,
     });
   } catch (error) {
     if (error?.code === "INVALID_STATUS") {
-      return res.status(400).json({ message: error.message });
+      return next(new AppError(400, "VALIDATION_ERROR", "Invalid request", { cause: error }));
     }
     if (error?.code === "PENDING_LOCKED") {
       await logAdminEvent({
@@ -81,13 +85,14 @@ export const updateStatus = async (req, res) => {
         description: "Pending inquiry locked from admin status change.",
         metadata: { attempted_status: req.body?.status },
       });
-      return res.status(403).json({ message: error.message });
+      return next(new AppError(403, "UNAUTHORIZED", "You do not have permission to perform this action", { cause: error }));
     }
-    return res.status(500).json({ message: "Internal server error" });
+    logger.error({ err: error, requestId: req.requestId }, "updateStatus failed");
+    return next(new AppError(500, "INTERNAL", "Internal server error", { cause: error }));
   }
 };
 
-export const bulkStatusUpdate = async (req, res) => {
+export const bulkStatusUpdate = async (req, res, next) => {
   try {
     const { ids, status } = req.body || {};
     const normalizedStatus = String(status || "").toUpperCase();
@@ -109,10 +114,10 @@ export const bulkStatusUpdate = async (req, res) => {
       });
     }
 
-    return res.status(200).json(result);
+    return res.ok(result);
   } catch (error) {
     if (error?.code === "INVALID_STATUS") {
-      return res.status(400).json({ message: error.message });
+      return next(new AppError(400, "VALIDATION_ERROR", "Invalid request", { cause: error }));
     }
     if (error?.code === "PENDING_LOCKED") {
       await logAdminEvent({
@@ -122,16 +127,17 @@ export const bulkStatusUpdate = async (req, res) => {
         description: "Pending inquiry locked from bulk admin status change.",
         metadata: { attempted_status: req.body?.status, ids: req.body?.ids || [] },
       });
-      return res.status(403).json({ message: error.message });
+      return next(new AppError(403, "UNAUTHORIZED", "You do not have permission to perform this action", { cause: error }));
     }
-    return res.status(500).json({ message: "Internal server error" });
+    logger.error({ err: error, requestId: req.requestId }, "bulkStatusUpdate failed");
+    return next(new AppError(500, "INTERNAL", "Internal server error", { cause: error }));
   }
 };
 
-export const removeInquiry = async (req, res) => {
+export const removeInquiry = async (req, res, next) => {
   try {
     const inquiry = await deleteInquiry(req.params.id);
-    if (!inquiry) return res.status(404).json({ message: "Inquiry not found" });
+    if (!inquiry) return next(new AppError(404, "NOT_FOUND", "Not found"));
     await logAdminEvent({
       adminId: req.user?.admin_id,
       eventType: "INQUIRY_DELETE_PERMANENT",
@@ -139,13 +145,14 @@ export const removeInquiry = async (req, res) => {
       entityId: inquiry.id,
       description: `Admin permanently deleted inquiry ${inquiry.id}.`,
     });
-    return res.status(200).json({ ok: true });
+    return res.ok({ ok: true });
   } catch (error) {
-    return res.status(500).json({ message: "Internal server error" });
+    logger.error({ err: error, requestId: req.requestId }, "removeInquiry failed");
+    return next(new AppError(500, "INTERNAL", "Internal server error", { cause: error }));
   }
 };
 
-export const bulkRemoveInquiries = async (req, res) => {
+export const bulkRemoveInquiries = async (req, res, next) => {
   try {
     const { ids } = req.body || {};
     const result = await bulkDeleteInquiries(ids);
@@ -156,18 +163,19 @@ export const bulkRemoveInquiries = async (req, res) => {
       description: `Admin permanently deleted ${result?.deleted || 0} inquiries.`,
       metadata: { ids: Array.isArray(ids) ? ids : [] },
     });
-    return res.status(200).json(result);
+    return res.ok(result);
   } catch (error) {
-    return res.status(500).json({ message: "Internal server error" });
+    logger.error({ err: error, requestId: req.requestId }, "bulkRemoveInquiries failed");
+    return next(new AppError(500, "INTERNAL", "Internal server error", { cause: error }));
   }
 };
 
-export const relayToBoss = async (req, res) => {
+export const relayToBoss = async (req, res, next) => {
   try {
     const { severity, note } = req.body || {};
     const allowed = ["LOW", "MEDIUM", "HIGH", "CRITICAL"];
     if (!severity || !allowed.includes(String(severity).toUpperCase())) {
-      return res.status(400).json({ message: "severity is required" });
+      return next(new AppError(400, "VALIDATION_ERROR", "Invalid request"));
     }
 
     const inquiry = await relayInquiryToBoss(
@@ -178,7 +186,7 @@ export const relayToBoss = async (req, res) => {
       new Date(Date.now() + 1000 * 60 * 60 * 24 * 7)
     );
 
-    if (!inquiry) return res.status(404).json({ message: "Inquiry not found" });
+    if (!inquiry) return next(new AppError(404, "NOT_FOUND", "Not found"));
 
     const reviewLink = `${process.env.BACKEND_URL}/api/inquiry/review/${inquiry.id}?token=${inquiry.boss_token}`;
 
@@ -193,8 +201,9 @@ export const relayToBoss = async (req, res) => {
       reviewLink,
     });
 
-    return res.status(200).json({ message: "Relayed to boss" });
+    return res.ok({ message: "Relayed to boss" });
   } catch (error) {
-    return res.status(500).json({ message: "Internal server error" });
+    logger.error({ err: error, requestId: req.requestId }, "relayToBoss failed");
+    return next(new AppError(500, "INTERNAL", "Internal server error", { cause: error }));
   }
 };

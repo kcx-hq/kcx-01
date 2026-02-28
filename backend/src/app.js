@@ -34,6 +34,22 @@ import {
 
 const API_BASE_PATHS = ["/api", "/api/v1"];
 const INTERNAL_BASE_PATHS = ["/internal", "/api/internal", "/api/v1/internal"];
+const DEFAULT_ALLOWED_ORIGINS = [
+  "http://localhost:5173",
+  "http://localhost:5174",
+  "http://localhost:5175",
+  "http://localhost:5176",
+  "http://localhost:3000",
+  "https://kcx-01.vercel.app",
+];
+
+const getAllowedOrigins = () => {
+  const configuredOrigins = [process.env.FRONTEND_URL, process.env.ADMIN_URL]
+    .filter((origin) => typeof origin === "string" && origin.trim() !== "")
+    .map((origin) => origin.trim());
+
+  return Array.from(new Set([...DEFAULT_ALLOWED_ORIGINS, ...configuredOrigins]));
+};
 
 function mountApiRouters(app) {
   for (const basePath of API_BASE_PATHS) {
@@ -44,7 +60,9 @@ function mountApiRouters(app) {
     app.use(`${basePath}/dashboard`, coreDashboardRoutes);
     app.use(`${basePath}/chatbot`, chatbotRoutes);
     app.use(`${basePath}/cloud`, cloudRoutes);
-    app.use(basePath, clientRoutes);
+    // app.use(basePath, clientRoutes);
+    app.use(`${basePath}/admin/auth` , adminAuthRoutes)
+    app.use(`${basePath}/admin` , adminRoutes)
   }
 }
 
@@ -71,10 +89,17 @@ export function createApp(deps = {}) {
 
   app.use(
     cors({
-      origin: ["http://localhost:5173", "http://localhost:5174" , "http://localhost:5175" , "https://kcx-01.vercel.app"], // frontend (supports both ports)
-      credentials: true,               // allow cookies
+      origin: getAllowedOrigins(),
+      credentials: true,
       methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-      allowedHeaders: ["Content-Type", "Authorization", "X-Signature", "X-Timestamp", "X-Nonce"]
+      allowedHeaders: [
+        "Content-Type",
+        "Authorization",
+        "X-Request-Id",
+        "X-Signature",
+        "X-Timestamp",
+        "X-Nonce",
+      ],
     })
   );
   app.use(

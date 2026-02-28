@@ -1024,7 +1024,7 @@ export const sendInquiryRelayEmailToBoss = async ({
 
     return { success: true };
   } catch (error) {
-    console.error("Inquiry relay email error:", error);
+    logger.error({ err: error }, "Inquiry relay email error");
     return { success: false, message: "Failed to send relay email" };
   }
 };
@@ -1944,7 +1944,7 @@ export const sendInquiryStandbyEmail = async (email, name, note) => {
 
     return { success: true };
   } catch (error) {
-    console.error("Inquiry standby email error:", error);
+    logger.error({ err: error }, "Inquiry standby email error");
     return { success: false, message: "Failed to send standby email" };
   }
 };

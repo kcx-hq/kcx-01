@@ -65,7 +65,7 @@ export const submitInquiry = async (req, res, next) => {
   }
 };
 
-export const getBossReviewPage = async (req, res) => {
+export const getBossReviewPage = async (req, res, next) => {
   try {
     const { id } = req.params;
     const { token } = req.query;
@@ -135,87 +135,14 @@ export const getBossReviewPage = async (req, res) => {
 </body>
 </html>`);
   } catch (error) {
-    console.error(error);
-    return res.status(500).json({ message: "Server error" });
+    logger.error({ err: error, requestId: req.requestId }, "getBossReviewPage failed");
+    return next(new AppError(500, "INTERNAL", "Internal server error", { cause: error }));
   }
 };
 
-export const getBossReviewPage = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { token } = req.query;
-    if (!token) return res.status(400).send("Invalid request");
 
-    const inquiry = await Inquiry.findByPk(id);
-    if (!inquiry) return res.status(404).send("Inquiry not found");
 
-    if (!inquiry.boss_token || token !== inquiry.boss_token) {
-      return res.status(403).send("Invalid or expired link.");
-    }
-
-    verifyJWT(token);
-
-    if (inquiry.boss_token_expires && new Date(inquiry.boss_token_expires) < new Date()) {
-      return res.status(403).send("Link expired.");
-    }
-
-    return res.send(`<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <title>Inquiry Review</title>
-  <style>
-    body { font-family: Arial, sans-serif; background:#f5f6f7; padding: 40px; }
-    .card { max-width: 720px; margin: 0 auto; background: #fff; padding: 28px; border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,0.08); }
-    .title { font-size: 20px; font-weight: bold; margin-bottom: 6px; }
-    .muted { color: #6b7280; font-size: 13px; }
-    .row { margin: 12px 0; }
-    label { display:block; font-size: 12px; color: #6b7280; margin-bottom: 6px; text-transform: uppercase; letter-spacing: .6px; }
-    input, textarea, select { width: 100%; padding: 10px 12px; border-radius: 8px; border: 1px solid #d1d5db; }
-    .actions { display:flex; gap:10px; justify-content:flex-end; margin-top: 18px; }
-    .btn { padding: 10px 14px; border-radius: 8px; border: 1px solid #d1d5db; background:#fff; cursor:pointer; }
-    .btn-primary { background:#0f766e; color:#fff; border-color:#0f766e; }
-    .btn-danger { border-color:#ef4444; color:#ef4444; }
-  </style>
-</head>
-<body>
-  <div class="card">
-    <div class="title">Inquiry Review</div>
-    <div class="muted">${inquiry.name} • ${inquiry.email}</div>
-
-    <form method="POST" action="/api/inquiry/review/${inquiry.id}/decision?token=${token}">
-      <div class="row">
-        <label>Preferred Timeslot</label>
-        <div>${new Date(inquiry.preferred_datetime).toLocaleString()}</div>
-      </div>
-      <div class="row">
-        <label>Message</label>
-        <div>${inquiry.message || ""}</div>
-      </div>
-      <div class="row">
-        <label>Meeting Link (required for ACCEPT)</label>
-        <input name="meeting_link" placeholder="https://meet.google.com/..." />
-      </div>
-      <div class="row">
-        <label>Optional Message</label>
-        <textarea name="message" rows="3" placeholder="Optional note to client"></textarea>
-      </div>
-      <div class="actions">
-        <button class="btn btn-danger" type="submit" name="decision" value="REJECT">Reject</button>
-        <button class="btn" type="submit" name="decision" value="STANDBY">Standby</button>
-        <button class="btn btn-primary" type="submit" name="decision" value="ACCEPT">Accept</button>
-      </div>
-    </form>
-  </div>
-</body>
-</html>`);
-  } catch (error) {
-    console.error(error);
-    return res.status(500).send("Something went wrong");
-  }
-};
-
-export const handleBossDecision = async (req, res) => {
+export const handleBossDecision = async (req, res, next) => {
   try {
     const { id } = req.params;
     const { token } = req.query;
@@ -291,94 +218,12 @@ export const handleBossDecision = async (req, res) => {
 </body>
 </html>`);
   } catch (error) {
-    console.error(error);
-    return res.status(500).send("Something went wrong");
+    logger.error({ err: error, requestId: req.requestId }, "handleBossDecision failed");
+    return next(new AppError(500, "INTERNAL", "Internal server error", { cause: error }));
   }
 };
 
-export const acceptInquiry = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { token } = req.query;
 
-    if (!token) return res.status(400).send("Invalid request");
-
-    const inquiry = await Inquiry.findByPk(id);
-    if (!inquiry) return res.status(404).send("Inquiry not found");
-
-    if (inquiry.status !== "PENDING") {
-      return res.send("This inquiry has already been processed.");
-    }
-
-    if (token !== inquiry.action_token) {
-      return res.status(403).send("Invalid or expired link.");
-    }
-
-    verifyJWT(token);
-
-    if (inquiry.boss_token_expires && new Date(inquiry.boss_token_expires) < new Date()) {
-      return res.status(403).send("Link expired.");
-    }
-
-    const normalized = String(decision || "").toUpperCase();
-    if (!["ACCEPT", "REJECT", "STANDBY"].includes(normalized)) {
-      return res.status(400).send("Invalid decision");
-    }
-
-    if (normalized === "ACCEPT" && (!meeting_link || !String(meeting_link).trim())) {
-      return res.status(400).send("Meeting link is required to accept.");
-    }
-
-    const statusMap = {
-      ACCEPT: "ACCEPTED",
-      REJECT: "REJECTED",
-      STANDBY: "STANDBY",
-    };
-    const mappedStatus = statusMap[normalized];
-
-    await inquiry.update({
-      status: mappedStatus,
-      meet_link: normalized === "ACCEPT" ? String(meeting_link).trim() : inquiry.meet_link,
-      boss_token: null,
-      boss_token_expires: null,
-    });
-
-    if (normalized === "ACCEPT") {
-      await sendMeetingConfirmationEmail(
-        inquiry.email,
-        inquiry.name,
-        inquiry.preferred_datetime,
-        inquiry.timezone,
-        String(meeting_link).trim()
-      );
-    } else if (normalized === "REJECT") {
-      await sendInquiryRejectionEmail(inquiry.email, inquiry.name, message);
-    } else {
-      await sendInquiryStandbyEmail(inquiry.email, inquiry.name, message);
-    }
-
-    return res.send(`<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <title>Inquiry Updated</title>
-  <style>
-    body { font-family: Arial, sans-serif; background:#f5f6f7; display:flex; align-items:center; justify-content:center; height:100vh; }
-    .card { background:#fff; padding: 36px; border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,0.08); text-align:center; }
-  </style>
-</head>
-<body>
-  <div class="card">
-    <h2>Decision recorded</h2>
-    <p>The client has been notified.</p>
-  </div>
-</body>
-</html>`);
-  } catch (error) {
-    console.error(error);
-    return res.status(500).send("Something went wrong");
-  }
-};
 
 export const acceptInquiry = async (req, res, next) => {
   try {

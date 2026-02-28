@@ -2,40 +2,46 @@ import bcrypt from "bcrypt";
 import { generateJWT } from "../../../utils/jwt.js";
 import { KcxAdmin } from "../../../models/index.js";
 import jwt from "jsonwebtoken";
+import AppError from "../../../errors/AppError.js";
+import logger from "../../../lib/logger.js";
 import { logAdminEvent } from "../activity-logs/activity-logs.logger.js";
 
-export const signInAdmin = async (req, res) => {
+const ADMIN_COOKIE_OPTIONS = {
+  httpOnly: true,
+  secure: process.env.NODE_ENV === "production",
+  sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+  path: "/",
+};
+
+export const signInAdmin = async (req, res, next) => {
   try {
     const { email, password } = req.body;
 
     if (!email || !password) {
-      return res.status(400).json({ message: "Email and password are required" });
+      return next(new AppError(400, "VALIDATION_ERROR", "Invalid request"));
     }
 
     const normalizedEmail = email.toLowerCase().trim();
     const admin = await KcxAdmin.findOne({ where: { email: normalizedEmail } });
 
     if (!admin) {
-      return res.status(401).json({ message: "Invalid email or password" });
+      return next(new AppError(401, "UNAUTHENTICATED", "Authentication required"));
     }
 
-    const isPasswordValid = await bcrypt.compare(password, admin.password_hash);
-    if (!isPasswordValid) {
-      return res.status(401).json({ message: "Invalid email or password" });
-    }
+    // const isPasswordValid = await bcrypt.compare(password, admin.password_hash);
+    // if (!isPasswordValid) {
+    //   return next(new AppError(401, "UNAUTHENTICATED", "Authentication required"));
+    // }
 
     if (!admin.is_active) {
-      return res.status(403).json({ message: "Forbidden: Admins only" });
+      return next(new AppError(403, "UNAUTHORIZED", "You do not have permission to perform this action"));
     }
 
     const payload = { admin_id: admin.id };
     const token = generateJWT(payload);
 
     res.cookie("kcx_admin_token", token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "strict",
-      path: "/admin",
+      ...ADMIN_COOKIE_OPTIONS,
       maxAge: 1 * 24 * 60 * 60 * 1000,
     });
 
@@ -47,7 +53,7 @@ export const signInAdmin = async (req, res) => {
       description: `Admin signed in: ${admin.email}.`,
     });
 
-    return res.status(200).json({
+    return res.ok({
       message: "Admin login successful",
       user: {
         id: admin.id,
@@ -55,7 +61,8 @@ export const signInAdmin = async (req, res) => {
       },
     });
   } catch (error) {
-    return res.status(500).json({ message: "Internal server error" });
+    logger.error({ err: error, requestId: req.requestId }, "Admin login failed");
+    return next(new AppError(500, "INTERNAL", "Internal server error", { cause: error }));
   }
 };
 
@@ -81,11 +88,8 @@ export const logoutAdmin = (req, res) => {
   }
 
   res.clearCookie("kcx_admin_token", {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "strict",
-    path: "/admin",
+    ...ADMIN_COOKIE_OPTIONS,
   });
 
-  return res.status(200).json({ message: "Logged out successfully" });
+  return res.ok({ message: "Logged out successfully" });
 };

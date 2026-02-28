@@ -1,47 +1,20 @@
 import { create } from "zustand";
-import axios from "axios";
+import { apiGet, apiPost, apiPut } from "../services/http";
+import { getApiErrorMessage, isApiError } from "../services/apiError";
+import type {
+  AuthUser,
+  FetchUserResult,
+  LoginData,
+  SignInResult,
+  SignUpResult,
+  SignupPayload,
+  UpdateProfileInput,
+  UpdateProfileResult,
+  VerifyEmailInput,
+  VerifyEmailResult,
+} from "../shared/auth/types";
 
-type AuthUser = {
-  full_name?: string;
-  email?: string;
-  role?: string;
-  caps?: unknown;
-  hasUploaded?: boolean;
-};
-
-type AuthStore = {
-  user: AuthUser | null;
-  isSigningIn: boolean;
-  isSigningUp: boolean;
-  isVerifying: boolean;
-  error: string | null;
-  fetchUser: () => Promise<{ success: boolean; user?: AuthUser }>;
-  updateProfile: (args: {
-    full_name: string;
-  }) => Promise<{ success: boolean; message?: string; user?: AuthUser }>;
-  signUp: (payload: unknown) => Promise<{ success: boolean; message?: string }>;
-  signIn: (args: {
-    email: string;
-    password: string;
-  }) => Promise<{
-    success: boolean;
-    message?: string;
-    hasUploaded?: boolean;
-    status?: number;
-    retryAfterSeconds?: number;
-    blockedUntil?: string;
-  }>;
-  verifyEmail: (args: {
-    email: string;
-    otp: string;
-  }) => Promise<{ success: boolean; message?: string }>;
-  logout: () => Promise<void>;
-};
-
-axios.defaults.withCredentials = true;
-
-const API_URL = import.meta.env.VITE_API_URL 
-const CAPS_VERSION = "v1"; // bump when structure changes
+const CAPS_VERSION = "v1";
 
 interface AuthMessageResponse {
   message?: string;
@@ -64,6 +37,13 @@ interface VerifyEmailResponse extends AuthMessageResponse {
   user: AuthUser;
 }
 
+interface SignInLockoutMeta {
+  retryAfterSeconds?: number;
+  blockedUntil?: string;
+}
+
+type SignInResultWithLockout = SignInResult & SignInLockoutMeta;
+
 interface AuthStore {
   user: AuthUser | null;
   isSigningIn: boolean;
@@ -73,12 +53,23 @@ interface AuthStore {
   fetchUser: () => Promise<FetchUserResult>;
   updateProfile: (payload: UpdateProfileInput) => Promise<UpdateProfileResult>;
   signUp: (payload: SignupPayload) => Promise<SignUpResult>;
-  signIn: (payload: LoginData) => Promise<SignInResult>;
+  signIn: (payload: LoginData) => Promise<SignInResultWithLockout>;
   verifyEmail: (payload: VerifyEmailInput) => Promise<VerifyEmailResult>;
   logout: () => Promise<void>;
 }
 
 type AuthErrorContext = "signIn" | "signUp" | "verifyEmail" | "updateProfile";
+
+type SignupRequestPayload = Omit<SignupPayload, "client_name" | "client_email"> & {
+  client_name?: string;
+  client_email?: string;
+};
+
+const normalizeOptionalSignupField = (value: string | undefined): string | undefined => {
+  if (typeof value !== "string") return undefined;
+  const trimmed = value.trim();
+  return trimmed !== "" ? trimmed : undefined;
+};
 
 const getAuthErrorMessage = (
   error: unknown,
@@ -133,23 +124,39 @@ const getAuthErrorMessage = (
   return getApiErrorMessage(error, fallback);
 };
 
+const getLockoutMeta = (error: unknown): SignInLockoutMeta => {
+  if (!isApiError(error)) return {};
+
+  const details =
+    typeof error.details === "object" && error.details !== null
+      ? (error.details as Record<string, unknown>)
+      : null;
+  if (!details) return {};
+
+  const retryAfterRaw = details["retry_after_seconds"];
+  const blockedUntilRaw = details["blocked_until"];
+
+  const retryAfterSeconds = Number.isFinite(Number(retryAfterRaw))
+    ? Number(retryAfterRaw)
+    : undefined;
+  const blockedUntil =
+    typeof blockedUntilRaw === "string" && blockedUntilRaw.trim() !== ""
+      ? blockedUntilRaw
+      : undefined;
+
+  return { retryAfterSeconds, blockedUntil };
+};
+
 export const useAuthStore = create<AuthStore>((set) => ({
   user: null,
-
   isSigningIn: false,
   isSigningUp: false,
   isVerifying: false,
-
   error: null,
 
-  /* ================= FETCH USER ================= */
   fetchUser: async () => {
     try {
-      const res = await axios.get(`${API_URL}/api/auth/me`, {
-        withCredentials: true,
-      });
-
-      const user = res.data as AuthUser;
+      const user = await apiGet<AuthUser>("/api/auth/me");
       set({ user });
 
       if (user?.caps) {
@@ -171,52 +178,53 @@ export const useAuthStore = create<AuthStore>((set) => ({
     }
   },
 
-  /* ================= UPDATE PROFILE ================= */
   updateProfile: async ({ full_name }: UpdateProfileInput) => {
     try {
-      const res = await axios.put(`${API_URL}/api/auth/profile`, { full_name });
-      set({ user: res.data.user as AuthUser });
-      return {
-        success: true,
-        message: res.data.message,
-        user: res.data.user as AuthUser,
-      };
-    } catch (err) {
-      const errorMessage =
-        (err as any).response?.data?.message || "Failed to update profile";
+      const response = await apiPut<UpdateProfileResponse>("/api/auth/profile", { full_name });
+      set({ user: response.user });
+      return { success: true, message: response.message, user: response.user };
+    } catch (err: unknown) {
+      const errorMessage = getAuthErrorMessage(err, "Failed to update profile", "updateProfile");
       return { success: false, message: errorMessage };
     }
   },
 
-  /* ================= SIGN UP ================= */
   signUp: async (payload: SignupPayload) => {
     set({ isSigningUp: true, error: null });
 
     try {
-      const response = await apiPost<SignUpResponse>("/api/auth/signup", payload);
+      const requestPayload: SignupRequestPayload = {
+        full_name: payload.full_name.trim(),
+        email: payload.email.trim(),
+        password: payload.password,
+        role: payload.role.trim(),
+      };
 
-      set({
-        user: res.data.user as AuthUser,
-        isSigningUp: false,
-      });
+      const normalizedClientName = normalizeOptionalSignupField(payload.client_name);
+      const normalizedClientEmail = normalizeOptionalSignupField(payload.client_email);
 
+      if (normalizedClientName) {
+        requestPayload.client_name = normalizedClientName;
+      }
+
+      if (normalizedClientEmail) {
+        requestPayload.client_email = normalizedClientEmail;
+      }
+
+      const response = await apiPost<SignUpResponse>("/api/auth/signup", requestPayload);
+      set({ user: response.user, isSigningUp: false });
       return { success: true, message: response.message };
     } catch (err: unknown) {
       const errorMessage = getAuthErrorMessage(err, "Signup failed", "signUp");
-      set({
-        isSigningUp: false,
-        error:
-          (err as any).response?.data?.message || "Signup failed",
-      });
-
+      set({ isSigningUp: false, error: errorMessage });
       return {
         success: false,
-        message: (err as any).response?.data?.message,
+        message: errorMessage,
+        status: isApiError(err) ? err.status : undefined,
       };
     }
   },
 
-  /* ================= SIGN IN ================= */
   signIn: async ({ email, password }: LoginData) => {
     set({ isSigningIn: true, error: null });
 
@@ -226,47 +234,34 @@ export const useAuthStore = create<AuthStore>((set) => ({
         password,
       });
 
-      // After successful login, fetch full user data
       try {
         const user = await apiGet<AuthUser>("/api/auth/me");
-        set({
-          user: userRes.data as AuthUser,
-          isSigningIn: false,
-        });
+        set({ user, isSigningIn: false });
         return {
           success: true,
-          hasUploaded:
-            Boolean(user.hasUploaded || signInResponse.hasUploaded),
+          hasUploaded: Boolean(user.hasUploaded || signInResponse.hasUploaded),
         };
       } catch {
-        // If /me fails, use the basic user data from signin
-        set({
-          user: res.data.user as AuthUser,
-          isSigningIn: false,
-        });
-        return { success: true, hasUploaded: Boolean(signInResponse.hasUploaded) };
+        set({ user: signInResponse.user ?? null, isSigningIn: false });
+        return {
+          success: true,
+          hasUploaded: Boolean(signInResponse.hasUploaded),
+        };
       }
-    } catch (err) {
-      const status = (err as any).response?.status;
-      const retryAfterSeconds = (err as any).response?.data?.retry_after_seconds;
-      const blockedUntil = (err as any).response?.data?.blocked_until;
-      set({
-        isSigningIn: false,
-        error:
-          (err as any).response?.data?.message || "Login failed",
-      });
-
+    } catch (err: unknown) {
+      const errorMessage = getAuthErrorMessage(err, "Login failed", "signIn");
+      const lockoutMeta = getLockoutMeta(err);
+      set({ isSigningIn: false, error: errorMessage });
       return {
         success: false,
-        message: (err as any).response?.data?.message,
-        status,
-        retryAfterSeconds,
-        blockedUntil,
+        message: errorMessage,
+        status: isApiError(err) ? err.status : undefined,
+        retryAfterSeconds: lockoutMeta.retryAfterSeconds,
+        blockedUntil: lockoutMeta.blockedUntil,
       };
     }
   },
 
-  /* ================= VERIFY EMAIL ================= */
   verifyEmail: async ({ email, otp }: VerifyEmailInput) => {
     set({ isVerifying: true, error: null });
 
@@ -276,40 +271,26 @@ export const useAuthStore = create<AuthStore>((set) => ({
         otp,
       });
 
-      set({
-        user: response.user,
-        isVerifying: false,
-      });
-
+      set({ user: response.user, isVerifying: false });
       return { success: true, message: response.message };
     } catch (err: unknown) {
       const errorMessage = getAuthErrorMessage(err, "Verification failed", "verifyEmail");
-      set({
-        isVerifying: false,
-        error:
-          (err as any).response?.data?.message || "Verification failed",
-      });
-
+      set({ isVerifying: false, error: errorMessage });
       return {
         success: false,
-        message: (err as any).response?.data?.message,
+        message: errorMessage,
+        status: isApiError(err) ? err.status : undefined,
       };
     }
   },
 
-  /* ================= LOGOUT ================= */
   logout: async () => {
     try {
       await apiGet<void>("/api/auth/logout");
-    } catch (err: unknown) {
-      console.error("Logout error:", err);
+    } catch {
+      // no-op: local auth state is cleared regardless of network logout status
     } finally {
-      // Clear user state
-      set({
-        user: null,
-      });
-      // Clear localStorage data (saved views can be kept, but CSV data is no longer stored)
-      // localStorage.removeItem('finops_saved_views'); // Optional: keep user preferences
+      set({ user: null });
     }
   },
 }));

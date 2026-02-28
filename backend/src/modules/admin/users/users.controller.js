@@ -6,110 +6,118 @@ import {
   notifyUnverifiedUser,
   deleteUser,
 } from "./users.service.js";
+import AppError from "../../../errors/AppError.js";
+import logger from "../../../lib/logger.js";
 
-export const getUsers = async (req, res) => {
+export const getUsers = async (req, res, next) => {
   try {
     const result = await listUsers(req.query);
-    return res.status(200).json(result);
+    return res.ok(result);
   } catch (error) {
-    return res.status(500).json({ message: "Internal server error" });
+    logger.error({ err: error, requestId: req.requestId }, "getUsers failed");
+    return next(new AppError(500, "INTERNAL", "Internal server error", { cause: error }));
   }
 };
 
-export const getUser = async (req, res) => {
+export const getUser = async (req, res, next) => {
   try {
     const user = await getUserById(req.params.id);
-    if (!user) return res.status(404).json({ message: "User not found" });
-    return res.status(200).json(user);
+    if (!user) return next(new AppError(404, "NOT_FOUND", "Not found"));
+    return res.ok(user);
   } catch (error) {
-    return res.status(500).json({ message: "Internal server error" });
+    logger.error({ err: error, requestId: req.requestId }, "getUser failed");
+    return next(new AppError(500, "INTERNAL", "Internal server error", { cause: error }));
   }
 };
 
-export const updateStatus = async (req, res) => {
+export const updateStatus = async (req, res, next) => {
   try {
     const { is_active } = req.body;
 
     if (typeof is_active !== "boolean") {
-      return res.status(400).json({ message: "is_active must be boolean" });
+      return next(new AppError(400, "VALIDATION_ERROR", "Invalid request"));
     }
 
     const user = await updateUserStatus(req.params.id, is_active, req.user?.admin_id);
-    if (!user) return res.status(404).json({ message: "User not found" });
+    if (!user) return next(new AppError(404, "NOT_FOUND", "Not found"));
 
-    return res.status(200).json({
+    return res.ok({
       id: user.id,
       is_active: user.is_active,
     });
   } catch (error) {
     if (error?.code === "LAST_ADMIN") {
-      return res.status(400).json({ message: error.message });
+      return next(new AppError(400, "VALIDATION_ERROR", "Invalid request", { cause: error }));
     }
     if (error?.message?.includes("own account")) {
-      return res.status(400).json({ message: error.message });
+      return next(new AppError(400, "VALIDATION_ERROR", "Invalid request", { cause: error }));
     }
-    return res.status(500).json({ message: "Internal server error" });
+    logger.error({ err: error, requestId: req.requestId }, "updateStatus failed");
+    return next(new AppError(500, "INTERNAL", "Internal server error", { cause: error }));
   }
 };
 
-export const updateRole = async (req, res) => {
+export const updateRole = async (req, res, next) => {
   try {
     const { role } = req.body;
 
     if (!role) {
-      return res.status(400).json({ message: "role is required" });
+      return next(new AppError(400, "VALIDATION_ERROR", "Invalid request"));
     }
 
     const user = await updateUserRole(req.params.id, role, req.user?.admin_id);
-    if (!user) return res.status(404).json({ message: "User not found" });
+    if (!user) return next(new AppError(404, "NOT_FOUND", "Not found"));
 
-    return res.status(200).json({
+    return res.ok({
       id: user.id,
       role: user.role,
     });
   } catch (error) {
     if (error?.code === "INVALID_ROLE" || error?.code === "LAST_ADMIN") {
-      return res.status(400).json({ message: error.message });
+      return next(new AppError(400, "VALIDATION_ERROR", "Invalid request", { cause: error }));
     }
     if (error?.message?.includes("own account")) {
-      return res.status(400).json({ message: error.message });
+      return next(new AppError(400, "VALIDATION_ERROR", "Invalid request", { cause: error }));
     }
-    return res.status(500).json({ message: "Internal server error" });
+    logger.error({ err: error, requestId: req.requestId }, "updateRole failed");
+    return next(new AppError(500, "INTERNAL", "Internal server error", { cause: error }));
   }
 };
 
-export const notifyUnverified = async (req, res) => {
+export const notifyUnverified = async (req, res, next) => {
   try {
     const user = await notifyUnverifiedUser(req.params.id, req.user?.admin_id);
-    if (!user) return res.status(404).json({ message: "User not found" });
-    return res.status(200).json({ message: "Verification email sent." });
+    if (!user) return next(new AppError(404, "NOT_FOUND", "Not found"));
+    return res.ok({ message: "Verification email sent." });
   } catch (error) {
     if (error?.code === "ALREADY_VERIFIED") {
-      return res.status(400).json({ message: error.message });
+      return next(new AppError(400, "VALIDATION_ERROR", "Invalid request", { cause: error }));
     }
     if (error?.message?.includes("own account")) {
-      return res.status(400).json({ message: error.message });
+      return next(new AppError(400, "VALIDATION_ERROR", "Invalid request", { cause: error }));
     }
-    return res.status(500).json({ message: "Internal server error" });
+    logger.error({ err: error, requestId: req.requestId }, "notifyUnverified failed");
+    return next(new AppError(500, "INTERNAL", "Internal server error", { cause: error }));
   }
 };
 
-export const removeUser = async (req, res) => {
+export const removeUser = async (req, res, next) => {
   try {
     const { password } = req.body || {};
     if (!password) {
-      return res.status(400).json({ message: "Admin password is required" });
+      return next(new AppError(400, "VALIDATION_ERROR", "Invalid request"));
     }
     const user = await deleteUser(req.params.id, req.user?.admin_id, password);
-    if (!user) return res.status(404).json({ message: "User not found" });
-    return res.status(200).json({ message: "User deleted" });
+    if (!user) return next(new AppError(404, "NOT_FOUND", "Not found"));
+    return res.ok({ message: "User deleted" });
   } catch (error) {
     if (error?.message?.includes("own account")) {
-      return res.status(400).json({ message: error.message });
+      return next(new AppError(400, "VALIDATION_ERROR", "Invalid request", { cause: error }));
     }
     if (error?.code === "INVALID_PASSWORD") {
-      return res.status(401).json({ message: error.message });
+      return next(new AppError(401, "UNAUTHENTICATED", "Authentication required", { cause: error }));
     }
-    return res.status(500).json({ message: "Internal server error" });
+    logger.error({ err: error, requestId: req.requestId }, "removeUser failed");
+    return next(new AppError(500, "INTERNAL", "Internal server error", { cause: error }));
   }
 };

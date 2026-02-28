@@ -17,6 +17,7 @@ const PUBLIC_ROUTE_RULES = [
 
 const INTERNAL_ROUTE_PATTERN =
   /^(?:\/internal|\/api(?:\/v1)?\/internal)(?:\/|$)/i;
+const ADMIN_ROUTE_PATTERN = /^\/api(?:\/v1)?\/admin(?:\/|$)/i;
 const INTERNAL_ALLOWED_ROLES = new Set(["admin", "system"]);
 
 function normalizeRole(role) {
@@ -31,6 +32,11 @@ function isPublicRoute(method, path) {
 
 export function defaultDenyAuth(req, res, next) {
   if (req.method === "OPTIONS") {
+    return next();
+  }
+
+  // Admin APIs apply their own decodeAdmin/requireAdmin middleware and should not be gated by user-token middleware.
+  if (ADMIN_ROUTE_PATTERN.test(req.path)) {
     return next();
   }
 

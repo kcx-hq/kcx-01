@@ -29,7 +29,12 @@ const EMPTY_DATA: ForecastingBudgetsPayload = {
     gates: [],
   },
   submodules: {
-    budgetSetupOwnership: { hierarchy: [], budgetType: "fixed", atRiskBudgets: [], rows: [] },
+    budgetSetupOwnership: {
+      hierarchy: [],
+      budgetType: "fixed",
+      atRiskBudgets: [],
+      rows: [],
+    },
     forecastEngine: {
       selectedMethod: "hybrid_blend",
       methodologyOptions: [],
@@ -49,7 +54,13 @@ const EMPTY_DATA: ForecastingBudgetsPayload = {
       overrunAvoidedIfActionsCompleteBy: null,
     },
     scenarioPlanning: { constraints: [], scenarios: [], recommendedScenario: null },
-    forecastActualTracking: { mapePct: null, biasPct: null, accuracyScore: null, byScope: [], topMisses: [] },
+    forecastActualTracking: {
+      mapePct: null,
+      biasPct: null,
+      accuracyScore: null,
+      byScope: [],
+      topMisses: [],
+    },
     alertsEscalation: { unacknowledgedCount: 0, states: [], alerts: [] },
   },
   metricDictionary: [],
@@ -70,8 +81,16 @@ export function useForecastingBudgetsData({
   filters,
   controls,
 }: {
-  api: { call: (module: string, endpoint: string, options?: { params?: Record<string, unknown> }) => Promise<unknown> } | null;
-  caps: { modules?: Record<string, { enabled?: boolean; endpoints?: Record<string, unknown> }> } | null;
+  api: {
+    call: (
+      module: string,
+      endpoint: string,
+      options?: { params?: Record<string, unknown> },
+    ) => Promise<unknown>;
+  } | null;
+  caps: {
+    modules?: Record<string, { enabled?: boolean; endpoints?: Record<string, unknown> }>;
+  } | null;
   filters: { provider?: string; service?: string; region?: string };
   controls: ForecastingControls;
 }) {
@@ -89,7 +108,14 @@ export function useForecastingBudgetsData({
       compareTo: controls.compareTo,
       costBasis: controls.costBasis,
     }),
-    [filters?.provider, filters?.service, filters?.region, controls.period, controls.compareTo, controls.costBasis],
+    [
+      filters?.provider,
+      filters?.service,
+      filters?.region,
+      controls.period,
+      controls.compareTo,
+      controls.costBasis,
+    ],
   );
 
   useEffect(() => {
@@ -105,18 +131,20 @@ export function useForecastingBudgetsData({
     setError(null);
     setRefreshing(!loading);
 
-    (async () => {
+    void (async () => {
       try {
         const res = (await api.call("forecastingBudgets", "summary", { params })) as
-          | ForecastingBudgetsPayload
-          | null;
+          | { success?: boolean; data?: ForecastingBudgetsPayload }
+          | ForecastingBudgetsPayload;
         if (!active) return;
-        setData(res || EMPTY_DATA);
+        const payload =
+          (res as { data?: ForecastingBudgetsPayload })?.data ??
+          (res as ForecastingBudgetsPayload);
+        setData(payload || EMPTY_DATA);
       } catch (fetchError) {
         if (!active) return;
         const code = (fetchError as { code?: string })?.code;
         if (code !== "NOT_SUPPORTED") {
-          console.error("Forecasting & Budgets fetch failed:", fetchError);
           setError("Failed to load Forecasting & Budgets data.");
         }
         setData(EMPTY_DATA);

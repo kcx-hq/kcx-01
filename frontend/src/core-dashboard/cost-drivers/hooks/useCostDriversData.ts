@@ -282,7 +282,7 @@ export function useCostDriversData(input: UseCostDriversDataInput): UseCostDrive
             minChange: resolvedMinChange,
             rowLimit,
           },
-        })) as { success?: boolean; data?: unknown };
+        }) as { success?: boolean; data?: unknown };
 
         if (abortControllerRef.current?.signal.aborted) return;
 
@@ -349,7 +349,6 @@ export function useCostDriversData(input: UseCostDriversDataInput): UseCostDrive
         if (err?.name === 'AbortError') return;
         if (!abortControllerRef.current?.signal.aborted) {
           setErrorMessage('Error loading cost drivers. Please try again.');
-          console.error('Error fetching cost drivers:', error);
         }
       } finally {
         if (!abortControllerRef.current?.signal.aborted) {

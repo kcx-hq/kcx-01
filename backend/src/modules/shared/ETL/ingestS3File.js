@@ -7,7 +7,12 @@ import { collectDimensions } from "./dimensions/collectDimensions.js";
 import { bulkUpsertDimensions } from "./dimensions/bulkUpsertDimensions.js";
 import { preloadDimensionMaps } from "./dimensions/preloadDimensionsMaps.js";
 import { resolveDimensionIdsFromMaps } from "./dimensions/resolveFromMaps.js";
-import { pushFact, flushFacts, resetFactBuffer, getFactStats } from "./fact/billingUsageFact.js";
+import {
+  pushFact,
+  flushFacts,
+  resetFactBuffer,
+  getFactStats,
+} from "./fact/billingUsageFact.js";
 import {
   loadResolvedMapping,
   storeAutoSuggestions,
@@ -30,99 +35,98 @@ export async function ingestS3File({
   clientcreds = null,
   region = "ap-south-1",
   assumeRoleOptions = null,
-}){
+}) {
   resetFactBuffer();
-  const creds = await assumeRole( {region , clientcreds , assumeRoleOptions  });
+  const creds = await assumeRole({ region, clientcreds, assumeRoleOptions });
 
+  const s3 = new S3Client({
+    region,
+    credentials: creds,
+  });
 
-    const s3 = new S3Client({
-      region,
-      credentials: creds,
-    });
+  const response = await s3.send(
+    new GetObjectCommand({
+      Bucket,
+      Key: s3Key,
+    }),
+  );
 
-    const response = await s3.send(
-      new GetObjectCommand({
-        Bucket,
-        Key: s3Key,
-      })
-    );
+  const isGzip = s3Key.toLowerCase().endsWith(".gz");
+  const inputStream = isGzip
+    ? response.Body.pipe(createGunzip())
+    : response.Body;
 
-    const isGzip = s3Key.toLowerCase().endsWith(".gz");
-    const inputStream = isGzip
-      ? response.Body.pipe(createGunzip())
-      : response.Body;
+  const csvStream = inputStream.pipe(csv());
 
-    const csvStream = inputStream.pipe(csv());
+  let headers;
+  let provider;
+  const sampleRows = [];
+  let isFirstRow = true;
 
-    let headers;
-    let provider;
-    const sampleRows = [];
-
-    let isFirstRow = true;
-
-    for await (const rawRow of csvStream) {
-      if (isFirstRow) {
-        headers = Object.keys(rawRow);
-        provider = detectProvider(headers);
-        await storeDetectedColumns(provider, headers, clientid);
-        isFirstRow = false;
-      }
-
-      sampleRows.push(rawRow);
+  for await (const rawRow of csvStream) {
+    if (isFirstRow) {
+      headers = Object.keys(rawRow);
+      provider = detectProvider(headers);
+      await storeDetectedColumns(provider, headers, clientid);
+      isFirstRow = false;
     }
 
-    const suggestionRows = sampleRows.slice(0, 200);
-    const suggestions = autoSuggest(headers, suggestionRows, internalFields);
+    sampleRows.push(rawRow);
+  }
 
-    await storeAutoSuggestions(provider, uploadId, suggestions, clientid);
+  const suggestionRows = sampleRows.slice(0, 200);
+  const suggestions = autoSuggest(headers, suggestionRows, internalFields);
+  await storeAutoSuggestions(provider, uploadId, suggestions, clientid);
 
-    const resolvedMapping = await loadResolvedMapping(provider, headers, clientid);
+  const resolvedMapping = await loadResolvedMapping(provider, headers, clientid);
+  const mappedRowsForDims = sampleRows.map((rawRow) =>
+    mapRow(rawRow, resolvedMapping),
+  );
 
-    const mappedRowsForDims = sampleRows.map((rawRow) =>
-      mapRow(rawRow, resolvedMapping)
-    );
+  const dims = await collectDimensions(mappedRowsForDims);
 
-    const dims = await collectDimensions(mappedRowsForDims);
+  const transaction = await sequelize.transaction();
+  try {
+    await bulkUpsertDimensions(dims, transaction);
+    await transaction.commit();
+  } catch (err) {
+    await transaction.rollback();
+    throw err;
+  }
 
-    const transaction = await sequelize.transaction();
-    try {
-      await bulkUpsertDimensions(dims, transaction);
-      await transaction.commit();
-    } catch (err) {
-      await transaction.rollback();
-      throw err;
+  const maps = await preloadDimensionMaps();
+
+  let skippedRows = 0;
+  for (const row of mappedRowsForDims) {
+    const dimensionIds = resolveDimensionIdsFromMaps(row, maps);
+
+    // Keep ingestion permissive: only core dimensions are mandatory.
+    // Optional dimensions (resource, sku, commitment discount) can be null.
+    if (
+      !dimensionIds.regionid ||
+      !dimensionIds.cloudaccountid ||
+      !dimensionIds.commitmentdiscountid ||
+      !dimensionIds.resourceid ||
+      !dimensionIds.serviceid ||
+      !dimensionIds.skuid
+    ) {
+      skippedRows += 1;
+      continue;
     }
 
-    const maps = await preloadDimensionMaps();
+    await pushFact(uploadId, row, dimensionIds);
+  }
 
-    /* ======================
-       FACT INSERT
-    ======================= */
+  await flushFacts();
+  const stats = getFactStats();
+  logger.info(
+    { uploadId, attempted: stats.attempted, skippedRows },
+    "Direct ETL complete",
+  );
 
-    let skippedRows = 0;
-    for (const row of mappedRowsForDims) {
-      const dimensionIds = resolveDimensionIdsFromMaps(row, maps);
-
-      // Keep ingestion permissive: only core dimensions are mandatory.
-      // Optional dimensions (resource, sku, commitment discount) can be null.
-      if (
-        !dimensionIds.regionid ||
-        !dimensionIds.cloudaccountid ||
-        !dimensionIds.commitmentdiscountid ||
-        !dimensionIds.resourceid ||
-        !dimensionIds.serviceid ||
-        !dimensionIds.skuid
-      ) {
-        skippedRows += 1;
-        continue;
-      }
-
-      await pushFact(uploadId, row, dimensionIds);
-    }
-
-    await flushFacts();
-
-    const stats = getFactStats();
-    console.log("✅ Direct ETL complete");
-    return { attempted: stats.attempted, skipped: skippedRows, totalRows: mappedRowsForDims.length };
+  return {
+    attempted: stats.attempted,
+    skipped: skippedRows,
+    totalRows: mappedRowsForDims.length,
+  };
 }

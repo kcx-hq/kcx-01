@@ -1,9 +1,11 @@
 import { KcxAdmin } from "../../../models/index.js";
+import AppError from "../../../errors/AppError.js";
+import logger from "../../../lib/logger.js";
 
 export const requireAdmin = async (req, res, next) => {
   try {
     if (!req.user?.admin_id) {
-      return res.status(401).json({ message: "Unauthorized: Missing admin" });
+      return next(new AppError(401, "UNAUTHENTICATED", "Authentication required"));
     }
 
     const admin = await KcxAdmin.findByPk(req.user.admin_id, {
@@ -11,11 +13,12 @@ export const requireAdmin = async (req, res, next) => {
     });
 
     if (!admin || !admin.is_active) {
-      return res.status(403).json({ message: "Forbidden: Admins only" });
+      return next(new AppError(403, "UNAUTHORIZED", "You do not have permission to perform this action"));
     }
 
-    next();
+    return next();
   } catch (error) {
-    return res.status(500).json({ message: "Internal server error" });
+    logger.error({ err: error, requestId: req.requestId }, "requireAdmin failed");
+    return next(new AppError(500, "INTERNAL", "Internal server error", { cause: error }));
   }
 };

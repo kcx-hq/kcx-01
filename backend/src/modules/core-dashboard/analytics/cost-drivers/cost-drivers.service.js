@@ -1,5 +1,24 @@
 import { costGrowthRate, roundTo } from '../../../../common/utils/cost.calculations.js';
 import { costDriversRepository } from './cost-drivers.repository.js';
+import logger from "../../../../lib/logger.js";
+
+function normalizeUploadIds(req) {
+  const fromQuery = req.query?.uploadId ?? req.query?.uploadIds;
+  const fromBody = req.body?.uploadId ?? req.body?.uploadIds;
+  const raw = fromQuery ?? fromBody;
+
+  if (!raw) return [];
+
+  if (Array.isArray(raw)) {
+    return raw.map(String).map((s) => s.trim()).filter(Boolean);
+  }
+
+  // allow comma-separated strings
+  return String(raw)
+    .split(',')
+    .map((s) => s.trim())
+    .filter(Boolean);
+}
 
 /**
  * Calculate cost drivers from time series data
@@ -7,6 +26,7 @@ import { costDriversRepository } from './cost-drivers.repository.js';
  * @param {Array} timeSeriesResult - Array of { date, cost, groupId } objects
  * @param {Object} nameMap - Map of groupId to display names
  * @returns {Object} Driver analysis data
+ * 
  */
 export function calculateCostDrivers(timeSeriesResult, nameMap) {
   if (!timeSeriesResult || timeSeriesResult.length === 0) {
@@ -1230,77 +1250,7 @@ const buildLegacyDetailAliases = ({ summary, trend, topSkuChanges, resourceBreak
     : '',
 });
 
-export const calculateCostDrivers = (timeSeriesResult = [], nameMap = {}) => {
-  if (!timeSeriesResult.length) {
-    return {
-      overallStats: {
-        totalCurr: 0,
-        totalPrev: 0,
-        diff: 0,
-        pct: 0,
-        totalIncreases: 0,
-        totalDecreases: 0,
-      },
-      dynamics: { newSpend: 0, expansion: 0, deleted: 0, optimization: 0 },
-      increases: [],
-      decreases: [],
-    };
-  }
 
-  const groups = new Map();
-  const dates = [...new Set(timeSeriesResult.map((row) => row.date))].sort();
-  const mid = Math.floor(dates.length / 2);
-  const prevSet = new Set(dates.slice(0, mid));
-  const currSet = new Set(dates.slice(mid));
-
-  for (const row of timeSeriesResult) {
-    const groupId = String(row.groupId || 'unknown');
-    const cost = toNumber(row.cost, 0);
-    const entry = ensureMapEntry(groups, groupId, () => ({
-      id: groupId,
-      name: nameMap[groupId] || `Unknown (${groupId})`,
-      prev: 0,
-      curr: 0,
-    }));
-    if (currSet.has(row.date)) entry.curr += cost;
-    else if (prevSet.has(row.date)) entry.prev += cost;
-  }
-
-  const rows = [...groups.values()].map((entry) => {
-    const diff = entry.curr - entry.prev;
-    return {
-      ...entry,
-      diff,
-      pct: roundTo(pct(entry.curr, entry.prev), 2),
-      isNew: entry.prev === 0 && entry.curr > 0,
-      isDeleted: entry.curr === 0 && entry.prev > 0,
-    };
-  });
-
-  const increases = rows.filter((row) => row.diff > 0).sort((a, b) => b.diff - a.diff).slice(0, 10);
-  const decreases = rows.filter((row) => row.diff < 0).sort((a, b) => a.diff - b.diff).slice(0, 10);
-  const totalCurr = rows.reduce((sum, row) => sum + row.curr, 0);
-  const totalPrev = rows.reduce((sum, row) => sum + row.prev, 0);
-
-  return {
-    overallStats: {
-      totalCurr: roundTo(totalCurr, 2),
-      totalPrev: roundTo(totalPrev, 2),
-      diff: roundTo(totalCurr - totalPrev, 2),
-      pct: roundTo(pct(totalCurr, totalPrev), 2),
-      totalIncreases: roundTo(increases.reduce((sum, row) => sum + row.diff, 0), 2),
-      totalDecreases: roundTo(decreases.reduce((sum, row) => sum + row.diff, 0), 2),
-    },
-    dynamics: {
-      newSpend: roundTo(rows.filter((row) => row.isNew).reduce((sum, row) => sum + row.diff, 0), 2),
-      expansion: roundTo(rows.filter((row) => !row.isNew && row.diff > 0).reduce((sum, row) => sum + row.diff, 0), 2),
-      deleted: roundTo(Math.abs(rows.filter((row) => row.isDeleted).reduce((sum, row) => sum + row.diff, 0)), 2),
-      optimization: roundTo(Math.abs(rows.filter((row) => !row.isDeleted && row.diff < 0).reduce((sum, row) => sum + row.diff, 0)), 2),
-    },
-    increases,
-    decreases,
-  };
-};
 
 const emptyResponse = (overrides = {}) => ({
   schemaVersion: CONTRACT_VERSION,
@@ -1610,7 +1560,7 @@ export const costDriversService = {
             : undefined,
       };
     } catch (error) {
-      console.error('Error in driversService.getCostDrivers:', error.message);
+      logger.error({ err: error }, "driversService.getCostDrivers failed");
       throw error;
     }
   },

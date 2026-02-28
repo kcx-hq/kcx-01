@@ -11,7 +11,7 @@ const router = express.Router();
 router.use(decodeAdmin, requireAdmin);
 
 router.get("/health", (req, res) => {
-  res.status(200).json({ ok: true });
+  return res.ok({ ok: true });
 });
 
 router.use("/overview", overviewRoutes);

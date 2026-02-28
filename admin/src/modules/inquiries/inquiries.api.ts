@@ -1,19 +1,8 @@
-import { API_BASE_URL, buildUrl } from "../../services/http";
+import { apiDelete, apiGet, apiPatch, apiPost } from "../../services/http";
 import type { InquiriesListResponse } from "./inquiries.types";
 
 export const fetchInquiries = async (params: Record<string, string | number | undefined>) => {
-  const url = buildUrl("/admin/inquiries", params);
-  const res = await fetch(url.toString(), {
-    method: "GET",
-    credentials: "include",
-  });
-
-  if (!res.ok) {
-    const data = await res.json().catch(() => ({}));
-    throw new Error(data.message || "Failed to load inquiries");
-  }
-
-  return (await res.json()) as InquiriesListResponse;
+  return apiGet<InquiriesListResponse>("/api/admin/inquiries", { query: params });
 };
 
 export const updateInquiryStatus = async (
@@ -21,79 +10,29 @@ export const updateInquiryStatus = async (
   status: "PENDING" | "ACCEPTED" | "REJECTED" | "STANDBY" | "HANDLED" | "TRASHED",
   meetLink?: string
 ) => {
-  const res = await fetch(`${API_BASE_URL}/admin/inquiries/${id}/status`, {
-    method: "PATCH",
-    headers: { "Content-Type": "application/json" },
-    credentials: "include",
-    body: JSON.stringify({ status, meet_link: meetLink }),
-  });
-
-  if (!res.ok) {
-    const data = await res.json().catch(() => ({}));
-    throw new Error(data.message || "Failed to update inquiry");
-  }
-
-  return res.json();
+  return apiPatch<{ id: string; status: string; meet_link?: string | null }>(
+    `/api/admin/inquiries/${id}/status`,
+    { status, meet_link: meetLink },
+  );
 };
 
 export const bulkUpdateInquiries = async (ids: string[], status: string) => {
-  const res = await fetch(`${API_BASE_URL}/admin/inquiries/bulk/status`, {
-    method: "PATCH",
-    headers: { "Content-Type": "application/json" },
-    credentials: "include",
-    body: JSON.stringify({ ids, status }),
+  return apiPatch<{ updated: number }>("/api/admin/inquiries/bulk/status", {
+    ids,
+    status,
   });
-
-  if (!res.ok) {
-    const data = await res.json().catch(() => ({}));
-    throw new Error(data.message || "Failed to update inquiries");
-  }
-
-  return res.json();
 };
 
 export const deleteInquiry = async (id: string) => {
-  const res = await fetch(`${API_BASE_URL}/admin/inquiries/${id}`, {
-    method: "DELETE",
-    credentials: "include",
-  });
-
-  if (!res.ok) {
-    const data = await res.json().catch(() => ({}));
-    throw new Error(data.message || "Failed to delete inquiry");
-  }
-
-  return res.json();
+  return apiDelete<{ ok?: boolean }>(`/api/admin/inquiries/${id}`);
 };
 
 export const bulkDeleteInquiries = async (ids: string[]) => {
-  const res = await fetch(`${API_BASE_URL}/admin/inquiries/bulk/remove`, {
-    method: "DELETE",
-    headers: { "Content-Type": "application/json" },
-    credentials: "include",
-    body: JSON.stringify({ ids }),
+  return apiDelete<{ deleted: number }>("/api/admin/inquiries/bulk/remove", {
+    ids,
   });
-
-  if (!res.ok) {
-    const data = await res.json().catch(() => ({}));
-    throw new Error(data.message || "Failed to delete inquiries");
-  }
-
-  return res.json();
 };
 
 export const relayInquiry = async (id: string, payload: { severity: string; note?: string }) => {
-  const res = await fetch(`${API_BASE_URL}/admin/inquiries/${id}/relay`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    credentials: "include",
-    body: JSON.stringify(payload),
-  });
-
-  if (!res.ok) {
-    const data = await res.json().catch(() => ({}));
-    throw new Error(data.message || "Failed to relay inquiry");
-  }
-
-  return res.json();
+  return apiPost<{ message?: string }>(`/api/admin/inquiries/${id}/relay`, payload);
 };

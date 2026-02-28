@@ -1,14 +1,17 @@
 import { getCachedOverviewSnapshot } from "./overview.service.js";
+import AppError from "../../../errors/AppError.js";
+import logger from "../../../lib/logger.js";
 
-export const getOverview = async (req, res) => {
+export const getOverview = async (req, res, next) => {
   try {
     const data = await getCachedOverviewSnapshot({
       recentDays: req.query.recentDays,
       activityLimit: req.query.activityLimit,
       force: req.query.force === "true",
     });
-    return res.status(200).json(data);
+    return res.ok(data);
   } catch (error) {
-    return res.status(500).json({ message: "Internal server error" });
+    logger.error({ err: error, requestId: req.requestId }, "getOverview failed");
+    return next(new AppError(500, "INTERNAL", "Internal server error", { cause: error }));
   }
 };

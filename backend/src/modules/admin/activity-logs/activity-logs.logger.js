@@ -1,4 +1,5 @@
 import { AdminActivityLog } from "../../../models/index.js";
+import logger from "../../../lib/logger.js";
 
 export const logAdminEvent = async ({
   adminId,
@@ -23,6 +24,6 @@ export const logAdminEvent = async ({
       correlation_id: correlationId,
     });
   } catch (error) {
-    console.warn("AdminActivityLog insert failed:", error?.message || error);
+    logger.warn({ err: error }, "AdminActivityLog insert failed");
   }
 };

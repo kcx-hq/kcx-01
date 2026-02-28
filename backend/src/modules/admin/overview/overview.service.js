@@ -6,6 +6,7 @@ import {
   ClientS3Integrations,
   LoginAttempt,
 } from "../../../models/index.js";
+import logger from "../../../lib/logger.js";
 
 const DEFAULT_RECENT_DAYS = 7;
 const DEFAULT_ACTIVITY_LIMIT = 5;
@@ -23,7 +24,7 @@ const safeCount = async (model, options = {}, fallback = 0) => {
   try {
     return await model.count(options);
   } catch (error) {
-    console.error("Overview count failed", model?.name, error?.message || error);
+    logger.warn({ err: error, model: model?.name }, "Overview count failed");
     return fallback;
   }
 };
@@ -32,7 +33,7 @@ const safeFindAll = async (model, options = {}, fallback = []) => {
   try {
     return await model.findAll(options);
   } catch (error) {
-    console.error("Overview findAll failed", model?.name, error?.message || error);
+    logger.warn({ err: error, model: model?.name }, "Overview findAll failed");
     return fallback;
   }
 };

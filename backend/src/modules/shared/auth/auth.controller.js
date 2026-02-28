@@ -2,6 +2,8 @@ import * as userService from "../user/user.service.js";
 import * as clientService from "../client.service.js";
 import { UserRole } from "../../../models/UserRole.js";
 import { isValidEmail } from "../../../utils/emailValidation.js";
+import AppError from "../../../errors/AppError.js";
+import logger from "../../../lib/logger.js";
 import bcrypt from "bcrypt";
 import { generateJWT } from "../../../utils/jwt.js";
 import { generateVerificationOTP } from "../../../utils/generateVerificationOTP.js";
@@ -14,6 +16,42 @@ import { Op } from "sequelize";
 const LOGIN_WINDOW_MS = 150000;
 const LOGIN_MAX_ATTEMPTS = 5;
 const LOGIN_BLOCK_MS = 5 * 60 * 1000;
+
+const AUTH_COOKIE_OPTIONS = {
+  httpOnly: true,
+  secure: process.env.NODE_ENV === "production",
+  sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+  path: "/",
+};
+
+const normalizeEmail = (value) => String(value || "").toLowerCase().trim();
+
+const resolveClientEmail = (clientEmail, fallbackEmail) => {
+  const normalized = normalizeEmail(clientEmail);
+  return normalized || fallbackEmail;
+};
+
+const deriveClientName = (clientName, normalizedEmail) => {
+  const normalizedName = String(clientName || "").trim();
+  if (normalizedName) return normalizedName;
+  const fallbackName = normalizedEmail.split("@")[1]?.split(".")[0];
+  return fallbackName || "Default Client";
+};
+
+const buildAuthPayload = (user) => ({
+  id: user.id,
+  role: user.role,
+  client_id: user.client_id,
+});
+
+const getCapabilitiesForClient = (clientId) =>
+  CAPABILITIES_MAP[clientId] || CAPABILITIES_MAP.core;
+
+const isValidProfileName = (value) => {
+  if (typeof value !== "string") return false;
+  const normalized = value.trim();
+  return normalized.length > 0 && normalized.length <= 120;
+};
 
 const buildLockoutResponse = (blockedUntil) => {
   const until = new Date(blockedUntil);
@@ -77,7 +115,7 @@ const markFailedAttempt = async (email, ip) => {
 const clearAttempts = async (email, ip) => {
   await LoginAttempt.destroy({ where: { email, ip } });
 };
-export const signUp = async (req, res) => {
+export const signUp = async (req, res, next) => {
   try {
     const { email, password, full_name, role, client_name, client_email } =
       req.body;
@@ -89,17 +127,13 @@ export const signUp = async (req, res) => {
 
     // Validate email format
     if (!isValidEmail(email)) {
-      return res.status(400).json({
-        message: "Invalid email format",
-      });
+      return next(new AppError(400, "VALIDATION_ERROR", "Invalid request"));
     }
 
     // Validate role
     const validRoles = Object.values(UserRole);
     if (!validRoles.includes(role)) {
-      return res.status(400).json({
-        message: `Invalid role. Must be one of: ${validRoles.join(", ")}`,
-      });
+      return next(new AppError(400, "VALIDATION_ERROR", "Invalid request"));
     }
 
     const normalizedEmail = normalizeEmail(email);
@@ -194,36 +228,32 @@ export const signIn = async (req, res, next) => {
       return next(new AppError(400, "VALIDATION_ERROR", "Invalid request"));
     }
     /* 2. Normalize email */
-    const normalizedEmail = email.toLowerCase().trim();
+    const normalizedEmail = normalizeEmail(email);
     const ip = getClientIp(req);
 
     const existingAttempt = await LoginAttempt.findOne({
       where: { email: normalizedEmail, ip },
     });
     if (existingAttempt?.blocked_until && new Date(existingAttempt.blocked_until) > new Date()) {
-      return res.status(429).json(buildLockoutResponse(existingAttempt.blocked_until));
+      return next(new AppError(429, "RATE_LIMITED", buildLockoutResponse(existingAttempt.blocked_until).message));
     }
     /* 3. Find user */
     const user = await userService.getUserByEmail(normalizedEmail);
     if (!user) {
       const blockedUntil = await markFailedAttempt(normalizedEmail, ip);
       if (blockedUntil) {
-        return res.status(429).json(buildLockoutResponse(blockedUntil));
+        return next(new AppError(429, "RATE_LIMITED", buildLockoutResponse(blockedUntil).message));
       }
-      return res.status(401).json({
-        message: "Invalid email or password",
-      });
+      return next(new AppError(401, "UNAUTHENTICATED", "Authentication required"));
     }
     /* 4. Check password */
     const isPasswordValid = await bcrypt.compare(password, user.password_hash);
     if (!isPasswordValid) {
       const blockedUntil = await markFailedAttempt(normalizedEmail, ip);
       if (blockedUntil) {
-        return res.status(429).json(buildLockoutResponse(blockedUntil));
+        return next(new AppError(429, "RATE_LIMITED", buildLockoutResponse(blockedUntil).message));
       }
-      return res.status(401).json({
-        message: "Invalid email or password",
-      });
+      return next(new AppError(401, "UNAUTHENTICATED", "Authentication required"));
     }
 
     if (!user.is_verified) {
@@ -233,22 +263,15 @@ export const signIn = async (req, res, next) => {
       await user.save();
       await sendVerificationEmail(user.email, user.full_name, otp);
       await clearAttempts(normalizedEmail, ip);
-      return res.status(403).json({
-        message:
-          "OTP sent on registered Email.Please verify your email before logging in.",
-      });
+      return next(new AppError(403, "UNAUTHORIZED", "You do not have permission to perform this action"));
     }
     /* 5. Generate JWT */
     const payload = buildAuthPayload(user);
     const token = generateJWT(payload);
 
     /* 6. Set cookie */
-    // For cross-site deployments (frontend on Vercel, backend on Render) we need SameSite=None and Secure=true in production
     res.cookie("kandco_token", token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "strict",
-      path: "/",
+      ...AUTH_COOKIE_OPTIONS,
       maxAge: 1 * 24 * 60 * 60 * 1000,
     });
 
@@ -260,7 +283,7 @@ export const signIn = async (req, res, next) => {
 
     /* 8. Response */
     await clearAttempts(normalizedEmail, ip);
-    return res.status(200).json({
+    return res.ok({
       message: "Login successful",
       user: {
         id: user.id,
@@ -338,12 +361,8 @@ export const updateProfile = async (req, res, next) => {
 };
 
 export const logout = (req, res, _next) => {
-  // Ensure we clear the same cookie attributes when logging out
   res.clearCookie("kandco_token", {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "strict",
-    path: "/",
+    ...AUTH_COOKIE_OPTIONS,
   });
   return res.ok({ message: "Logged out successfully" });
 };

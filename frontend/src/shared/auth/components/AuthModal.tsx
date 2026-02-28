@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState , useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, ShieldCheck } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -88,7 +88,6 @@ const AuthModal = ({ isOpen, onClose, initialView = "login" }: AuthModalProps) =
     };
 
     const response = await signUp(payload);
-    console.log(response);
 
     if (response.success) {
       setEmailForVerify(signupData.email);

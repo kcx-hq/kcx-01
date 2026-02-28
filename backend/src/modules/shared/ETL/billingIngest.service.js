@@ -3,7 +3,12 @@ import { collectDimensions } from "./dimensions/collectDimensions.js";
 import { bulkUpsertDimensions } from "./dimensions/bulkUpsertDimensions.js";
 import { preloadDimensionMaps } from "./dimensions/preloadDimensionsMaps.js";
 import { resolveDimensionIdsFromMaps } from "./dimensions/resolveFromMaps.js";
-import { pushFact, flushFacts, resetFactBuffer, getFactStats } from "./fact/billingUsageFact.js";
+import {
+  pushFact,
+  flushFacts,
+  resetFactBuffer,
+  getFactStats,
+} from "./fact/billingUsageFact.js";
 import sequelize from "../../../config/db.config.js";
 import {
   loadResolvedMapping,
@@ -29,7 +34,7 @@ export async function ingestBillingCsv({ uploadId, filePath, clientid }) {
   const resolvedMapping = await loadResolvedMapping(
     provider,
     headers,
-    clientid
+    clientid,
   );
 
   const mappedRows = rows.map((raw) => mapRow(raw, resolvedMapping));
@@ -46,21 +51,21 @@ export async function ingestBillingCsv({ uploadId, filePath, clientid }) {
   }
 
   const maps = await preloadDimensionMaps();
-for await (const row of mappedRows) {
-  const dimensionIds = resolveDimensionIdsFromMaps(row, maps);
+  for await (const row of mappedRows) {
+    const dimensionIds = resolveDimensionIdsFromMaps(row, maps);
 
-  // Only core dimensions are mandatory as per BillingUsageFact model:
-  // uploadid (provided), cloudaccountid, serviceid, regionid
-  if (
-    !dimensionIds.regionid ||
-    !dimensionIds.cloudaccountid ||
-    !dimensionIds.serviceid
-  ) {
-    continue;
+    // Only core dimensions are mandatory as per BillingUsageFact model:
+    // uploadid (provided), cloudaccountid, serviceid, regionid
+    if (
+      !dimensionIds.regionid ||
+      !dimensionIds.cloudaccountid ||
+      !dimensionIds.serviceid
+    ) {
+      continue;
+    }
+
+    await pushFact(uploadId, row, dimensionIds);
   }
 
-  await pushFact(uploadId, row, dimensionIds);
-}
-
-await flushFacts();
+  await flushFacts();
 }

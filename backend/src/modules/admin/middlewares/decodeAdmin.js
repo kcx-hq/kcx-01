@@ -1,4 +1,5 @@
 import jwt from "jsonwebtoken";
+import AppError from "../../../errors/AppError.js";
 
 export const decodeAdmin = (req, res, next) => {
   const token =
@@ -7,14 +8,14 @@ export const decodeAdmin = (req, res, next) => {
       req.headers.authorization.split(" ")[1]);
 
   if (!token) {
-    return res.status(401).json({ message: "Unauthorized: No admin token" });
+    return next(new AppError(401, "UNAUTHENTICATED", "Authentication required"));
   }
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     req.user = decoded;
-    next();
+    return next();
   } catch (error) {
-    return res.status(401).json({ message: "Unauthorized: Invalid admin token" });
+    return next(new AppError(401, "UNAUTHENTICATED", "Authentication required", { cause: error }));
   }
 };
