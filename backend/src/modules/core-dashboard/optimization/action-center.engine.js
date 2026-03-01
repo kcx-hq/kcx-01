@@ -446,6 +446,299 @@ const buildAnomalyBridgeCards = (wasteCategories, actionOpportunities) => {
   ];
 };
 
+const buildExecutionModel = ({
+  actionOpportunities = [],
+  idleResources = [],
+  rightSizingRecommendations = [],
+  verificationRows = [],
+  wasteCategories = [],
+  now,
+}) => {
+  const backlogRows = [...actionOpportunities]
+    .sort((a, b) => {
+      if (b.priorityScore !== a.priorityScore) return b.priorityScore - a.priorityScore;
+      if (b.monthlyImpact !== a.monthlyImpact) return b.monthlyImpact - a.monthlyImpact;
+      return new Date(a.etaDate).getTime() - new Date(b.etaDate).getTime();
+    })
+    .map((row) => ({
+      id: row.id,
+      title: row.title,
+      owner: row.ownerTeam,
+      impact: roundTo(row.monthlyImpact, 2),
+      confidence: row.confidence,
+      effort: row.effort,
+      status: row.workflowStatus,
+      eta: row.etaDate,
+      blockedBy: row.blockedBy || '-',
+      score: roundTo(row.priorityScore * 100, 2),
+    }));
+
+  const workflowRows = [...actionOpportunities]
+    .sort((a, b) => new Date(a.etaDate).getTime() - new Date(b.etaDate).getTime())
+    .map((row) => ({
+      id: row.id,
+      title: row.title,
+      owner: row.ownerTeam,
+      status: row.workflowStatus,
+      eta: row.etaDate,
+      blockedBy: row.blockedBy || '-',
+      nextStep: row.nextStep,
+    }));
+
+  const idleRows = (idleResources || []).map((row) => ({
+    id: String(row?.id || row?.resourceId || `idle-${hashString(row?.name)}`),
+    name: String(row?.name || row?.resourceName || row?.id || 'Unknown resource'),
+    type: String(row?.type || 'Unknown'),
+    env: String(row?.risk || 'Non-prod'),
+    age: roundTo(toNumber(row?.daysIdle), 0),
+    last: String(row?.lastActivity || 'Unknown'),
+    savings: roundTo(toNumber(row?.savings), 2),
+    confidence: String(row?.confidence || 'Medium'),
+  }));
+
+  const storageRows = idleRows.filter((row) =>
+    `${row.type} ${row.name}`.toLowerCase().match(/storage|snapshot|volume|disk|log/),
+  );
+
+  const rightsizingRows = (rightSizingRecommendations || []).map((row, index) => ({
+    id: String(row?.id || `rightsizing-${index + 1}`),
+    current: String(row?.currentInstance || 'Current'),
+    recommended: String(row?.recommendedInstance || 'Recommended'),
+    cpuP95Pct: roundTo(toNumber(row?.currentCPU), 2),
+    savings: roundTo(toNumber(row?.savings), 2),
+    risk: String(row?.riskLevel || 'Medium'),
+  }));
+
+  const openCount = backlogRows.filter((row) => !['Verified', 'Realized'].includes(row.status)).length;
+  const estimatedMonthlySavings = roundTo(backlogRows.reduce((sum, row) => sum + row.impact, 0), 2);
+  const verifiedMtd = roundTo(
+    verificationRows.reduce((sum, row) => sum + toNumber(row?.verified), 0),
+    2,
+  );
+  const blockedCount = backlogRows.filter((row) => row.blockedBy !== '-').length;
+
+  return {
+    kpis: {
+      openCount,
+      estimatedMonthlySavings,
+      verifiedMtd,
+      blockedCount,
+      generatedAt: now.toISOString(),
+    },
+    backlogRows,
+    workflowRows,
+    verificationRows,
+    wasteCategories,
+    rightsizingRows,
+    idleRows,
+    storageRows,
+  };
+};
+
+const buildCommitmentModel = ({
+  commitmentGap = null,
+  actionOpportunities = [],
+  now,
+}) => {
+  const recommendation = String(commitmentGap?.recommendation || 'Savings Plan');
+  const predictableWorkload = Boolean(commitmentGap?.predictableWorkload);
+  const totalComputeSpend = roundTo(toNumber(commitmentGap?.totalComputeSpend), 2);
+  const onDemandPct = clamp(roundTo(toNumber(commitmentGap?.onDemandPercentage), 2), 0, 100);
+  const rawCoveragePct = toNumber(commitmentGap?.coveragePct);
+  const coveragePct = clamp(
+    roundTo(rawCoveragePct > 0 ? rawCoveragePct : onDemandPct > 0 ? 100 - onDemandPct : 68, 2),
+    0,
+    100,
+  );
+  const rawUtilizationPct = toNumber(commitmentGap?.utilizationPct);
+  const utilizationPct = clamp(
+    roundTo(
+      rawUtilizationPct > 0
+        ? rawUtilizationPct
+        : predictableWorkload
+          ? 86
+          : clamp(coveragePct - 9, 58, 88),
+      2,
+    ),
+    0,
+    100,
+  );
+  const rawEffectiveSavingsRatePct = toNumber(commitmentGap?.effectiveSavingsRatePct);
+  const effectiveSavingsRatePct = clamp(
+    roundTo(
+      rawEffectiveSavingsRatePct > 0
+        ? rawEffectiveSavingsRatePct
+        : (coveragePct * utilizationPct) / 115,
+      2,
+    ),
+    0,
+    100,
+  );
+
+  const potentialSavings = roundTo(toNumber(commitmentGap?.potentialSavings), 2);
+  const underCoveredPct = roundTo(Math.max(0, 72 - coveragePct), 2);
+  const overCoveredPct = roundTo(Math.max(0, coveragePct - 93), 2);
+  const rawBreakageRiskPct = toNumber(commitmentGap?.breakageRiskPct);
+  const breakageRiskPct = clamp(
+    roundTo(
+      rawBreakageRiskPct > 0
+        ? rawBreakageRiskPct
+        : Math.max(underCoveredPct * 1.1, overCoveredPct * 1.35) + (predictableWorkload ? 4 : 11),
+      2,
+    ),
+    0,
+    100,
+  );
+
+  const exposureBase = Math.max(potentialSavings, totalComputeSpend * 0.04);
+  const exposure30 = roundTo(exposureBase * 0.5, 2);
+  const exposure60 = roundTo(exposureBase * 0.35, 2);
+  const exposure90 = roundTo(exposureBase * 0.2, 2);
+
+  const expirationRows = [
+    {
+      window: '30d',
+      expiresOn: toIsoDate(addDays(now, 30)),
+      exposure: exposure30,
+      riskState: exposure30 > 0 ? 'expiry soon' : 'monitor',
+    },
+    {
+      window: '60d',
+      expiresOn: toIsoDate(addDays(now, 60)),
+      exposure: exposure60,
+      riskState: exposure60 > exposure30 * 0.75 ? 'rising risk' : 'monitor',
+    },
+    {
+      window: '90d',
+      expiresOn: toIsoDate(addDays(now, 90)),
+      exposure: exposure90,
+      riskState: 'monitor',
+    },
+  ];
+
+  const decisionRows = [];
+  if (coveragePct < 68 || onDemandPct > 35) {
+    decisionRows.push({
+      id: 'coverage-gap',
+      scope: 'global',
+      action: recommendation,
+      rationale:
+        coveragePct < 68
+          ? 'Coverage is below target; increase committed baseline for predictable workloads.'
+          : 'On-demand share remains high for stable workloads.',
+      projectedSavings: roundTo(Math.max(potentialSavings * 0.5, (68 - Math.min(68, coveragePct)) * 0.01 * totalComputeSpend), 2),
+      downsideRiskPct: roundTo(Math.max(10, breakageRiskPct * 0.55), 2),
+      risk: coveragePct < 55 ? 'High' : 'Medium',
+      confidence: predictableWorkload ? 'High' : 'Medium',
+    });
+  }
+
+  if (utilizationPct < 82 || overCoveredPct > 0) {
+    decisionRows.push({
+      id: 'utilization-gap',
+      scope: 'service-family',
+      action: 'Reshape commitment mix',
+      rationale: 'Utilization indicates over-commitment in part of the baseline; rebalance terms/scope.',
+      projectedSavings: roundTo(Math.max(potentialSavings * 0.3, totalComputeSpend * 0.02), 2),
+      downsideRiskPct: roundTo(Math.max(8, breakageRiskPct * 0.4), 2),
+      risk: overCoveredPct > 8 ? 'High' : 'Medium',
+      confidence: utilizationPct >= 75 ? 'Medium' : 'Low',
+    });
+  }
+
+  if (exposure30 > 0) {
+    decisionRows.push({
+      id: 'expiry-renewal',
+      scope: 'expiring-portfolio',
+      action: 'Renew expiring commitments',
+      rationale: 'Upcoming expirations can force on-demand fallback without pre-commit decisions.',
+      projectedSavings: roundTo(exposure30 * 0.28, 2),
+      downsideRiskPct: roundTo(Math.max(5, breakageRiskPct * 0.3), 2),
+      risk: 'Medium',
+      confidence: 'High',
+    });
+  }
+
+  if (!decisionRows.length) {
+    decisionRows.push({
+      id: 'maintain',
+      scope: 'global',
+      action: 'Maintain current commitment mix',
+      rationale: 'Coverage and utilization are in target band; continue monitoring expiry windows.',
+      projectedSavings: roundTo(potentialSavings * 0.1, 2),
+      downsideRiskPct: roundTo(Math.max(3, breakageRiskPct * 0.2), 2),
+      risk: 'Low',
+      confidence: predictableWorkload ? 'High' : 'Medium',
+    });
+  }
+
+  const ownerImpact = new Map();
+  actionOpportunities.forEach((row) => {
+    const key = String(row?.ownerProduct || row?.ownerTeam || 'unassigned');
+    ownerImpact.set(key, (ownerImpact.get(key) || 0) + toNumber(row?.monthlyImpact));
+  });
+
+  const rankedOwnerImpact = Array.from(ownerImpact.entries())
+    .map(([scope, impact]) => ({ scope, impact: roundTo(impact, 2) }))
+    .sort((a, b) => b.impact - a.impact)
+    .slice(0, 3);
+
+  const spendDenominator = Math.max(totalComputeSpend, rankedOwnerImpact.reduce((sum, row) => sum + row.impact, 0), 1);
+  const globalCommitted = roundTo(spendDenominator * (coveragePct / 100), 2);
+  const globalUtilized = roundTo(globalCommitted * (utilizationPct / 100), 2);
+  const drilldownRows = [
+    {
+      scope: 'global',
+      covered: globalCommitted,
+      committed: roundTo(spendDenominator, 2),
+      utilized: globalUtilized,
+      unused: roundTo(Math.max(0, globalCommitted - globalUtilized), 2),
+    },
+    ...rankedOwnerImpact.map((row) => {
+      const weight = clamp(row.impact / spendDenominator, 0.05, 0.6);
+      const committed = roundTo(spendDenominator * weight * (coveragePct / 100), 2);
+      const utilized = roundTo(committed * (utilizationPct / 100), 2);
+      return {
+        scope: row.scope,
+        covered: committed,
+        committed: roundTo(spendDenominator * weight, 2),
+        utilized,
+        unused: roundTo(Math.max(0, committed - utilized), 2),
+      };
+    }),
+  ];
+
+  const riskCards = [
+    { id: 'under-covered', label: 'Under-covered', value: underCoveredPct },
+    { id: 'over-covered', label: 'Over-covered', value: overCoveredPct },
+    { id: 'breakage-risk', label: 'Breakage risk', value: breakageRiskPct },
+  ];
+
+  return {
+    summary: {
+      recommendation,
+      predictableWorkload,
+      workloadPattern: String(commitmentGap?.workloadPattern || ''),
+      typicalApproach: String(commitmentGap?.typicalApproach || ''),
+    },
+    kpis: {
+      coveragePct,
+      utilizationPct,
+      effectiveSavingsRatePct,
+      onDemandPct,
+      totalComputeSpend,
+      potentialSavings,
+      underCoveredPct,
+      overCoveredPct,
+      breakageRiskPct,
+    },
+    expirationRows,
+    riskCards,
+    decisionRows,
+    drilldownRows,
+  };
+};
+
 const createActionOpportunity = ({ raw, index, trackerMap, now, p95Impact }) => {
   const title = String(raw?.title || `Optimization Opportunity ${index + 1}`);
   const hash = hashString(`${title}-${raw?.id || index}`);
@@ -636,6 +929,19 @@ export function buildActionCenterModel({
   const ownerScoreboard = buildOwnerScoreboard(actionOpportunities, now);
   const blockerHeatmap = buildBlockerHeatmap(actionOpportunities);
   const anomalyBridgeCards = buildAnomalyBridgeCards(wasteCategories, actionOpportunities);
+  const executionModel = buildExecutionModel({
+    actionOpportunities,
+    idleResources,
+    rightSizingRecommendations,
+    verificationRows,
+    wasteCategories,
+    now,
+  });
+  const commitmentsModel = buildCommitmentModel({
+    commitmentGap,
+    actionOpportunities,
+    now,
+  });
 
   const rightsizingScatter = (rightSizingRecommendations || []).slice(0, 120).map((row, index) => {
     const hash = hashString(String(row?.id || row?.resourceName || index));
@@ -697,10 +1003,20 @@ export function buildActionCenterModel({
     ownerScoreboard,
     blockerHeatmap,
     anomalyBridgeCards,
+    execution: executionModel,
+    commitments: commitmentsModel,
     commitment: {
-      recommendation: String(commitmentGap?.recommendation || 'No commitment recommendation'),
-      potentialSavings: roundTo(toNumber(commitmentGap?.potentialSavings), 2),
-      predictableWorkload: Boolean(commitmentGap?.predictableWorkload),
+      recommendation: commitmentsModel.summary.recommendation,
+      potentialSavings: commitmentsModel.kpis.potentialSavings,
+      predictableWorkload: commitmentsModel.summary.predictableWorkload,
+      coveragePct: commitmentsModel.kpis.coveragePct,
+      utilizationPct: commitmentsModel.kpis.utilizationPct,
+      effectiveSavingsRatePct: commitmentsModel.kpis.effectiveSavingsRatePct,
+      breakageRiskPct: commitmentsModel.kpis.breakageRiskPct,
+      onDemandPercentage: commitmentsModel.kpis.onDemandPct,
+      totalComputeSpend: commitmentsModel.kpis.totalComputeSpend,
+      workloadPattern: commitmentsModel.summary.workloadPattern,
+      typicalApproach: commitmentsModel.summary.typicalApproach,
     },
     underReviewCoverage: {
       spendUnderReview,
@@ -709,7 +1025,7 @@ export function buildActionCenterModel({
     },
     meta: {
       generatedAt: new Date().toISOString(),
-      formulaVersion: 'optimization_action_center_v1',
+      formulaVersion: 'optimization_action_center_v2',
       stageOrder: STAGE_ORDER,
       currency: 'USD',
     },

@@ -256,6 +256,7 @@ export const buildAllocationUnitEconomicsViewModel = ({
   period = "last30days",
   costBasis = "actual",
   compareMode = "previous_period",
+  unitMetric = "consumed_quantity",
 } = {}) => {
   const comparison = payload?.comparison || {};
   const currentWindow = comparison?.currentWindow || {};
@@ -274,6 +275,10 @@ export const buildAllocationUnitEconomicsViewModel = ({
   const breakEven = payload?.breakEven || unitEconomics?.breakEven || {};
   const benchmarks = payload?.benchmarks || unitEconomics?.benchmarks || {};
   const sharedTransparency = payload?.sharedPoolTransparency || {};
+  const denominatorGate = payload?.denominatorGate || {};
+  const trust = payload?.trust || {};
+  const ownershipDrift = payload?.ownershipDrift || {};
+  const unitMetricDefinitions = payload?.unitMetricDefinitions || {};
   const showbackRows = Array.isArray(allocation?.rows) ? allocation.rows : [];
   const teamProductRows = Array.isArray(benchmarks?.teamProduct) ? benchmarks.teamProduct : [];
   const environmentRows = Array.isArray(benchmarks?.environment) ? benchmarks.environment : [];
@@ -511,6 +516,44 @@ export const buildAllocationUnitEconomicsViewModel = ({
       String(costBasis || "actual"),
       String(allocation?.ruleApplied || "No shared pool detected"),
     ),
+    denominatorGate: {
+      status: String(denominatorGate?.status || "fail").toLowerCase(),
+      reasons: Array.isArray(denominatorGate?.reasons) ? denominatorGate.reasons.map((item) => String(item)) : [],
+      metric: String(denominatorGate?.metric || unitMetricDefinitions?.selectedMetric || unitMetric || "consumed_quantity"),
+      quantityCoveragePct: round(denominatorGate?.quantity_coverage_pct, 2),
+    },
+    trust: {
+      dataFreshnessTs: trust?.data_freshness_ts || null,
+      coveragePct: round(trust?.coverage_pct, 2),
+      confidenceLevel: String(trust?.confidence_level || "low").toLowerCase(),
+    },
+    ownershipDrift: {
+      series: Array.isArray(ownershipDrift?.series)
+        ? ownershipDrift.series.map((row) => ({
+            period: String(row?.period || ""),
+            driftEvents: round(row?.drift_events, 0),
+            impactedCost: round(row?.impacted_cost, 2),
+            driftRatePct: round(row?.drift_rate_pct, 2),
+          }))
+        : [],
+      flags: Array.isArray(ownershipDrift?.flags)
+        ? ownershipDrift.flags.map((flag) => ({
+            type: String(flag?.type || "integrity"),
+            severity: String(flag?.severity || "low").toLowerCase(),
+            team: String(flag?.team || "Unknown Team"),
+            detail: String(flag?.detail || "No details available."),
+          }))
+        : [],
+    },
+    unitMetricDefinitions: {
+      selectedMetric: String(unitMetricDefinitions?.selectedMetric || unitMetric || "consumed_quantity"),
+      availableMetrics: Array.isArray(unitMetricDefinitions?.availableMetrics)
+        ? unitMetricDefinitions.availableMetrics.map((metric) => ({
+            key: String(metric?.key || "consumed_quantity"),
+            label: String(metric?.label || "Consumed Quantity"),
+          }))
+        : [{ key: "consumed_quantity", label: "Consumed Quantity" }],
+    },
     periodLabel,
     notes: [
       String(payload?.integrity?.aggregationIntegrity?.valid)

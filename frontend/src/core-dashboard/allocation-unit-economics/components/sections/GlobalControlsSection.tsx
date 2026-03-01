@@ -10,6 +10,7 @@ const labelMap = {
   period: 'Period',
   basis: 'Cost Basis',
   compareTo: 'Compare To',
+  unitMetric: 'Unit Metric',
 };
 
 const options = {
@@ -27,9 +28,19 @@ const options = {
     { value: 'previous_period', label: 'Previous Period' },
     { value: 'same_period_last_month', label: 'Same Period Last Month' },
   ],
+  unitMetric: [
+    { value: 'consumed_quantity', label: 'Consumed Quantity' },
+    { value: 'requests', label: 'Requests' },
+    { value: 'orders', label: 'Orders' },
+    { value: 'gb', label: 'GB Processed' },
+    { value: 'minutes', label: 'Minutes' },
+  ],
 };
 
-export default function GlobalControlsSection({ controls, onChange }: GlobalControlsSectionProps) {
+export default function GlobalControlsSection({
+  controls,
+  onChange,
+}: GlobalControlsSectionProps) {
   return (
     <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
       <div className="mb-3 flex items-center justify-between">
@@ -40,7 +51,7 @@ export default function GlobalControlsSection({ controls, onChange }: GlobalCont
           Finance Scope
         </span>
       </div>
-      <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
+      <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-4">
         {(Object.keys(labelMap) as Array<keyof typeof labelMap>).map((key) => (
           <label key={key} className="flex flex-col gap-1">
             <span className="text-[10px] font-black uppercase tracking-wider text-slate-500">

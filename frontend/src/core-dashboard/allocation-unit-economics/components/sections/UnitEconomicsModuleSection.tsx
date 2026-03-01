@@ -1,30 +1,53 @@
 import React from 'react';
 import type { AllocationUnitEconomicsViewModel } from '../../types';
-import UnitTrendSection from './UnitTrendSection';
 import UnitBenchmarkSection from './UnitBenchmarkSection';
-import MarginOverlaySection from './MarginOverlaySection';
-import VarianceSection from './VarianceSection';
+import UnitTrendCharts from './UnitTrendCharts';
+import UnitKpiStrip from './UnitKpiStrip';
+import UnitDecompositionWaterfall from './UnitDecompositionWaterfall';
+import TargetGapCard from './TargetGapCard';
+import DenominatorGateBadge from './DenominatorGateBadge';
 
 interface UnitEconomicsModuleSectionProps {
   model: AllocationUnitEconomicsViewModel;
 }
 
 export default function UnitEconomicsModuleSection({ model }: UnitEconomicsModuleSectionProps) {
+  const gate = model.denominatorGate;
+  const allowDecomposition = gate.status !== 'fail';
+  const allowBenchmarks = gate.status !== 'fail';
+
   return (
     <div className="space-y-4">
-      <section className="rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2">
-        <p className="text-xs font-black uppercase tracking-wider text-emerald-800">
-          Unit Economics uses Final Allocated Cost (Direct + Shared) as source of truth.
-        </p>
+      <UnitKpiStrip model={model} />
+
+      <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+        <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+          <h3 className="text-sm font-black uppercase tracking-wider text-slate-800">Unit Cost Trend</h3>
+          <DenominatorGateBadge status={gate.status} reasons={gate.reasons} metric={gate.metric} />
+        </div>
+        <UnitTrendCharts trend={model.kpis.trend} targetUnitCost={model.kpis.target.targetUnitCost} />
       </section>
 
-      <UnitTrendSection model={model.kpis} />
-      <UnitBenchmarkSection
-        teamProductRows={model.teamProductUnitRows}
-        environmentRows={model.environmentUnitRows}
-      />
-      <MarginOverlaySection model={model.margin} />
-      <VarianceSection teamRows={model.teamVariance} productRows={model.productVariance} />
+      {allowDecomposition ? <UnitDecompositionWaterfall model={model} /> : null}
+
+      {allowBenchmarks ? (
+        <UnitBenchmarkSection
+          teamProductRows={model.teamProductUnitRows}
+          environmentRows={model.environmentUnitRows}
+        />
+      ) : (
+        <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+          <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+            <h3 className="text-sm font-black uppercase tracking-wider text-slate-800">Benchmarks</h3>
+            <DenominatorGateBadge status={gate.status} reasons={gate.reasons} metric={gate.metric} />
+          </div>
+          <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-8 text-center text-sm font-semibold text-amber-800">
+            Benchmark ranking is hidden due to denominator gate failure.
+          </div>
+        </section>
+      )}
+
+      <TargetGapCard model={model} />
     </div>
   );
 }

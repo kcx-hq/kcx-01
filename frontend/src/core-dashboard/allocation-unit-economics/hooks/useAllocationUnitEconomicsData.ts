@@ -112,6 +112,25 @@ const DEFAULT_VIEW_MODEL: AllocationUnitEconomicsViewModel = {
   productVariance: [],
   heatmap: [],
   exportRows: [],
+  denominatorGate: {
+    status: 'fail',
+    reasons: ['No denominator volume found in selected scope.'],
+    metric: 'consumed_quantity',
+    quantityCoveragePct: 0,
+  },
+  trust: {
+    dataFreshnessTs: null,
+    coveragePct: 0,
+    confidenceLevel: 'low',
+  },
+  ownershipDrift: {
+    series: [],
+    flags: [],
+  },
+  unitMetricDefinitions: {
+    selectedMetric: 'consumed_quantity',
+    availableMetrics: [{ key: 'consumed_quantity', label: 'Consumed Quantity' }],
+  },
   periodLabel: 'N/A',
   notes: [
     'Allocation and unit economics data is unavailable for selected scope.',
@@ -154,8 +173,9 @@ export function useAllocationUnitEconomicsData({
       period: mapPeriod(controls.period),
       compareTo: controls.compareTo,
       costBasis: controls.basis,
+      unitMetric: controls.unitMetric || 'consumed_quantity',
     }),
-    [filters.provider, filters.service, filters.region, controls.period, controls.compareTo, controls.basis],
+    [filters.provider, filters.service, filters.region, controls.period, controls.compareTo, controls.basis, controls.unitMetric],
   );
 
   useEffect(() => {

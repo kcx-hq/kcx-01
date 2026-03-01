@@ -13,6 +13,7 @@ const INITIAL_CONTROLS: AllocationUnitEconomicsControls = {
   period: '30d',
   basis: 'actual',
   compareTo: 'previous_period',
+  unitMetric: 'consumed_quantity',
 };
 
 export default function AllocationUnitEconomics({ filters, api, caps }: AllocationUnitEconomicsProps) {

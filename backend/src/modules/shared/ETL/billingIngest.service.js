@@ -1,5 +1,8 @@
-import { readCsv, readCsvWithHeaders } from "../../../utils/csvReader.js";
-import { collectDimensions } from "./dimensions/collectDimensions.js";
+import { readCsv, readCsvHeaders } from "../../../utils/csvReader.js";
+import {
+  createDimensionsAccumulator,
+  collectDimensionRow,
+} from "./dimensions/collectDimensions.js";
 import { bulkUpsertDimensions } from "./dimensions/bulkUpsertDimensions.js";
 import { preloadDimensionMaps } from "./dimensions/preloadDimensionsMaps.js";
 import { resolveDimensionIdsFromMaps } from "./dimensions/resolveFromMaps.js";

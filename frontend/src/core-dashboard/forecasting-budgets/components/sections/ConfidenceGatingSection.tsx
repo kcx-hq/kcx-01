@@ -12,7 +12,7 @@ export function ConfidenceGatingSection({ confidence }: ConfidenceGatingSectionP
     <section className="rounded-2xl border border-[var(--border-light)] bg-white p-4 md:p-5">
       <h2 className="flex items-center gap-2 text-sm font-black uppercase tracking-[0.12em] text-[var(--text-primary)] md:text-base">
         <ShieldCheck size={16} className="text-[var(--brand-primary)]" />
-        Confidence Gating Model
+        Confidence Gates (Governance Inputs)
       </h2>
       <div className="mt-3 grid grid-cols-1 gap-3 md:grid-cols-3">
         <Metric
@@ -32,31 +32,38 @@ export function ConfidenceGatingSection({ confidence }: ConfidenceGatingSectionP
         />
       </div>
 
-      <div className="mt-4 overflow-x-auto">
-        <table className="min-w-full divide-y divide-slate-200 text-left text-sm">
-          <thead className="bg-slate-50 text-[11px] font-bold uppercase tracking-[0.1em] text-slate-500">
-            <tr>
-              <th className="px-3 py-2">Gate</th>
-              <th className="px-3 py-2">Status</th>
-              <th className="px-3 py-2">Value</th>
-              <th className="px-3 py-2">Threshold</th>
-              <th className="px-3 py-2">Consequence</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-100">
-            {(confidence.gates || []).map((gate) => (
-              <tr key={gate.id}>
-                <td className="px-3 py-2 font-semibold text-slate-900">{gate.label}</td>
-                <td className="px-3 py-2">
-                  <StatusPill status={gate.status} />
-                </td>
-                <td className="px-3 py-2 text-slate-700">{gate.value.toFixed(2)}</td>
-                <td className="px-3 py-2 text-slate-700">{gate.threshold}</td>
-                <td className="px-3 py-2 text-slate-700">{gate.consequence}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+      <div className="mt-4 grid grid-cols-1 gap-3 xl:grid-cols-2">
+        {(confidence.gates || []).map((gate) => (
+          <article
+            key={gate.id}
+            className={`rounded-xl border p-3 ${
+              gate.status === "pass"
+                ? "border-emerald-200 bg-emerald-50/60"
+                : gate.status === "warn"
+                  ? "border-amber-200 bg-amber-50/60"
+                  : "border-rose-200 bg-rose-50/60"
+            }`}
+          >
+            <div className="flex items-start justify-between gap-3">
+              <p className="text-sm font-semibold text-slate-900">{gate.label}</p>
+              <StatusPill status={gate.status} />
+            </div>
+            <p className="mt-2 text-xl font-black text-slate-900">{gate.value.toFixed(2)}</p>
+            <p className="mt-1 text-xs text-slate-700">Threshold: {gate.threshold}</p>
+            <p className="mt-2 text-xs text-slate-600">{gate.consequence}</p>
+          </article>
+        ))}
+      </div>
+
+      <div className="mt-4 rounded-xl border border-slate-200 bg-slate-50/70 p-3">
+        <p className="text-[11px] font-bold uppercase tracking-[0.1em] text-slate-500">
+          Gate Impact Summary
+        </p>
+        <p className="mt-1 text-sm text-slate-700">
+          {confidence.consequences.length
+            ? confidence.consequences.join(" ")
+            : "All governance gates are passing for current planning confidence."}
+        </p>
       </div>
     </section>
   );

@@ -123,6 +123,7 @@ export const signUp = async (req, res, next) => {
     // Validate required fields
     if (!email || !password || !full_name || !role) {
       return next(new AppError(400, "VALIDATION_ERROR", "Invalid request"));
+      return next(new AppError(400, "VALIDATION_ERROR", "Invalid request"));
     }
 
     // Validate email format
@@ -141,6 +142,11 @@ export const signUp = async (req, res, next) => {
       client_email,
       normalizedEmail,
     );
+    const normalizedEmail = normalizeEmail(email);
+    const normalizedClientEmail = resolveClientEmail(
+      client_email,
+      normalizedEmail,
+    );
 
     // 1. Generate verification OTP ONCE
     const { otp, expires } = generateVerificationOTP();
@@ -152,6 +158,7 @@ export const signUp = async (req, res, next) => {
 
     if (existingUser) {
       if (existingUser.is_verified) {
+        return next(new AppError(409, "CONFLICT", "Conflict"));
         return next(new AppError(409, "CONFLICT", "Conflict"));
       }
 
@@ -166,6 +173,7 @@ export const signUp = async (req, res, next) => {
         otp,
       );
 
+      return res.ok({
       return res.ok({
         message:
           "User is already registered. Verify the email. Verification OTP resent. Please verify your email.",
@@ -182,6 +190,7 @@ export const signUp = async (req, res, next) => {
       const client =
         (await clientService.getClientByEmail(normalizedClientEmail)) ??
         (await clientService.createClient({
+          name: deriveClientName(client_name, normalizedEmail),
           name: deriveClientName(client_name, normalizedEmail),
           email: normalizedClientEmail,
         }));
@@ -204,6 +213,7 @@ export const signUp = async (req, res, next) => {
 
     // 6. Response
     return res.created({
+    return res.created({
       message: "User registered successfully. Please verify your email.",
       user: {
         id: user.id,
@@ -216,15 +226,19 @@ export const signUp = async (req, res, next) => {
   } catch (error) {
     logger.error({ err: error, requestId: req.requestId }, "Signup error");
     return next(new AppError(500, "INTERNAL", "Internal server error", { cause: error }));
+    logger.error({ err: error, requestId: req.requestId }, "Signup error");
+    return next(new AppError(500, "INTERNAL", "Internal server error", { cause: error }));
   }
 };
 
+export const signIn = async (req, res, next) => {
 export const signIn = async (req, res, next) => {
   try {
     const { email, password } = req.body;
 
     /* 1. Required fields */
     if (!email || !password) {
+      return next(new AppError(400, "VALIDATION_ERROR", "Invalid request"));
       return next(new AppError(400, "VALIDATION_ERROR", "Invalid request"));
     }
     /* 2. Normalize email */
@@ -267,6 +281,7 @@ export const signIn = async (req, res, next) => {
     }
     /* 5. Generate JWT */
     const payload = buildAuthPayload(user);
+    const payload = buildAuthPayload(user);
     const token = generateJWT(payload);
 
     /* 6. Set cookie */
@@ -295,12 +310,16 @@ export const signIn = async (req, res, next) => {
   } catch (error) {
     logger.error({ err: error, requestId: req.requestId }, "Login error");
     return next(new AppError(500, "INTERNAL", "Internal server error", { cause: error }));
+    logger.error({ err: error, requestId: req.requestId }, "Login error");
+    return next(new AppError(500, "INTERNAL", "Internal server error", { cause: error }));
   }
 };
 
 export const getUser = async (req, res, next) => {
+export const getUser = async (req, res, next) => {
   try {
     const user = await userService.getUserById(req.user.id);
+    if (!user) return next(new AppError(404, "NOT_FOUND", "Not found"));
     if (!user) return next(new AppError(404, "NOT_FOUND", "Not found"));
 
     // Check if user has existing upload
@@ -309,6 +328,8 @@ export const getUser = async (req, res, next) => {
     });
     const hasUploaded = !!existingUpload;
 
+    const caps = getCapabilitiesForClient(req.client_id);
+    return res.ok({
     const caps = getCapabilitiesForClient(req.client_id);
     return res.ok({
       id: user.id,
@@ -323,9 +344,11 @@ export const getUser = async (req, res, next) => {
     });
   } catch (err) {
     return next(new AppError(500, "INTERNAL", "Internal server error", { cause: err }));
+    return next(new AppError(500, "INTERNAL", "Internal server error", { cause: err }));
   }
 };
 
+export const updateProfile = async (req, res, next) => {
 export const updateProfile = async (req, res, next) => {
   try {
     const { full_name } = req.body;
@@ -333,16 +356,20 @@ export const updateProfile = async (req, res, next) => {
 
     if (!isValidProfileName(full_name)) {
       return next(new AppError(400, "VALIDATION_ERROR", "Invalid request"));
+    if (!isValidProfileName(full_name)) {
+      return next(new AppError(400, "VALIDATION_ERROR", "Invalid request"));
     }
 
     const user = await userService.getUserById(userId);
     if (!user) {
+      return next(new AppError(404, "NOT_FOUND", "Not found"));
       return next(new AppError(404, "NOT_FOUND", "Not found"));
     }
 
     user.full_name = full_name.trim();
     await user.save();
 
+    return res.ok({
     return res.ok({
       message: "Profile updated successfully",
       user: {
@@ -357,6 +384,8 @@ export const updateProfile = async (req, res, next) => {
   } catch (err) {
     logger.error({ err, requestId: req.requestId }, "Update profile error");
     return next(new AppError(500, "INTERNAL", "Internal server error", { cause: err }));
+    logger.error({ err, requestId: req.requestId }, "Update profile error");
+    return next(new AppError(500, "INTERNAL", "Internal server error", { cause: err }));
   }
 };
 
@@ -365,18 +394,23 @@ export const logout = (req, res, _next) => {
     ...AUTH_COOKIE_OPTIONS,
   });
   return res.ok({ message: "Logged out successfully" });
+  return res.ok({ message: "Logged out successfully" });
 };
 
 export const verifyEmail = async (req, res, next) => {
+export const verifyEmail = async (req, res, next) => {
   try {
     const { email, otp } = req.body;
+    const normalizedEmail = normalizeEmail(email);
     const normalizedEmail = normalizeEmail(email);
     const user = await userService.getUserByEmail(normalizedEmail);
 
     if (!user) {
       return next(new AppError(404, "NOT_FOUND", "Not found"));
+      return next(new AppError(404, "NOT_FOUND", "Not found"));
     }
     if (user.is_verified) {
+      return next(new AppError(400, "VALIDATION_ERROR", "Invalid request"));
       return next(new AppError(400, "VALIDATION_ERROR", "Invalid request"));
     }
     if (
@@ -384,18 +418,23 @@ export const verifyEmail = async (req, res, next) => {
       new Date() > user.verification_otp_expires
     ) {
       return next(new AppError(400, "VALIDATION_ERROR", "Invalid request"));
+      return next(new AppError(400, "VALIDATION_ERROR", "Invalid request"));
     }
     user.is_verified = true;
     user.verification_otp = null;
     user.verification_otp_expires = null;
     await user.save();
     return res.ok({ message: "Email verified successfully" });
+    return res.ok({ message: "Email verified successfully" });
   } catch (error) {
+    logger.error({ err: error, requestId: req.requestId }, "Email verification error");
+    return next(new AppError(500, "INTERNAL", "Internal server error", { cause: error }));
     logger.error({ err: error, requestId: req.requestId }, "Email verification error");
     return next(new AppError(500, "INTERNAL", "Internal server error", { cause: error }));
   }
 };
 
+export const forgotPassword = async (req, res, next) => {
 export const forgotPassword = async (req, res, next) => {
   try {
     const { email } = req.body;
@@ -406,13 +445,16 @@ export const forgotPassword = async (req, res, next) => {
     };
 
     if (!email) return res.ok(genericMsg);
+    if (!email) return res.ok(genericMsg);
 
     const user = await User.findOne({
       where: {
         email: normalizeEmail(email)
+        email: normalizeEmail(email)
       },
     });
 
+    if (!user) return res.ok({ message: "User not exist" });
     if (!user) return res.ok({ message: "User not exist" });
 
     // Generate token
@@ -435,14 +477,19 @@ export const forgotPassword = async (req, res, next) => {
       html: `
         <div style="background-color:#f3fbf7; padding:32px; font-family:ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;">
   <div style="max-width:520px; margin:0 auto; background-color:#ffffff; border:1px solid rgba(15,157,115,0.18); border-radius:16px; padding:28px;">
+        <div style="background-color:#f3fbf7; padding:32px; font-family:ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;">
+  <div style="max-width:520px; margin:0 auto; background-color:#ffffff; border:1px solid rgba(15,157,115,0.18); border-radius:16px; padding:28px;">
 
+    <h2 style="color:#133a2d; margin:0 0 12px; font-size:22px;">
     <h2 style="color:#133a2d; margin:0 0 12px; font-size:22px;">
       Reset your password
     </h2>
 
     <p style="color:#5f7a70; font-size:14px; line-height:1.6; margin:0 0 20px;">
+    <p style="color:#5f7a70; font-size:14px; line-height:1.6; margin:0 0 20px;">
       We received a request to reset your password. Click the button below to set a new password.
       <br />
+      <span style="color:#6d8379;">This link is valid for 15 minutes.</span>
       <span style="color:#6d8379;">This link is valid for 15 minutes.</span>
     </p>
 
@@ -452,11 +499,13 @@ export const forgotPassword = async (req, res, next) => {
         style="
           display:inline-block;
           background-color:#0f9d73;
+          background-color:#0f9d73;
           color:#ffffff;
           text-decoration:none;
           font-weight:700;
           padding:14px 26px;
           border-radius:14px;
+          box-shadow:0 4px 14px rgba(15,157,115,0.28);
           box-shadow:0 4px 14px rgba(15,157,115,0.28);
         "
       >
@@ -466,11 +515,16 @@ export const forgotPassword = async (req, res, next) => {
 
     <p style="color:#5f7a70; font-size:13px; line-height:1.6; margin:0;">
       If you didn't request a password reset, you can safely ignore this email.
+    <p style="color:#5f7a70; font-size:13px; line-height:1.6; margin:0;">
+      If you didn't request a password reset, you can safely ignore this email.
       Your password will remain unchanged.
     </p>
 
     <hr style="border:none; border-top:1px solid rgba(15,157,115,0.18); margin:24px 0;" />
+    <hr style="border:none; border-top:1px solid rgba(15,157,115,0.18); margin:24px 0;" />
 
+    <p style="color:#6d8379; font-size:12px; text-align:center; margin:0;">
+      (c) ${new Date().getFullYear()} K and Co., All rights reserved
     <p style="color:#6d8379; font-size:12px; text-align:center; margin:0;">
       (c) ${new Date().getFullYear()} K and Co., All rights reserved
     </p>
@@ -482,11 +536,14 @@ export const forgotPassword = async (req, res, next) => {
     });
 
     return res.ok(genericMsg);
+    return res.ok(genericMsg);
   } catch (err) {
+    return next(new AppError(500, "INTERNAL", "Internal server error", { cause: err }));
     return next(new AppError(500, "INTERNAL", "Internal server error", { cause: err }));
   }
 };
 
+export const resetPassword = async (req, res, next) => {
 export const resetPassword = async (req, res, next) => {
   try {
     const { token } = req.params;
@@ -494,9 +551,11 @@ export const resetPassword = async (req, res, next) => {
 
     if (!password || !confirmPassword) {
       return next(new AppError(400, "VALIDATION_ERROR", "Invalid request"));
+      return next(new AppError(400, "VALIDATION_ERROR", "Invalid request"));
     }
 
     if (password !== confirmPassword) {
+      return next(new AppError(400, "VALIDATION_ERROR", "Invalid request"));
       return next(new AppError(400, "VALIDATION_ERROR", "Invalid request"));
     }
 
@@ -514,8 +573,10 @@ export const resetPassword = async (req, res, next) => {
 
     if (!user) {
       return next(new AppError(400, "VALIDATION_ERROR", "Invalid request"));
+      return next(new AppError(400, "VALIDATION_ERROR", "Invalid request"));
     }
 
+    // Update password (your field is password_hash)
     // Update password (your field is password_hash)
     // You can hash manually OR just set password_hash and let your beforeUpdate hook hash it.
     // Option A (hash manually):
@@ -528,7 +589,9 @@ export const resetPassword = async (req, res, next) => {
     await user.save();
 
     return res.ok({ message: "Password reset successful. Please login." });
+    return res.ok({ message: "Password reset successful. Please login." });
   } catch (err) {
+    return next(new AppError(500, "INTERNAL", "Internal server error", { cause: err }));
     return next(new AppError(500, "INTERNAL", "Internal server error", { cause: err }));
   }
 };

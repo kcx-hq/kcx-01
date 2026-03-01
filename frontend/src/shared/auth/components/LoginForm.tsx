@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom";
 const LoginForm = ({ loginData, setLoginData, handleLogin, isSigningIn, lockoutUntilMs, onSwitchToSignup }) => {
   const navigate = useNavigate();
   const [focusedField, setFocusedField] = useState<"email" | "password" | null>(null);
+  const [focusedField, setFocusedField] = useState<"email" | "password" | null>(null);
   const [rememberMe, setRememberMe] = useState(false);
   const [remainingSeconds, setRemainingSeconds] = useState(0);
 
@@ -34,6 +35,7 @@ const LoginForm = ({ loginData, setLoginData, handleLogin, isSigningIn, lockoutU
       <div className="space-y-5">
         {/* Email Field */}
         <InputGroup
+        <InputGroup
           label="Email Address"
           type="email"
           placeholder="you@company.com"
@@ -41,7 +43,12 @@ const LoginForm = ({ loginData, setLoginData, handleLogin, isSigningIn, lockoutU
           onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
             setLoginData({ ...loginData, email: e.target.value })
           }
+          onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+            setLoginData({ ...loginData, email: e.target.value })
+          }
           icon={Mail}
+          isFocused={focusedField === "email"}
+          onFocus={() => setFocusedField("email")}
           isFocused={focusedField === "email"}
           onFocus={() => setFocusedField("email")}
           onBlur={() => setFocusedField(null)}
@@ -49,14 +56,21 @@ const LoginForm = ({ loginData, setLoginData, handleLogin, isSigningIn, lockoutU
 
         {/* Password Field */}
         <InputGroup
+        <InputGroup
           label="Password"
           type="password"
+          placeholder="Enter password"
           placeholder="Enter password"
           value={loginData.password}
           onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
             setLoginData({ ...loginData, password: e.target.value })
           }
+          onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+            setLoginData({ ...loginData, password: e.target.value })
+          }
           icon={Lock}
+          isFocused={focusedField === "password"}
+          onFocus={() => setFocusedField("password")}
           isFocused={focusedField === "password"}
           onFocus={() => setFocusedField("password")}
           onBlur={() => setFocusedField(null)}
@@ -67,7 +81,13 @@ const LoginForm = ({ loginData, setLoginData, handleLogin, isSigningIn, lockoutU
         <label className="flex items-center gap-2 cursor-pointer group select-none">
           <input
             type="checkbox"
+          <input
+            type="checkbox"
             checked={rememberMe}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+              setRememberMe(e.target.checked)
+            }
+            className="w-4 h-4 rounded border-gray-300 text-[var(--brand-primary)] focus:ring-[var(--brand-primary)]"
             onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
               setRememberMe(e.target.checked)
             }
@@ -111,11 +131,29 @@ const LoginForm = ({ loginData, setLoginData, handleLogin, isSigningIn, lockoutU
             Sign up
           </button>
         </p>
+        <p className="text-xs text-gray-500">
+          Don't have an account?{" "}
+          <button
+            type="button"
+            onClick={onSwitchToSignup}
+            className="font-bold text-[#192630] hover:text-[var(--brand-primary)] ml-1"
+          >
+            Sign up
+          </button>
+        </p>
       </div>
     </form>
   );
 };
 
+const InputGroup = ({
+  label,
+  icon: Icon,
+  isFocused,
+  onFocus,
+  onBlur,
+  ...props
+}: InputGroupProps) => (
 const InputGroup = ({
   label,
   icon: Icon,
@@ -136,7 +174,14 @@ const InputGroup = ({
         className={`
           w-full font-medium rounded-xl py-2.5 pl-10 pr-4
           border outline-none text-sm transition-all duration-200
+          w-full font-medium rounded-xl py-2.5 pl-10 pr-4
+          border outline-none text-sm transition-all duration-200
           placeholder:text-gray-400
+          ${
+            isFocused
+              ? "bg-white border-[var(--brand-primary)] ring-4 ring-[var(--brand-primary-soft)] text-[#192630]"
+              : "bg-gray-50 border-gray-200 text-gray-900 hover:border-gray-300 hover:bg-gray-100"
+          }
           ${
             isFocused
               ? "bg-white border-[var(--brand-primary)] ring-4 ring-[var(--brand-primary-soft)] text-[#192630]"
@@ -145,8 +190,10 @@ const InputGroup = ({
         `}
       />
       <div
+      <div
         className={`
           absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none z-10 transition-colors duration-200
+          ${isFocused ? "text-[var(--brand-primary)]" : "text-gray-400"}
           ${isFocused ? "text-[var(--brand-primary)]" : "text-gray-400"}
         `}
       >
@@ -157,3 +204,4 @@ const InputGroup = ({
 );
 
 export default LoginForm;
+

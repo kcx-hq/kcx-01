@@ -93,11 +93,11 @@ export function useDriverDetails({
         driver?.detailsPayload?.dimension ||
         'service';
       const driverKey: string | null =
+        driver?.detailsPayload?.driverKey ||
+        driver?.evidencePayload?.driverKey ||
         driver?.key ||
         driver?.name ||
         driver?.id ||
-        driver?.evidencePayload?.driverKey ||
-        driver?.detailsPayload?.driverKey ||
         null;
 
       if (!driverKey) return;

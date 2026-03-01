@@ -96,6 +96,26 @@ export const CAPABILITIES_MAP = {
             method: "GET",
             path: "/analytics/cost-analysis/analysis",
           },
+          costAnalysisKpis: {
+            method: "GET",
+            path: "/analytics/cost-analysis/kpis",
+          },
+          costAnalysisTrend: {
+            method: "GET",
+            path: "/analytics/cost-analysis/trend",
+          },
+          costAnalysisBreakdown: {
+            method: "GET",
+            path: "/analytics/cost-analysis/breakdown",
+          },
+          costAnalysisConcentration: {
+            method: "GET",
+            path: "/analytics/cost-analysis/concentration",
+          },
+          costAnalysisAnomalyImpact: {
+            method: "GET",
+            path: "/analytics/cost-analysis/anomaly-impact",
+          },
           costFilters: {
             method: "GET",
             path: "/analytics/cost-analysis/filters",
@@ -123,6 +143,38 @@ export const CAPABILITIES_MAP = {
           analysis: {
             method: "GET",
             path: "/analytics/data-quality/analysis",
+          },
+          banner: {
+            method: "GET",
+            path: "/analytics/data-quality/governance-data-health/banner",
+          },
+          freshness: {
+            method: "GET",
+            path: "/analytics/data-quality/governance-data-health/freshness",
+          },
+          coverage: {
+            method: "GET",
+            path: "/analytics/data-quality/governance-data-health/coverage",
+          },
+          tagCompliance: {
+            method: "GET",
+            path: "/analytics/data-quality/governance-data-health/tag-compliance",
+          },
+          ownershipCompleteness: {
+            method: "GET",
+            path: "/analytics/data-quality/governance-data-health/ownership-completeness",
+          },
+          currencyBasis: {
+            method: "GET",
+            path: "/analytics/data-quality/governance-data-health/currency-basis",
+          },
+          denominatorQuality: {
+            method: "GET",
+            path: "/analytics/data-quality/governance-data-health/denominator-quality",
+          },
+          controlViolations: {
+            method: "GET",
+            path: "/analytics/data-quality/governance-data-health/control-violations",
           },
         },
       },
@@ -236,6 +288,26 @@ export const CAPABILITIES_MAP = {
           costAnalysis: {
             method: "GET",
             path: "/analytics/cost-analysis/analysis",
+          },
+          costAnalysisKpis: {
+            method: "GET",
+            path: "/analytics/cost-analysis/kpis",
+          },
+          costAnalysisTrend: {
+            method: "GET",
+            path: "/analytics/cost-analysis/trend",
+          },
+          costAnalysisBreakdown: {
+            method: "GET",
+            path: "/analytics/cost-analysis/breakdown",
+          },
+          costAnalysisConcentration: {
+            method: "GET",
+            path: "/analytics/cost-analysis/concentration",
+          },
+          costAnalysisAnomalyImpact: {
+            method: "GET",
+            path: "/analytics/cost-analysis/anomaly-impact",
           },
           costFilters: {
             method: "GET",

@@ -1,103 +1,135 @@
 import AppError from "../../../../errors/AppError.js";
 import logger from "../../../../lib/logger.js";
-import { costDriversService } from './cost-drivers.service.js';
-
-function normalizeUploadIds(input) {
-  if (!input) return [];
-
-  if (Array.isArray(input)) {
-    return input.map(String).map((value) => value.trim()).filter(Boolean);
-  }
-
-  if (typeof input === 'string') {
-    return input
-      .split(',')
-      .map((value) => value.trim())
-      .filter(Boolean);
-  }
-
-  return [];
-}
-
-function extractUploadIds(req) {
-  return normalizeUploadIds(
-    req.query.uploadid ??
-      req.query.uploadId ??
-      req.query.uploadids ??
-      req.query.uploadIds ??
-      req.body?.uploadid ??
-      req.body?.uploadId ??
-      req.body?.uploadIds,
-  );
-}
+import { costDriversService } from "./cost-drivers.service.js";
+import { assertUploadScope } from "../../utils/uploadScope.service.js";
+import { extractUploadIdsFromRequest } from "../../utils/uploadIds.utils.js";
 
 const parseNumberOrDefault = (value, fallback) =>
   Number.isFinite(Number(value)) ? Number(value) : fallback;
 
 const readFilters = (source = {}) => ({
-  provider: source.provider || 'All',
-  service: source.service || 'All',
-  region: source.region || 'All',
-  account: source.account || 'All',
-  subAccount: source.subAccount || 'All',
-  team: source.team || 'All',
-  app: source.app || 'All',
-  env: source.env || 'All',
-  costCategory: source.costCategory || 'All',
-  tagKey: source.tagKey || '',
-  tagValue: source.tagValue || '',
+  provider: source.provider || "All",
+  service: source.service || "All",
+  region: source.region || "All",
+  account: source.account || "All",
+  subAccount: source.subAccount || "All",
+  team: source.team || "All",
+  app: source.app || "All",
+  env: source.env || "All",
+  costCategory: source.costCategory || "All",
+  tagKey: source.tagKey || "",
+  tagValue: source.tagValue || "",
   uploadId: source.uploadId || source.uploadid || null,
 });
 
-export const getCostDrivers = async (req, res, next) => {
+const resolveScopedUploadIds = async (req) => {
+  const uploadIds = await assertUploadScope({
+    uploadIds: extractUploadIdsFromRequest(req),
+    clientId: req.client_id,
+  });
+  if (!uploadIds.length) {
+    throw new AppError(400, "VALIDATION_ERROR", "Invalid request");
+  }
+  return uploadIds;
+};
+
+const buildAnalysisOptions = async (req) => {
+  const uploadIds = await resolveScopedUploadIds(req);
+  const query = req.query || {};
+  const filters = readFilters(query);
+
+  return {
+    filters,
+    period: parseNumberOrDefault(query.period, 30),
+    timeRange: query.timeRange || null,
+    compareTo: query.compareTo || null,
+    startDate: query.startDate || null,
+    endDate: query.endDate || null,
+    previousStartDate: query.previousStartDate || null,
+    previousEndDate: query.previousEndDate || null,
+    costBasis: query.costBasis || null,
+    dimension: query.dimension || "service",
+    minChange: parseNumberOrDefault(query.minChange, 0),
+    rowLimit: parseNumberOrDefault(query.rowLimit, 100),
+    activeServiceFilter: query.activeServiceFilter || "All",
+    uploadIds,
+  };
+};
+
+const withAnalysis = (handler) => async (req, res, next) => {
   try {
     if (!req.user?.id) {
       return next(new AppError(401, "UNAUTHENTICATED", "Authentication required"));
     }
 
-    const uploadIds = extractUploadIds(req);
-    const query = req.query || {};
-
-    const filters = readFilters(query);
-    const period = parseNumberOrDefault(query.period, 30);
-    const minChange = parseNumberOrDefault(query.minChange, 0);
-    const rowLimit = parseNumberOrDefault(query.rowLimit, 100);
-
-    const data = await costDriversService.getCostDrivers({
-      filters,
-      period,
-      timeRange: query.timeRange || null,
-      compareTo: query.compareTo || null,
-      startDate: query.startDate || null,
-      endDate: query.endDate || null,
-      previousStartDate: query.previousStartDate || null,
-      previousEndDate: query.previousEndDate || null,
-      costBasis: query.costBasis || null,
-      dimension: query.dimension || 'service',
-      minChange,
-      rowLimit,
-      activeServiceFilter: query.activeServiceFilter || 'All',
-      uploadIds,
-    });
-
-    const safeData = data || {};
-    if (
-      Array.isArray(safeData.increases) &&
-      Array.isArray(safeData.decreases) &&
-      safeData.increases.length === 0 &&
-      safeData.decreases.length === 0 &&
-      !safeData.message
-    ) {
-      safeData.message =
-        'No cost changes detected in selected windows. Try another time range or compare mode.';
-    }
-
-    return res.ok(safeData);
+    const options = await buildAnalysisOptions(req);
+    const payload = await costDriversService.getCostDrivers(options);
+    return handler(payload, res);
   } catch (error) {
-    logger.error({ err: error, requestId: req.requestId }, "Error in getCostDrivers");
+    if (error instanceof AppError) {
+      return next(error);
+    }
+    logger.error({ err: error, requestId: req.requestId }, "Error in cost drivers controller");
     return next(new AppError(500, "INTERNAL", "Internal server error", { cause: error }));
   }
 };
+
+export const getCostDrivers = withAnalysis((payload, res) => res.ok(payload));
+
+export const getCostDriversKpis = withAnalysis((payload, res) =>
+  res.ok({
+    controls: payload?.controls || null,
+    periodWindows: payload?.periodWindows || null,
+    varianceSummary: payload?.varianceSummary || null,
+    kpiStrip: payload?.kpiStrip || [],
+    trust: payload?.trust || null,
+    attributionConfidence: payload?.attributionConfidence || null,
+  }),
+);
+
+export const getCostDriversWaterfall = withAnalysis((payload, res) =>
+  res.ok({
+    controls: payload?.controls || null,
+    varianceSummary: payload?.varianceSummary || null,
+    waterfall: payload?.waterfall || null,
+    topDrivers: payload?.topDrivers || [],
+  }),
+);
+
+export const getCostDriversDecomposition = withAnalysis((payload, res) =>
+  res.ok({
+    controls: payload?.controls || null,
+    decomposition: payload?.decomposition || null,
+    topDrivers: payload?.topDrivers || [],
+  }),
+);
+
+export const getCostDriversRateVsUsage = withAnalysis((payload, res) =>
+  res.ok({
+    controls: payload?.controls || null,
+    rateVsUsage: payload?.rateVsUsage || null,
+    trust: payload?.trust || null,
+  }),
+);
+
+export const getCostDriversTrust = withAnalysis((payload, res) =>
+  res.ok({
+    controls: payload?.controls || null,
+    trust: payload?.trust || null,
+    unexplainedVariance: payload?.unexplainedVariance || null,
+    attributionConfidence: payload?.attributionConfidence || null,
+    runMeta: payload?.runMeta || null,
+  }),
+);
+
+export const getCostDriversExecutiveSummary = withAnalysis((payload, res) =>
+  res.ok({
+    controls: payload?.controls || null,
+    executiveInsights: payload?.executiveInsights || { bullets: [] },
+    topDrivers: payload?.topDrivers || [],
+    trust: payload?.trust || null,
+  }),
+);
 
 export const getDriverDetails = async (req, res, next) => {
   try {
@@ -105,10 +137,7 @@ export const getDriverDetails = async (req, res, next) => {
       return next(new AppError(401, "UNAUTHENTICATED", "Authentication required"));
     }
 
-    const uploadIds = extractUploadIds(req);
-    if (!uploadIds.length) {
-      return next(new AppError(400, "VALIDATION_ERROR", "Invalid request"));
-    }
+    const uploadIds = await resolveScopedUploadIds(req);
 
     const body = req.body || {};
     const query = req.query || {};
@@ -122,7 +151,7 @@ export const getDriverDetails = async (req, res, next) => {
       body?.driver?.dimension ||
       body?.driver?.detailsPayload?.dimension ||
       query.dimension ||
-      'service';
+      "service";
 
     if (!driver && !driverKey) {
       return next(new AppError(400, "VALIDATION_ERROR", "Invalid request"));
@@ -147,6 +176,9 @@ export const getDriverDetails = async (req, res, next) => {
 
     return res.ok(data);
   } catch (error) {
+    if (error instanceof AppError) {
+      return next(error);
+    }
     logger.error({ err: error, requestId: req.requestId }, "Error in getDriverDetails");
     return next(new AppError(500, "INTERNAL", "Internal server error", { cause: error }));
   }

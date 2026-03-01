@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { buildParamsFromFilters } from "../utils/helpers";
 import type {
+  ActionCenterModel,
   ApiLikeError,
   IdleResource,
   OptimizationData,
@@ -53,7 +54,10 @@ export function useOptimizationData({
       const payload = (actionCenterRes && typeof actionCenterRes === "object"
         ? actionCenterRes
         : {}) as Record<string, unknown>;
-      const model = payload?.model ?? null;
+      const model =
+        payload?.model && typeof payload.model === "object"
+          ? (payload.model as ActionCenterModel)
+          : null;
       const opportunities = Array.isArray(payload?.opportunities) ? payload.opportunities : [];
       const idleResources = Array.isArray(payload?.idleResources) ? payload.idleResources : [];
       const rightSizingRecs = Array.isArray(payload?.rightSizingRecommendations)
@@ -64,6 +68,11 @@ export function useOptimizationData({
         payload?.commitmentGap && typeof payload.commitmentGap === "object"
           ? payload.commitmentGap
           : null;
+      const estimatedSavingsFromModel = Number(model?.execution?.kpis?.estimatedMonthlySavings || 0);
+      const totalPotentialSavings =
+        estimatedSavingsFromModel > 0
+          ? estimatedSavingsFromModel
+          : opportunities.reduce((sum, opp) => sum + (opp.savings || 0), 0);
 
       setOptimizationData({
         opportunities,
@@ -72,7 +81,7 @@ export function useOptimizationData({
         commitmentGap,
         trackerItems,
         actionCenterModel: model,
-        totalPotentialSavings: opportunities.reduce((sum, opp) => sum + (opp.savings || 0), 0),
+        totalPotentialSavings,
       });
     } catch (err: unknown) {
       const errorObj = err as ApiLikeError;

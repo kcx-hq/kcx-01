@@ -241,6 +241,35 @@ export interface AllocationUnitEconomicsViewModel {
   productVariance: VarianceRow[];
   heatmap: HeatmapCell[];
   exportRows: ExportRow[];
+  denominatorGate: {
+    status: 'pass' | 'warn' | 'fail';
+    reasons: string[];
+    metric: string;
+    quantityCoveragePct: number;
+  };
+  trust: {
+    dataFreshnessTs: string | null;
+    coveragePct: number;
+    confidenceLevel: 'high' | 'medium' | 'low' | string;
+  };
+  ownershipDrift: {
+    series: Array<{
+      period: string;
+      driftEvents: number;
+      impactedCost: number;
+      driftRatePct: number;
+    }>;
+    flags: Array<{
+      type: string;
+      severity: 'high' | 'medium' | 'low' | string;
+      team: string;
+      detail: string;
+    }>;
+  };
+  unitMetricDefinitions: {
+    selectedMetric: string;
+    availableMetrics: Array<{ key: string; label: string }>;
+  };
   periodLabel: string;
   notes: string[];
 }
@@ -249,4 +278,5 @@ export interface AllocationUnitEconomicsControls {
   period: '30d' | '90d' | 'month';
   basis: 'actual' | 'amortized' | 'net';
   compareTo: 'previous_period' | 'same_period_last_month';
+  unitMetric: string;
 }

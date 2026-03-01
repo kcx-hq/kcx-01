@@ -18,6 +18,7 @@ export async function readCsvHeaders(filePath) {
   return new Promise((resolve, reject) => {
     const stream = fs.createReadStream(filePath).pipe(csv());
     stream.once("headers", headers => resolve(headers));
+    stream.once("end", () => resolve([]));
     stream.once("error", reject);
   });
 }

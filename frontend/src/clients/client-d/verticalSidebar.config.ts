@@ -115,9 +115,9 @@ const ClientDSidebarConfig: ClientDSidebarConfigShape = {
       items: [
         {
           to: "/client-d/dashboard/optimization",
-          label: "Optimization",
+          label: "Optimization & Commitments",
           icon: Sparkles,
-          description: "Idle resources, commitments, right-sizing, tracker",
+          description: "Execution backlog plus commitment/rate safety",
         },
       ],
     },

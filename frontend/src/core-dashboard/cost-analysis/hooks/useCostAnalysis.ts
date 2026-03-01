@@ -77,6 +77,7 @@ export function useCostAnalysis({
           granularity: filters.granularity,
           compareTo: filters.compareTo,
           costBasis: filters.costBasis,
+          currencyMode: filters.currencyMode,
           groupBy: filters.groupBy,
           startDate: filters.timeRange === "custom" ? filters.startDate || undefined : undefined,
           endDate: filters.timeRange === "custom" ? filters.endDate || undefined : undefined,

@@ -35,6 +35,12 @@ interface SidebarConfig {
   brand: SidebarBrand;
   groups: SidebarGroup[];
   features?: SidebarFeatures;
+  footer?: {
+    uploadRoute?: string;
+    uploadLabel?: string;
+    lockedLabel?: string;
+    billingUploadsRoute?: string;
+  };
 }
 
 interface VerticalSidebarProps {
@@ -79,6 +85,10 @@ function VerticalSidebarContent({
   const showFooterUpload = features?.footerUpload ?? true;
   const MAX_UPLOADS = features?.maxUploads ?? 5;
   const isUploadLocked = !isPremiumUser && isLocked;
+  const uploadRoute = config.footer?.uploadRoute || "/upload";
+  const billingUploadsRoute = config.footer?.billingUploadsRoute || "/billing-uploads";
+  const uploadLabel = config.footer?.uploadLabel || "New Upload";
+  const lockedLabel = config.footer?.lockedLabel || "Upgrade Plan";
 
   const uploadCount = useMemo(
     () => parseInt(localStorage.getItem(uploadCountStorageKey) || "0", 10),
@@ -291,7 +301,7 @@ function VerticalSidebarContent({
         {showFooterUpload && (
           <div className="p-3 mt-auto bg-[#162A38] border-t border-white/10">
             <button
-              onClick={() => navigate("/billing-uploads")}
+              onClick={() => navigate(billingUploadsRoute)}
               className="w-full mb-2 flex items-center justify-center gap-2 rounded-lg border border-[#1EA88A]/45 bg-[#162A38] hover:bg-[#1A3345] hover:border-[#35C9A7]/80 px-3 py-2 transition-all"
             >
               <Files size={15} className="text-[#007758]" />
@@ -300,13 +310,19 @@ function VerticalSidebarContent({
               </span>
             </button>
 
-            <div
+            <button
+              type="button"
+              onClick={() => {
+                if (!isUploadLocked) navigate(uploadRoute);
+              }}
+              disabled={isUploadLocked}
               className={`
                 w-full group relative overflow-hidden rounded-xl p-0 transition-all duration-300 border shadow-sm
                 ${isUploadLocked
                     ? "bg-amber-900/10 border-amber-500/20 hover:border-amber-500/40" 
                     : "bg-[#162A38] border-[#1EA88A]/60 hover:border-[#35C9A7]/80 hover:shadow-[0_8px_24px_rgba(0,119,88,0.22)]"
                 }
+                ${isUploadLocked ? "cursor-not-allowed" : "cursor-pointer"}
               `}
             >
                 <div className="relative z-10 flex flex-col items-center lg:flex-row lg:justify-between p-3 gap-2">
@@ -316,7 +332,7 @@ function VerticalSidebarContent({
                         </div>
                         <div className="hidden lg:block text-left">
                             <p className={`text-xs font-bold ${isUploadLocked ? "text-amber-200" : "text-white"}`}>
-                                {isUploadLocked ? "Upgrade Plan" : "New Upload"}
+                                {isUploadLocked ? lockedLabel : uploadLabel}
                             </p>
                             <p className={`text-[10px] ${isUploadLocked ? "text-gray-400" : "text-[#B6C8C2]"}`}>
                                 {isUploadLocked
@@ -334,7 +350,7 @@ function VerticalSidebarContent({
                         </div>
                     )}
                 </div>
-            </div>
+            </button>
 
           </div>
         )}

@@ -17,6 +17,7 @@ interface GlobalControlsSectionProps {
   granularityOptions: string[];
   compareOptions: string[];
   costBasisOptions: string[];
+  currencyModeOptions: string[];
   groupByOptions: string[];
   onFiltersChange: (patch: SpendAnalyticsFilterPatch) => void;
   onToggleMediumFilters: () => void;
@@ -34,6 +35,7 @@ const GlobalControlsSection = ({
   granularityOptions,
   compareOptions,
   costBasisOptions,
+  currencyModeOptions,
   groupByOptions,
   onFiltersChange,
   onToggleMediumFilters,
@@ -45,7 +47,7 @@ const GlobalControlsSection = ({
       <div className="mb-4 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <SlidersHorizontal size={16} className="text-emerald-700" />
-          <h2 className="text-sm font-black uppercase tracking-widest text-slate-700">Global Controls</h2>
+          <h2 className="text-sm font-black uppercase tracking-widest text-slate-700">Filters</h2>
           {selectedFilterCount > 0 ? (
             <span className="rounded-full bg-emerald-100 px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-emerald-700">
               {selectedFilterCount} active
@@ -164,6 +166,12 @@ const GlobalControlsSection = ({
               value={filters.costBasis}
               options={costBasisOptions}
               onChange={(value) => onFiltersChange({ costBasis: value as SpendAnalyticsFilters["costBasis"] })}
+            />
+            <SelectControl
+              label="Currency"
+              value={filters.currencyMode}
+              options={currencyModeOptions}
+              onChange={(value) => onFiltersChange({ currencyMode: value as SpendAnalyticsFilters["currencyMode"] })}
             />
             <SelectControl
               label="Group By"

@@ -1,15 +1,18 @@
 import DataQualityView from "./DataQualityView";
-import { useDataQuality } from "./hooks/useDataQuality";
-import type { DataQualityIssueRow, DataQualityProps, DataQualityTab } from "./types";
+import type { GovernanceFilters } from "./types";
+import type { ApiClient, Capabilities } from "../../services/apiClient";
 
-const DataQuality = ({ filters, api, caps }) => {
-  const isEnabled = Boolean(api && caps && caps.modules?.dataQuality?.enabled);
+interface DataQualityProps {
+  filters?: GovernanceFilters;
+  api: ApiClient | null;
+  caps: Capabilities | null;
+}
 
-  const { loading, stats } = useDataQuality({ filters, api, caps });
-
+const DataQuality = ({ filters, api, caps }: DataQualityProps) => {
+  const isEnabled = Boolean(api && caps?.modules?.dataQuality?.enabled);
   if (!isEnabled) return null;
 
-  return <DataQualityView loading={loading} stats={stats} filters={filters} />;
+  return <DataQualityView filters={filters} api={api} caps={caps} />;
 };
 
 export default DataQuality;

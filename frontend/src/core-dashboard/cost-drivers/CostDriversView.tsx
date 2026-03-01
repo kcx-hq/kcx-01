@@ -5,9 +5,9 @@ import {
   DriverDetailModal,
   ExecutiveInsightsSection,
   KpiStripSection,
+  RateVsUsageSection,
   StatusBanner,
   UnexplainedVarianceSection,
-  VarianceTrendSection,
   WaterfallSection,
 } from './components';
 import type { CostDriversViewProps } from './types';
@@ -25,8 +25,9 @@ export function CostDriversView({
   activeKpiId,
   onToggleKpi,
   waterfall,
-  trendComparison,
   decomposition,
+  topDrivers,
+  rateVsUsage,
   activeTab,
   onTabChange,
   onOpenDriver,
@@ -64,30 +65,28 @@ export function CostDriversView({
 
       <KpiStripSection cards={kpiStrip} activeKpiId={activeKpiId} onToggleKpi={onToggleKpi} />
 
-      <div className="grid grid-cols-1 gap-5 xl:grid-cols-[minmax(0,1.7fr)_minmax(0,1fr)] xl:items-start">
-        <div className="min-w-0">
-          <WaterfallSection waterfall={waterfall} />
-        </div>
-        <div className="min-w-0">
-          <UnexplainedVarianceSection
-            unexplainedVariance={unexplainedVariance}
-            attributionConfidence={attributionConfidence}
-            runMeta={runMeta}
-            trust={trust}
-          />
-        </div>
-      </div>
-
       <div className="min-w-0">
-        <VarianceTrendSection trendComparison={trendComparison} />
+        <WaterfallSection waterfall={waterfall} />
       </div>
 
       <DecompositionSection
         decomposition={decomposition}
+        topDrivers={topDrivers}
         activeTab={activeTab}
         onTabChange={onTabChange}
         onOpenDetail={onOpenDriver}
       />
+
+      <RateVsUsageSection rateVsUsage={rateVsUsage} onOpenDetail={onOpenDriver} />
+
+      <div className="min-w-0">
+        <UnexplainedVarianceSection
+          unexplainedVariance={unexplainedVariance}
+          attributionConfidence={attributionConfidence}
+          runMeta={runMeta}
+          trust={trust}
+        />
+      </div>
 
       <ExecutiveInsightsSection executiveInsights={executiveInsights} onOpenDetail={onOpenDriver} />
 

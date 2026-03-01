@@ -9,8 +9,8 @@ const levelFromScore = (score) => {
 export const scoreAllocationConfidence = ({
   tagCoveragePct = 0,
   sharedPoolRatioPct = 0,
-  ruleCompletenessPct = 100,
-  dataConsistencyPct = 100,
+  ruleCompletenessPct = 0,
+  dataConsistencyPct = 0,
 }) => {
   const sharedRatioRiskScore = clamp(100 - sharedPoolRatioPct, 0, 100);
   const score =

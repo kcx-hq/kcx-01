@@ -111,6 +111,14 @@ export interface CostDriversDecompositionRow {
   driverType: string;
   riskLevel: DriverSeverity;
   unexplainedContribution: number;
+  driverBreakdown?: {
+    newServicesResources?: number;
+    usageGrowth?: number;
+    ratePriceChange?: number;
+    mixShift?: number;
+    creditsDiscountChange?: number;
+    savingsRemovals?: number;
+  };
   evidencePayload?: {
     dimension: string;
     driverKey: string;
@@ -124,6 +132,47 @@ export interface CostDriversDecompositionRow {
     resourceExplorer: string;
     optimization: string;
   };
+}
+
+export interface CostDriversTopDriverRow {
+  dimension: string;
+  key: string;
+  name: string;
+  deltaValue: number;
+  deltaPercent: number;
+  contributionPercent: number;
+  confidence: "High" | "Medium" | "Low" | string;
+  riskLevel: DriverSeverity;
+  evidenceSummary: string;
+  evidencePayload?: {
+    dimension: string;
+    driverKey: string;
+  };
+}
+
+export interface CostDriversRateVsUsageRow {
+  key: string;
+  name: string;
+  usageEffectValue: number;
+  rateEffectValue: number;
+  interactionValue: number;
+  totalDeltaValue: number;
+  confidence: "High" | "Medium" | "Low" | string;
+  evidenceSummary: string;
+}
+
+export interface CostDriversRateVsUsageModel {
+  supported: boolean;
+  supportReason: string;
+  coveragePercent: number;
+  summary: {
+    usageEffectValue: number;
+    rateEffectValue: number;
+    interactionValue: number;
+    totalExplainedFromSplit: number;
+  };
+  interpretation: string;
+  rows: CostDriversRateVsUsageRow[];
 }
 
 export interface CostDriversDecompositionTab {
@@ -205,6 +254,8 @@ export interface CostDriversResponse {
       thresholdRule: string;
     };
   };
+  topDrivers?: CostDriversTopDriverRow[];
+  rateVsUsage?: CostDriversRateVsUsageModel;
   unexplainedVariance: {
     value: number;
     modelResidualValue?: number;
@@ -343,8 +394,9 @@ export interface CostDriversViewProps {
   activeKpiId: string | null;
   onToggleKpi: (id: string) => void;
   waterfall: CostDriversWaterfall;
-  trendComparison: CostDriversTrendComparison;
   decomposition: CostDriversDecompositionModel;
+  topDrivers: CostDriversTopDriverRow[];
+  rateVsUsage: CostDriversRateVsUsageModel;
   activeTab: string;
   onTabChange: (tab: string) => void;
   onOpenDriver: (row: CostDriversDecompositionRow) => void;

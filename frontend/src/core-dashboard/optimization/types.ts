@@ -3,7 +3,14 @@ import type { LucideIcon } from "lucide-react";
 import type { ApiClient, Capabilities } from "../../services/apiClient";
 import type { DashboardFilters } from "../dashboard/types";
 
-export type OptimizationTab = "opportunities" | "idle" | "rightsizing" | "commitments";
+export type OptimizationTab =
+  | "overview"
+  | "execution-backlog"
+  | "commitments-rates"
+  | "opportunities"
+  | "idle"
+  | "rightsizing"
+  | "commitments";
 export type IdleFilter = "all" | "prod" | "non-prod";
 export type IdleSort = "savings-desc" | "savings-asc" | "days-desc" | "days-asc";
 
@@ -58,6 +65,189 @@ export interface RightSizingRecommendation {
   savings?: number;
   riskLevel?: "Low" | "Medium" | "High" | string;
   assumptions?: string[];
+  region?: string;
+  resourceName?: string;
+}
+
+export interface CommitmentGap {
+  onDemandPercentage?: number;
+  coveragePct?: number;
+  utilizationPct?: number;
+  effectiveSavingsRatePct?: number;
+  breakageRiskPct?: number;
+  totalComputeSpend?: number;
+  onDemandSpend?: number;
+  committedSpend?: number;
+  recommendation?: string;
+  potentialSavings?: number;
+  predictableWorkload?: boolean;
+  workloadPattern?: string;
+  typicalApproach?: string;
+  commitmentMix?: {
+    committedSpend?: number;
+    onDemandSpend?: number;
+    committedPct?: number;
+    onDemandPct?: number;
+  };
+  expiryWindows?: Array<{
+    window?: string;
+    exposure?: number;
+    riskState?: string;
+  }>;
+  [key: string]: unknown;
+}
+
+export interface ActionCenterExecutionKpis {
+  openCount?: number;
+  estimatedMonthlySavings?: number;
+  verifiedMtd?: number;
+  blockedCount?: number;
+  generatedAt?: string;
+}
+
+export interface ActionCenterBacklogRow {
+  id?: string;
+  title?: string;
+  owner?: string;
+  impact?: number;
+  confidence?: string;
+  effort?: string;
+  status?: string;
+  eta?: string;
+  blockedBy?: string;
+  score?: number;
+}
+
+export interface ActionCenterWorkflowRow {
+  id?: string;
+  title?: string;
+  owner?: string;
+  status?: string;
+  eta?: string;
+  blockedBy?: string;
+  nextStep?: string;
+}
+
+export interface ActionCenterVerificationRow {
+  id?: string;
+  title?: string;
+  claimed?: number;
+  verified?: number;
+  delta?: number;
+}
+
+export interface ActionCenterIdleRow {
+  id?: string;
+  name?: string;
+  type?: string;
+  env?: string;
+  age?: number;
+  last?: string;
+  savings?: number;
+  confidence?: string;
+}
+
+export interface ActionCenterWasteRow {
+  id?: string;
+  label?: string;
+  savings?: number;
+  rule?: string;
+  ruleName?: string;
+}
+
+export interface ActionCenterRightsizingRow {
+  id?: string;
+  current?: string;
+  recommended?: string;
+  cpuP95Pct?: number;
+  savings?: number;
+  risk?: string;
+}
+
+export interface ActionCenterExecutionModel {
+  kpis?: ActionCenterExecutionKpis;
+  backlogRows?: ActionCenterBacklogRow[];
+  workflowRows?: ActionCenterWorkflowRow[];
+  verificationRows?: ActionCenterVerificationRow[];
+  wasteCategories?: ActionCenterWasteRow[];
+  rightsizingRows?: ActionCenterRightsizingRow[];
+  idleRows?: ActionCenterIdleRow[];
+  storageRows?: ActionCenterIdleRow[];
+}
+
+export interface ActionCenterCommitmentsKpis {
+  coveragePct?: number;
+  utilizationPct?: number;
+  effectiveSavingsRatePct?: number;
+  onDemandPct?: number;
+  totalComputeSpend?: number;
+  potentialSavings?: number;
+  underCoveredPct?: number;
+  overCoveredPct?: number;
+  breakageRiskPct?: number;
+}
+
+export interface ActionCenterCommitmentExpirationRow {
+  window?: string;
+  expiresOn?: string;
+  exposure?: number;
+  riskState?: string;
+}
+
+export interface ActionCenterCommitmentDecisionRow {
+  id?: string;
+  scope?: string;
+  action?: string;
+  rationale?: string;
+  projectedSavings?: number;
+  downsideRiskPct?: number;
+  risk?: string;
+  confidence?: string;
+}
+
+export interface ActionCenterCommitmentDrilldownRow {
+  scope?: string;
+  covered?: number;
+  committed?: number;
+  utilized?: number;
+  unused?: number;
+}
+
+export interface ActionCenterCommitmentModel {
+  summary?: {
+    recommendation?: string;
+    predictableWorkload?: boolean;
+    workloadPattern?: string;
+    typicalApproach?: string;
+  };
+  kpis?: ActionCenterCommitmentsKpis;
+  expirationRows?: ActionCenterCommitmentExpirationRow[];
+  riskCards?: Array<{
+    id?: string;
+    label?: string;
+    value?: number;
+  }>;
+  decisionRows?: ActionCenterCommitmentDecisionRow[];
+  drilldownRows?: ActionCenterCommitmentDrilldownRow[];
+}
+
+export interface ActionCenterModel {
+  opportunities?: Record<string, unknown>[];
+  verificationRows?: Record<string, unknown>[];
+  wasteCategories?: Record<string, unknown>[];
+  executive?: {
+    realizedSavingsMtd?: number;
+    [key: string]: unknown;
+  };
+  commitment?: CommitmentGap;
+  execution?: ActionCenterExecutionModel;
+  commitments?: ActionCenterCommitmentModel;
+  meta?: {
+    generatedAt?: string;
+    formulaVersion?: string;
+    [key: string]: unknown;
+  };
+  [key: string]: unknown;
 }
 
 export interface OptimizationData {
@@ -65,6 +255,9 @@ export interface OptimizationData {
   idleResources: IdleResource[];
   rightSizingRecs: RightSizingRecommendation[];
   totalPotentialSavings: number;
+  actionCenterModel?: ActionCenterModel | null;
+  commitmentGap?: CommitmentGap | null;
+  trackerItems?: Record<string, unknown>[];
 }
 
 export interface OptimizationProps {

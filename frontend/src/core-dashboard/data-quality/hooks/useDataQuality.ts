@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import type { ApiLikeError, DataQualityStats, UseDataQualityParams, UseDataQualityResult } from "../types";
 
 const EMPTY_STATS: DataQualityStats = {
-  score: 100,
+  score: 0,
   totalRows: 0,
   costAtRisk: 0,
   governance: null,

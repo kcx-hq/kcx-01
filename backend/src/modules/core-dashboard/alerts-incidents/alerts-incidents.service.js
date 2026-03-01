@@ -5,13 +5,13 @@ import { dataQualityService } from "../analytics/data-quality/data-quality.servi
 import { forecastingBudgetsService } from "../forecasting-budgets/forecasting-budgets.service.js";
 import { optimizationService } from "../optimization/optimization.service.js";
 import { unitEconomicsService } from "../unit-economics/unit-economics.service.js";
+import {
+  toNumber,
+  clamp,
+  confidenceLevelFromScore,
+} from "../shared/core-dashboard.formulas.js";
 
-const n = (value) => {
-  const parsed = Number(value);
-  return Number.isFinite(parsed) ? parsed : 0;
-};
-
-const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
+const n = toNumber;
 
 const toSeverityRank = (severity) => {
   const map = { critical: 4, high: 3, medium: 2, low: 1 };
@@ -26,9 +26,7 @@ const severityFromImpact = (impactAmount = 0, impactPct = 0) => {
 };
 
 const confidenceFromScore = (score = 0) => {
-  if (score >= 80) return "high";
-  if (score >= 60) return "medium";
-  return "low";
+  return confidenceLevelFromScore(score, { high: 80, medium: 60 });
 };
 
 const buildEscalationChain = (owner) => {
@@ -452,6 +450,130 @@ const buildIncidentBundles = (alerts = []) => {
   });
 };
 
+const headerCategoryDefs = [
+  { id: "spend", label: "Spend Intelligence" },
+  { id: "drivers", label: "Cost Drivers" },
+  { id: "allocation", label: "Allocation" },
+  { id: "optimization", label: "Optimization" },
+  { id: "budgets", label: "Budgets" },
+  { id: "governance", label: "Governance" },
+];
+
+const formatHeaderTitle = (alert) => {
+  const subtype = String(alert?.subtype || alert?.type || "alert").replace(/_/g, " ");
+  const service = String(alert?.scope?.service || "Global");
+  return `${service} - ${subtype}`;
+};
+
+const isAllocationGovernanceAlert = (alert) => {
+  if (alert.type !== "governance_control") return false;
+  const blob = [
+    alert.subtype,
+    ...(Array.isArray(alert.probableRootCause) ? alert.probableRootCause : []),
+    alert.nextStep,
+  ]
+    .join(" ")
+    .toLowerCase();
+  return ["allocation", "owner", "ownership", "unallocated", "chargeback", "showback"].some(
+    (token) => blob.includes(token),
+  );
+};
+
+const resolvePrimaryHeaderCategory = (alert) => {
+  if (alert.type === "spend_anomaly") return "spend";
+  if (alert.type === "forecast_budget_risk") return "budgets";
+  if (alert.type === "optimization_workflow" || alert.type === "commitment_risk") {
+    return "optimization";
+  }
+  if (isAllocationGovernanceAlert(alert)) return "allocation";
+  if (alert.type === "governance_control") return "governance";
+
+  const descriptor = [
+    alert.type,
+    alert.subtype,
+    ...(Array.isArray(alert.probableRootCause) ? alert.probableRootCause : []),
+    alert.nextStep,
+  ]
+    .join(" ")
+    .toLowerCase();
+  if (["driver", "variance", "confidence"].some((token) => descriptor.includes(token))) {
+    return "drivers";
+  }
+
+  return "spend";
+};
+
+const toHeaderAlertItem = (alert, categoryId) => ({
+  id: alert.id,
+  title: formatHeaderTitle(alert),
+  category: categoryId,
+  type: alert.type,
+  subtype: alert.subtype,
+  severity: alert.severity,
+  status: alert.status,
+  detectedAt: alert.detectedAt,
+  deepLink: alert.deepLink,
+  scope: {
+    provider: alert.scope?.provider || "All",
+    service: alert.scope?.service || "All",
+    region: alert.scope?.region || "All",
+    team: alert.scope?.team || "Unassigned",
+  },
+  impact: {
+    amount: roundTo(n(alert?.impact?.amount), 2),
+    pct: roundTo(n(alert?.impact?.pct), 2),
+    currency: alert?.impact?.currency || "USD",
+  },
+  nextStep: alert.nextStep || "Review alert details and assign owner action.",
+});
+
+const buildHeaderAlerts = (alerts = [], currency = "USD") => {
+  const unresolved = alerts.filter((alert) => alert.status !== "resolved");
+  const ranked = [...unresolved].sort((a, b) => {
+    const severityDiff = toSeverityRank(b.severity) - toSeverityRank(a.severity);
+    if (severityDiff !== 0) return severityDiff;
+    return n(b?.impact?.amount) - n(a?.impact?.amount);
+  });
+
+  const categorized = ranked.map((alert) => ({
+    alert,
+    categoryId: resolvePrimaryHeaderCategory(alert),
+  }));
+  const categoryCounts = categorized.reduce((acc, entry) => {
+    acc[entry.categoryId] = (acc[entry.categoryId] || 0) + 1;
+    return acc;
+  }, {});
+
+  const topByCategory = Object.fromEntries(
+    headerCategoryDefs.map((cat) => {
+      const matched = categorized
+        .filter((entry) => entry.categoryId === cat.id)
+        .map((entry) => toHeaderAlertItem(entry.alert, cat.id));
+      return [cat.id, matched];
+    }),
+  );
+
+  const categories = headerCategoryDefs
+    .map((cat) => ({
+      id: cat.id,
+      label: cat.label,
+      count: Number(categoryCounts[cat.id] || 0),
+    }))
+    .filter((cat) => cat.count > 0);
+
+  const topAlerts = categorized.map((entry) =>
+    toHeaderAlertItem(entry.alert, entry.categoryId),
+  );
+
+  return {
+    totalOpenAlerts: unresolved.length,
+    categories,
+    topByCategory,
+    topAlerts,
+    currency,
+  };
+};
+
 export const alertsIncidentsService = {
   async getSummary({
     filters = {},
@@ -481,6 +603,17 @@ export const alertsIncidentsService = {
           queue: [],
           totalQueued: 0,
         },
+        headerAlerts: {
+          totalOpenAlerts: 0,
+          categories: headerCategoryDefs.map((cat) => ({
+            id: cat.id,
+            label: cat.label,
+            count: 0,
+          })),
+          topByCategory: Object.fromEntries(headerCategoryDefs.map((cat) => [cat.id, []])),
+          topAlerts: [],
+          currency: "USD",
+        },
         headerAnomalies: { count: 0, list: [] },
         message: "No scoped uploads selected.",
       };
@@ -491,37 +624,7 @@ export const alertsIncidentsService = {
       service: filters.service || "All",
       region: filters.region || "All",
     };
-
-    if (String(view).toLowerCase() === "header") {
-      const overviewAnomalies = await dashboardService.getAnomalies(effectiveFilters, uploadIds);
-      const list = Array.isArray(overviewAnomalies?.list) ? overviewAnomalies.list : [];
-      return {
-        controls: { period, costBasis, currency: "USD" },
-        kpis: {
-          totalOpenAlerts: 0,
-          criticalAlerts: 0,
-          highAlerts: 0,
-          unresolvedSlaBreaches: 0,
-          totalImpact: 0,
-        },
-        alerts: [],
-        incidentBundles: [],
-        embeddedViews: {},
-        notificationCenter: { policy: defaultNotificationPolicy, queue: [], totalQueued: 0 },
-        ownershipRouting: {
-          source: "allocation_driven",
-          primaryOwner: "governance-owner@kcx.example",
-          escalationChain: [],
-          topTeams: [],
-        },
-        headerAnomalies: {
-          count: list.length,
-          list: list.slice(0, 10),
-        },
-        message: "Header anomaly snapshot",
-        generatedAt: detectionNow(),
-      };
-    }
+    const headerOnly = String(view).toLowerCase() === "header";
 
     const [
       overviewAnomalies,
@@ -637,6 +740,19 @@ export const alertsIncidentsService = {
         })),
     };
 
+    const headerAlerts = buildHeaderAlerts(alerts, currency);
+
+    if (headerOnly) {
+      return {
+        controls: { period, costBasis, currency },
+        kpis,
+        headerAlerts,
+        headerAnomalies,
+        message: "Header alerts snapshot",
+        generatedAt: detectionNow(),
+      };
+    }
+
     return {
       controls: { period, costBasis, currency },
       kpis,
@@ -649,6 +765,7 @@ export const alertsIncidentsService = {
         totalQueued: queue.length,
         routedOwners: Array.from(new Set(queue.flatMap((item) => item.recipients))).length,
       },
+      headerAlerts,
       ownershipRouting: {
         source: "allocation_driven",
         primaryOwner: ownerContext.primaryOwner,

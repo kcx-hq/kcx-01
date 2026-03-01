@@ -1,17 +1,18 @@
-import React from "react";
+import React, { useMemo, useState } from "react";
 import type {
   CostAnalysisFilterOptions,
   SpendAnalyticsFilterPatch,
   SpendAnalyticsFilters,
   SpendAnalyticsPayload,
 } from "./types";
-import { BREAKDOWN_FILTER_MAP, BREAKDOWN_TABS } from "./utils/view.constants";
 import GlobalControlsSection from "./components/sections/GlobalControlsSection";
-import KpiDeckSection from "./components/sections/KpiDeckSection";
-import BusinessProviderInsightsSection from "./components/sections/BusinessProviderInsightsSection";
-import TrendBreakdownSection from "./components/sections/TrendBreakdownSection";
-import PostAnalysisSections from "./components/sections/PostAnalysisSections";
-import { useCostAnalysisViewModel } from "./hooks/useCostAnalysisViewModel";
+import SpendKpiDeckSection from "./components/sections/SpendKpiDeckSection";
+import SpendTrendSection from "./components/sections/SpendTrendSection";
+import BreakdownCompositionSection from "./components/sections/BreakdownCompositionSection";
+import ConcentrationSection from "./components/sections/ConcentrationSection";
+import TrustCueSection from "./components/sections/TrustCueSection";
+import { formatDate } from "./utils/format";
+import { SectionRefreshOverlay } from "../common/SectionStates";
 
 interface CostAnalysisViewProps {
   filters: SpendAnalyticsFilters;
@@ -23,6 +24,42 @@ interface CostAnalysisViewProps {
   isLoading: boolean;
 }
 
+const FALLBACK_OPTIONS = {
+  timeRanges: ["7d", "30d", "90d", "mtd", "qtd", "custom"],
+  granularities: ["daily", "weekly", "monthly"],
+  compareTo: ["previous_period", "same_period_last_month", "none"],
+  costBasis: ["actual", "amortized", "net"],
+  currencyModes: ["usd"],
+  groupBy: ["ServiceName", "RegionName", "ProviderName", "Account", "Team", "App", "Env", "CostCategory"],
+};
+
+const DEFAULT_FILTER_VALUES: Pick<
+  SpendAnalyticsFilters,
+  | "provider"
+  | "service"
+  | "region"
+  | "account"
+  | "subAccount"
+  | "app"
+  | "team"
+  | "env"
+  | "costCategory"
+  | "tagKey"
+  | "tagValue"
+> = {
+  provider: "All",
+  service: "All",
+  region: "All",
+  account: "All",
+  subAccount: "All",
+  app: "All",
+  team: "All",
+  env: "All",
+  costCategory: "All",
+  tagKey: "",
+  tagValue: "",
+};
+
 const CostAnalysisView = ({
   filters,
   onFiltersChange,
@@ -32,12 +69,16 @@ const CostAnalysisView = ({
   message,
   isLoading,
 }: CostAnalysisViewProps) => {
-  const vm = useCostAnalysisViewModel({
-    filters,
-    onFiltersChange,
-    onResetFilters,
-    spendAnalytics,
-  });
+  const [showMediumFilters, setShowMediumFilters] = useState<boolean>(false);
+  const [showAdvancedFilters, setShowAdvancedFilters] = useState<boolean>(false);
+
+  const selectedFilterCount = useMemo(() => {
+    let count = 0;
+    (Object.keys(DEFAULT_FILTER_VALUES) as Array<keyof typeof DEFAULT_FILTER_VALUES>).forEach((key) => {
+      if (filters[key] !== DEFAULT_FILTER_VALUES[key]) count += 1;
+    });
+    return count;
+  }, [filters]);
 
   if (!spendAnalytics) {
     return (
@@ -47,124 +88,71 @@ const CostAnalysisView = ({
     );
   }
 
+  const optionBag = spendAnalytics.controls?.options || FALLBACK_OPTIONS;
+  const periodLabel =
+    spendAnalytics.controls?.startDate && spendAnalytics.controls?.endDate
+      ? `${formatDate(spendAnalytics.controls.startDate)} - ${formatDate(spendAnalytics.controls.endDate)}`
+      : "Selected period";
+  const contextLabel = `${periodLabel} | ${String(spendAnalytics.controls.granularity)} | ${String(
+    spendAnalytics.controls.compareTo
+  )}`;
+
   return (
     <div className="space-y-5">
       <GlobalControlsSection
-        selectedFilterCount={vm.selectedFilterCount}
-        showMediumFilters={vm.showMediumFilters}
-        showAdvancedFilters={vm.showAdvancedFilters}
+        selectedFilterCount={selectedFilterCount}
+        showMediumFilters={showMediumFilters}
+        showAdvancedFilters={showAdvancedFilters}
         filters={filters}
         filterOptions={filterOptions}
-        timeRangeOptions={vm.controlOptions.timeRangeOptions}
-        granularityOptions={vm.controlOptions.granularityOptions}
-        compareOptions={vm.controlOptions.compareOptions}
-        costBasisOptions={vm.controlOptions.costBasisOptions}
-        groupByOptions={vm.controlOptions.groupByOptions}
+        timeRangeOptions={optionBag.timeRanges as string[]}
+        granularityOptions={optionBag.granularities as string[]}
+        compareOptions={optionBag.compareTo as string[]}
+        costBasisOptions={optionBag.costBasis as string[]}
+        currencyModeOptions={optionBag.currencyModes as string[]}
+        groupByOptions={optionBag.groupBy as string[]}
         onFiltersChange={onFiltersChange}
         onToggleMediumFilters={() =>
-          vm.setShowMediumFilters((prev) => {
+          setShowMediumFilters((prev) => {
             const next = !prev;
-            if (!next) vm.setShowAdvancedFilters(false);
+            if (!next) setShowAdvancedFilters(false);
             return next;
           })
         }
-        onToggleAdvancedFilters={() => vm.showMediumFilters && vm.setShowAdvancedFilters((prev) => !prev)}
-        onResetAll={vm.resetAllFilters}
-      />
-
-      <section className="rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-sm">
-        <div className="flex flex-wrap items-center gap-2">
-          <span className="text-[10px] font-black uppercase tracking-wider text-slate-500">Scope</span>
-          <span className="rounded-full bg-slate-100 px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-slate-600">
-            Period: {vm.scopeContext.periodLabel}
-          </span>
-          <span className="rounded-full bg-slate-100 px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-slate-600">
-            Granularity: {vm.scopeContext.granularityLabel}
-          </span>
-          <span className="rounded-full bg-slate-100 px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-slate-600">
-            Basis: {vm.scopeContext.costBasisLabel}
-          </span>
-          <span className="rounded-full bg-slate-100 px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-slate-600">
-            Compare: {vm.scopeContext.compareLabel}
-          </span>
-          <span className="rounded-full bg-slate-100 px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-slate-600">
-            Group: {vm.scopeContext.groupByLabel}
-          </span>
-        </div>
-      </section>
-
-      <KpiDeckSection
-        kpiInsights={vm.kpiInsights}
-        activeKpiInsight={vm.activeKpiInsight}
-        onToggleKpi={vm.toggleKpiInsight}
-        onCloseInsight={vm.closeKpiInsight}
-        contextLabel={`${vm.scopeContext.periodLabel} | ${vm.scopeContext.granularityLabel} | ${vm.scopeContext.compareLabel}`}
-      />
-
-      <BusinessProviderInsightsSection
-        businessInsights={vm.businessInsights}
-        selectedProvider={filters.provider}
-        providerBreakdown={vm.providerBreakdown}
-        regionBreakdown={vm.regionBreakdown}
-        topServiceMix={vm.topServiceMix}
-        top5ServiceShare={vm.top5ServiceShare}
-        topRegion={vm.topRegion}
-        onProviderSelect={(provider) => onFiltersChange({ provider })}
-      />
-
-      <TrendBreakdownSection
-        compareLabel={vm.compareLabel}
-        trendSeries={vm.trendSeries}
-        normalizedChart={vm.normalizedChart}
-        legendSeriesKeys={vm.legendSeriesKeys}
-        hiddenSeries={vm.hiddenSeries}
-        palette={vm.palette}
-        breakdownState={{
-          rows: vm.breakdownRows,
-          tab: vm.breakdownTab,
-          tabLabel: vm.activeBreakdownTabLabel,
-          activeFilterValue: vm.activeBreakdownFilterValue,
-          tabs: BREAKDOWN_TABS,
-          filterMap: BREAKDOWN_FILTER_MAP,
+        onToggleAdvancedFilters={() => showMediumFilters && setShowAdvancedFilters((prev) => !prev)}
+        onResetAll={() => {
+          setShowAdvancedFilters(false);
+          setShowMediumFilters(false);
+          onResetFilters();
         }}
-        breakdownListRef={vm.breakdownListRef}
-        filters={filters}
-        onToggleSeries={vm.toggleSeries}
-        onResetBreakdownFilters={vm.resetBreakdownFilters}
-        onSetBreakdownTab={vm.setBreakdownTab}
-        onApplyBreakdownFilter={vm.applyBreakdownFilter}
       />
+      <div className="relative">
+        {isLoading ? <SectionRefreshOverlay label="Refreshing cost analysis..." rounded="rounded-3xl" /> : null}
+        <div className="space-y-5">
+          <TrustCueSection trust={spendAnalytics.trust} filters={filters} />
+          <SpendKpiDeckSection cards={spendAnalytics.kpiDeck.cards} contextLabel={contextLabel} />
 
-      <PostAnalysisSections
-        anomalyHighlights={vm.anomalyHighlights}
-        predictabilityScore={spendAnalytics.predictabilityRisk.predictabilityScore}
-        volatilityScore={spendAnalytics.predictabilityRisk.volatilityScore}
-        forecast={vm.forecast}
-        riskRows={vm.riskRows}
-        drilldownPaths={spendAnalytics.drilldownPaths}
-      />
+          <section className="grid grid-cols-1 items-stretch gap-5 xl:grid-cols-12">
+            <div className="xl:col-span-8 xl:h-full">
+              <SpendTrendSection trend={spendAnalytics.trend} trust={spendAnalytics.trust} filters={filters} />
+            </div>
+            <div className="xl:col-span-4 xl:h-full">
+              <BreakdownCompositionSection
+                breakdown={spendAnalytics.breakdown}
+                filters={filters}
+                onFiltersChange={onFiltersChange}
+                serviceKeys={spendAnalytics.trend.activeKeys}
+              />
+            </div>
+          </section>
 
-      {isLoading ? (
-        <div className="rounded-2xl border border-emerald-100 bg-emerald-50 px-3 py-2 text-[11px] font-bold uppercase tracking-wider text-emerald-700">
-          Refreshing spend analytics...
+          <ConcentrationSection
+            concentration={spendAnalytics.concentration}
+            concentrationPareto={spendAnalytics.concentrationPareto}
+            contextLabel={contextLabel}
+          />
         </div>
-      ) : null}
-      <style>{`
-        .custom-scroll {
-          scrollbar-width: thin;
-          scrollbar-color: #cbd5e1 transparent;
-        }
-        .custom-scroll::-webkit-scrollbar {
-          width: 6px;
-        }
-        .custom-scroll::-webkit-scrollbar-track {
-          background: transparent;
-        }
-        .custom-scroll::-webkit-scrollbar-thumb {
-          background-color: #cbd5e1;
-          border-radius: 9999px;
-        }
-      `}</style>
+      </div>
     </div>
   );
 };

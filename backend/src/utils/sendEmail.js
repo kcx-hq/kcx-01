@@ -3,6 +3,7 @@
 
 import { mg } from "../config/mailgun.config.js";
 import logger from "../lib/logger.js";
+import logger from "../lib/logger.js";
 
 // Generic Mailgun send function
 export const sendEmail = async ({ to, subject, html }) => {
@@ -19,6 +20,7 @@ export const sendEmail = async ({ to, subject, html }) => {
       data
     );
   } catch (error) {
+    logger.error("Mailgun error:", error);
     logger.error("Mailgun error:", error);
     throw error;
   }
@@ -46,6 +48,8 @@ export const sendVerificationEmail = async (email, full_name, otp) => {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             background-color: #f3fbf7;
             color: #133a2d;
+            background-color: #f3fbf7;
+            color: #133a2d;
             line-height: 1.5;
         }
         
@@ -55,8 +59,11 @@ export const sendVerificationEmail = async (email, full_name, otp) => {
             margin: 40px auto;
             background-color: #ffffff;
             border: 1px solid rgba(15, 157, 115, 0.20);
+            background-color: #ffffff;
+            border: 1px solid rgba(15, 157, 115, 0.20);
             border-radius: 24px;
             padding: 32px;
+            box-shadow: 0 20px 60px rgba(15, 157, 115, 0.12);
             box-shadow: 0 20px 60px rgba(15, 157, 115, 0.12);
         }
         
@@ -73,7 +80,10 @@ export const sendVerificationEmail = async (email, full_name, otp) => {
             padding: 6px 12px;
             background: rgba(15, 157, 115, 0.10);
             border: 1px solid rgba(15, 157, 115, 0.24);
+            background: rgba(15, 157, 115, 0.10);
+            border: 1px solid rgba(15, 157, 115, 0.24);
             border-radius: 9999px;
+            color: #0f3d2f;
             color: #0f3d2f;
             font-size: 12px;
             font-weight: 600;
@@ -83,6 +93,7 @@ export const sendVerificationEmail = async (email, full_name, otp) => {
         .pulse-dot {
             width: 8px;
             height: 8px;
+            background-color: #0f9d73;
             background-color: #0f9d73;
             border-radius: 50%;
             animation: pulse 2s infinite;
@@ -103,10 +114,12 @@ export const sendVerificationEmail = async (email, full_name, otp) => {
             font-size: 28px;
             font-weight: bold;
             background: linear-gradient(to right, #0f3d2f, #0f9d73);
+            background: linear-gradient(to right, #0f3d2f, #0f9d73);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
             margin-bottom: 8px;
+            color: #133a2d;
             color: #133a2d;
         }
         
@@ -116,13 +129,16 @@ export const sendVerificationEmail = async (email, full_name, otp) => {
             font-weight: 600;
             margin-bottom: 16px;
             color: #133a2d;
+            color: #133a2d;
         }
         
         .greeting span {
             color: #0f9d73;
+            color: #0f9d73;
         }
         
         .instruction {
+            color: #5f7a70;
             color: #5f7a70;
             margin-bottom: 24px;
             font-size: 16px;
@@ -130,6 +146,8 @@ export const sendVerificationEmail = async (email, full_name, otp) => {
         
         /* OTP Box */
         .otp-container {
+            background: rgba(15, 157, 115, 0.08);
+            border: 1px solid rgba(15, 157, 115, 0.20);
             background: rgba(15, 157, 115, 0.08);
             border: 1px solid rgba(15, 157, 115, 0.20);
             border-radius: 20px;
@@ -143,6 +161,7 @@ export const sendVerificationEmail = async (email, full_name, otp) => {
             font-weight: bold;
             letter-spacing: 8px;
             color: #133a2d;
+            color: #133a2d;
             margin-bottom: 16px;
             font-family: monospace;
         }
@@ -152,6 +171,7 @@ export const sendVerificationEmail = async (email, full_name, otp) => {
             align-items: center;
             justify-content: center;
             gap: 8px;
+            color: #5f7a70;
             color: #5f7a70;
             font-size: 14px;
         }
@@ -165,12 +185,15 @@ export const sendVerificationEmail = async (email, full_name, otp) => {
         .info-box {
             background: rgba(15, 157, 115, 0.08);
             border: 1px solid rgba(15, 157, 115, 0.20);
+            background: rgba(15, 157, 115, 0.08);
+            border: 1px solid rgba(15, 157, 115, 0.20);
             border-radius: 16px;
             padding: 20px;
             margin-bottom: 24px;
         }
         
         .info-text {
+            color: #5f7a70;
             color: #5f7a70;
             font-size: 14px;
             line-height: 1.6;
@@ -179,17 +202,20 @@ export const sendVerificationEmail = async (email, full_name, otp) => {
         /* Footer */
         .footer {
             border-top: 1px solid rgba(15, 157, 115, 0.20);
+            border-top: 1px solid rgba(15, 157, 115, 0.20);
             padding-top: 24px;
             text-align: center;
         }
         
         .footer-text {
             color: #6d8379;
+            color: #6d8379;
             font-size: 12px;
             line-height: 1.5;
         }
         
         .security-text {
+            color: #0f9d73;
             color: #0f9d73;
             opacity: 0.8;
             margin-top: 4px;
@@ -267,6 +293,7 @@ export const sendVerificationEmail = async (email, full_name, otp) => {
     return { success: true };
   } catch (error) {
     logger.error("Email error:", error);
+    logger.error("Email error:", error);
     return { success: false, message: "Failed to send email" };
   }
 };
@@ -284,6 +311,7 @@ export const sendInquiryAcknowledgementEmail = async (email, name, preferred_dat
     await sendEmail({
       to: email,
       subject: "We've Received Your Inquiry",
+      subject: "We've Received Your Inquiry",
       html:  `
         <!DOCTYPE html>
 <html>
@@ -300,6 +328,8 @@ export const sendInquiryAcknowledgementEmail = async (email, name, preferred_dat
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             background-color: #f3fbf7;
             color: #133a2d;
+            background-color: #f3fbf7;
+            color: #133a2d;
             line-height: 1.6;
         }
         
@@ -309,8 +339,11 @@ export const sendInquiryAcknowledgementEmail = async (email, name, preferred_dat
             margin: 40px auto;
             background-color: #ffffff;
             border: 1px solid rgba(15, 157, 115, 0.20);
+            background-color: #ffffff;
+            border: 1px solid rgba(15, 157, 115, 0.20);
             border-radius: 24px;
             padding: 40px;
+            box-shadow: 0 20px 60px rgba(15, 157, 115, 0.12);
             box-shadow: 0 20px 60px rgba(15, 157, 115, 0.12);
         }
         
@@ -327,7 +360,10 @@ export const sendInquiryAcknowledgementEmail = async (email, name, preferred_dat
             padding: 8px 16px;
             background: rgba(15, 157, 115, 0.10);
             border: 1px solid rgba(15, 157, 115, 0.24);
+            background: rgba(15, 157, 115, 0.10);
+            border: 1px solid rgba(15, 157, 115, 0.24);
             border-radius: 9999px;
+            color: #0f3d2f;
             color: #0f3d2f;
             font-size: 13px;
             font-weight: 600;
@@ -338,9 +374,11 @@ export const sendInquiryAcknowledgementEmail = async (email, name, preferred_dat
             font-size: 28px;
             font-weight: bold;
             background: linear-gradient(to right, #0f3d2f, #0f9d73);
+            background: linear-gradient(to right, #0f3d2f, #0f9d73);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
+            color: #133a2d;
             color: #133a2d;
         }
         
@@ -350,13 +388,16 @@ export const sendInquiryAcknowledgementEmail = async (email, name, preferred_dat
             font-weight: 600;
             margin-bottom: 20px;
             color: #133a2d;
+            color: #133a2d;
         }
         
         .greeting span {
             color: #0f9d73;
+            color: #0f9d73;
         }
         
         .message {
+            color: #133a2d;
             color: #133a2d;
             margin-bottom: 20px;
             font-size: 16px;
@@ -364,10 +405,13 @@ export const sendInquiryAcknowledgementEmail = async (email, name, preferred_dat
         
         .message strong {
             color: #0f9d73;
+            color: #0f9d73;
         }
         
         /* Meeting Time Card */
         .meeting-card {
+            background: rgba(15, 157, 115, 0.08);
+            border: 1px solid rgba(15, 157, 115, 0.20);
             background: rgba(15, 157, 115, 0.08);
             border: 1px solid rgba(15, 157, 115, 0.20);
             border-radius: 16px;
@@ -380,6 +424,7 @@ export const sendInquiryAcknowledgementEmail = async (email, name, preferred_dat
             align-items: center;
             gap: 10px;
             color: #133a2d;
+            color: #133a2d;
             font-size: 15px;
             font-weight: 600;
             margin-bottom: 12px;
@@ -389,9 +434,11 @@ export const sendInquiryAcknowledgementEmail = async (email, name, preferred_dat
             width: 18px;
             height: 18px;
             color: #0f9d73;
+            color: #0f9d73;
         }
         
         .meeting-time {
+            color: #133a2d;
             color: #133a2d;
             font-size: 18px;
             font-weight: 600;
@@ -400,11 +447,14 @@ export const sendInquiryAcknowledgementEmail = async (email, name, preferred_dat
         
         .timezone {
             color: #6d8379;
+            color: #6d8379;
             font-size: 14px;
         }
         
         /* Info Box */
         .info-box {
+            background: rgba(15, 157, 115, 0.08);
+            border: 1px solid rgba(15, 157, 115, 0.18);
             background: rgba(15, 157, 115, 0.08);
             border: 1px solid rgba(15, 157, 115, 0.18);
             border-radius: 16px;
@@ -413,6 +463,7 @@ export const sendInquiryAcknowledgementEmail = async (email, name, preferred_dat
         }
         
         .info-box strong {
+            color: #0f9d73;
             color: #0f9d73;
         }
         
@@ -423,6 +474,7 @@ export const sendInquiryAcknowledgementEmail = async (email, name, preferred_dat
             gap: 10px;
             padding: 16px;
             background: rgba(15, 157, 115, 0.08);
+            background: rgba(15, 157, 115, 0.08);
             border-radius: 12px;
             margin: 24px 0;
         }
@@ -431,10 +483,12 @@ export const sendInquiryAcknowledgementEmail = async (email, name, preferred_dat
             width: 20px;
             height: 20px;
             color: #0f9d73;
+            color: #0f9d73;
         }
         
         .response-time span {
             font-weight: 600;
+            color: #0f9d73;
             color: #0f9d73;
         }
         
@@ -443,9 +497,11 @@ export const sendInquiryAcknowledgementEmail = async (email, name, preferred_dat
             margin-top: 32px;
             padding-top: 24px;
             border-top: 1px solid rgba(15, 157, 115, 0.20);
+            border-top: 1px solid rgba(15, 157, 115, 0.20);
         }
         
         .signature strong {
+            color: #0f9d73;
             color: #0f9d73;
             font-size: 16px;
         }
@@ -458,12 +514,14 @@ export const sendInquiryAcknowledgementEmail = async (email, name, preferred_dat
         
         .company-name {
             color: #0f9d73;
+            color: #0f9d73;
             font-size: 18px;
             font-weight: bold;
             margin-bottom: 8px;
         }
         
         .footer-text {
+            color: #6d8379;
             color: #6d8379;
             font-size: 13px;
             opacity: 0.8;
@@ -563,6 +621,7 @@ export const sendInquiryAcknowledgementEmail = async (email, name, preferred_dat
     return { success: true };
   } catch (error) {
     logger.error("Client email error:", error);
+    logger.error("Client email error:", error);
     return { success: false, message: "Failed to send acknowledgement email" };
   }
 };
@@ -580,6 +639,7 @@ export const sendInquiryEmailToCompany = async (name, email, message, preferred_
     await sendEmail({
       to: process.env.COMPANY_EMAIL,
       subject: "New Inquiry Received - Action Required",
+      subject: "New Inquiry Received - Action Required",
       html: `
         <!DOCTYPE html>
 <html>
@@ -596,6 +656,8 @@ export const sendInquiryEmailToCompany = async (name, email, message, preferred_
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             background-color: #f3fbf7;
             color: #133a2d;
+            background-color: #f3fbf7;
+            color: #133a2d;
             line-height: 1.6;
         }
         
@@ -605,8 +667,11 @@ export const sendInquiryEmailToCompany = async (name, email, message, preferred_
             margin: 40px auto;
             background-color: #ffffff;
             border: 1px solid rgba(15, 157, 115, 0.20);
+            background-color: #ffffff;
+            border: 1px solid rgba(15, 157, 115, 0.20);
             border-radius: 24px;
             padding: 40px;
+            box-shadow: 0 20px 60px rgba(15, 157, 115, 0.12);
             box-shadow: 0 20px 60px rgba(15, 157, 115, 0.12);
         }
         
@@ -623,7 +688,10 @@ export const sendInquiryEmailToCompany = async (name, email, message, preferred_
             padding: 8px 16px;
             background: rgba(15, 157, 115, 0.10);
             border: 1px solid rgba(15, 157, 115, 0.24);
+            background: rgba(15, 157, 115, 0.10);
+            border: 1px solid rgba(15, 157, 115, 0.24);
             border-radius: 9999px;
+            color: #0f3d2f;
             color: #0f3d2f;
             font-size: 13px;
             font-weight: 600;
@@ -633,6 +701,7 @@ export const sendInquiryEmailToCompany = async (name, email, message, preferred_
         .alert-icon {
             width: 10px;
             height: 10px;
+            background-color: #0f9d73;
             background-color: #0f9d73;
             border-radius: 50%;
             animation: pulse 2s infinite;
@@ -653,14 +722,18 @@ export const sendInquiryEmailToCompany = async (name, email, message, preferred_
             font-size: 28px;
             font-weight: bold;
             background: linear-gradient(to right, #0f3d2f, #0f9d73);
+            background: linear-gradient(to right, #0f3d2f, #0f9d73);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
+            color: #133a2d;
             color: #133a2d;
         }
         
         /* Inquiry Info Card */
         .info-card {
+            background: rgba(15, 157, 115, 0.08);
+            border: 1px solid rgba(15, 157, 115, 0.20);
             background: rgba(15, 157, 115, 0.08);
             border: 1px solid rgba(15, 157, 115, 0.20);
             border-radius: 16px;
@@ -677,12 +750,14 @@ export const sendInquiryEmailToCompany = async (name, email, message, preferred_
         .info-label {
             width: 120px;
             color: #0f9d73;
+            color: #0f9d73;
             font-weight: 600;
             font-size: 14px;
             flex-shrink: 0;
         }
         
         .info-value {
+            color: #133a2d;
             color: #133a2d;
             font-size: 15px;
             flex-grow: 1;
@@ -692,12 +767,15 @@ export const sendInquiryEmailToCompany = async (name, email, message, preferred_
         .message-box {
             background: rgba(15, 157, 115, 0.08);
             border: 1px solid rgba(15, 157, 115, 0.18);
+            background: rgba(15, 157, 115, 0.08);
+            border: 1px solid rgba(15, 157, 115, 0.18);
             border-radius: 12px;
             padding: 20px;
             margin: 20px 0;
         }
         
         .message-label {
+            color: #0f9d73;
             color: #0f9d73;
             font-weight: 600;
             margin-bottom: 12px;
@@ -706,6 +784,7 @@ export const sendInquiryEmailToCompany = async (name, email, message, preferred_
         
         .message-content {
             color: #133a2d;
+            color: #133a2d;
             white-space: pre-wrap;
             font-size: 14px;
             line-height: 1.6;
@@ -713,6 +792,8 @@ export const sendInquiryEmailToCompany = async (name, email, message, preferred_
         
         /* Meeting Time Card */
         .meeting-card {
+            background: rgba(15, 157, 115, 0.08);
+            border: 1px solid rgba(15, 157, 115, 0.20);
             background: rgba(15, 157, 115, 0.08);
             border: 1px solid rgba(15, 157, 115, 0.20);
             border-radius: 16px;
@@ -724,6 +805,7 @@ export const sendInquiryEmailToCompany = async (name, email, message, preferred_
             display: flex;
             align-items: center;
             gap: 10px;
+            color: #0f9d73;
             color: #0f9d73;
             font-size: 15px;
             font-weight: 600;
@@ -737,6 +819,7 @@ export const sendInquiryEmailToCompany = async (name, email, message, preferred_
         
         .meeting-time {
             color: #133a2d;
+            color: #133a2d;
             font-size: 18px;
             font-weight: 600;
             margin-bottom: 6px;
@@ -744,12 +827,14 @@ export const sendInquiryEmailToCompany = async (name, email, message, preferred_
         
         .timezone {
             color: #6d8379;
+            color: #6d8379;
             font-size: 14px;
         }
         
         /* Divider */
         .divider {
             height: 1px;
+            background: rgba(15, 157, 115, 0.20);
             background: rgba(15, 157, 115, 0.20);
             margin: 32px 0;
         }
@@ -761,6 +846,7 @@ export const sendInquiryEmailToCompany = async (name, email, message, preferred_
         }
         
         .action-title {
+            color: #133a2d;
             color: #133a2d;
             font-size: 18px;
             font-weight: 600;
@@ -788,32 +874,44 @@ export const sendInquiryEmailToCompany = async (name, email, message, preferred_
         
         .accept-button {
             background: rgba(15, 157, 115, 0.12);
+            background: rgba(15, 157, 115, 0.12);
             border: 1px solid rgba(40, 167, 69, 0.4);
+            color: #0f9d73;
             color: #0f9d73;
         }
         
         .accept-button:hover {
             background: rgba(15, 157, 115, 0.18);
             border-color: rgba(15, 157, 115, 0.35);
+            background: rgba(15, 157, 115, 0.18);
+            border-color: rgba(15, 157, 115, 0.35);
             transform: translateY(-2px);
+            box-shadow: 0 4px 20px rgba(15, 157, 115, 0.12);
             box-shadow: 0 4px 20px rgba(15, 157, 115, 0.12);
         }
         
         .reject-button {
             background: rgba(15, 157, 115, 0.12);
+            background: rgba(15, 157, 115, 0.12);
             border: 1px solid rgba(220, 53, 69, 0.4);
+            color: #0b7d5b;
             color: #0b7d5b;
         }
         
         .reject-button:hover {
             background: rgba(15, 157, 115, 0.18);
             border-color: rgba(15, 157, 115, 0.35);
+            background: rgba(15, 157, 115, 0.18);
+            border-color: rgba(15, 157, 115, 0.35);
             transform: translateY(-2px);
+            box-shadow: 0 4px 20px rgba(15, 157, 115, 0.12);
             box-shadow: 0 4px 20px rgba(15, 157, 115, 0.12);
         }
         
         /* Note */
         .note {
+            background: rgba(15, 157, 115, 0.06);
+            border: 1px solid rgba(15, 157, 115, 0.08);
             background: rgba(15, 157, 115, 0.06);
             border: 1px solid rgba(15, 157, 115, 0.08);
             border-radius: 12px;
@@ -822,6 +920,7 @@ export const sendInquiryEmailToCompany = async (name, email, message, preferred_
         }
         
         .note p {
+            color: #6d8379;
             color: #6d8379;
             font-size: 14px;
             text-align: center;
@@ -833,10 +932,12 @@ export const sendInquiryEmailToCompany = async (name, email, message, preferred_
             margin-top: 32px;
             padding-top: 24px;
             border-top: 1px solid rgba(15, 157, 115, 0.20);
+            border-top: 1px solid rgba(15, 157, 115, 0.20);
             text-align: center;
         }
         
         .company-name {
+            color: #0f9d73;
             color: #0f9d73;
             font-size: 16px;
             font-weight: bold;
@@ -844,6 +945,7 @@ export const sendInquiryEmailToCompany = async (name, email, message, preferred_
         }
         
         .footer-text {
+            color: #5f7a70;
             color: #5f7a70;
             font-size: 13px;
         }
@@ -927,10 +1029,12 @@ export const sendInquiryEmailToCompany = async (name, email, message, preferred_
             <div class="action-buttons">
                 <a href="${acceptLink}" class="action-button accept-button">
                     <span>&#10004;</span>
+                    <span>&#10004;</span>
                     Accept Inquiry
                 </a>
                 
                 <a href="${rejectLink}" class="action-button reject-button">
+                    <span>&#10060;</span>
                     <span>&#10060;</span>
                     Reject Inquiry
                 </a>
@@ -961,6 +1065,7 @@ export const sendInquiryEmailToCompany = async (name, email, message, preferred_
 
     return { success: true };
   } catch (error) {
+    logger.error("Company email error:", error);
     logger.error("Company email error:", error);
     return { success: false, message: "Failed to send company email" };
   }
@@ -1057,6 +1162,8 @@ export const sendMeetingConfirmationEmail = async (email, name, preferred_dateti
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             background-color: #f3fbf7;
             color: #133a2d;
+            background-color: #f3fbf7;
+            color: #133a2d;
             line-height: 1.6;
         }
         
@@ -1066,8 +1173,11 @@ export const sendMeetingConfirmationEmail = async (email, name, preferred_dateti
             margin: 40px auto;
             background-color: #ffffff;
             border: 1px solid rgba(15, 157, 115, 0.20);
+            background-color: #ffffff;
+            border: 1px solid rgba(15, 157, 115, 0.20);
             border-radius: 24px;
             padding: 40px;
+            box-shadow: 0 20px 60px rgba(15, 157, 115, 0.12);
             box-shadow: 0 20px 60px rgba(15, 157, 115, 0.12);
         }
         
@@ -1084,7 +1194,9 @@ export const sendMeetingConfirmationEmail = async (email, name, preferred_dateti
             padding: 8px 20px;
             background: rgba(40, 167, 69, 0.1);
             border: 1px solid rgba(15, 157, 115, 0.18);
+            border: 1px solid rgba(15, 157, 115, 0.18);
             border-radius: 9999px;
+            color: #0f9d73;
             color: #0f9d73;
             font-size: 13px;
             font-weight: 600;
@@ -1094,6 +1206,7 @@ export const sendMeetingConfirmationEmail = async (email, name, preferred_dateti
         .success-icon {
             width: 12px;
             height: 12px;
+            background-color: #0f9d73;
             background-color: #0f9d73;
             border-radius: 50%;
             animation: successPulse 2s infinite;
@@ -1114,14 +1227,17 @@ export const sendMeetingConfirmationEmail = async (email, name, preferred_dateti
             font-size: 28px;
             font-weight: bold;
             background: linear-gradient(to right, #0f3d2f, #0f9d73);
+            background: linear-gradient(to right, #0f3d2f, #0f9d73);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
             margin-bottom: 12px;
             color: #133a2d;
+            color: #133a2d;
         }
         
         .subtitle {
+            color: #5f7a70;
             color: #5f7a70;
             font-size: 16px;
             max-width: 400px;
@@ -1138,13 +1254,16 @@ export const sendMeetingConfirmationEmail = async (email, name, preferred_dateti
             font-weight: 600;
             margin-bottom: 20px;
             color: #133a2d;
+            color: #133a2d;
         }
         
         .greeting span {
             color: #0f9d73;
+            color: #0f9d73;
         }
         
         .success-message {
+            color: #133a2d;
             color: #133a2d;
             font-size: 16px;
             margin-bottom: 28px;
@@ -1152,10 +1271,13 @@ export const sendMeetingConfirmationEmail = async (email, name, preferred_dateti
         
         .success-message strong {
             color: #0f9d73;
+            color: #0f9d73;
         }
         
         /* Meeting Details Card */
         .meeting-card {
+            background: rgba(15, 157, 115, 0.08);
+            border: 1px solid rgba(15, 157, 115, 0.20);
             background: rgba(15, 157, 115, 0.08);
             border: 1px solid rgba(15, 157, 115, 0.20);
             border-radius: 16px;
@@ -1167,6 +1289,7 @@ export const sendMeetingConfirmationEmail = async (email, name, preferred_dateti
             display: flex;
             align-items: center;
             gap: 10px;
+            color: #0f9d73;
             color: #0f9d73;
             font-size: 18px;
             font-weight: 600;
@@ -1190,6 +1313,7 @@ export const sendMeetingConfirmationEmail = async (email, name, preferred_dateti
             margin-bottom: 18px;
             padding-bottom: 18px;
             border-bottom: 1px solid rgba(15, 157, 115, 0.08);
+            border-bottom: 1px solid rgba(15, 157, 115, 0.08);
         }
         
         .detail-item:last-child {
@@ -1201,6 +1325,7 @@ export const sendMeetingConfirmationEmail = async (email, name, preferred_dateti
         .detail-label {
             width: 130px;
             color: #0f9d73;
+            color: #0f9d73;
             font-weight: 600;
             font-size: 14px;
             flex-shrink: 0;
@@ -1208,11 +1333,13 @@ export const sendMeetingConfirmationEmail = async (email, name, preferred_dateti
         
         .detail-value {
             color: #133a2d;
+            color: #133a2d;
             font-size: 15px;
             flex-grow: 1;
         }
         
         .meet-link {
+            color: #0f9d73;
             color: #0f9d73;
             text-decoration: none;
             font-weight: 500;
@@ -1220,12 +1347,16 @@ export const sendMeetingConfirmationEmail = async (email, name, preferred_dateti
             display: inline-block;
             padding: 8px 12px;
             background: rgba(15, 157, 115, 0.10);
+            background: rgba(15, 157, 115, 0.10);
             border-radius: 8px;
+            border: 1px solid rgba(15, 157, 115, 0.18);
             border: 1px solid rgba(15, 157, 115, 0.18);
             transition: all 0.3s ease;
         }
         
         .meet-link:hover {
+            background: rgba(15, 157, 115, 0.18);
+            border-color: rgba(15, 157, 115, 0.30);
             background: rgba(15, 157, 115, 0.18);
             border-color: rgba(15, 157, 115, 0.30);
         }
@@ -1243,6 +1374,8 @@ export const sendMeetingConfirmationEmail = async (email, name, preferred_dateti
             padding: 16px 32px;
             background: #0f9d73;
             color: #ffffff;
+            background: #0f9d73;
+            color: #ffffff;
             text-decoration: none;
             border-radius: 12px;
             font-weight: 600;
@@ -1250,11 +1383,15 @@ export const sendMeetingConfirmationEmail = async (email, name, preferred_dateti
             transition: all 0.3s ease;
             border: 1px solid rgba(15, 157, 115, 0.18);
             box-shadow: 0 4px 20px rgba(15, 157, 115, 0.12);
+            border: 1px solid rgba(15, 157, 115, 0.18);
+            box-shadow: 0 4px 20px rgba(15, 157, 115, 0.12);
         }
         
         .join-button:hover {
             background: #0b7d5b;
+            background: #0b7d5b;
             transform: translateY(-2px);
+            box-shadow: 0 6px 25px rgba(15, 157, 115, 0.18);
             box-shadow: 0 6px 25px rgba(15, 157, 115, 0.18);
         }
         
@@ -1267,12 +1404,15 @@ export const sendMeetingConfirmationEmail = async (email, name, preferred_dateti
         .instructions {
             background: rgba(15, 157, 115, 0.06);
             border: 1px solid rgba(15, 157, 115, 0.08);
+            background: rgba(15, 157, 115, 0.06);
+            border: 1px solid rgba(15, 157, 115, 0.08);
             border-radius: 12px;
             padding: 20px;
             margin: 24px 0;
         }
         
         .instructions p {
+            color: #6d8379;
             color: #6d8379;
             font-size: 14px;
             text-align: center;
@@ -1284,15 +1424,18 @@ export const sendMeetingConfirmationEmail = async (email, name, preferred_dateti
             margin-top: 32px;
             padding-top: 24px;
             border-top: 1px solid rgba(15, 157, 115, 0.20);
+            border-top: 1px solid rgba(15, 157, 115, 0.20);
         }
         
         .signature p {
+            color: #133a2d;
             color: #133a2d;
             margin-bottom: 8px;
             font-size: 15px;
         }
         
         .team-name {
+            color: #0f9d73;
             color: #0f9d73;
             font-size: 16px;
             font-weight: bold;
@@ -1306,12 +1449,14 @@ export const sendMeetingConfirmationEmail = async (email, name, preferred_dateti
         
         .company-name {
             color: #0f9d73;
+            color: #0f9d73;
             font-size: 16px;
             font-weight: bold;
             margin-bottom: 8px;
         }
         
         .footer-text {
+            color: #5f7a70;
             color: #5f7a70;
             font-size: 13px;
         }
@@ -1329,7 +1474,10 @@ export const sendMeetingConfirmationEmail = async (email, name, preferred_dateti
             padding: 10px 20px;
             background: rgba(15, 157, 115, 0.08);
             border: 1px solid rgba(15, 157, 115, 0.20);
+            background: rgba(15, 157, 115, 0.08);
+            border: 1px solid rgba(15, 157, 115, 0.20);
             border-radius: 8px;
+            color: #6d8379;
             color: #6d8379;
             text-decoration: none;
             font-size: 14px;
@@ -1337,6 +1485,7 @@ export const sendMeetingConfirmationEmail = async (email, name, preferred_dateti
         }
         
         .calendar-link:hover {
+            background: rgba(15, 157, 115, 0.18);
             background: rgba(15, 157, 115, 0.18);
             border-color: rgba(255, 255, 255, 0.2);
         }
@@ -1399,6 +1548,7 @@ export const sendMeetingConfirmationEmail = async (email, name, preferred_dateti
                             <strong id="formattedDateTime">${formattedDateTime}</strong>
                             <br>
                             <small style="color: #5f7a70;" id="timezone">${timezone}</small>
+                            <small style="color: #5f7a70;" id="timezone">${timezone}</small>
                         </div>
                     </li>
                     
@@ -1456,6 +1606,7 @@ export const sendMeetingConfirmationEmail = async (email, name, preferred_dateti
     return { success: true };
   } catch (error) {
     logger.error("Meeting confirmation email error:", error);
+    logger.error("Meeting confirmation email error:", error);
     return { success: false, message: "Failed to send meeting confirmation email" };
   }
 };
@@ -1482,6 +1633,8 @@ export const sendInquiryRejectionEmail = async (email, name, reason) => {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             background-color: #f3fbf7;
             color: #133a2d;
+            background-color: #f3fbf7;
+            color: #133a2d;
             line-height: 1.6;
         }
         
@@ -1491,8 +1644,11 @@ export const sendInquiryRejectionEmail = async (email, name, reason) => {
             margin: 40px auto;
             background-color: #ffffff;
             border: 1px solid rgba(15, 157, 115, 0.20);
+            background-color: #ffffff;
+            border: 1px solid rgba(15, 157, 115, 0.20);
             border-radius: 24px;
             padding: 40px;
+            box-shadow: 0 20px 60px rgba(15, 157, 115, 0.12);
             box-shadow: 0 20px 60px rgba(15, 157, 115, 0.12);
         }
         
@@ -1509,7 +1665,9 @@ export const sendInquiryRejectionEmail = async (email, name, reason) => {
             padding: 8px 20px;
             background: rgba(220, 53, 69, 0.1);
             border: 1px solid rgba(15, 157, 115, 0.18);
+            border: 1px solid rgba(15, 157, 115, 0.18);
             border-radius: 9999px;
+            color: #0b7d5b;
             color: #0b7d5b;
             font-size: 13px;
             font-weight: 600;
@@ -1519,6 +1677,7 @@ export const sendInquiryRejectionEmail = async (email, name, reason) => {
         .rejection-icon {
             width: 12px;
             height: 12px;
+            background-color: #0b7d5b;
             background-color: #0b7d5b;
             border-radius: 50%;
             position: relative;
@@ -1532,6 +1691,7 @@ export const sendInquiryRejectionEmail = async (email, name, reason) => {
             width: 6px;
             height: 6px;
             background-color: #f3fbf7;
+            background-color: #f3fbf7;
             border-radius: 50%;
             transform: translate(-50%, -50%);
         }
@@ -1540,14 +1700,17 @@ export const sendInquiryRejectionEmail = async (email, name, reason) => {
             font-size: 28px;
             font-weight: bold;
             background: linear-gradient(to right, #0f3d2f, #0f9d73);
+            background: linear-gradient(to right, #0f3d2f, #0f9d73);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
             margin-bottom: 12px;
             color: #133a2d;
+            color: #133a2d;
         }
         
         .subtitle {
+            color: #5f7a70;
             color: #5f7a70;
             font-size: 16px;
             max-width: 400px;
@@ -1564,13 +1727,16 @@ export const sendInquiryRejectionEmail = async (email, name, reason) => {
             font-weight: 600;
             margin-bottom: 20px;
             color: #133a2d;
+            color: #133a2d;
         }
         
         .greeting span {
             color: #0f9d73;
+            color: #0f9d73;
         }
         
         .message {
+            color: #133a2d;
             color: #133a2d;
             font-size: 16px;
             margin-bottom: 16px;
@@ -1578,11 +1744,13 @@ export const sendInquiryRejectionEmail = async (email, name, reason) => {
         
         .message strong {
             color: #0b7d5b;
+            color: #0b7d5b;
         }
         
         /* Rejection Card */
         .rejection-card {
             background: rgba(220, 53, 69, 0.05);
+            border: 1px solid rgba(15, 157, 115, 0.12);
             border: 1px solid rgba(15, 157, 115, 0.12);
             border-radius: 16px;
             padding: 28px;
@@ -1598,6 +1766,7 @@ export const sendInquiryRejectionEmail = async (email, name, reason) => {
             left: 0;
             width: 4px;
             height: 100%;
+            background: linear-gradient(to bottom, #0b7d5b, #0f9d73);
             background: linear-gradient(to bottom, #0b7d5b, #0f9d73);
         }
         
@@ -1616,9 +1785,11 @@ export const sendInquiryRejectionEmail = async (email, name, reason) => {
             width: 24px;
             height: 24px;
             color: #0b7d5b;
+            color: #0b7d5b;
         }
         
         .card-title {
+            color: #0b7d5b;
             color: #0b7d5b;
             font-size: 18px;
             font-weight: 600;
@@ -1626,6 +1797,7 @@ export const sendInquiryRejectionEmail = async (email, name, reason) => {
         }
         
         .card-content {
+            color: #133a2d;
             color: #133a2d;
             font-size: 15px;
             line-height: 1.6;
@@ -1635,6 +1807,8 @@ export const sendInquiryRejectionEmail = async (email, name, reason) => {
         .appreciation {
             background: rgba(15, 157, 115, 0.06);
             border: 1px solid rgba(15, 157, 115, 0.08);
+            background: rgba(15, 157, 115, 0.06);
+            border: 1px solid rgba(15, 157, 115, 0.08);
             border-radius: 12px;
             padding: 24px;
             margin: 28px 0;
@@ -1642,6 +1816,7 @@ export const sendInquiryRejectionEmail = async (email, name, reason) => {
         }
         
         .appreciation p {
+            color: #6d8379;
             color: #6d8379;
             font-size: 15px;
             line-height: 1.6;
@@ -1653,6 +1828,7 @@ export const sendInquiryRejectionEmail = async (email, name, reason) => {
         }
         
         .next-steps-title {
+            color: #0f9d73;
             color: #0f9d73;
             font-size: 16px;
             font-weight: 600;
@@ -1680,7 +1856,9 @@ export const sendInquiryRejectionEmail = async (email, name, reason) => {
             margin-bottom: 12px;
             padding: 12px;
             background: rgba(15, 157, 115, 0.05);
+            background: rgba(15, 157, 115, 0.05);
             border-radius: 8px;
+            border: 1px solid rgba(15, 157, 115, 0.08);
             border: 1px solid rgba(15, 157, 115, 0.08);
         }
         
@@ -1695,7 +1873,9 @@ export const sendInquiryRejectionEmail = async (email, name, reason) => {
             width: 24px;
             height: 24px;
             background: rgba(15, 157, 115, 0.10);
+            background: rgba(15, 157, 115, 0.10);
             border-radius: 6px;
+            color: #0f9d73;
             color: #0f9d73;
             font-size: 12px;
             font-weight: 600;
@@ -1704,11 +1884,14 @@ export const sendInquiryRejectionEmail = async (email, name, reason) => {
         
         .step-text {
             color: #133a2d;
+            color: #133a2d;
             font-size: 14px;
         }
         
         /* Contact Info */
         .contact-info {
+            background: rgba(15, 157, 115, 0.08);
+            border: 1px solid rgba(15, 157, 115, 0.18);
             background: rgba(15, 157, 115, 0.08);
             border: 1px solid rgba(15, 157, 115, 0.18);
             border-radius: 12px;
@@ -1719,12 +1902,14 @@ export const sendInquiryRejectionEmail = async (email, name, reason) => {
         
         .contact-title {
             color: #0f9d73;
+            color: #0f9d73;
             font-size: 14px;
             font-weight: 600;
             margin-bottom: 8px;
         }
         
         .contact-email {
+            color: #133a2d;
             color: #133a2d;
             font-size: 15px;
             text-decoration: none;
@@ -1733,6 +1918,7 @@ export const sendInquiryRejectionEmail = async (email, name, reason) => {
         
         .contact-email:hover {
             color: #0f9d73;
+            color: #0f9d73;
         }
         
         /* Signature */
@@ -1740,15 +1926,18 @@ export const sendInquiryRejectionEmail = async (email, name, reason) => {
             margin-top: 32px;
             padding-top: 24px;
             border-top: 1px solid rgba(15, 157, 115, 0.20);
+            border-top: 1px solid rgba(15, 157, 115, 0.20);
         }
         
         .signature p {
+            color: #133a2d;
             color: #133a2d;
             margin-bottom: 8px;
             font-size: 15px;
         }
         
         .team-name {
+            color: #0f9d73;
             color: #0f9d73;
             font-size: 16px;
             font-weight: bold;
@@ -1762,12 +1951,14 @@ export const sendInquiryRejectionEmail = async (email, name, reason) => {
         
         .company-name {
             color: #0f9d73;
+            color: #0f9d73;
             font-size: 16px;
             font-weight: bold;
             margin-bottom: 8px;
         }
         
         .footer-text {
+            color: #5f7a70;
             color: #5f7a70;
             font-size: 13px;
         }
@@ -1778,11 +1969,14 @@ export const sendInquiryRejectionEmail = async (email, name, reason) => {
             padding: 16px;
             background: rgba(15, 157, 115, 0.05);
             border: 1px solid rgba(15, 157, 115, 0.08);
+            background: rgba(15, 157, 115, 0.05);
+            border: 1px solid rgba(15, 157, 115, 0.08);
             border-radius: 12px;
             text-align: center;
         }
         
         .future-opportunity p {
+            color: #6d8379;
             color: #6d8379;
             font-size: 14px;
         }
@@ -1817,6 +2011,7 @@ export const sendInquiryRejectionEmail = async (email, name, reason) => {
             <h3 class="greeting">Hello <span id="name">${name}</span>,</h3>
             
             <p class="message">
+                We appreciate you contacting <strong style="color: #0f9d73;">KandCo</strong>.
                 We appreciate you contacting <strong style="color: #0f9d73;">KandCo</strong>.
             </p>
             
@@ -1907,6 +2102,7 @@ export const sendInquiryRejectionEmail = async (email, name, reason) => {
 
     return { success: true };
   } catch (error) {
+    logger.error("Inquiry rejection email error:", error);
     logger.error("Inquiry rejection email error:", error);
     return { success: false, message: "Failed to send inquiry rejection email" };
   }

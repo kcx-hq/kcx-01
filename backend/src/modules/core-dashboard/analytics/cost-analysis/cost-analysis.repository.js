@@ -300,6 +300,7 @@ export const costAnalysisRepository = {
         apps: ["All"],
         teams: ["All"],
         envs: ["All"],
+        currencyModes: ["usd"],
         tagKeys: [],
       };
     }
@@ -429,6 +430,7 @@ export const costAnalysisRepository = {
       apps: ["All", ...[...appSet].sort()],
       teams: ["All", ...[...teamSet].sort()],
       envs: ["All", ...[...envSet].sort()],
+      currencyModes: ["usd"],
       tagKeys: [...tagKeySet].sort(),
     };
   },

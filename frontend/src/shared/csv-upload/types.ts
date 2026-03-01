@@ -33,6 +33,7 @@ export interface DashboardStoreSlice {
 export interface BillingUploadRecord {
   uploadid: string;
   filename: string;
+  status?: string;
   clientid?: string;
   uploadedby?: string;
   billingperiodstart?: string;

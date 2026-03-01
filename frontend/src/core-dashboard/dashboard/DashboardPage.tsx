@@ -72,7 +72,7 @@ const DashboardPage = () => {
 
   const memoizedFilters = filters;
 
-  const anomaliesData = useHeaderAnomalies({ api, caps, filters, route });
+  const headerData = useHeaderAnomalies({ api, caps, filters, route });
   const { hasAnyDashboardModule } = useDashboardCapabilities(caps);
 
   useEffect(() => {
@@ -153,8 +153,9 @@ const DashboardPage = () => {
 
       <Header
         title={pageTitle}
-        anomalies={anomaliesData.list}
-        anomaliesCount={anomaliesData.count}
+        anomalies={headerData.anomalies.list}
+        anomaliesCount={headerData.anomalies.count}
+        headerAlerts={headerData.alerts}
       />
 
       <main className="relative ml-[72px] min-h-screen pt-[64px] transition-all duration-300 lg:ml-[240px]">

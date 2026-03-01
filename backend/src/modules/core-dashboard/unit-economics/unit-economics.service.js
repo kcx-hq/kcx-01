@@ -4,6 +4,7 @@ import {
   costGrowthRate,
   roundTo,
 } from "../../../common/utils/cost.calculations.js";
+import { toNumber, clamp } from "../shared/core-dashboard.formulas.js";
 import { scoreAllocationConfidence } from "./allocation/confidence.scorer.js";
 import { validateOwnershipBalance } from "./allocation/ownership.validator.js";
 import { summarizeSharedPoolByCategory } from "./allocation/shared-pool.calculator.js";
@@ -25,10 +26,34 @@ import { toAllocationDto } from "./dto/allocation.dto.js";
 import { toUnitEconomicsDto } from "./dto/unit-economics.dto.js";
 import { buildAllocationUnitEconomicsViewModel } from "./presentation/allocation-unit-economics.viewmodel.js";
 
-const n = (v) => Number.parseFloat(v || 0) || 0;
+const n = toNumber;
 const isObject = (v) => v && typeof v === "object" && !Array.isArray(v);
 const DAY_MS = 24 * 60 * 60 * 1000;
-const clampPct = (value) => Math.max(0, Math.min(100, roundTo(n(value), 2)));
+const clampPct = (value) => clamp(roundTo(n(value), 2), 0, 100);
+const computeRuleCompletenessPct = (coverage = {}) =>
+  clampPct((n(coverage.teamPct) + n(coverage.ownerPct) + n(coverage.productPct)) / 3);
+const computeDataConsistencyPct = ({
+  ownershipValidation = {},
+  totalCost = 0,
+  sharedPoolTotal = 0,
+}) => {
+  const diagnostics = ownershipValidation?.diagnostics || {};
+  const totalBase = Math.max(1, n(totalCost));
+  const sharedBase = Math.max(1, n(sharedPoolTotal));
+  const additivityGapPct = (Math.abs(n(diagnostics.additivityDiff)) / totalBase) * 100;
+  const sharedPoolGapPct = (Math.abs(n(diagnostics.sharedPoolBalanceDiff)) / sharedBase) * 100;
+  const sharedAllocationGapPct = (Math.abs(n(diagnostics.sharedAllocationDiff)) / sharedBase) * 100;
+
+  const structuralPenalty =
+    (ownershipValidation?.noDoubleAllocation ? 0 : 20) +
+    (ownershipValidation?.sharedPoolBalanced ? 0 : 20);
+  const numericPenalty = Math.min(
+    60,
+    additivityGapPct * 8 + sharedPoolGapPct * 6 + sharedAllocationGapPct * 6,
+  );
+
+  return clampPct(100 - structuralPenalty - numericPenalty);
+};
 
 const normalizeTags = (tags) => {
   if (!tags) return {};
@@ -271,12 +296,151 @@ const aggregateWindow = (rows = [], basis = "actual") => {
   };
 };
 
+const buildTrustEnvelope = ({
+  rows = [],
+  coveragePct = 0,
+  confidenceLevel = "low",
+  currentWindow = null,
+}) => {
+  const freshnessTs =
+    rows.length > 0
+      ? rows.reduce((latest, row) => {
+          const current = toDate(row?.chargeperiodstart);
+          if (!current) return latest;
+          if (!latest) return current;
+          return current > latest ? current : latest;
+        }, null)
+      : null;
+
+  return {
+    data_freshness_ts: freshnessTs
+      ? freshnessTs.toISOString()
+      : currentWindow?.endDate
+        ? currentWindow.endDate.toISOString()
+        : null,
+    coverage_pct: roundTo(n(coveragePct), 2),
+    confidence_level: String(confidenceLevel || "low").toLowerCase(),
+  };
+};
+
+const buildDenominatorGate = ({
+  rows = [],
+  totalQuantity = 0,
+  trend = [],
+  unitMetric = "consumed_quantity",
+}) => {
+  const metric = String(unitMetric || "consumed_quantity").toLowerCase();
+  const positiveQuantityRows = rows.filter((row) => n(row?.consumedquantity) > 0).length;
+  const quantityCoveragePct = rows.length > 0 ? (positiveQuantityRows / rows.length) * 100 : 0;
+  const reasons = [];
+
+  if (metric !== "consumed_quantity") {
+    reasons.push("Selected unit metric is not fully supported; default quantity mapping applied.");
+  }
+  if (totalQuantity <= 0) {
+    reasons.push("No positive denominator volume found in selected scope.");
+  }
+  if (quantityCoveragePct < 85) {
+    reasons.push(`Quantity coverage is ${roundTo(quantityCoveragePct, 2)}%, below recommended threshold.`);
+  }
+  if (trend.length < 7) {
+    reasons.push("Insufficient trend points for stable unit-cost behavior.");
+  }
+
+  let status = "pass";
+  if (totalQuantity <= 0 || quantityCoveragePct < 60 || trend.length < 3) status = "fail";
+  else if (quantityCoveragePct < 85 || trend.length < 7 || metric !== "consumed_quantity") status = "warn";
+
+  return {
+    status,
+    reasons,
+    metric,
+    quantity_coverage_pct: roundTo(quantityCoveragePct, 2),
+  };
+};
+
+const buildOwnershipDrift = ({
+  currentRows = [],
+  previousRows = [],
+  currentLabel = "Current",
+  previousLabel = "Previous",
+}) => {
+  const byTeamCurrent = new Map();
+  const byTeamPrevious = new Map();
+
+  currentRows.forEach((row) => {
+    const team = String(row?.team || "Unassigned Team");
+    byTeamCurrent.set(team, (byTeamCurrent.get(team) || 0) + n(row?.totalCost));
+  });
+  previousRows.forEach((row) => {
+    const team = String(row?.team || "Unassigned Team");
+    byTeamPrevious.set(team, (byTeamPrevious.get(team) || 0) + n(row?.finalCost || row?.totalCost));
+  });
+
+  const teams = new Set([...byTeamCurrent.keys(), ...byTeamPrevious.keys()]);
+  const totalCurrent = Array.from(byTeamCurrent.values()).reduce((sum, value) => sum + n(value), 0);
+  const totalPrevious = Array.from(byTeamPrevious.values()).reduce((sum, value) => sum + n(value), 0);
+
+  let driftEvents = 0;
+  let impactedCost = 0;
+  const flags = [];
+
+  teams.forEach((team) => {
+    const current = n(byTeamCurrent.get(team));
+    const previous = n(byTeamPrevious.get(team));
+    const currentShare = totalCurrent > 0 ? (current / totalCurrent) * 100 : 0;
+    const previousShare = totalPrevious > 0 ? (previous / totalPrevious) * 100 : 0;
+    const shareDelta = Math.abs(currentShare - previousShare);
+    if (shareDelta >= 5) {
+      driftEvents += 1;
+      impactedCost += Math.max(current, previous);
+      flags.push({
+        type: "share_shift",
+        severity: shareDelta >= 12 ? "high" : "medium",
+        team,
+        detail: `${team} share moved by ${roundTo(shareDelta, 2)}% between windows.`,
+      });
+    }
+  });
+
+  if (teams.has("Unassigned Team")) {
+    const unassigned = n(byTeamCurrent.get("Unassigned Team"));
+    if (unassigned > 0) {
+      flags.push({
+        type: "integrity",
+        severity: "high",
+        team: "Unassigned Team",
+        detail: `Unassigned ownership present: ${roundTo(unassigned, 2)} cost impact.`,
+      });
+    }
+  }
+
+  return {
+    series: [
+      {
+        period: String(previousLabel || "Previous"),
+        drift_events: 0,
+        impacted_cost: 0,
+        drift_rate_pct: 0,
+      },
+      {
+        period: String(currentLabel || "Current"),
+        drift_events: driftEvents,
+        impacted_cost: roundTo(impactedCost, 2),
+        drift_rate_pct: roundTo((driftEvents / Math.max(1, teams.size)) * 100, 2),
+      },
+    ],
+    flags: flags.slice(0, 10),
+  };
+};
+
 export const unitEconomicsService = {
   async getSummary({
     filters = {},
     period = null,
     compareTo = "previous_period",
     costBasis = "actual",
+    unitMetric = "consumed_quantity",
     uploadIds = [],
   }) {
     const latestChargeDate = period
@@ -294,6 +458,7 @@ export const unitEconomicsService = {
         period,
         costBasis: safeBasis,
         compareMode,
+        unitMetric,
       }),
     });
     const queryStartDate =
@@ -424,6 +589,35 @@ export const unitEconomicsService = {
         elasticity: { score: null, classification: "undefined" },
         volatility: { scorePct: 0, level: "low" },
         decomposition: { startUnitCost: 0, endUnitCost: 0, components: [], validationDelta: 0 },
+        denominatorGate: {
+          status: "fail",
+          reasons: ["No denominator volume found in selected scope."],
+          metric: String(unitMetric || "consumed_quantity"),
+          quantity_coverage_pct: 0,
+        },
+        trust: buildTrustEnvelope({
+          rows: [],
+          coveragePct: 0,
+          confidenceLevel: "low",
+          currentWindow,
+        }),
+        ownershipDrift: {
+          series: [
+            { period: "Previous", drift_events: 0, impacted_cost: 0, drift_rate_pct: 0 },
+            { period: "Current", drift_events: 0, impacted_cost: 0, drift_rate_pct: 0 },
+          ],
+          flags: [],
+        },
+        unitMetricDefinitions: {
+          selectedMetric: String(unitMetric || "consumed_quantity"),
+          availableMetrics: [
+            { key: "consumed_quantity", label: "Consumed Quantity" },
+            { key: "requests", label: "Requests" },
+            { key: "orders", label: "Orders" },
+            { key: "gb", label: "GB Processed" },
+            { key: "minutes", label: "Minutes" },
+          ],
+        },
         integrity: {
           decompositionBalance: { isBalanced: true, difference: 0, epsilon: 0.0002 },
           aggregationIntegrity: { valid: true, difference: 0, totalCost: 0, rowTotal: 0 },
@@ -608,17 +802,21 @@ export const unitEconomicsService = {
       unallocatedAmount: roundTo(unallocatedAmount, 2),
       unallocatedPct: clampPct((unallocatedAmount / safeTotalCost) * 100),
     };
-    const sharedPoolRatioPct = safeTotalCost > 0 ? (sharedPoolTotal / safeTotalCost) * 100 : 0;
-    const allocationConfidence = scoreAllocationConfidence({
-      tagCoveragePct: coverage.teamPct,
-      sharedPoolRatioPct,
-      ruleCompletenessPct: 100,
-      dataConsistencyPct: 100,
-    });
     const ownershipValidation = validateOwnershipBalance({
       allocationRows,
       sharedPoolTotal,
       redistributedAmount,
+    });
+    const sharedPoolRatioPct = totalCost > 0 ? (sharedPoolTotal / totalCost) * 100 : 0;
+    const allocationConfidence = scoreAllocationConfidence({
+      tagCoveragePct: coverage.teamPct,
+      sharedPoolRatioPct,
+      ruleCompletenessPct: computeRuleCompletenessPct(coverage),
+      dataConsistencyPct: computeDataConsistencyPct({
+        ownershipValidation,
+        totalCost,
+        sharedPoolTotal,
+      }),
     });
     const sharedPoolTransparency = summarizeSharedPoolByCategory({
       sharedRows: sharedCategoryRows,
@@ -883,6 +1081,25 @@ export const unitEconomicsService = {
       breakEven,
     });
 
+    const denominatorGate = buildDenominatorGate({
+      rows: currentRows,
+      totalQuantity: currentWindowAggregate.totalQuantity,
+      trend,
+      unitMetric,
+    });
+    const trust = buildTrustEnvelope({
+      rows: currentRows,
+      coveragePct: coverage.teamPct,
+      confidenceLevel: allocationConfidence.level,
+      currentWindow,
+    });
+    const ownershipDrift = buildOwnershipDrift({
+      currentRows: allocationRows,
+      previousRows: previousTeamRows,
+      currentLabel: "Current",
+      previousLabel: "Previous",
+    });
+
     return attachViewModel({
       kpis: {
         totalCost: roundTo(totalCost, 2),
@@ -958,6 +1175,19 @@ export const unitEconomicsService = {
       benchmarks: unitEconomicsDto.benchmarks,
       forecast,
       breakEven,
+      denominatorGate,
+      trust,
+      ownershipDrift,
+      unitMetricDefinitions: {
+        selectedMetric: String(unitMetric || "consumed_quantity"),
+        availableMetrics: [
+          { key: "consumed_quantity", label: "Consumed Quantity" },
+          { key: "requests", label: "Requests" },
+          { key: "orders", label: "Orders" },
+          { key: "gb", label: "GB Processed" },
+          { key: "minutes", label: "Minutes" },
+        ],
+      },
       margin,
       efficiency: efficiency,
       elasticity,

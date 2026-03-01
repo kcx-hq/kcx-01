@@ -314,8 +314,8 @@ const ClientCReports = ({ api, caps }: ClientCReportsProps) => {
         reportType: reportId,
         period: extractedData.summary.billingPeriod || new Date().toISOString().split('T')[0] || "",
         totalSpend: totalSpend,
-        topServices: topServices.length ? topServices : [{ name: "No data available", cost: 0 }],
-        topRegions: topRegions.length ? topRegions : [{ name: "No data available", cost: 0 }],
+        topServices,
+        topRegions,
         optimizationData: {
           totalPotentialSavings: 0,
           highConfidencePercent: 0,

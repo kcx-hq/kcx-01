@@ -10,12 +10,12 @@ import {
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
-import KpiCard from "../../../core-dashboard/cost-analysis/components/KpiCard";
-import SpendBehaviorCard from "../../../core-dashboard/cost-analysis/components/SpendBehaviorCard";
-import BreakdownSidebar from "../../../core-dashboard/cost-analysis/components/BreakdownSidebar";
+import KpiCard from "./components/KpiCard";
+import SpendBehaviorCard from "./components/SpendBehaviorCard";
+import BreakdownSidebar from "./components/BreakdownSidebar";
 import PremiumGate from "../../../core-dashboard/common/PremiumGate";
-import BreakdownModal from "../../../core-dashboard/cost-analysis/components/BreakdownModal";
-import InfoModal from "../../../core-dashboard/cost-analysis/components/InfoModal";
+import BreakdownModal from "./components/BreakdownModal";
+import InfoModal from "./components/InfoModal";
 
 import { formatCurrency, formatDate } from "./utils/format";
 import type { CostAnalysisViewProps } from "./types";

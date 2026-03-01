@@ -79,8 +79,9 @@ export default function CostDrivers({ filters, api, caps }: CostDriversProps) {
       activeKpiId={activeKpiId}
       onToggleKpi={onToggleKpi}
       waterfall={data.waterfall}
-      trendComparison={data.trendComparison}
       decomposition={data.decomposition}
+      topDrivers={data.topDrivers}
+      rateVsUsage={data.rateVsUsage}
       activeTab={effectiveActiveTab}
       onTabChange={setActiveTab}
       onOpenDriver={onOpenDriver}

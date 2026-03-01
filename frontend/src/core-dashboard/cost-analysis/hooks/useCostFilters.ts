@@ -17,9 +17,36 @@ interface UseCostFiltersResult {
   filterOptions: CostAnalysisFilterOptions;
 }
 
+const normalizeAllFirst = (values: unknown): string[] => {
+  if (!Array.isArray(values)) return ["All"];
+  const cleaned = values
+    .filter((item): item is string => typeof item === "string")
+    .map((item) => item.trim())
+    .filter(Boolean);
+  const withoutAll = cleaned.filter((item) => item.toLowerCase() !== "all");
+  const deduped = Array.from(new Set(withoutAll));
+  return ["All", ...deduped];
+};
+
 const getPayload = (response: unknown): CostAnalysisFilterOptions | null => {
   if (!isObjectRecord(response)) return null;
-  return response as CostAnalysisFilterOptions;
+  return {
+    providers: normalizeAllFirst(response["providers"]),
+    services: normalizeAllFirst(response["services"]),
+    regions: normalizeAllFirst(response["regions"]),
+    accounts: normalizeAllFirst(response["accounts"]),
+    subAccounts: normalizeAllFirst(response["subAccounts"]),
+    costCategories: normalizeAllFirst(response["costCategories"]),
+    apps: normalizeAllFirst(response["apps"]),
+    teams: normalizeAllFirst(response["teams"]),
+    envs: normalizeAllFirst(response["envs"]),
+    currencyModes: Array.isArray(response["currencyModes"])
+      ? response["currencyModes"].filter((item): item is "usd" => item === "usd")
+      : defaultCostAnalysisFilterOptions.currencyModes,
+    tagKeys: Array.isArray(response["tagKeys"])
+      ? response["tagKeys"].filter((item): item is string => typeof item === "string")
+      : [],
+  };
 };
 
 const hasNotSupportedCode = (error: unknown): boolean =>

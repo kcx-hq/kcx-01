@@ -71,8 +71,8 @@ const Reports = ({ filters = {}, api, caps }: ReportsProps) => {
           reportType,
           period,
           totalSpend,
-          topServices: topServices.length ? topServices : [{ name: "No data available", cost: 0 }],
-          topRegions: topRegions.length ? topRegions : [{ name: "No data available", cost: 0 }],
+          topServices,
+          topRegions,
           optimizationData: {
             totalPotentialSavings: parseCurrency(opt?.totalPotentialSavings || 0),
             highConfidencePercent,

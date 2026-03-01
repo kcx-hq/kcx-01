@@ -16,8 +16,15 @@ export function getFactStats() {
   return { ...stats };
 }
 
-export async function pushFact(uploadId, row, dims) {
-  buffer.push({
+function getBuffer(uploadId) {
+  if (!buffersByUpload.has(uploadId)) {
+    buffersByUpload.set(uploadId, []);
+  }
+  return buffersByUpload.get(uploadId);
+}
+
+function buildFact(uploadId, row, dims) {
+  return {
     uploadid: uploadId,
 
     cloudaccountid: dims.cloudaccountid,
@@ -62,9 +69,14 @@ export async function pushFact(uploadId, row, dims) {
   }
 }
 
+async function flushByUpload(uploadId) {
+  const current = buffersByUpload.get(uploadId);
+  if (!current || !current.length) {
+    return;
+  }
 
-export async function flushFacts() {
-  if (!buffer.length) return;
+  const data = current;
+  buffersByUpload.set(uploadId, []);
 
   const data = buffer;
   buffer = [];

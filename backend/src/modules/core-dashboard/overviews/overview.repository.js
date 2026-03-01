@@ -1,76 +1,178 @@
-import { BillingUsageFact, CloudAccount, Service, Region } from '../../../models/index.js';
+import {
+  BillingUsageFact,
+  BillingUpload,
+  CloudAccount,
+  Region,
+  Service,
+} from '../../../models/index.js';
+import Sequelize from '../../../config/db.config.js';
 import { Op } from 'sequelize';
 
 export const dashboardRepository = {
-  /**
-   * Fetch Raw Data for In-Memory Aggregation
-   * ✅ Updated to match "cost-analysis" uploadid approach:
-   *  - supports uploadIds (array)
-   *  - supports uploadId (single)
-   *  - keeps the rest of the logic the same
-   */
-  async getOverviewRawData(filters = {}) {
-    const { provider, service, region, uploadId, uploadIds } = filters;
-
-    const whereClause = {};
-
-    // 1. Upload ID(s) (Crucial for filtering by file)
-    // ✅ support both uploadIds array and single uploadId
-    if (uploadIds && Array.isArray(uploadIds) && uploadIds.length > 0) {
-      whereClause.uploadid = { [Op.in]: uploadIds };
-    } else if (uploadId) {
-      whereClause.uploadid = uploadId;
+  async getFilterOptions(uploadIds = []) {
+    if (!Array.isArray(uploadIds) || uploadIds.length === 0) {
+      return { providers: ['All'], services: ['All'], regions: ['All'] };
     }
 
-    // 2. Filter out zero costs to speed up processing
-    whereClause.billedcost = { [Op.ne]: 0 };
+    const whereFact = { uploadid: { [Op.in]: uploadIds } };
 
-    // 3. Dynamic Includes based on filters
-    const include = [];
+    const [providers, services, regions] = await Promise.all([
+      BillingUsageFact.findAll({
+        where: whereFact,
+        include: [{ model: CloudAccount, as: 'cloudAccount', attributes: [], required: true }],
+        attributes: [[Sequelize.fn('DISTINCT', Sequelize.col('cloudAccount.providername')), 'value']],
+        raw: true,
+      }),
+      BillingUsageFact.findAll({
+        where: whereFact,
+        include: [{ model: Service, as: 'service', attributes: [], required: true }],
+        attributes: [[Sequelize.fn('DISTINCT', Sequelize.col('service.servicename')), 'value']],
+        order: [[Sequelize.col('value'), 'ASC']],
+        raw: true,
+      }),
+      BillingUsageFact.findAll({
+        where: whereFact,
+        include: [{ model: Region, as: 'region', attributes: [], required: true }],
+        attributes: [[Sequelize.fn('DISTINCT', Sequelize.col('region.regionname')), 'value']],
+        order: [[Sequelize.col('value'), 'ASC']],
+        raw: true,
+      }),
+    ]);
 
-    // Provider Filter
-    if (provider && provider !== 'All') {
-      include.push({
-        model: CloudAccount,
-        as: 'cloudAccount',
-        where: { providername: provider },
-        required: true
-      });
-    } else {
-      include.push({ model: CloudAccount, as: 'cloudAccount', required: false });
-    }
+    return {
+      providers: ['All', ...providers.map((p) => p.value).filter(Boolean)],
+      services: ['All', ...services.map((s) => s.value).filter(Boolean)],
+      regions: ['All', ...regions.map((r) => r.value).filter(Boolean)],
+    };
+  },
 
-    // Service Filter
-    if (service && service !== 'All') {
-      include.push({
-        model: Service,
-        as: 'service',
-        where: { servicename: service },
-        required: true
-      });
-    } else {
-      include.push({ model: Service, as: 'service', required: false });
-    }
-
-    // Region Filter
-    if (region && region !== 'All') {
-      include.push({
-        model: Region,
-        as: 'region',
-        where: { regionname: region },
-        required: true
-      });
-    } else {
-      include.push({ model: Region, as: 'region', required: false });
-    }
-
-    // 4. Fetch Data
-    // We fetch associations so we can group by names in the Service layer
-    return await BillingUsageFact.findAll({
-      where: whereClause,
-      include,
-      attributes: ['billedcost', 'chargeperiodstart'],
-      raw: false // We need the associated objects
-    });
-  }
+  async getOverviewAggregates(whereClause = {}, monthExpr, uploadIds = []) {
+    return Promise.all([
+      BillingUsageFact.sum('billedcost', { where: whereClause }),
+      BillingUsageFact.findAll({
+        where: whereClause,
+        attributes: [
+          [Sequelize.fn('DATE', Sequelize.col('BillingUsageFact.chargeperiodstart')), 'date'],
+          [Sequelize.fn('SUM', Sequelize.col('BillingUsageFact.billedcost')), 'cost'],
+        ],
+        group: [Sequelize.fn('DATE', Sequelize.col('BillingUsageFact.chargeperiodstart'))],
+        order: [[Sequelize.fn('DATE', Sequelize.col('BillingUsageFact.chargeperiodstart')), 'ASC']],
+        raw: true,
+      }),
+      BillingUsageFact.findAll({
+        where: whereClause,
+        include: [{ model: Service, as: 'service', required: true, attributes: [] }],
+        attributes: [
+          [Sequelize.col('service.servicename'), 'name'],
+          [Sequelize.fn('SUM', Sequelize.col('BillingUsageFact.billedcost')), 'value'],
+        ],
+        group: [Sequelize.col('service.servicename')],
+        order: [[Sequelize.literal('value'), 'DESC']],
+        limit: 15,
+        raw: true,
+      }),
+      BillingUsageFact.findAll({
+        where: whereClause,
+        include: [{ model: Region, as: 'region', required: true, attributes: [] }],
+        attributes: [
+          [Sequelize.col('region.regionname'), 'name'],
+          [Sequelize.fn('SUM', Sequelize.col('BillingUsageFact.billedcost')), 'value'],
+        ],
+        group: [Sequelize.col('region.regionname')],
+        order: [[Sequelize.literal('value'), 'DESC']],
+        limit: 1,
+        raw: true,
+      }),
+      BillingUsageFact.findAll({
+        where: whereClause,
+        include: [{ model: CloudAccount, as: 'cloudAccount', required: true, attributes: [] }],
+        attributes: [
+          [Sequelize.col('cloudAccount.providername'), 'name'],
+          [Sequelize.fn('SUM', Sequelize.col('BillingUsageFact.billedcost')), 'value'],
+        ],
+        group: [Sequelize.col('cloudAccount.providername')],
+        order: [[Sequelize.literal('value'), 'DESC']],
+        limit: 1,
+        raw: true,
+      }),
+      BillingUsageFact.findAll({
+        where: whereClause,
+        include: [{ model: Region, as: 'region', required: true, attributes: [] }],
+        attributes: [
+          [Sequelize.col('region.regionname'), 'name'],
+          [Sequelize.fn('SUM', Sequelize.col('BillingUsageFact.billedcost')), 'value'],
+        ],
+        group: [Sequelize.col('region.regionname')],
+        order: [[Sequelize.literal('value'), 'DESC']],
+        raw: true,
+      }),
+      BillingUsageFact.findOne({
+        where: {
+          ...whereClause,
+          [Op.or]: [{ tags: { [Op.is]: null } }, { tags: { [Op.eq]: {} } }],
+        },
+        attributes: [[Sequelize.fn('SUM', Sequelize.col('BillingUsageFact.billedcost')), 'total']],
+        raw: true,
+      }),
+      BillingUsageFact.findOne({
+        where: { ...whereClause, resourceid: { [Op.or]: [{ [Op.is]: null }, { [Op.eq]: '' }] } },
+        attributes: [[Sequelize.fn('SUM', Sequelize.col('BillingUsageFact.billedcost')), 'total']],
+        raw: true,
+      }),
+      BillingUsageFact.findOne({
+        where: whereClause,
+        attributes: [
+          [Sequelize.fn('MIN', Sequelize.col('BillingUsageFact.billingperiodstart')), 'billingStart'],
+          [Sequelize.fn('MAX', Sequelize.col('BillingUsageFact.billingperiodend')), 'billingEnd'],
+          [Sequelize.fn('MIN', Sequelize.col('BillingUsageFact.chargeperiodstart')), 'chargeStart'],
+          [Sequelize.fn('MAX', Sequelize.col('BillingUsageFact.chargeperiodend')), 'chargeEnd'],
+        ],
+        raw: true,
+      }),
+      BillingUsageFact.findAll({
+        where: whereClause,
+        attributes: [
+          [monthExpr, 'month'],
+          [Sequelize.fn('SUM', Sequelize.col('BillingUsageFact.billedcost')), 'value'],
+        ],
+        group: [monthExpr],
+        order: [[monthExpr, 'DESC']],
+        limit: 2,
+        raw: true,
+      }),
+      BillingUsageFact.findAll({
+        where: whereClause,
+        include: [{ model: CloudAccount, as: 'cloudAccount', required: true, attributes: [] }],
+        attributes: [
+          [Sequelize.col('cloudAccount.providername'), 'provider'],
+          [Sequelize.fn('SUM', Sequelize.col('BillingUsageFact.billedcost')), 'value'],
+        ],
+        group: [Sequelize.col('cloudAccount.providername')],
+        order: [[Sequelize.literal('value'), 'DESC']],
+        raw: true,
+      }),
+      BillingUsageFact.findAll({
+        where: whereClause,
+        attributes: [
+          [monthExpr, 'month'],
+          [
+            Sequelize.literal(
+              'SUM(GREATEST(COALESCE("BillingUsageFact"."listcost",0) - COALESCE("BillingUsageFact"."effectivecost",0), 0))'
+            ),
+            'value',
+          ],
+        ],
+        group: [monthExpr],
+        order: [[monthExpr, 'DESC']],
+        limit: 2,
+        raw: true,
+      }),
+      BillingUpload.findOne({
+        where: { uploadid: { [Op.in]: uploadIds } },
+        attributes: ['uploadid', 'uploadedat'],
+        order: [['uploadedat', 'DESC']],
+        raw: true,
+      }),
+    ]);
+  },
 };

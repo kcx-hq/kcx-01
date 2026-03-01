@@ -1,4 +1,4 @@
-import { AlertTriangle, Bell, ShieldAlert } from "lucide-react";
+import { Bell } from "lucide-react";
 import { SectionEmpty, SectionError, SectionLoading, SectionRefreshOverlay } from "../common/SectionStates";
 import type { AlertsIncidentsControls, AlertsIncidentsPayload, AlertRow } from "./types";
 import { formatCurrency, formatDateTime, formatPercent } from "./utils/format";
@@ -39,7 +39,7 @@ export default function AlertsIncidentsView({
               Alerts & Incidents
             </h1>
             <p className="mt-1 text-sm text-[var(--text-muted)]">
-              Unified anomaly-to-incident workflow with ownership routing and notification plan.
+              Alerts inbox for triage, assignment, SLA tracking, and resolution.
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
@@ -143,66 +143,6 @@ export default function AlertsIncidentsView({
         </h2>
         <AlertsTable rows={alerts} currency={currency} />
       </section>
-
-      <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
-        <section className="rounded-2xl border border-[var(--border-light)] bg-white p-4 md:p-5">
-          <h2 className="flex items-center gap-2 text-sm font-black uppercase tracking-[0.12em] text-[var(--text-primary)] md:text-base">
-            <ShieldAlert size={16} className="text-[var(--brand-primary)]" />
-            Notification Queue
-          </h2>
-          <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
-            <Metric label="Queued" value={`${data.notificationCenter.totalQueued}`} detail="Pending outbound notifications" />
-            <Metric
-              label="Routed Owners"
-              value={`${data.notificationCenter.routedOwners || 0}`}
-              detail="Distinct recipients in queue"
-            />
-          </div>
-          <div className="mt-3 max-h-[260px] overflow-y-auto pr-1">
-            <table className="min-w-full divide-y divide-slate-200 text-left text-sm">
-              <thead className="bg-slate-50 text-[11px] font-bold uppercase tracking-[0.1em] text-slate-500">
-                <tr>
-                  <th className="px-2 py-1.5">Alert</th>
-                  <th className="px-2 py-1.5">Mode</th>
-                  <th className="px-2 py-1.5">Channels</th>
-                  <th className="px-2 py-1.5">Recipients</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {data.notificationCenter.queue.slice(0, 20).map((item) => (
-                  <tr key={`${item.alertId}-${item.queuedAt}`}>
-                    <td className="px-2 py-1.5 text-slate-700">{item.alertId}</td>
-                    <td className="px-2 py-1.5 text-slate-700">{item.mode}</td>
-                    <td className="px-2 py-1.5 text-slate-700">{item.channels.join(", ")}</td>
-                    <td className="px-2 py-1.5 text-slate-700">{item.recipients.slice(0, 2).join(", ")}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </section>
-
-        <section className="rounded-2xl border border-[var(--border-light)] bg-white p-4 md:p-5">
-          <h2 className="text-sm font-black uppercase tracking-[0.12em] text-[var(--text-primary)] md:text-base">
-            Embedded Alert Surfaces
-          </h2>
-          <div className="mt-3 space-y-2">
-            {Object.entries(data.embeddedViews || {}).map(([moduleName, model]) => (
-              <div key={moduleName} className="rounded-xl border border-slate-200 p-3">
-                <p className="text-sm font-semibold capitalize text-slate-900">
-                  {moduleName.replace(/([A-Z])/g, " $1")}
-                </p>
-                <p className="mt-1 text-xs text-slate-600">
-                  {model.count} alerts | top {Math.min(3, model.top?.length || 0)} shown in module context
-                </p>
-                <a href={model.deepLink} className="mt-1 inline-block text-xs font-semibold text-emerald-700">
-                  Open module
-                </a>
-              </div>
-            ))}
-          </div>
-        </section>
-      </div>
     </div>
   );
 }

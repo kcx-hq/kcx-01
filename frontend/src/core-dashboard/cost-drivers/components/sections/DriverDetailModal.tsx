@@ -1,5 +1,7 @@
 import React from 'react';
 import {
+  Bar,
+  BarChart,
   CartesianGrid,
   Line,
   LineChart,
@@ -26,10 +28,32 @@ export default function DriverDetailModal({
 }) {
   if (!open || !driver) return null;
 
-  const summary = details?.summary || null;
+  const detailSummary = details?.summary || null;
+  const summary =
+    detailSummary ||
+    {
+      previousSpend: Number(driver?.previousSpend || 0),
+      currentSpend: Number(driver?.currentSpend || 0),
+      deltaValue: Number(driver?.deltaValue || 0),
+      contributionScore: Number(driver?.contributionScore || 0),
+    };
   const trend = Array.isArray(details?.trend) ? details.trend : [];
   const resources = Array.isArray(details?.resourceBreakdown) ? details.resourceBreakdown : [];
   const links = details?.links || {};
+  const breakdown = driver?.driverBreakdown || null;
+  const hasTrendData = trend.some((point) => Number(point.currentSpend || 0) !== 0 || Number(point.previousSpend || 0) !== 0);
+  const hasDetailedEvidence = Boolean(detailSummary);
+
+  const breakdownSeries = breakdown
+    ? [
+        { name: 'New', value: Number(breakdown.newServicesResources || 0) },
+        { name: 'Usage', value: Number(breakdown.usageGrowth || 0) },
+        { name: 'Rate', value: Number(breakdown.ratePriceChange || 0) },
+        { name: 'Mix', value: Number(breakdown.mixShift || 0) },
+        { name: 'Credits', value: Number(breakdown.creditsDiscountChange || 0) },
+        { name: 'Savings', value: Number(breakdown.savingsRemovals || 0) },
+      ].filter((item) => Math.abs(item.value) > 0)
+    : [];
 
   return (
     <div className="fixed inset-0 z-[70] flex items-center justify-center bg-slate-900/45 p-4">
@@ -65,22 +89,59 @@ export default function DriverDetailModal({
                 <Row label="Contribution" value={`${Number(summary?.contributionScore || 0).toFixed(2)}`} />
               </div>
 
-              <div className="rounded-xl border border-slate-200 bg-white p-3">
-                <p className="mb-2 text-[11px] font-black uppercase tracking-wider text-slate-600">Driver Trend</p>
-                <div className="h-56">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <LineChart data={trend}>
-                      <CartesianGrid vertical={false} strokeDasharray="3 3" stroke="#e2e8f0" />
-                      <XAxis dataKey="date" tick={{ fill: '#64748b', fontSize: 11 }} />
-                      <YAxis tick={{ fill: '#64748b', fontSize: 11 }} />
-                      <Tooltip
-                        formatter={(value) => formatCurrency(Number(value || 0))}
-                        labelFormatter={(label) => String(label)}
-                      />
-                      <Line dataKey="currentSpend" stroke="#0f766e" strokeWidth={2} dot={false} />
-                      <Line dataKey="previousSpend" stroke="#f59e0b" strokeWidth={2} dot={false} />
-                    </LineChart>
-                  </ResponsiveContainer>
+              {!hasDetailedEvidence ? (
+                <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-semibold text-amber-800">
+                  Detailed evidence is limited for this selection. Showing best available driver snapshot.
+                </div>
+              ) : null}
+
+              <div className="grid grid-cols-1 gap-3 xl:grid-cols-2">
+                <div className="rounded-xl border border-slate-200 bg-white p-3">
+                  <p className="mb-2 text-[11px] font-black uppercase tracking-wider text-slate-600">Driver Trend</p>
+                  <div className="h-56">
+                    {hasTrendData ? (
+                      <ResponsiveContainer width="100%" height="100%">
+                        <LineChart data={trend}>
+                          <CartesianGrid vertical={false} strokeDasharray="3 3" stroke="#e2e8f0" />
+                          <XAxis dataKey="date" tick={{ fill: '#64748b', fontSize: 11 }} />
+                          <YAxis tick={{ fill: '#64748b', fontSize: 11 }} />
+                          <Tooltip
+                            formatter={(value) => formatCurrency(Number(value || 0))}
+                            labelFormatter={(label) => String(label)}
+                          />
+                          <Line dataKey="currentSpend" stroke="#0f766e" strokeWidth={2} dot={false} name="Current" />
+                          <Line dataKey="previousSpend" stroke="#f59e0b" strokeWidth={2} dot={false} name="Previous" />
+                        </LineChart>
+                      </ResponsiveContainer>
+                    ) : (
+                      <div className="flex h-full items-center justify-center rounded-lg border border-dashed border-slate-200 text-sm font-semibold text-slate-500">
+                        No time-series points available for this driver in selected periods.
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                <div className="rounded-xl border border-slate-200 bg-white p-3">
+                  <p className="mb-2 text-[11px] font-black uppercase tracking-wider text-slate-600">
+                    Attribution Breakdown
+                  </p>
+                  <div className="h-56">
+                    {breakdownSeries.length ? (
+                      <ResponsiveContainer width="100%" height="100%">
+                        <BarChart data={breakdownSeries}>
+                          <CartesianGrid vertical={false} strokeDasharray="3 3" stroke="#e2e8f0" />
+                          <XAxis dataKey="name" tick={{ fill: '#64748b', fontSize: 11 }} />
+                          <YAxis tick={{ fill: '#64748b', fontSize: 11 }} />
+                          <Tooltip formatter={(value) => formatCurrency(Number(value || 0))} />
+                          <Bar dataKey="value" fill="#0f766e" radius={[6, 6, 0, 0]} />
+                        </BarChart>
+                      </ResponsiveContainer>
+                    ) : (
+                      <div className="flex h-full items-center justify-center rounded-lg border border-dashed border-slate-200 text-sm font-semibold text-slate-500">
+                        Attribution split is not available for this driver.
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
 

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Upload,
@@ -23,6 +23,8 @@ import type {
 } from "./types";
 
 const MAX_MB = 50;
+const ETL_POLL_INTERVAL_MS = 2500;
+const ETL_POLL_TIMEOUT_MS = 15 * 60 * 1000;
 
 type InputMode = "csv" | "cloud";
 type CsvStatus = "idle" | "uploading" | "error";
@@ -65,6 +67,9 @@ const isBillingUploadRecord = (value: unknown): value is BillingUploadRecord => 
   return typeof (value as Record<string, unknown>)["uploadid"] === "string";
 };
 
+const normalizeUploadStatus = (value: unknown): string =>
+  typeof value === "string" ? value.trim().toUpperCase() : "";
+
 const getAxiosMessage = (error: unknown, fallback: string): string => {
   const message = getApiErrorMessageWithRequestId(error, fallback);
   if (message) {
@@ -75,6 +80,7 @@ const getAxiosMessage = (error: unknown, fallback: string): string => {
 
 const CsvUploadInput = ({ uploadUrl, withCredentials = true }: CsvUploadInputProps) => {
   const navigate = useNavigate();
+  const isMountedRef = useRef(true);
 
   const finalUploadUrl = uploadUrl || "/api/etl";
   const cloudVerifyUrl = "/api/cloud/aws/verify-connection";
@@ -82,6 +88,7 @@ const CsvUploadInput = ({ uploadUrl, withCredentials = true }: CsvUploadInputPro
 
   const [mode, setMode] = useState<InputMode>("csv"); // csv | cloud
   const [csvStatus, setCsvStatus] = useState<CsvStatus>("idle"); // idle | uploading | error
+  const [csvProcessingMessage, setCsvProcessingMessage] = useState("Uploading file...");
   const [csvErrorMessage, setCsvErrorMessage] = useState("");
   const [fileDetails, setFileDetails] = useState<FileDetails | null>(null);
   const [cloudForm, setCloudForm] = useState<CloudForm>({
@@ -97,6 +104,18 @@ const CsvUploadInput = ({ uploadUrl, withCredentials = true }: CsvUploadInputPro
   const [hasExistingUploads, setHasExistingUploads] = useState(false);
   const setUploadIds = useDashboardStore((s) => s.setUploadIds);
   const dashboardPath = useDashboardStore((s) => s.dashboardPath);
+
+  const setCsvProcessingMessageSafe = (message: string) => {
+    if (!isMountedRef.current) {
+      return;
+    }
+    setCsvProcessingMessage(message);
+  };
+
+  const redirectToDashboard = () => {
+    const targetPath = dashboardPath || "/dashboard";
+    window.location.assign(targetPath);
+  };
 
   const formatDateTime = (value: string | number | Date | null | undefined) => {
     if (!value) return "--";
@@ -119,6 +138,13 @@ const CsvUploadInput = ({ uploadUrl, withCredentials = true }: CsvUploadInputPro
   };
 
   useEffect(() => {
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
+
+  useEffect(() => {
     const checkExistingUploads = async () => {
       try {
         const response = await apiGet<unknown>("/api/etl/get-billing-uploads", { withCredentials });
@@ -131,6 +157,54 @@ const CsvUploadInput = ({ uploadUrl, withCredentials = true }: CsvUploadInputPro
 
     checkExistingUploads();
   }, [withCredentials]);
+
+  const sleep = (ms: number) =>
+    new Promise<void>((resolve) => {
+      window.setTimeout(resolve, ms);
+    });
+
+  const fetchUploadStatus = async (uploadId: string): Promise<string | null> => {
+    const response = await apiGet<unknown>("/api/etl/get-billing-uploads", { withCredentials });
+    const uploads = Array.isArray(response) ? response.filter(isBillingUploadRecord) : [];
+    const normalizedUploadId = String(uploadId).trim().toLowerCase();
+    const match = uploads.find(
+      (row) => String(row.uploadid || "").trim().toLowerCase() === normalizedUploadId,
+    );
+    if (!match) {
+      return null;
+    }
+    return normalizeUploadStatus(match.status);
+  };
+
+  const waitForEtlCompletion = async (uploadId: string) => {
+    const startedAt = Date.now();
+
+    while (Date.now() - startedAt <= ETL_POLL_TIMEOUT_MS) {
+      if (!isMountedRef.current) {
+        return;
+      }
+
+      const status = await fetchUploadStatus(uploadId);
+      if (status === "COMPLETED") {
+        setCsvProcessingMessageSafe("ETL completed. Opening dashboard...");
+        return;
+      }
+
+      if (status === "FAILED") {
+        throw new Error("ETL processing failed. Please retry with a valid CSV.");
+      }
+
+      if (status === "PENDING") {
+        setCsvProcessingMessageSafe("Upload received. Waiting for ETL to start...");
+      } else {
+        setCsvProcessingMessageSafe("ETL is processing your data...");
+      }
+
+      await sleep(ETL_POLL_INTERVAL_MS);
+    }
+
+    throw new Error("ETL is taking longer than expected. Please check Billing Uploads for progress.");
+  };
 
   const uploadFile = async (file: File | null | undefined) => {
     const msg = validate(file);
@@ -149,6 +223,7 @@ const CsvUploadInput = ({ uploadUrl, withCredentials = true }: CsvUploadInputPro
     });
 
     setCsvStatus("uploading");
+    setCsvProcessingMessageSafe("Uploading file...");
     setCsvErrorMessage("");
 
     const formData = new FormData();
@@ -160,12 +235,32 @@ const CsvUploadInput = ({ uploadUrl, withCredentials = true }: CsvUploadInputPro
         withCredentials,
       });
 
-      const nextUploadIds = response?.uploadId ? [response.uploadId] : [];
-      setUploadIds(nextUploadIds);
-      navigate(dashboardPath);
+      const uploadId = response?.uploadId;
+      if (!uploadId) {
+        throw new Error("Upload accepted but upload ID is missing.");
+      }
+
+      setUploadIds([uploadId]);
+      setCsvProcessingMessageSafe("File uploaded. ETL is processing your data...");
+      await waitForEtlCompletion(uploadId);
+
+      if (!isMountedRef.current) {
+        return;
+      }
+
+      setCsvProcessingMessageSafe("ETL completed. Redirecting to dashboard...");
+      redirectToDashboard();
+      return;
     } catch (err: unknown) {
+      if (!isMountedRef.current) {
+        return;
+      }
       setCsvStatus("error");
-      setCsvErrorMessage(getAxiosMessage(err, "Upload failed."));
+      if (err instanceof Error && err.message) {
+        setCsvErrorMessage(err.message);
+      } else {
+        setCsvErrorMessage(getAxiosMessage(err, "Upload failed."));
+      }
     }
   };
 
@@ -391,22 +486,21 @@ const CsvUploadInput = ({ uploadUrl, withCredentials = true }: CsvUploadInputPro
                   </div>
 
                   <h2 className="mb-2 text-2xl font-bold text-[var(--text-primary)]">
-                    Uploading and Processing
+                    Processing Your Data
                   </h2>
                   <p className={`mb-8 flex items-center gap-2 ${uploadTheme.mutedText}`}>
                     {fileDetails?.name}{" "}
                     <span className="h-1 w-1 rounded-full bg-[var(--text-muted)]" /> {fileDetails?.size}
                   </p>
-                  <div className="h-1.5 w-full max-w-sm overflow-hidden rounded-full bg-[var(--border-light)]">
+                  <div className="relative h-1.5 w-full max-w-sm overflow-hidden rounded-full bg-[var(--border-light)]">
                     <motion.div
-                      initial={{ width: "0%" }}
-                      animate={{ width: "100%" }}
-                      transition={{ duration: 2 }}
-                      className="h-full bg-[var(--brand-primary)]"
+                      className="absolute inset-y-0 left-0 w-1/3 bg-[var(--brand-primary)]"
+                      animate={{ x: ["-130%", "320%"] }}
+                      transition={{ duration: 1.2, repeat: Infinity, ease: "linear" }}
                     />
                   </div>
                   <p className={`mt-4 animate-pulse text-xs ${uploadTheme.mutedText}`}>
-                    Calculating unit costs and anomalies...
+                    {csvProcessingMessage}
                   </p>
                 </motion.div>
               ) : mode === "csv" ? (

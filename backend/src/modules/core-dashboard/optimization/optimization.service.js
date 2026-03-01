@@ -311,7 +311,7 @@ export const optimizationService = {
       trackerItems,
       meta: {
         generatedAt: new Date().toISOString(),
-        formulaVersion: model?.meta?.formulaVersion || 'optimization_action_center_v1',
+        formulaVersion: model?.meta?.formulaVersion || 'optimization_action_center_v2',
       },
     };
   }

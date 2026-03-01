@@ -1,9 +1,30 @@
 import React, { useState } from "react";
 import type { LucideIcon } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import { 
   Eye, EyeOff, User, Mail, Briefcase, Building2, Globe, Lock 
 } from "lucide-react";
 import { Link } from "react-router-dom";
+import type { SignupData } from "../types";
+
+interface SignupFormProps {
+  signupData: SignupData;
+  setSignupData: React.Dispatch<React.SetStateAction<SignupData>>;
+  handleSignup: (e: React.FormEvent<HTMLFormElement>) => void | Promise<void>;
+  isSigningUp: boolean;
+  showPassword: boolean;
+  setShowPassword: React.Dispatch<React.SetStateAction<boolean>>;
+  onSwitchToLogin: () => void;
+}
+
+interface InputGroupProps extends Omit<React.InputHTMLAttributes<HTMLInputElement>, "onFocus" | "onBlur" | "onChange"> {
+  label: string;
+  icon: LucideIcon;
+  isFocused: boolean;
+  onFocus: React.FocusEventHandler<HTMLInputElement>;
+  onBlur: React.FocusEventHandler<HTMLInputElement>;
+  onChange: React.ChangeEventHandler<HTMLInputElement>;
+}
 import type { SignupData } from "../types";
 
 interface SignupFormProps {
@@ -29,9 +50,16 @@ const SignupForm = ({
   signupData, setSignupData, handleSignup, isSigningUp, 
   showPassword, setShowPassword, onSwitchToLogin 
 }: SignupFormProps) => {
+}: SignupFormProps) => {
   const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [focusedField, setFocusedField] = useState<keyof SignupData | null>(null);
+  const [focusedField, setFocusedField] = useState<keyof SignupData | null>(null);
 
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    if (name in signupData) {
+      setSignupData({ ...signupData, [name]: value });
+    }
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     if (name in signupData) {
@@ -192,6 +220,7 @@ const SignupForm = ({
             type="checkbox" 
             checked={acceptedTerms} 
             onChange={(e: React.ChangeEvent<HTMLInputElement>) => setAcceptedTerms(e.target.checked)} 
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setAcceptedTerms(e.target.checked)} 
             className="mt-0.5 w-4 h-4 rounded border-gray-300 text-[var(--brand-primary)] focus:ring-[var(--brand-primary)]" 
           />
           <span className="text-xs text-gray-500">I agree to the <Link to="#" className="font-semibold text-gray-900 underline decoration-gray-300 hover:decoration-[var(--brand-primary)]">Terms</Link> and <Link to="#" className="font-semibold text-gray-900 underline decoration-gray-300 hover:decoration-[var(--brand-primary)]">Privacy Policy</Link>.</span>
@@ -214,6 +243,7 @@ const SignupForm = ({
 };
 
 // --- Paste the InputGroup component from Step 1 here ---
+const InputGroup = ({ label, icon: Icon, isFocused, onFocus, onBlur, ...props }: InputGroupProps) => (
 const InputGroup = ({ label, icon: Icon, isFocused, onFocus, onBlur, ...props }: InputGroupProps) => (
   <div className="space-y-1.5">
     <label className="text-[11px] font-bold text-gray-500 uppercase tracking-wider pl-1 block">

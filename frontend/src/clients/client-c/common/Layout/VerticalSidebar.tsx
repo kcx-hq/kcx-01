@@ -177,9 +177,9 @@ const VerticalSidebar = ({ caps = {} }: VerticalSidebarProps) => {
         },
         {
           to: "/client-c/optimization",
-          label: "Optimization",
+          label: "Optimization & Commitments",
           icon: Sparkles,
-          description: "Cost optimization recommendations",
+          description: "Execution backlog plus commitment/rate safety",
           enabled: caps.modules?.optimization?.enabled 
         },
         {

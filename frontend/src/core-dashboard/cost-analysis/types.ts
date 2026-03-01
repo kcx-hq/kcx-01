@@ -2,6 +2,7 @@ export type CostBasis = "actual" | "amortized" | "net";
 export type TimeRangePreset = "7d" | "30d" | "90d" | "mtd" | "qtd" | "custom";
 export type Granularity = "daily" | "weekly" | "monthly";
 export type CompareTo = "previous_period" | "same_period_last_month" | "none";
+export type CurrencyMode = "usd";
 export type SpendAnalyticsGroupBy =
   | "ServiceName"
   | "RegionName"
@@ -28,6 +29,7 @@ export interface SpendAnalyticsFilters {
   granularity: Granularity;
   compareTo: CompareTo;
   costBasis: CostBasis;
+  currencyMode: CurrencyMode;
   groupBy: SpendAnalyticsGroupBy;
   startDate: string;
   endDate: string;
@@ -45,6 +47,7 @@ export interface CostAnalysisFilterOptions {
   apps: string[];
   teams: string[];
   envs: string[];
+  currencyModes: CurrencyMode[];
   tagKeys: string[];
 }
 
@@ -68,6 +71,8 @@ export interface BreakdownRow {
   compareLabel: string;
   drilldownLink: string;
   pinFilter: Record<string, string>;
+  isOthers?: boolean;
+  memberCount?: number;
 }
 
 export interface SpendAnomalyItem {
@@ -92,12 +97,47 @@ export interface SpendTopMoverItem {
   direction: "increase" | "decrease";
 }
 
+export interface SpendAnalyticsTrustCue {
+  lastUpdatedAt: string | null;
+  freshnessHours: number | null;
+  coveragePercent: number;
+  providerCoverage: number;
+  serviceCoverage: number;
+  regionCoverage: number;
+  confidence: "High" | "Medium" | "Low" | string;
+  scopedRows: number;
+  totalRows: number;
+}
+
+export interface SpendAnalyticsKpiCard {
+  key: string;
+  title: string;
+  value: number;
+  valueType?: "currency" | "percent" | "number";
+  status: "on_track" | "watch" | "critical" | string;
+  comparison: {
+    label: string;
+    deltaValue: number;
+    deltaPercent: number;
+  };
+  context?: {
+    peakDate?: string | null;
+    insightPoints?: string[];
+  };
+  trust?: {
+    confidence: string;
+    freshnessHours: number | null;
+    coveragePercent: number;
+  };
+}
+
 export interface SpendAnalyticsPayload {
   controls: {
     timeRange: TimeRangePreset | string;
     granularity: Granularity | string;
     compareTo: CompareTo | string;
     costBasis: CostBasis | string;
+    currencyMode: CurrencyMode | string;
     groupBy: SpendAnalyticsGroupBy | string;
     startDate: string | null;
     endDate: string | null;
@@ -106,18 +146,19 @@ export interface SpendAnalyticsPayload {
       granularities: Granularity[] | string[];
       compareTo: CompareTo[] | string[];
       costBasis: CostBasis[] | string[];
+      currencyModes: CurrencyMode[] | string[];
       groupBy: SpendAnalyticsGroupBy[] | string[];
     };
   };
+  trust: SpendAnalyticsTrustCue;
   kpiDeck: {
+    cards: SpendAnalyticsKpiCard[];
     totalSpend: number;
     avgDailySpend: number;
     peakDailySpend: number;
     trendPercent: number;
-    volatilityScore: number;
     topConcentrationShare: number;
     anomalyImpact: number;
-    predictabilityScore: number;
   };
   trend: {
     granularity: Granularity | string;
@@ -126,6 +167,7 @@ export interface SpendAnalyticsPayload {
     series: TrendSeriesPoint[];
   };
   breakdown: {
+    activeDimension: string;
     byProvider: BreakdownRow[];
     byService: BreakdownRow[];
     byRegion: BreakdownRow[];
@@ -134,6 +176,41 @@ export interface SpendAnalyticsPayload {
     byApp: BreakdownRow[];
     byEnv: BreakdownRow[];
     byCostCategory: BreakdownRow[];
+    preview: BreakdownRow[];
+  };
+  concentration: {
+    topServiceShare: number;
+    topProviderShare: number;
+    top3ServiceShare: number;
+    top5ServiceShare: number;
+    paretoByService: Array<{
+      name: string;
+      spend: number;
+      sharePercent: number;
+      cumulativeSharePercent: number;
+    }>;
+    paretoByProvider: Array<{
+      name: string;
+      spend: number;
+      sharePercent: number;
+      cumulativeSharePercent: number;
+    }>;
+  };
+  anomalyImpact: {
+    impactTotal: number;
+    shareOfSpend: number;
+    cards: Array<{
+      id: string;
+      title: string;
+      impactToDate: number;
+      detectedAt: string;
+      windowStart: string;
+      windowEnd: string;
+      confidence: string;
+      severity: string;
+      likelyDrivers: string[];
+    }>;
+    markers: Array<{ date: string; impact: number; confidence: string }>;
   };
   topMovers?: SpendTopMoverItem[];
   anomalyDetection: {
@@ -145,24 +222,6 @@ export interface SpendAnalyticsPayload {
     list: SpendAnomalyItem[];
     highlights?: SpendAnomalyItem[];
   };
-  predictabilityRisk: {
-    forecast: {
-      projectedSpend: number;
-      lowerBound: number;
-      upperBound: number;
-      confidence: string;
-      points: Array<{ date: string; forecast: number; lower: number; upper: number }>;
-    };
-    predictabilityScore: number;
-    volatilityScore: number;
-    riskMatrix: Array<{
-      name: string;
-      spend: number;
-      spendShare: number;
-      volatility: number;
-      riskLevel: string;
-    }>;
-  };
   concentrationPareto: {
     top10ServicesShare: number;
     top3AccountsShare: number;
@@ -171,10 +230,17 @@ export interface SpendAnalyticsPayload {
     topAccounts: Array<{ name: string; value: number }>;
     topRegions: Array<{ name: string; value: number }>;
   };
+  routes: {
+    overview: string;
+    breakdownExplorer: string;
+    concentration: string;
+    anomalyImpact: string;
+  };
   drilldownPaths: {
-    varianceDrivers: string;
-    resourceInventory: string;
-    billingExplorer: string;
+    overview: string;
+    breakdownExplorer: string;
+    concentration: string;
+    anomalyImpact: string;
   };
 }
 
@@ -205,6 +271,11 @@ export interface CostAnalysisCaps {
       enabled?: boolean;
       endpoints?: {
         costAnalysis?: unknown;
+        costAnalysisKpis?: unknown;
+        costAnalysisTrend?: unknown;
+        costAnalysisBreakdown?: unknown;
+        costAnalysisConcentration?: unknown;
+        costAnalysisAnomalyImpact?: unknown;
         costFilters?: unknown;
       };
     };
@@ -243,6 +314,7 @@ export const defaultSpendAnalyticsFilters: SpendAnalyticsFilters = {
   granularity: "daily",
   compareTo: "previous_period",
   costBasis: "actual",
+  currencyMode: "usd",
   groupBy: "ServiceName",
   startDate: "",
   endDate: "",
@@ -258,6 +330,7 @@ export const defaultCostAnalysisFilterOptions: CostAnalysisFilterOptions = {
   apps: ["All"],
   teams: ["All"],
   envs: ["All"],
+  currencyModes: ["usd"],
   tagKeys: [],
 };
 

@@ -4,15 +4,12 @@ import {
   Region,
   CloudAccount,
   Resource,
-  BillingUpload,
 } from '../../../models/index.js';
 import Sequelize from '../../../config/db.config.js';
 import { Op } from 'sequelize';
 import {
   anomalyThreshold,
   averageDailyFromPeriod,
-  budgetUtilizationPercentage,
-  budgetVariance,
   costSharePercentage,
   dailyAverageSpend,
   forecastedMonthlySpend,
@@ -20,12 +17,20 @@ import {
   roundTo,
   splitPeriodTrendPercentage,
 } from '../../../common/utils/cost.calculations.js';
+import {
+  budgetConsumptionPct,
+  budgetVarianceValue as formulaBudgetVarianceValue,
+  burnRatePerDay,
+  percent,
+  breachEtaDays as formulaBreachEtaDays,
+} from '../shared/core-dashboard.formulas.js';
 import { optimizationService } from '../optimization/optimization.service.js';
 import { costDriversService } from '../analytics/cost-drivers/cost-drivers.service.js';
 import {
   checkOwnershipGaps,
   checkTagCompliance,
 } from '../governance/governance.policies.js';
+import { dashboardRepository } from './overview.repository.js';
 
 /**
  * Resolve filter names to IDs for WHERE clause filtering
@@ -103,17 +108,40 @@ const toSafeDate = (value) => {
   return d && !Number.isNaN(d.getTime()) ? d : null;
 };
 
+const pad2 = (n) => String(n).padStart(2, '0');
+
 const isoDate = (value) => {
   const d = toSafeDate(value);
-  return d ? d.toISOString().split('T')[0] : null;
+  if (!d) return null;
+  return `${d.getUTCFullYear()}-${pad2(d.getUTCMonth() + 1)}-${pad2(d.getUTCDate())}`;
+};
+
+const toMonthKey = (value) => {
+  const d = toSafeDate(value);
+  if (!d) return null;
+  return `${d.getUTCFullYear()}-${pad2(d.getUTCMonth() + 1)}`;
+};
+
+const startOfMonthIso = (value) => {
+  const d = toSafeDate(value);
+  if (!d) return null;
+  const start = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), 1));
+  return isoDate(start);
+};
+
+const endOfMonthIso = (value) => {
+  const d = toSafeDate(value);
+  if (!d) return null;
+  const end = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth() + 1, 0));
+  return isoDate(end);
 };
 
 const getMonthProgress = (referenceDate) => {
   const safeRef = toSafeDate(referenceDate) || new Date();
-  const y = safeRef.getFullYear();
-  const m = safeRef.getMonth();
-  const daysInMonth = new Date(y, m + 1, 0).getDate();
-  const daysElapsed = Math.min(daysInMonth, Math.max(1, safeRef.getDate()));
+  const y = safeRef.getUTCFullYear();
+  const m = safeRef.getUTCMonth();
+  const daysInMonth = new Date(Date.UTC(y, m + 1, 0)).getUTCDate();
+  const daysElapsed = Math.min(daysInMonth, Math.max(1, safeRef.getUTCDate()));
 
   return {
     referenceDate: safeRef,
@@ -137,13 +165,35 @@ const inferAnomalyCause = (serviceName = '') => {
   return 'Usage spike above expected baseline';
 };
 
+const inferDriverReason = (driverName = '', direction = 'increase') => {
+  const label = String(driverName || '').toLowerCase();
+  if (label.includes('data') || label.includes('network') || label.includes('transfer')) {
+    return direction === 'increase' ? 'Data transfer growth' : 'Data transfer normalization';
+  }
+  if (label.includes('storage') || label.includes('s3') || label.includes('disk')) {
+    return direction === 'increase' ? 'Storage growth' : 'Storage optimization';
+  }
+  if (label.includes('compute') || label.includes('ec2') || label.includes('vm') || label.includes('instance')) {
+    return direction === 'increase' ? 'Compute utilization increase' : 'Compute rightsizing impact';
+  }
+  return direction === 'increase' ? 'Usage or unit cost increase' : 'Usage or unit cost decrease';
+};
+
+const anomalySeverityFromImpact = (impactValue = 0) => {
+  const impact = moneyToNumber(impactValue);
+  if (impact >= 20000) return 'Critical';
+  if (impact >= 7500) return 'High';
+  if (impact >= 2500) return 'Medium';
+  return 'Low';
+};
+
 const mapActionStatus = (status) => {
   const s = String(status || '').toLowerCase();
-  if (s === 'identified') return 'New';
-  if (s === 'in-review' || s === 'in_progress' || s === 'inprogress') return 'In progress';
-  if (s === 'done' || s === 'completed') return 'Done';
-  if (s === 'verified') return 'Verified';
-  return 'New';
+  if (s.includes('block')) return 'Blocked';
+  if (s === 'in-review' || s === 'in_progress' || s === 'inprogress' || s.includes('progress')) {
+    return 'In progress';
+  }
+  return 'Open';
 };
 
 const etaDaysFromPriority = (priority = 'medium') => {
@@ -151,6 +201,31 @@ const etaDaysFromPriority = (priority = 'medium') => {
   if (p === 'high') return 3;
   if (p === 'low') return 14;
   return 7;
+};
+
+const normalizeKeyPart = (value) => String(value || '').trim().toLowerCase();
+
+const uniqueBy = (items = [], keyResolver) => {
+  const seen = new Set();
+  return items.filter((item) => {
+    const key = normalizeKeyPart(keyResolver(item));
+    if (!key || seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+};
+
+const formatSignedPercentLabel = (value, digits = 1) => {
+  const num = moneyToNumber(value);
+  const sign = num > 0 ? '+' : '';
+  return `${sign}${num.toFixed(digits)}%`;
+};
+
+const budgetStatusByPercent = (value) => {
+  const pct = moneyToNumber(value);
+  if (pct > 5) return 'Over budget';
+  if (pct > 2) return 'Watch';
+  return 'On track';
 };
 
 const buildEmptyExecutiveOverview = () => ({
@@ -163,8 +238,23 @@ const buildEmptyExecutiveOverview = () => ({
     budgetVariancePercent: 0,
     realizedSavingsMtd: 0,
     pipelineSavings: 0,
-    unallocatedSpendValue: 0,
-    unallocatedSpendPercent: 0,
+    presentation: {
+      mtdSpend: { comparison: 'vs prior 0.0%', comparisonValue: 0, status: 'On track' },
+      eomForecast: { comparison: 'vs budget 0.0%', comparisonValue: 0, status: 'On track' },
+      budgetVariance: { comparison: 'variance 0.0%', comparisonValue: 0, status: 'On track' },
+      realizedSavings: { comparison: 'Pipeline unavailable', comparisonValue: 0, status: 'Watch', coveragePercent: 0 },
+    },
+    calculationContext: {
+      asOfDate: null,
+      monthStartDate: null,
+      monthEndDate: null,
+      daysElapsed: 0,
+      daysInMonth: 0,
+      daysRemaining: 0,
+      runRatePerDay: 0,
+      budgetSource: 'Auto baseline from prior trend',
+      realizedSavingsMethod: 'Sum(max(ListCost - EffectiveCost, 0)) within current month window',
+    },
   },
   outcomeAndRisk: {
     budgetBurn: {
@@ -173,6 +263,9 @@ const buildEmptyExecutiveOverview = () => ({
       monthElapsedPercent: 0,
       varianceToPacePercent: 0,
       burnRatePerDay: 0,
+      breachEtaDays: null,
+      breachEtaDate: null,
+      breachEtaLabel: null,
     },
     riskFlags: [],
   },
@@ -192,11 +285,16 @@ const buildEmptyExecutiveOverview = () => ({
   },
   anomalySpotlight: {
     anomalies: [],
+    alertsLink: '/dashboard/alerts-incidents',
     spendAnalyticsLink: '/dashboard/cost-analysis',
   },
   dataTrust: {
     lastDataRefreshAt: null,
     freshnessHours: null,
+    providerCoveragePercent: 0,
+    costCoveragePercent: 0,
+    allocationPercent: 0,
+    confidenceLevel: 'Low',
     ownerCoveragePercent: 0,
     ownerCoverageValue: 0,
     tagCompliancePercent: 0,
@@ -239,41 +337,7 @@ export const dashboardService = {
    * IMPORTANT: scoped by user uploadIds (data isolation)
    */
   async getFilters( uploadIds = []) {
-    // If you want global filters (across all uploads), remove the early return + upload filter below.
-    if (!uploadIds || uploadIds.length === 0) {
-      return { providers: ['All'], services: ['All'], regions: ['All'] };
-    }
-
-    const whereFact = { uploadid: { [Op.in]: uploadIds } };
-
-    const [providers, services, regions] = await Promise.all([
-      BillingUsageFact.findAll({
-        where: whereFact,
-        include: [{ model: CloudAccount, as: 'cloudAccount', attributes: [], required: true }],
-        attributes: [[Sequelize.fn('DISTINCT', Sequelize.col('cloudAccount.providername')), 'value']],
-        raw: true,
-      }),
-      BillingUsageFact.findAll({
-        where: whereFact,
-        include: [{ model: Service, as: 'service', attributes: [], required: true }],
-        attributes: [[Sequelize.fn('DISTINCT', Sequelize.col('service.servicename')), 'value']],
-        order: [[Sequelize.col('value'), 'ASC']],
-        raw: true,
-      }),
-      BillingUsageFact.findAll({
-        where: whereFact,
-        include: [{ model: Region, as: 'region', attributes: [], required: true }],
-        attributes: [[Sequelize.fn('DISTINCT', Sequelize.col('region.regionname')), 'value']],
-        order: [[Sequelize.col('value'), 'ASC']],
-        raw: true,
-      }),
-    ]);
-
-    return {
-      providers: ['All', ...providers.map(p => p.value).filter(Boolean)],
-      services: ['All', ...services.map(s => s.value).filter(Boolean)],
-      regions: ['All', ...regions.map(r => r.value).filter(Boolean)],
-    };
+    return dashboardRepository.getFilterOptions(uploadIds);
   },
 
   /**
@@ -322,131 +386,9 @@ export const dashboardService = {
       periodRange,
       monthlySpend,
       providerMixResult,
-      realizedSavingsResult,
+      monthlyRealizedSavings,
       latestUpload,
-    ] = await Promise.all([
-      BillingUsageFact.sum('billedcost', { where: whereClause }),
-      BillingUsageFact.findAll({
-        where: whereClause,
-        attributes: [
-          [Sequelize.fn('DATE', Sequelize.col('BillingUsageFact.chargeperiodstart')), 'date'],
-          [Sequelize.fn('SUM', Sequelize.col('BillingUsageFact.billedcost')), 'cost'],
-        ],
-        group: [Sequelize.fn('DATE', Sequelize.col('BillingUsageFact.chargeperiodstart'))],
-        order: [[Sequelize.fn('DATE', Sequelize.col('BillingUsageFact.chargeperiodstart')), 'ASC']],
-        raw: true,
-      }),
-      BillingUsageFact.findAll({
-        where: whereClause,
-        include: [{ model: Service, as: 'service', required: true, attributes: [] }],
-        attributes: [
-          [Sequelize.col('service.servicename'), 'name'],
-          [Sequelize.fn('SUM', Sequelize.col('BillingUsageFact.billedcost')), 'value'],
-        ],
-        group: [Sequelize.col('service.servicename')],
-        order: [[Sequelize.literal('value'), 'DESC']],
-        limit: 15,
-        raw: true,
-      }),
-      BillingUsageFact.findAll({
-        where: whereClause,
-        include: [{ model: Region, as: 'region', required: true, attributes: [] }],
-        attributes: [
-          [Sequelize.col('region.regionname'), 'name'],
-          [Sequelize.fn('SUM', Sequelize.col('BillingUsageFact.billedcost')), 'value'],
-        ],
-        group: [Sequelize.col('region.regionname')],
-        order: [[Sequelize.literal('value'), 'DESC']],
-        limit: 1,
-        raw: true,
-      }),
-      BillingUsageFact.findAll({
-        where: whereClause,
-        include: [{ model: CloudAccount, as: 'cloudAccount', required: true, attributes: [] }],
-        attributes: [
-          [Sequelize.col('cloudAccount.providername'), 'name'],
-          [Sequelize.fn('SUM', Sequelize.col('BillingUsageFact.billedcost')), 'value'],
-        ],
-        group: [Sequelize.col('cloudAccount.providername')],
-        order: [[Sequelize.literal('value'), 'DESC']],
-        limit: 1,
-        raw: true,
-      }),
-      BillingUsageFact.findAll({
-        where: whereClause,
-        include: [{ model: Region, as: 'region', required: true, attributes: [] }],
-        attributes: [
-          [Sequelize.col('region.regionname'), 'name'],
-          [Sequelize.fn('SUM', Sequelize.col('BillingUsageFact.billedcost')), 'value'],
-        ],
-        group: [Sequelize.col('region.regionname')],
-        order: [[Sequelize.literal('value'), 'DESC']],
-        raw: true,
-      }),
-      BillingUsageFact.findOne({
-        where: {
-          ...whereClause,
-          [Op.or]: [{ tags: { [Op.is]: null } }, { tags: { [Op.eq]: {} } }],
-        },
-        attributes: [[Sequelize.fn('SUM', Sequelize.col('BillingUsageFact.billedcost')), 'total']],
-        raw: true,
-      }),
-      BillingUsageFact.findOne({
-        where: { ...whereClause, resourceid: { [Op.or]: [{ [Op.is]: null }, { [Op.eq]: '' }] } },
-        attributes: [[Sequelize.fn('SUM', Sequelize.col('BillingUsageFact.billedcost')), 'total']],
-        raw: true,
-      }),
-      BillingUsageFact.findOne({
-        where: whereClause,
-        attributes: [
-          [Sequelize.fn('MIN', Sequelize.col('BillingUsageFact.billingperiodstart')), 'billingStart'],
-          [Sequelize.fn('MAX', Sequelize.col('BillingUsageFact.billingperiodend')), 'billingEnd'],
-          [Sequelize.fn('MIN', Sequelize.col('BillingUsageFact.chargeperiodstart')), 'chargeStart'],
-          [Sequelize.fn('MAX', Sequelize.col('BillingUsageFact.chargeperiodend')), 'chargeEnd'],
-        ],
-        raw: true,
-      }),
-      BillingUsageFact.findAll({
-        where: whereClause,
-        attributes: [
-          [monthExpr, 'month'],
-          [Sequelize.fn('SUM', Sequelize.col('BillingUsageFact.billedcost')), 'value'],
-        ],
-        group: [monthExpr],
-        order: [[monthExpr, 'DESC']],
-        limit: 2,
-        raw: true,
-      }),
-      BillingUsageFact.findAll({
-        where: whereClause,
-        include: [{ model: CloudAccount, as: 'cloudAccount', required: true, attributes: [] }],
-        attributes: [
-          [Sequelize.col('cloudAccount.providername'), 'provider'],
-          [Sequelize.fn('SUM', Sequelize.col('BillingUsageFact.billedcost')), 'value'],
-        ],
-        group: [Sequelize.col('cloudAccount.providername')],
-        order: [[Sequelize.literal('value'), 'DESC']],
-        raw: true,
-      }),
-      BillingUsageFact.findOne({
-        where: whereClause,
-        attributes: [
-          [
-            Sequelize.literal(
-              'SUM(GREATEST(COALESCE("BillingUsageFact"."listcost",0) - COALESCE("BillingUsageFact"."effectivecost",0), 0))'
-            ),
-            'value',
-          ],
-        ],
-        raw: true,
-      }),
-      BillingUpload.findOne({
-        where: { uploadid: { [Op.in]: uploadIds } },
-        attributes: ['uploadid', 'uploadedat'],
-        order: [['uploadedat', 'DESC']],
-        raw: true,
-      }),
-    ]);
+    ] = await dashboardRepository.getOverviewAggregates(whereClause, monthExpr, uploadIds);
 
     const totalSpendNum = Number(totalSpend || 0);
     const groupedData = (servicesAgg || []).map((r) => ({
@@ -491,12 +433,19 @@ export const dashboardService = {
     );
 
     const latestChargeDate =
-      toSafeDate(periodRange?.chargeEnd) ||
       toSafeDate(dailyTrend?.[dailyTrend.length - 1]?.date) ||
+      toSafeDate(periodRange?.chargeEnd) ||
       new Date();
     const monthProgress = getMonthProgress(latestChargeDate);
+    const asOfMonthKey = toMonthKey(monthProgress.referenceDate);
 
     const mtdSpend = roundTo(currentMonthSpend > 0 ? currentMonthSpend : totalSpendNum, 2);
+    const realizedSavingsMtd = roundTo(
+      moneyToNumber(
+        (monthlyRealizedSavings || []).find((row) => toMonthKey(row?.month) === asOfMonthKey)?.value || 0
+      ),
+      2
+    );
     const eomForecast = roundTo(
       forecastedMonthlySpend(
         dailyAverageSpend(mtdSpend, monthProgress.daysElapsed),
@@ -511,15 +460,16 @@ export const dashboardService = {
         : (previousMonthSpend > 0 ? previousMonthSpend * 1.05 : eomForecast * 1.05),
       2
     );
-    const budgetVarianceValue = roundTo(budgetVariance(eomForecast, resolvedBudget), 2);
-    const budgetVariancePercent =
-      resolvedBudget > 0 ? roundTo((budgetVarianceValue / resolvedBudget) * 100, 2) : 0;
-    const budgetConsumedPercent = roundTo(
-      budgetUtilizationPercentage(mtdSpend, resolvedBudget),
-      2
-    );
+    const budgetVarianceValue = formulaBudgetVarianceValue(eomForecast, resolvedBudget, 2);
+    const budgetVariancePercent = roundTo(percent(budgetVarianceValue, resolvedBudget, null), 2);
+    const budgetConsumedPercent = budgetConsumptionPct(mtdSpend, resolvedBudget, 2);
     const monthElapsedPercent = roundTo(monthProgress.monthElapsedPercent, 2);
     const varianceToPacePercent = roundTo(budgetConsumedPercent - monthElapsedPercent, 2);
+    const monthStartDate = startOfMonthIso(monthProgress.referenceDate);
+    const monthEndDate = endOfMonthIso(monthProgress.referenceDate);
+    const asOfDate = isoDate(monthProgress.referenceDate);
+    const daysRemaining = Math.max(0, monthProgress.daysInMonth - monthProgress.daysElapsed);
+    const runRatePerDay = burnRatePerDay(mtdSpend, monthProgress.daysElapsed, 2);
 
     let burnStatus = 'On track';
     if (
@@ -532,6 +482,20 @@ export const dashboardService = {
       (resolvedBudget > 0 && eomForecast > resolvedBudget)
     ) {
       burnStatus = 'Watch';
+    }
+
+    let breachEtaDays = null;
+    let breachEtaDate = null;
+    let breachEtaLabel = null;
+    if (budgetConsumedPercent > monthElapsedPercent && budgetConsumedPercent > 0) {
+      const rawDays = formulaBreachEtaDays(resolvedBudget, mtdSpend, runRatePerDay, 1);
+      if (Number.isFinite(rawDays)) {
+        breachEtaDays = Math.max(0, rawDays);
+        const etaDate = new Date(monthProgress.referenceDate);
+        etaDate.setUTCDate(etaDate.getUTCDate() + Math.ceil(breachEtaDays));
+        breachEtaDate = isoDate(etaDate);
+        breachEtaLabel = breachEtaDays <= 0 ? 'Now' : `${Math.ceil(breachEtaDays)}d`;
+      }
     }
 
     const [
@@ -547,7 +511,7 @@ export const dashboardService = {
       checkOwnershipGaps({
         filters: { provider, service, region },
         uploadIds,
-      }).catch(() => ({ ownedCostValue: 0, unownedCostValue: 0 })),
+      }).catch(() => ({ ownedCostValue: 0 })),
       checkTagCompliance({
         filters: { provider, service, region },
         uploadIds,
@@ -588,15 +552,7 @@ export const dashboardService = {
     );
 
     const ownedSpendValue = moneyToNumber(ownershipGaps?.ownedCostValue);
-    const unallocatedSpendValue = roundTo(
-      moneyToNumber(ownershipGaps?.unownedCostValue),
-      2
-    );
-    const ownershipSpendTotal = Math.max(ownedSpendValue + unallocatedSpendValue, totalSpendNum, 0);
-    const unallocatedSpendPercent = roundTo(
-      costSharePercentage(unallocatedSpendValue, ownershipSpendTotal || 1),
-      2
-    );
+    const ownershipSpendTotal = Math.max(totalSpendNum, ownedSpendValue, 0);
     const ownerCoveragePercent = roundTo(
       costSharePercentage(ownedSpendValue, ownershipSpendTotal || 1),
       2
@@ -634,7 +590,23 @@ export const dashboardService = {
     ]
       .sort((a, b) => Math.abs(b.deltaValue) - Math.abs(a.deltaValue))
       .slice(0, 5)
-      .map((d) => ({ ...d, deepLink: '/dashboard/cost-drivers' }));
+      .map((d) => {
+        const magnitudeSharePercent = roundTo(
+          costSharePercentage(Math.abs(moneyToNumber(d?.deltaValue)), totalSpendNum || 1),
+          2
+        );
+        const confidence =
+          magnitudeSharePercent >= 8
+            ? 'High'
+            : magnitudeSharePercent >= 3
+              ? 'Medium'
+              : 'Low';
+        return {
+          ...d,
+          reasonLabel: inferDriverReason(d?.name, d?.direction),
+          confidence,
+        };
+      });
 
     const trackerByTitle = new Map(
       (optimizationTracker || []).map((item) => [
@@ -642,7 +614,7 @@ export const dashboardService = {
         mapActionStatus(item?.status),
       ])
     );
-    const resolveActionStatus = (title, fallback = 'New') => {
+    const resolveActionStatus = (title, fallback = 'Open') => {
       const normalized = String(title || '').toLowerCase();
       for (const [key, value] of trackerByTitle.entries()) {
         if (key && normalized.includes(key)) return value;
@@ -658,12 +630,11 @@ export const dashboardService = {
         id: `idle-${resource?.id || resource?.resourceId || title}`,
         title,
         owner: resource?.owner || 'Unassigned',
-        status: resolveActionStatus(title, 'New'),
+        status: resolveActionStatus(title, 'Open'),
         expectedSavings,
         confidence: resource?.confidence || 'Medium',
         etaDays: etaDaysFromPriority(priority),
         etaLabel: `${etaDaysFromPriority(priority)}d`,
-        deepLink: '/dashboard/optimization',
       };
     });
 
@@ -683,13 +654,13 @@ export const dashboardService = {
           confidence,
           etaDays: etaDaysFromPriority('medium'),
           etaLabel: `${etaDaysFromPriority('medium')}d`,
-          deepLink: '/dashboard/optimization',
         };
       });
 
-    const topActions = [...idleActions, ...rightSizeActions]
-      .sort((a, b) => b.expectedSavings - a.expectedSavings)
-      .slice(0, 5);
+    const topActions = uniqueBy(
+      [...idleActions, ...rightSizeActions].sort((a, b) => b.expectedSavings - a.expectedSavings),
+      (action) => action?.title || action?.id
+    ).slice(0, 5);
 
     const latestUploadAt = latestUpload?.uploadedat ? new Date(latestUpload.uploadedat) : null;
     const freshnessHours =
@@ -709,17 +680,7 @@ export const dashboardService = {
         severity: (anomaliesData?.count || 0) > 5 ? 'high' : ((anomaliesData?.count || 0) > 0 ? 'medium' : 'low'),
         count: anomaliesData?.count || 0,
         impactValue: anomalyImpactValue,
-        ctaLink: '/dashboard/cost-analysis',
-      },
-      {
-        key: 'unallocated',
-        label: 'High unallocated spend',
-        active: unallocatedSpendPercent >= 10,
-        severity: unallocatedSpendPercent >= 15 ? 'high' : (unallocatedSpendPercent >= 10 ? 'medium' : 'low'),
-        count: null,
-        impactValue: unallocatedSpendValue,
-        metricPercent: unallocatedSpendPercent,
-        ctaLink: '/dashboard/allocation-unit-economics',
+        ctaLink: '/dashboard/cost-drivers',
       },
       {
         key: 'commitment',
@@ -749,7 +710,7 @@ export const dashboardService = {
         count: null,
         impactValue: 0,
         metricPercent: concentrationShare,
-        ctaLink: '/dashboard/cost-analysis',
+        ctaLink: '/dashboard/cost-drivers',
       },
     ];
 
@@ -761,6 +722,62 @@ export const dashboardService = {
           ? 'Tag compliance improving'
           : 'Tag compliance needs attention';
 
+    const unknownProviderValue = (providerMix || []).reduce((sum, row) => {
+      const providerLabel = String(row?.provider || '').trim().toLowerCase();
+      if (!providerLabel || providerLabel === 'unknown' || providerLabel === 'n/a') {
+        return sum + moneyToNumber(row?.value);
+      }
+      return sum;
+    }, 0);
+    const providerCoveragePercent = roundTo(
+      costSharePercentage(Math.max(0, totalSpendNum - unknownProviderValue), totalSpendNum || 1),
+      2
+    );
+    const costCoveragePercent = roundTo(
+      costSharePercentage(Math.max(0, totalSpendNum - missingMetadataCost), totalSpendNum || 1),
+      2
+    );
+    const allocationPercent = roundTo(Math.max(0, ownerCoveragePercent), 2);
+    let confidenceLevel = 'Low';
+    if (
+      freshnessHours != null &&
+      freshnessHours <= 24 &&
+      costCoveragePercent >= 98 &&
+      allocationPercent >= 95
+    ) {
+      confidenceLevel = 'High';
+    } else if (
+      freshnessHours != null &&
+      freshnessHours <= 48 &&
+      costCoveragePercent >= 95 &&
+      allocationPercent >= 90
+    ) {
+      confidenceLevel = 'Medium';
+    }
+
+    const mtdStatus = budgetStatusByPercent(spendChangePercent);
+    const forecastDeltaPercent = roundTo(percent(budgetVarianceValue, resolvedBudget, null), 2);
+    const forecastStatus = budgetStatusByPercent(forecastDeltaPercent);
+    const varianceStatus = budgetStatusByPercent(budgetVariancePercent);
+    const realizedCoveragePercent = roundTo(percent(realizedSavingsMtd, pipelineSavings, null), 2);
+    const realizedStatus =
+      pipelineSavings > 0
+        ? (realizedCoveragePercent >= 70 ? 'On track' : 'Watch')
+        : (realizedSavingsMtd > 0 ? 'On track' : 'Watch');
+    const realizedComparison =
+      pipelineSavings > 0
+        ? `${roundTo(realizedCoveragePercent, 1).toFixed(1)}% of pipeline`
+        : 'Pipeline unavailable';
+    const realizedComparisonValue =
+      pipelineSavings > 0
+        ? -Math.abs(realizedCoveragePercent)
+        : (realizedSavingsMtd > 0 ? -1 : 1);
+
+    const topUniqueAnomalies = uniqueBy(
+      anomalyList,
+      (a) => `${a?.ServiceName || ''}|${a?.ProviderName || ''}|${a?.RegionName || ''}`
+    ).slice(0, 3);
+
     const executiveOverview = {
       kpiHeader: {
         mtdSpend: roundTo(mtdSpend, 2),
@@ -769,10 +786,42 @@ export const dashboardService = {
         budget: roundTo(resolvedBudget, 2),
         budgetVarianceValue: roundTo(budgetVarianceValue, 2),
         budgetVariancePercent: roundTo(budgetVariancePercent, 2),
-        realizedSavingsMtd: roundTo(moneyToNumber(realizedSavingsResult?.value), 2),
+        realizedSavingsMtd,
         pipelineSavings: roundTo(pipelineSavings, 2),
-        unallocatedSpendValue: roundTo(unallocatedSpendValue, 2),
-        unallocatedSpendPercent: roundTo(unallocatedSpendPercent, 2),
+        presentation: {
+          mtdSpend: {
+            comparison: `vs prior ${formatSignedPercentLabel(spendChangePercent)}`,
+            comparisonValue: roundTo(spendChangePercent, 2),
+            status: mtdStatus,
+          },
+          eomForecast: {
+            comparison: `vs budget ${formatSignedPercentLabel(forecastDeltaPercent)}`,
+            comparisonValue: roundTo(forecastDeltaPercent, 2),
+            status: forecastStatus,
+          },
+          budgetVariance: {
+            comparison: `variance ${formatSignedPercentLabel(budgetVariancePercent)}`,
+            comparisonValue: roundTo(budgetVariancePercent, 2),
+            status: varianceStatus,
+          },
+          realizedSavings: {
+            comparison: realizedComparison,
+            comparisonValue: roundTo(realizedComparisonValue, 2),
+            status: realizedStatus,
+            coveragePercent: roundTo(realizedCoveragePercent, 2),
+          },
+        },
+        calculationContext: {
+          asOfDate,
+          monthStartDate,
+          monthEndDate,
+          daysElapsed: monthProgress.daysElapsed,
+          daysInMonth: monthProgress.daysInMonth,
+          daysRemaining,
+          runRatePerDay,
+          budgetSource: budgetInput > 0 ? 'User input budget' : 'Auto baseline from prior trend',
+          realizedSavingsMethod: 'Sum(max(ListCost - EffectiveCost, 0)) within current month window',
+        },
       },
       outcomeAndRisk: {
         budgetBurn: {
@@ -780,7 +829,10 @@ export const dashboardService = {
           budgetConsumedPercent: roundTo(budgetConsumedPercent, 2),
           monthElapsedPercent: roundTo(monthElapsedPercent, 2),
           varianceToPacePercent: roundTo(varianceToPacePercent, 2),
-          burnRatePerDay: roundTo(dailyAverageSpend(mtdSpend, monthProgress.daysElapsed), 2),
+          burnRatePerDay: runRatePerDay,
+          breachEtaDays,
+          breachEtaDate,
+          breachEtaLabel,
         },
         riskFlags,
       },
@@ -799,22 +851,31 @@ export const dashboardService = {
         optimizationLink: '/dashboard/optimization',
       },
       anomalySpotlight: {
-        anomalies: anomalyList.slice(0, 3).map((a) => ({
+        anomalies: topUniqueAnomalies.map((a) => ({
           id: a?.id,
           serviceName: a?.ServiceName || 'Unknown Service',
           providerName: a?.ProviderName || 'N/A',
           regionName: a?.RegionName || 'N/A',
+          title: `${a?.ServiceName || 'Service'} spend anomaly`,
           impactPerDay: roundTo(Math.max(0, moneyToNumber(a?.cost) - moneyToNumber(a?.threshold)), 2),
+          impactToDate: roundTo(Math.max(0, moneyToNumber(a?.cost) - moneyToNumber(a?.threshold)), 2),
           suspectedCause: inferAnomalyCause(a?.ServiceName),
           firstDetectedDate: isoDate(a?.ChargePeriodStart),
+          timeWindowLabel: a?.ChargePeriodStart ? `Since ${isoDate(a?.ChargePeriodStart)}` : 'Current detection window',
+          severity: anomalySeverityFromImpact(Math.max(0, moneyToNumber(a?.cost) - moneyToNumber(a?.threshold))),
           cost: roundTo(moneyToNumber(a?.cost), 2),
-          deepLink: '/dashboard/cost-analysis',
+          deepLink: '/dashboard/alerts-incidents',
         })),
+        alertsLink: '/dashboard/alerts-incidents',
         spendAnalyticsLink: '/dashboard/cost-analysis',
       },
       dataTrust: {
         lastDataRefreshAt: latestUploadAt ? latestUploadAt.toISOString() : null,
         freshnessHours,
+        providerCoveragePercent,
+        costCoveragePercent,
+        allocationPercent,
+        confidenceLevel,
         ownerCoveragePercent: roundTo(ownerCoveragePercent, 2),
         ownerCoverageValue: roundTo(ownedSpendValue, 2),
         tagCompliancePercent,

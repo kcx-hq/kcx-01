@@ -49,12 +49,17 @@ export interface BudgetBurn {
   monthElapsedPercent: number;
   varianceToPacePercent: number;
   burnRatePerDay: number;
+  breachEtaDays?: number | null;
+  breachEtaDate?: string | null;
+  breachEtaLabel?: string | null;
 }
 
 export interface TopMoverDriver {
   name: string;
   deltaValue: number;
   direction: string;
+  reasonLabel?: string;
+  confidence?: string;
   deepLink?: string;
 }
 
@@ -82,10 +87,21 @@ export interface OverviewAnomaly {
   providerName: string;
   regionName: string;
   impactPerDay: number;
+  impactToDate?: number;
   suspectedCause: string;
   firstDetectedDate: string | null;
   cost?: number;
+  title?: string;
+  severity?: string;
+  timeWindowLabel?: string;
   deepLink?: string;
+}
+
+export interface ExecutiveKpiPresentationItem {
+  comparison: string;
+  comparisonValue: number;
+  status: string;
+  coveragePercent?: number;
 }
 
 export interface ExecutiveOverview {
@@ -98,8 +114,23 @@ export interface ExecutiveOverview {
     budgetVariancePercent: number;
     realizedSavingsMtd: number;
     pipelineSavings: number;
-    unallocatedSpendValue: number;
-    unallocatedSpendPercent: number;
+    presentation?: {
+      mtdSpend: ExecutiveKpiPresentationItem;
+      eomForecast: ExecutiveKpiPresentationItem;
+      budgetVariance: ExecutiveKpiPresentationItem;
+      realizedSavings: ExecutiveKpiPresentationItem;
+    };
+    calculationContext?: {
+      asOfDate: string | null;
+      monthStartDate: string | null;
+      monthEndDate: string | null;
+      daysElapsed: number;
+      daysInMonth: number;
+      daysRemaining: number;
+      runRatePerDay: number;
+      budgetSource: string;
+      realizedSavingsMethod?: string;
+    };
   };
   outcomeAndRisk: {
     budgetBurn: BudgetBurn;
@@ -121,11 +152,16 @@ export interface ExecutiveOverview {
   };
   anomalySpotlight: {
     anomalies: OverviewAnomaly[];
+    alertsLink?: string;
     spendAnalyticsLink: string;
   };
   dataTrust: {
     lastDataRefreshAt: string | null;
     freshnessHours: number | null;
+    providerCoveragePercent?: number;
+    costCoveragePercent?: number;
+    allocationPercent?: number;
+    confidenceLevel?: "High" | "Medium" | "Low";
     ownerCoveragePercent: number;
     ownerCoverageValue: number;
     tagCompliancePercent: number;

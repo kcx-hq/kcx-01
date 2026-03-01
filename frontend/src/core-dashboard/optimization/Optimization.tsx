@@ -8,15 +8,13 @@ import type {
   IdleSort,
   OptimizationProps,
   OptimizationTab,
-  Opportunity,
-  RightSizingRecommendation,
 } from "./types";
 
 export default function Optimization({ filters: parentFilters = {}, api, caps }: OptimizationProps) {
   const { user } = useAuthStore();
   const isMasked = !user?.is_premium; // NOT premium => masked
 
-  const [activeTab, setActiveTab] = useState("overview");
+  const [activeTab, setActiveTab] = useState<OptimizationTab>("overview");
   const [expandedItems, setExpandedItems] = useState({});
   const [selectedInsight, setSelectedInsight] = useState(null);
   const [selectedResource, setSelectedResource] = useState(null);

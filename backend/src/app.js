@@ -9,6 +9,17 @@ import cors from "cors";
 import coreDashboardRoutes from "./modules/core-dashboard/core-dashboard.routes.js";
 import capabililitesRoutes from "./modules/shared/capabilities/capabilities.routes.js";
 import chatbotRoutes from "./modules/shared/chatbot/chat.routes.js";
+import express from "express";
+import compression from "compression";
+import AppError from "./errors/AppError.js";
+import authRoutes from "./modules/shared/auth/auth.route.js";
+import inquiryRoutes from "./modules/shared/inquiry/inquiry.route.js";
+import etlRoutes from "./modules/shared/ETL/etl.route.js";
+import cookieParser from "cookie-parser";
+import cors from "cors";
+import coreDashboardRoutes from "./modules/core-dashboard/core-dashboard.routes.js";
+import capabililitesRoutes from "./modules/shared/capabilities/capabilities.routes.js";
+import chatbotRoutes from "./modules/shared/chatbot/chat.routes.js";
 import cloudRoutes from "./modules/shared/cloud/cloud.route.js";
 import cloudAccountCredentialsRoutes from "./modules/internal/cloud-account-credentials/cloudAccountCredential.route.js";
 import clientRoutes from "./modules/clients/index.js";
@@ -83,7 +94,12 @@ export function createApp(deps = {}) {
   app.disable("x-powered-by");
 
   app.disable('etag'); // Before compression middleware
+  app.disable("x-powered-by");
 
+  app.disable('etag'); // Before compression middleware
+
+  // PERFORMANCE: Add compression middleware to reduce response sizes
+  // app.use(compression({ level: 6, threshold: 1024 })); // Compress responses > 1KB
   // PERFORMANCE: Add compression middleware to reduce response sizes
   // app.use(compression({ level: 6, threshold: 1024 })); // Compress responses > 1KB
 
@@ -155,6 +171,45 @@ export function createApp(deps = {}) {
     return res.ok({ status: "ready" });
   });
 
+  // Global default deny: every route is authenticated unless explicitly public.
+  app.use(defaultDenyAuth);
+  app.use(requireInternalRole);
+  app.use(validateRequest);
+
+  app.get("/healthz", (_req, res) => {
+    return res.ok({ status: "ok" });
+  });
+
+  app.get("/readyz", async (_req, res, next) => {
+    const readinessResult = await readiness();
+    if (!readinessResult.ready) {
+      return next(
+        new AppError(503, "NOT_READY", "Service not ready", {
+          cause:
+            readinessResult.error instanceof Error
+              ? readinessResult.error
+              : undefined,
+        })
+      );
+    }
+    return res.ok({ status: "ready" });
+  });
+
+  // Routes
+  mountApiRouters(app);
+  for (const basePath of INTERNAL_BASE_PATHS) {
+    app.use(`${basePath}/cloud-account-credentials`, cloudAccountCredentialsRoutes);
+  }
+
+  app.use(notFoundHandler);
+  app.use(errorHandler);
+
+  return app;
+}
+
+const app = createApp();
+
+export default app;
   // Routes
   mountApiRouters(app);
   for (const basePath of INTERNAL_BASE_PATHS) {

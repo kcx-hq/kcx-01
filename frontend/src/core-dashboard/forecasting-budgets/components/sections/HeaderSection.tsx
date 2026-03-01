@@ -19,10 +19,11 @@ export function HeaderSection({ controls, filters, executiveSentence }: HeaderSe
               Forecasting & Budgets
             </h1>
             <p className="mt-1 text-sm text-[var(--text-muted)]">
-              Planning and control outputs on final allocated cost with governance-gated confidence.
+              Owner: Planning Outcomes. This section owns budget outcomes, forecast accuracy, and scenarios.
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
+            <ScopeChip label="Owner: Planning Outcomes" />
             <ScopeChip label={`Provider: ${filters.provider || "All"}`} />
             <ScopeChip label={`Service: ${filters.service || "All"}`} />
             <ScopeChip label={`Region: ${filters.region || "All"}`} />

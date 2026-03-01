@@ -114,12 +114,13 @@ export default function ShowbackTableSection({
   const shouldScrollRows = teamRows.length > 12;
 
   const metrics = useMemo(() => {
-    const totalAllocated = round(rows.reduce((sum, row) => sum + Number(row.totalCost || 0), 0), 2);
+    const totalScopedCost = round(rows.reduce((sum, row) => sum + Number(row.totalCost || 0), 0), 2);
     const pendingAdjustment = round(Math.max(0, Number(coverage.unallocatedAmount || 0)), 2);
-    const chargebackExecutedAmount = round(Math.max(0, totalAllocated - pendingAdjustment), 2);
-    const showbackDistributed = totalAllocated;
+    const totalAllocated = round(Math.max(0, totalScopedCost - pendingAdjustment), 2);
+    const chargebackExecutedAmount = totalAllocated;
+    const showbackDistributed = totalScopedCost;
     const chargebackAppliedPct =
-      totalAllocated > 0 ? round((chargebackExecutedAmount / totalAllocated) * 100, 2) : 0;
+      totalScopedCost > 0 ? round((chargebackExecutedAmount / totalScopedCost) * 100, 2) : 0;
     const showbackOnlyPct = round(Math.max(0, 100 - chargebackAppliedPct), 2);
 
     const budgetRows = teamRows.filter((row) => row.budget !== null);
@@ -128,9 +129,9 @@ export default function ShowbackTableSection({
     const budgetVarianceByTeamPct =
       totalBudget > 0 ? round((totalVariance / totalBudget) * 100, 2) : null;
 
-    const pendingPct = totalAllocated > 0 ? (pendingAdjustment / totalAllocated) * 100 : 0;
+    const pendingPct = totalScopedCost > 0 ? (pendingAdjustment / totalScopedCost) * 100 : 0;
     const internalBillingStatus =
-      totalAllocated === 0
+      totalScopedCost === 0
         ? 'No Data'
         : pendingPct <= 1
           ? 'Chargeback Ready'
@@ -139,6 +140,7 @@ export default function ShowbackTableSection({
             : 'Showback Only';
 
     return {
+      totalScopedCost,
       totalAllocated,
       showbackDistributed,
       chargebackExecutedAmount,
@@ -170,6 +172,7 @@ export default function ShowbackTableSection({
         summary: 'Final allocated cost in current scope after direct and shared allocation.',
         points: [
           `Total allocated: ${formatCurrency(metrics.totalAllocated)}`,
+          `Total scoped cost: ${formatCurrency(metrics.totalScopedCost)}`,
           `Showback distributed: ${formatCurrency(metrics.showbackDistributed)}`,
           `Chargeback executed: ${formatCurrency(metrics.chargebackExecutedAmount)}`,
         ],

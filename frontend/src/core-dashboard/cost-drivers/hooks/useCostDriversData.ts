@@ -10,7 +10,9 @@ import type {
   CostDriversCaps,
   CostDriversFilters,
   CostDriversKpiCard,
+  CostDriversRateVsUsageModel,
   CostDriversResponse,
+  CostDriversTopDriverRow,
   CostDriversTrendPoint,
   CostDriversWaterfall,
   DriverSeverity,
@@ -67,6 +69,22 @@ const DEFAULT_RUN_META = {
     latestBillingDate: null,
   },
   filterScope: {},
+};
+
+const DEFAULT_TOP_DRIVERS: CostDriversTopDriverRow[] = [];
+
+const DEFAULT_RATE_VS_USAGE: CostDriversRateVsUsageModel = {
+  supported: false,
+  supportReason: 'Insufficient quantity coverage for reliable rate-vs-usage attribution.',
+  coveragePercent: 0,
+  summary: {
+    usageEffectValue: 0,
+    rateEffectValue: 0,
+    interactionValue: 0,
+    totalExplainedFromSplit: 0,
+  },
+  interpretation: 'No decomposition signal available.',
+  rows: [],
 };
 
 const DEFAULT_DECOMPOSITION = {
@@ -146,6 +164,8 @@ interface UseCostDriversDataResult {
   kpiStrip: CostDriversKpiCard[];
   waterfall: CostDriversWaterfall;
   decomposition: typeof DEFAULT_DECOMPOSITION;
+  topDrivers: CostDriversTopDriverRow[];
+  rateVsUsage: CostDriversRateVsUsageModel;
   trendComparison: typeof DEFAULT_TREND_COMPARISON;
   unexplainedVariance: typeof DEFAULT_UNEXPLAINED;
   attributionConfidence: typeof DEFAULT_ATTRIBUTION_CONFIDENCE;
@@ -218,6 +238,8 @@ export function useCostDriversData(input: UseCostDriversDataInput): UseCostDrive
     validation: { computedEnd: 0, expectedEnd: 0, deltaDifference: 0, isBalanced: true },
   });
   const [decomposition, setDecomposition] = useState(DEFAULT_DECOMPOSITION);
+  const [topDrivers, setTopDrivers] = useState<CostDriversTopDriverRow[]>(DEFAULT_TOP_DRIVERS);
+  const [rateVsUsage, setRateVsUsage] = useState<CostDriversRateVsUsageModel>(DEFAULT_RATE_VS_USAGE);
   const [trendComparison, setTrendComparison] = useState(DEFAULT_TREND_COMPARISON);
   const [unexplainedVariance, setUnexplainedVariance] = useState(DEFAULT_UNEXPLAINED);
   const [attributionConfidence, setAttributionConfidence] = useState(DEFAULT_ATTRIBUTION_CONFIDENCE);
@@ -330,6 +352,8 @@ export function useCostDriversData(input: UseCostDriversDataInput): UseCostDrive
         );
         setTrendComparison(payload.trendComparison || DEFAULT_TREND_COMPARISON);
         setDecomposition(payload.decomposition || DEFAULT_DECOMPOSITION);
+        setTopDrivers(Array.isArray(payload.topDrivers) ? payload.topDrivers : DEFAULT_TOP_DRIVERS);
+        setRateVsUsage(payload.rateVsUsage || DEFAULT_RATE_VS_USAGE);
         setUnexplainedVariance(payload.unexplainedVariance || DEFAULT_UNEXPLAINED);
         setAttributionConfidence(payload.attributionConfidence || DEFAULT_ATTRIBUTION_CONFIDENCE);
         setRunMeta(payload.runMeta || DEFAULT_RUN_META);
@@ -349,6 +373,7 @@ export function useCostDriversData(input: UseCostDriversDataInput): UseCostDrive
         if (err?.name === 'AbortError') return;
         if (!abortControllerRef.current?.signal.aborted) {
           setErrorMessage('Error loading cost drivers. Please try again.');
+          console.error('Error fetching cost drivers:', error);
         }
       } finally {
         if (!abortControllerRef.current?.signal.aborted) {
@@ -400,6 +425,8 @@ export function useCostDriversData(input: UseCostDriversDataInput): UseCostDrive
     waterfall,
     trendComparison,
     decomposition,
+    topDrivers,
+    rateVsUsage,
     unexplainedVariance,
     attributionConfidence,
     runMeta,

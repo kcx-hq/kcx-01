@@ -1,4 +1,5 @@
 import { createRequire } from "module";
+import { createRequire } from "module";
 import { S3Client, GetObjectCommand } from "@aws-sdk/client-s3";
 import { createGunzip } from "zlib";
 import csv from "csv-parser";
@@ -18,7 +19,10 @@ import { detectProvider } from "./provider-detect.service.js";
 import { autoSuggest } from "../../../utils/mapping/autoSuggest.js";
 import { internalFields } from "../../../utils/mapping/internalFields.js";
 import logger from "../../../lib/logger.js";
+import logger from "../../../lib/logger.js";
 
+const require = createRequire(import.meta.url);
+const { sequelize } = require("../../../db/index.cjs");
 const require = createRequire(import.meta.url);
 const { sequelize } = require("../../../db/index.cjs");
 
@@ -26,6 +30,7 @@ async function ingest() {
   try {
     const s3Key = process.argv[2];
     const clientid = "e757b872-9f72-45d0-9003-f48247a580c5";
+    const uploadId = "dc9da399-22a7-4e3e-aaf7-f8c74f158377";
     const uploadId = "dc9da399-22a7-4e3e-aaf7-f8c74f158377";
     const creds = await assumeRole();
 
@@ -48,6 +53,7 @@ async function ingest() {
       : response.Body;
 
     const csvStream = inputStream.pipe(csv());
+
 
     let headers;
     let provider;
@@ -76,6 +82,7 @@ async function ingest() {
         await storeAutoSuggestions(provider, uploadId, suggestions, clientid);
 
         resolvedMapping = await loadResolvedMapping(provider, headers, clientid);
+        resolvedMapping = await loadResolvedMapping(provider, headers, clientid);
       }
 
       if (resolvedMapping) {
@@ -102,20 +109,27 @@ async function ingest() {
 
       // Keep ingestion permissive: only core dimensions are mandatory.
       // Optional dimensions (resource, sku, commitment discount) can be null.
+      // Keep ingestion permissive: only core dimensions are mandatory.
+      // Optional dimensions (resource, sku, commitment discount) can be null.
       if (
         !dimensionIds.regionid ||
         !dimensionIds.cloudaccountid ||
         !dimensionIds.serviceid
+        !dimensionIds.serviceid
       ) continue;
 
-      await pushFact(uploadId, row, dimensionIds);
+      if (pushFact(uploadId, row, dimensionIds)) {
+        await flushFacts(uploadId);
+      }
     }
 
     await flushFacts();
     logger.info({ uploadId, clientid, bucket: Bucket }, "direct ETL complete");
   } catch (err) {
     logger.error({ err }, "direct ETL failed");
+    logger.error({ err }, "direct ETL failed");
   }
 }
 
 ingest()
+

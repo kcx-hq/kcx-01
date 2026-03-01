@@ -15,8 +15,28 @@ const emptyExecutiveOverview: ExecutiveOverview = {
     budgetVariancePercent: 0,
     realizedSavingsMtd: 0,
     pipelineSavings: 0,
-    unallocatedSpendValue: 0,
-    unallocatedSpendPercent: 0,
+    presentation: {
+      mtdSpend: { comparison: "vs prior 0.0%", comparisonValue: 0, status: "On track" },
+      eomForecast: { comparison: "vs budget 0.0%", comparisonValue: 0, status: "On track" },
+      budgetVariance: { comparison: "variance 0.0%", comparisonValue: 0, status: "On track" },
+      realizedSavings: {
+        comparison: "Pipeline unavailable",
+        comparisonValue: 0,
+        status: "Watch",
+        coveragePercent: 0,
+      },
+    },
+    calculationContext: {
+      asOfDate: null,
+      monthStartDate: null,
+      monthEndDate: null,
+      daysElapsed: 0,
+      daysInMonth: 0,
+      daysRemaining: 0,
+      runRatePerDay: 0,
+      budgetSource: "Auto baseline",
+      realizedSavingsMethod: "Sum(max(ListCost - EffectiveCost, 0)) within current month window",
+    },
   },
   outcomeAndRisk: {
     budgetBurn: {
@@ -25,6 +45,9 @@ const emptyExecutiveOverview: ExecutiveOverview = {
       monthElapsedPercent: 0,
       varianceToPacePercent: 0,
       burnRatePerDay: 0,
+      breachEtaDays: null,
+      breachEtaDate: null,
+      breachEtaLabel: null,
     },
     riskFlags: [],
   },
@@ -44,11 +67,16 @@ const emptyExecutiveOverview: ExecutiveOverview = {
   },
   anomalySpotlight: {
     anomalies: [],
+    alertsLink: "/dashboard/alerts-incidents",
     spendAnalyticsLink: "/dashboard/cost-analysis",
   },
   dataTrust: {
     lastDataRefreshAt: null,
     freshnessHours: null,
+    providerCoveragePercent: 0,
+    costCoveragePercent: 0,
+    allocationPercent: 0,
+    confidenceLevel: "Low",
     ownerCoveragePercent: 0,
     ownerCoverageValue: 0,
     tagCompliancePercent: 0,
@@ -80,6 +108,14 @@ const normalizeExecutiveOverview = (
     kpiHeader: {
       ...emptyExecutiveOverview.kpiHeader,
       ...(source.kpiHeader ?? {}),
+      presentation: {
+        ...emptyExecutiveOverview.kpiHeader.presentation,
+        ...(source.kpiHeader?.presentation ?? {}),
+      },
+      calculationContext: {
+        ...emptyExecutiveOverview.kpiHeader.calculationContext,
+        ...(source.kpiHeader?.calculationContext ?? {}),
+      },
     },
     outcomeAndRisk: {
       ...emptyExecutiveOverview.outcomeAndRisk,

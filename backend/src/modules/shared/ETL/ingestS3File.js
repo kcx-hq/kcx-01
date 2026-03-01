@@ -1,4 +1,5 @@
 import { createRequire } from "module";
+import { createRequire } from "module";
 import { S3Client, GetObjectCommand } from "@aws-sdk/client-s3";
 import { createGunzip } from "zlib";
 import csv from "csv-parser";
@@ -23,14 +24,20 @@ import { detectProvider } from "./provider-detect.service.js";
 import { autoSuggest } from "../../../utils/mapping/autoSuggest.js";
 import { internalFields } from "../../../utils/mapping/internalFields.js";
 import logger from "../../../lib/logger.js";
+import logger from "../../../lib/logger.js";
 
+const require = createRequire(import.meta.url);
+const { sequelize } = require("../../../db/index.cjs");
 const require = createRequire(import.meta.url);
 const { sequelize } = require("../../../db/index.cjs");
 
 export async function ingestS3File({
+export async function ingestS3File({
   s3Key,
   clientid,
   uploadId,
+  Bucket,
+  clientcreds = null,
   Bucket,
   clientcreds = null,
   region = "ap-south-1",

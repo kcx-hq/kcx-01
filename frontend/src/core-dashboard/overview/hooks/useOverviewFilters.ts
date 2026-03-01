@@ -19,6 +19,12 @@ const defaultFilterOptions: OverviewFilterOptions = {
 const toStringArray = (value: unknown): string[] =>
   Array.isArray(value) ? value.filter((item): item is string => typeof item === "string") : [];
 
+const normalizeAllFirst = (values: string[]): string[] => {
+  const cleaned = values.map((item) => item.trim()).filter(Boolean);
+  const withoutAll = cleaned.filter((item) => item.toLowerCase() !== "all");
+  return ["All", ...Array.from(new Set(withoutAll))];
+};
+
 const getFilterPayload = (response: unknown): OverviewFilterOptions | null => {
   if (!isObjectRecord(response)) return null;
 
@@ -29,9 +35,9 @@ const getFilterPayload = (response: unknown): OverviewFilterOptions | null => {
   if (!providers.length && !services.length && !regions.length) return null;
 
   return {
-    providers: providers.length ? providers : defaultFilterOptions.providers,
-    services: services.length ? services : defaultFilterOptions.services,
-    regions: regions.length ? regions : defaultFilterOptions.regions,
+    providers: providers.length ? normalizeAllFirst(providers) : defaultFilterOptions.providers,
+    services: services.length ? normalizeAllFirst(services) : defaultFilterOptions.services,
+    regions: regions.length ? normalizeAllFirst(regions) : defaultFilterOptions.regions,
   };
 };
 

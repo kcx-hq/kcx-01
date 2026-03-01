@@ -1,3 +1,6 @@
+import type { ApiClient, Capabilities } from "../../services/apiClient";
+import type { DashboardFilters } from "../dashboard/types";
+
 export type RiskLevel = "green" | "amber" | "red";
 
 export interface GovernanceRisk {
@@ -246,4 +249,188 @@ export interface DataQualityStats {
   costAtRisk: number;
   governance?: GovernanceModel | null;
   [key: string]: unknown;
+}
+
+export type GateStatus = "pass" | "warn" | "fail";
+export type BannerSeverity = "critical" | "high" | "medium" | "low";
+export type ConfidenceLevel = "high" | "medium" | "low";
+
+export interface ApiLikeError {
+  code?: string;
+  name?: string;
+  message?: string;
+}
+
+export interface UseDataQualityParams {
+  filters?: Partial<DashboardFilters>;
+  api: ApiClient | null;
+  caps: Capabilities | null;
+}
+
+export interface UseDataQualityResult {
+  loading: boolean;
+  stats: DataQualityStats | null;
+}
+
+export interface GovernanceFilters extends Partial<DashboardFilters> {
+  dateRange?: string;
+  environment?: string;
+  team?: string;
+  account?: string;
+  owner?: string;
+  currencyMode?: string;
+  costBasisMode?: string;
+  [key: string]: string | undefined;
+}
+
+export interface GateSummary {
+  id: string;
+  label: string;
+  severity: GateStatus;
+  message: string;
+}
+
+export interface QualityImpactBannerPayload {
+  last_checked_ts: string;
+  severity: BannerSeverity;
+  confidence_level: ConfidenceLevel;
+  recommended_owner: string;
+  overall_status: GateStatus;
+  message: string;
+  active_gate_ids: string[];
+  impact_scope_chips: string[];
+  gate_summaries: GateSummary[];
+  behavior?: {
+    confidence_label_mode?: string;
+  };
+  ttl_seconds?: number;
+}
+
+export interface FreshnessSourceStatus {
+  provider: string;
+  source_id: string;
+  last_success_ts: string | null;
+  lag_hours: number | null;
+  sla_soft_hours: number;
+  sla_hard_hours: number;
+  status: GateStatus;
+}
+
+export interface FreshnessStatusPayload {
+  last_checked_ts: string;
+  severity: GateStatus;
+  confidence_level: ConfidenceLevel;
+  recommended_owner: string;
+  summary: {
+    reliability_score: number;
+    freshness_lag_hours: number | null;
+    missing_days_30d: number;
+    duplicate_load_pct: number;
+  };
+  sources: FreshnessSourceStatus[];
+}
+
+export interface CoverageGatesPayload {
+  last_checked_ts: string;
+  severity: GateStatus;
+  confidence_level: ConfidenceLevel;
+  recommended_owner: string;
+  gates: {
+    missing_accounts: { value: number; status: GateStatus };
+    missing_days: { value: number; status: GateStatus };
+    duplicates: { value: number; status: GateStatus };
+    late_arriving: { value: number; status: GateStatus };
+  };
+  summary: {
+    expected_accounts: number;
+    ingested_accounts_30d: number;
+    coverage_completeness_pct: number;
+  };
+  rows: {
+    missing_days: string[];
+  };
+}
+
+export interface TagCompliancePayload {
+  last_checked_ts: string;
+  severity: GateStatus;
+  confidence_level: ConfidenceLevel;
+  recommended_owner: string;
+  spend_weighted_compliance_pct: number;
+  missing_tag_spend: number;
+  invalid_value_pct: number;
+  matrix_rows: CoverageByKeyRow[];
+  top_offenders: {
+    services: TopMissingServiceRow[];
+    accounts: TopMissingAccountRow[];
+  };
+}
+
+export interface OwnershipCompletenessPayload {
+  last_checked_ts: string;
+  severity: GateStatus;
+  confidence_level: ConfidenceLevel;
+  recommended_owner: string;
+  required_fields: string[];
+  completeness_score_pct: number;
+  unowned_spend: number;
+  coverage: {
+    allocated_pct: number;
+    unallocated_pct: number;
+    mapping_stability_pct: number;
+  };
+  drivers: Array<{ key: string; value: number }>;
+}
+
+export interface CurrencyBasisPayload {
+  last_checked_ts: string;
+  severity: GateStatus;
+  confidence_level: ConfidenceLevel;
+  recommended_owner: string;
+  fx_health: {
+    source_status: string;
+    stale_hours: number | null;
+    missing_pairs: number;
+  };
+  mismatch_spend_pct: number;
+  basis_checks: {
+    dominant_currency: string;
+    amortization_mode_consistency: number;
+    commitment_treatment_consistency: number;
+    credits_refunds_consistency: number;
+  };
+  drift_events: CostBasisDriftEvent[];
+}
+
+export interface DenominatorQualityPayload {
+  last_checked_ts: string;
+  severity: GateStatus;
+  confidence_level: ConfidenceLevel;
+  recommended_owner: string;
+  readiness_status: "pass" | "flagged" | "blocked" | string;
+  availability_pct: number;
+  mapping_completeness_pct: number;
+  invalid_volume_pct: number;
+  reason_codes: string[];
+  affected_metric_keys: string[];
+  impact?: {
+    unit_economics_confidence?: ConfidenceLevel | string;
+  };
+}
+
+export interface ControlViolationsPayload {
+  last_checked_ts: string;
+  severity: GateStatus;
+  confidence_level: ConfidenceLevel;
+  recommended_owner: string;
+  summary: {
+    violation_count: number;
+    violated_spend: number;
+    violated_spend_pct: number;
+  };
+  severity_summary: SeveritySummaryRow[];
+  top_violating_teams: ViolatingOwnerRow[];
+  top_violating_services: ViolatingServiceRow[];
+  top_violating_accounts: ViolatingAccountRow[];
+  policy_categories: string[];
 }

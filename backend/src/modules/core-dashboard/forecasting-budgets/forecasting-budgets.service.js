@@ -2,13 +2,24 @@ import { roundTo } from "../../../common/utils/cost.calculations.js";
 import { unitEconomicsService } from "../unit-economics/unit-economics.service.js";
 import { dataQualityService } from "../analytics/data-quality/data-quality.service.js";
 import { optimizationService } from "../optimization/optimization.service.js";
+import {
+  toNumber,
+  clamp,
+  safeDivide,
+  percent,
+  delta,
+  growthPct,
+  runRateForecast,
+  burnRatePerDay,
+  budgetConsumptionPct,
+  budgetVarianceValue,
+  breachEtaDays as computeBreachEtaDays,
+  requiredDailySpend as computeRequiredDailySpend,
+  confidenceLevelFromScore,
+  computeForecastErrorStats,
+} from "../shared/core-dashboard.formulas.js";
 
-const n = (v) => {
-  const p = Number(v);
-  return Number.isFinite(p) ? p : 0;
-};
-
-const clamp = (v, min, max) => Math.max(min, Math.min(max, v));
+const n = toNumber;
 
 const normalizePeriod = (v) => {
   const p = String(v || "mtd").toLowerCase();
@@ -107,8 +118,6 @@ const buildGates = (quality) => {
 
 const gateScore = (status) => (status === "pass" ? 100 : status === "warn" ? 65 : 30);
 
-const confidenceLevel = (score) => (score >= 85 ? "high" : score >= 70 ? "medium" : "low");
-
 const buildConfidence = (gates, volatilityPct) => {
   const weights = {
     data_freshness: 0.2,
@@ -135,12 +144,12 @@ const buildConfidence = (gates, volatilityPct) => {
   return {
     forecastConfidence: {
       score: forecastScore,
-      level: confidenceLevel(forecastScore),
+      level: confidenceLevelFromScore(forecastScore, { high: 85, medium: 70 }),
       advisoryOnly: fails > 0,
     },
     budgetConfidence: {
       score: budgetScore,
-      level: confidenceLevel(budgetScore),
+      level: confidenceLevelFromScore(budgetScore, { high: 85, medium: 70 }),
       advisoryOnly: fails > 0 || budgetScore < 70,
     },
     confidenceBandPct: band,
@@ -151,15 +160,15 @@ const buildConfidence = (gates, volatilityPct) => {
 };
 
 const buildBudgetRows = (rows, currentCost, forecastCost, daysElapsed, totalDays) => {
-  const elapsedPct = totalDays > 0 ? roundTo((daysElapsed / totalDays) * 100, 2) : 0;
+  const elapsedPct = totalDays > 0 ? roundTo(percent(daysElapsed, totalDays, null), 2) : 0;
   const mapped = (rows || []).map((row, idx) => {
     const consumed = roundTo(n(row?.totalCost), 2);
     const budget = row?.budget == null ? roundTo(consumed * 1.1, 2) : roundTo(n(row.budget), 2);
-    const share = currentCost > 0 ? consumed / currentCost : 0;
+    const share = safeDivide(consumed, currentCost, 0);
     const forecast = roundTo(forecastCost * share, 2);
-    const variance = roundTo(forecast - budget, 2);
-    const consumptionPct = budget > 0 ? roundTo((consumed / budget) * 100, 2) : 0;
-    const variancePct = budget > 0 ? roundTo((variance / budget) * 100, 2) : 0;
+    const variance = budgetVarianceValue(forecast, budget, 2);
+    const consumptionPct = budgetConsumptionPct(consumed, budget, 2);
+    const variancePct = roundTo(percent(variance, budget, null), 2);
     const status =
       consumptionPct >= 100
         ? "breached"
@@ -193,28 +202,13 @@ const buildBudgetRows = (rows, currentCost, forecastCost, daysElapsed, totalDays
 };
 
 const buildTracking = (trend) => {
-  const lookback = 7;
-  if (!Array.isArray(trend) || trend.length <= lookback) {
+  const { mapePct, biasPct, accuracyScore, errors } = computeForecastErrorStats(trend, {
+    lookback: 7,
+    valueSelector: (row) => row?.cost,
+  });
+  if (!errors.length) {
     return { mapePct: null, biasPct: null, accuracyScore: null, byScope: [], topMisses: [] };
   }
-  const errors = [];
-  for (let i = lookback; i < trend.length; i += 1) {
-    const w = trend.slice(i - lookback, i);
-    const forecast = w.reduce((s, r) => s + n(r.cost), 0) / lookback;
-    const actual = n(trend[i]?.cost);
-    if (actual <= 0) continue;
-    errors.push({
-      date: trend[i]?.date || null,
-      actual: roundTo(actual, 2),
-      forecast: roundTo(forecast, 2),
-      absErrorPct: roundTo((Math.abs(actual - forecast) / actual) * 100, 2),
-      biasPct: roundTo(((forecast - actual) / actual) * 100, 2),
-    });
-  }
-  if (!errors.length) return { mapePct: null, biasPct: null, accuracyScore: null, byScope: [], topMisses: [] };
-  const mapePct = roundTo(errors.reduce((s, e) => s + n(e.absErrorPct), 0) / errors.length, 2);
-  const biasPct = roundTo(errors.reduce((s, e) => s + n(e.biasPct), 0) / errors.length, 2);
-  const accuracyScore = roundTo(clamp(100 - mapePct, 0, 100), 2);
   const topMisses = [...errors]
     .sort((a, b) => n(b.absErrorPct) - n(a.absErrorPct))
     .slice(0, 8)
@@ -338,25 +332,26 @@ export const forecastingBudgetsService = {
     const daysRemaining = Math.max(0, totalDays - daysElapsed);
     const currentCost = roundTo(n(unit?.summary?.currentWindow?.totalCost ?? unit?.unitEconomics?.totalCost), 2);
     const previousCost = roundTo(n(unit?.summary?.previousWindow?.totalCost ?? unit?.unitEconomics?.previousTotalCost), 2);
-    const burnRate = roundTo(currentCost / daysElapsed, 2);
-    const forecastCost = roundTo(burnRate * totalDays, 2);
-    const prevForecast = roundTo((previousCost / Math.max(1, n(unit?.summary?.previousWindow?.days || daysElapsed))) * totalDays, 2);
-    const forecastDrift = roundTo(forecastCost - prevForecast, 2);
+    const burnRate = burnRatePerDay(currentCost, daysElapsed, 2);
+    const forecastCost = runRateForecast(currentCost, daysElapsed, totalDays, 2);
+    const prevDays = Math.max(1, n(unit?.summary?.previousWindow?.days || daysElapsed));
+    const prevForecast = runRateForecast(previousCost, prevDays, totalDays, 2);
+    const forecastDrift = roundTo(delta(forecastCost, prevForecast, null), 2);
 
     const showbackRows = Array.isArray(unit?.showbackRows) ? unit.showbackRows : [];
     const explicitBudget = roundTo(showbackRows.reduce((s, row) => s + n(row?.budget), 0), 2);
     const budget = explicitBudget > 0 ? explicitBudget : roundTo(Math.max(forecastCost * 1.05, previousCost * 1.08, currentCost * 1.1), 2);
-    const budgetConsumptionPct = budget > 0 ? roundTo((currentCost / budget) * 100, 2) : 0;
-    const budgetVarianceForecast = roundTo(forecastCost - budget, 2);
-    const plannedBurnRate = budget > 0 ? roundTo(budget / totalDays, 2) : 0;
-    const burnVsPlanPct = plannedBurnRate > 0 ? roundTo(((burnRate - plannedBurnRate) / plannedBurnRate) * 100, 2) : 0;
-    const breachEtaDays = burnRate > 0 ? roundTo((budget - currentCost) / burnRate, 2) : null;
-    const requiredDailySpend = daysRemaining > 0 ? roundTo((budget - currentCost) / daysRemaining, 2) : 0;
+    const budgetConsumptionPctValue = budgetConsumptionPct(currentCost, budget, 2);
+    const budgetVarianceForecast = budgetVarianceValue(forecastCost, budget, 2);
+    const plannedBurnRate = burnRatePerDay(budget, totalDays, 2);
+    const burnVsPlanPct = roundTo(growthPct(burnRate, plannedBurnRate, null), 2);
+    const breachEtaDays = computeBreachEtaDays(budget, currentCost, burnRate, 2);
+    const requiredDailySpend = computeRequiredDailySpend(budget, currentCost, daysRemaining, 2);
 
     const currentVolume = roundTo(n(unit?.summary?.currentWindow?.totalQuantity ?? unit?.unitEconomics?.totalQuantity), 2);
     const previousVolume = roundTo(n(unit?.summary?.previousWindow?.totalQuantity ?? unit?.unitEconomics?.previousTotalQuantity), 2);
-    const forecastVolume = roundTo((currentVolume / daysElapsed) * totalDays, 2);
-    const unitCostForecast = roundTo(forecastCost / Math.max(1, forecastVolume), 6);
+    const forecastVolume = runRateForecast(currentVolume, daysElapsed, totalDays, 2);
+    const unitCostForecast = roundTo(safeDivide(forecastCost, Math.max(1, forecastVolume), 0), 6);
     const volatilityPct = n(unit?.unitEconomics?.volatilityPct);
     const gates = buildGates(quality);
     const confidence = buildConfidence(gates, volatilityPct);
@@ -391,7 +386,7 @@ export const forecastingBudgetsService = {
           forecastVolume: vol,
           forecastUnitCost: roundTo(cost / Math.max(1, vol), 6),
           varianceVsBudget: roundTo(cost - budget, 2),
-          breachRiskPct: budget > 0 ? roundTo(clamp((cost / budget) * 100, 0, 250), 2) : 0,
+          breachRiskPct: budget > 0 ? roundTo(clamp(percent(cost, budget, null), 0, 250), 2) : 0,
           marginPerUnitImpact: unit?.margin?.marginPerUnit == null ? null : roundTo(n(unit?.margin?.marginPerUnit) - roundTo(cost / Math.max(1, vol), 6), 6),
         },
       };
@@ -438,8 +433,8 @@ export const forecastingBudgetsService = {
       });
     }
 
-    const costGrowthPct = previousCost > 0 ? roundTo(((currentCost - previousCost) / previousCost) * 100, 2) : 0;
-    const volumeGrowthPct = previousVolume > 0 ? roundTo(((currentVolume - previousVolume) / previousVolume) * 100, 2) : 0;
+    const costGrowthPct = roundTo(growthPct(currentCost, previousCost, null), 2);
+    const volumeGrowthPct = roundTo(growthPct(currentVolume, previousVolume, null), 2);
 
     return {
       controls: { period: p, compareTo: c, costBasis: b, currency: "USD" },
@@ -448,7 +443,7 @@ export const forecastingBudgetsService = {
         `${budgetRows.atRisk.length} budgets are at risk and required daily spend is $${requiredDailySpend.toFixed(2)}.`,
       kpiStrip: {
         eomForecastAllocatedCost: forecastCost,
-        budgetConsumptionPct,
+        budgetConsumptionPct: budgetConsumptionPctValue,
         budgetVarianceForecast,
         burnRate,
         breachEtaDays,

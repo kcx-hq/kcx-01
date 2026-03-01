@@ -7,9 +7,10 @@ const DEF_RANGE = "30d";
 const DEF_GRAN = "daily";
 const DEF_COMPARE = "previous_period";
 const DEF_BASIS = "actual";
+const DEF_CURRENCY_MODE = "usd";
 const DEF_GROUP = "ServiceName";
-const TOP_SERIES = 8;
 const TOP_N = 10;
+const TOP_PREVIEW_N = 5;
 const TOP_RISK_ROWS = 20;
 const TOP_ANOMALY_HIGHLIGHTS = 3;
 const DAY_MS = 86400000;
@@ -70,6 +71,7 @@ const buildScopeParams = ({
     granularity: gran,
     compareTo,
     costBasis: basis,
+    currencyMode: filters.currencyMode || DEF_CURRENCY_MODE,
     groupBy,
   };
   const keys = ["provider", "service", "region", "account", "subAccount", "app", "team", "env", "costCategory"];
@@ -276,7 +278,7 @@ const buildSeries = (rows, gran, dim, basis, compareTotals = []) => {
     gm.set(g, (gm.get(g) || 0) + c);
   }
   const activeKeys = groupTotals.size
-    ? [...groupTotals.entries()].sort((a, b) => b[1] - a[1]).slice(0, TOP_SERIES).map(([k]) => k)
+    ? [...groupTotals.entries()].sort((a, b) => b[1] - a[1]).map(([k]) => k)
     : [];
   const buckets = [...totals.keys()].sort((a, b) => new Date(a) - new Date(b));
   const compValsRaw = [...compareTotals.entries()]
@@ -289,18 +291,14 @@ const buildSeries = (rows, gran, dim, basis, compareTotals = []) => {
   const series = buckets.map((b, idx) => {
     const row = { date: b, total: roundTo(totals.get(b) || 0, 2) };
     const gm = groups.get(b) || new Map();
-    let other = 0;
     for (const [k, v] of gm.entries()) {
-      if (activeKeys.includes(k)) row[k] = roundTo(v, 2);
-      else other += v;
+      row[k] = roundTo(v, 2);
     }
-    if (other > 0) row.Other = roundTo(other, 2);
     row.previousTotal = roundTo(compVals[idx] || 0, 2);
     row.deltaValue = roundTo(row.total - row.previousTotal, 2);
     row.deltaPercent = roundTo(costGrowthRate(row.total, row.previousTotal), 2);
     return row;
   });
-  if (series.some((r) => r.Other > 0) && !activeKeys.includes("Other")) activeKeys.push("Other");
   return { series, activeKeys };
 };
 
@@ -328,6 +326,18 @@ const pickAnomalyHighlights = (list = [], limit = TOP_ANOMALY_HIGHLIGHTS) => {
   if (picked.length < limit) picked.push(...medium.slice(0, limit - picked.length));
   if (picked.length < limit) picked.push(...low.slice(0, limit - picked.length));
   return picked;
+};
+
+const dedupeAnomalies = (items = []) => {
+  const byKey = new Map();
+  items.forEach((item) => {
+    const key = `${item.serviceHint}|${item.regionHint}|${item.accountHint}`;
+    const current = byKey.get(key);
+    if (!current || Number(item.impact || 0) > Number(current.impact || 0)) {
+      byKey.set(key, item);
+    }
+  });
+  return [...byKey.values()].sort((a, b) => Number(b.impact || 0) - Number(a.impact || 0));
 };
 
 const detectAnoms = (series, rows, basis, scope = {}) => {
@@ -373,16 +383,20 @@ const detectAnoms = (series, rows, basis, scope = {}) => {
       baselineBefore: roundTo(Math.max(0, total - impact), 2),
       actualAfter: roundTo(total, 2),
       likelyDrivers: svc.slice(0, 2).map((x) => `${x.name} growth`),
-      billingExplorerLink: scopedLink("/dashboard/data-explorer", scope, { anomalyDate: p.date }),
+      billingExplorerLink: scopedLink("/dashboard/cost-analysis", scope, {
+        view: "anomaly-impact",
+        anomalyDate: p.date,
+      }),
     });
   }
   const sorted = list.sort((a, b) => b.impact - a.impact).slice(0, 10);
+  const deduped = dedupeAnomalies(sorted);
   return {
     threshold: roundTo(threshold, 2),
     mean: roundTo(mean, 2),
     stdDev: roundTo(stdDev, 2),
     list: sorted,
-    highlights: pickAnomalyHighlights(sorted),
+    highlights: pickAnomalyHighlights(deduped),
     markers: sorted.map((x) => ({ date: x.detectedAt, impact: x.impact, confidence: x.confidence })),
     impactTotal: roundTo(impactTotal, 2),
   };
@@ -417,9 +431,10 @@ const buildForecast = (series, refDate, volScore) => {
 };
 
 const breakdownWithDelta = (curRows, prevRows, dim, totalSpend, compareLabel, basis, scope = {}) => {
-  const cur = aggBy(curRows, dim, basis).slice(0, TOP_N);
+  const curAgg = aggBy(curRows, dim, basis);
   const prevMap = new Map(aggBy(prevRows, dim, basis).map((x) => [x.name, x.value]));
-  return cur.map((r) => {
+
+  const toRow = (r, isOthers = false, members = 0) => {
     const prev = Number(prevMap.get(r.name) || 0);
     const deltaValue = r.value - prev;
     const deltaPercent = prev > 0 ? (deltaValue / prev) * 100 : r.value > 0 ? 100 : 0;
@@ -430,10 +445,31 @@ const breakdownWithDelta = (curRows, prevRows, dim, totalSpend, compareLabel, ba
       deltaValue: roundTo(deltaValue, 2),
       deltaPercent: roundTo(deltaPercent, 2),
       compareLabel,
-      drilldownLink: scopedLink("/dashboard/data-explorer", scope, { [dim]: r.name }),
-      pinFilter: { [dim]: r.name },
+      drilldownLink: scopedLink("/dashboard/cost-analysis", scope, { view: "breakdown", dimension: dim }),
+      pinFilter: isOthers ? {} : { [dim]: r.name },
+      isOthers,
+      memberCount: members,
     };
-  });
+  };
+
+  const topRows = curAgg.slice(0, TOP_N).map((row) => toRow(row));
+  const others = curAgg.slice(TOP_N);
+  if (!others.length) return topRows;
+
+  const othersSpend = others.reduce((sum, item) => sum + Number(item.value || 0), 0);
+  const othersPrev = others.reduce((sum, item) => sum + Number(prevMap.get(item.name) || 0), 0);
+  const othersRow = toRow(
+    {
+      name: "Others",
+      value: roundTo(othersSpend, 2),
+    },
+    true,
+    others.length
+  );
+  othersRow.deltaValue = roundTo(othersSpend - othersPrev, 2);
+  othersRow.deltaPercent = othersPrev > 0 ? roundTo(((othersSpend - othersPrev) / othersPrev) * 100, 2) : 0;
+
+  return [...topRows, othersRow];
 };
 
 const riskMatrix = (rows, gran, basis) => {
@@ -482,12 +518,197 @@ const pareto = (rows, basis) => {
   };
 };
 
+const classifyHealth = ({ freshnessHours = 0, coveragePercent = 0 }) => {
+  if (freshnessHours <= 48 && coveragePercent >= 95) return "High";
+  if (freshnessHours <= 120 && coveragePercent >= 85) return "Medium";
+  return "Low";
+};
+
+const buildTrustCue = ({ rows = [], currentDayKeys = [], currentRows = [] }) => {
+  const now = Date.now();
+  const latestKey = currentDayKeys[currentDayKeys.length - 1] || null;
+  const latestDate = latestKey ? asDate(latestKey) : null;
+  const freshnessHours = latestDate ? roundTo(Math.max(0, (now - latestDate.getTime()) / 3600000), 1) : null;
+
+  const scopedCount = currentRows.length;
+  const allCount = rows.length || 1;
+  const coveragePercent = roundTo((scopedCount / allCount) * 100, 2);
+
+  const providerKnown = currentRows.filter((row) => dims(row).provider !== "Unknown").length;
+  const serviceKnown = currentRows.filter((row) => dims(row).service !== "Unknown Service").length;
+  const regionKnown = currentRows.filter((row) => dims(row).region !== "Unknown Region").length;
+
+  const providerCoverage = roundTo((providerKnown / Math.max(1, scopedCount)) * 100, 2);
+  const serviceCoverage = roundTo((serviceKnown / Math.max(1, scopedCount)) * 100, 2);
+  const regionCoverage = roundTo((regionKnown / Math.max(1, scopedCount)) * 100, 2);
+  const dimensionCoverage = roundTo((providerCoverage + serviceCoverage + regionCoverage) / 3, 2);
+  const confidence = classifyHealth({
+    freshnessHours: freshnessHours ?? 9999,
+    coveragePercent: dimensionCoverage,
+  });
+
+  return {
+    lastUpdatedAt: latestKey,
+    freshnessHours,
+    coveragePercent: dimensionCoverage,
+    providerCoverage,
+    serviceCoverage,
+    regionCoverage,
+    confidence,
+    scopedRows: scopedCount,
+    totalRows: rows.length,
+  };
+};
+
+const toStatus = (value, warningThreshold, criticalThreshold) => {
+  const v = Number(value || 0);
+  if (v >= criticalThreshold) return "critical";
+  if (v >= warningThreshold) return "watch";
+  return "on_track";
+};
+
+const buildParetoRows = (rows = [], totalSpend = 0, limit = TOP_N) => {
+  let cumulative = 0;
+  return rows.slice(0, limit).map((row) => {
+    const spend = Number(row.value || 0);
+    const sharePercent = totalSpend > 0 ? (spend / totalSpend) * 100 : 0;
+    cumulative += sharePercent;
+    return {
+      name: row.name,
+      spend: roundTo(spend, 2),
+      sharePercent: roundTo(sharePercent, 2),
+      cumulativeSharePercent: roundTo(cumulative, 2),
+    };
+  });
+};
+
+const VOLATILITY_STABILITY_TARGET = 12;
+const CONCENTRATION_RISK_TARGET = 25;
+
+const summarizeKpis = ({
+  totalSpend = 0,
+  prevTotal = 0,
+  avgDaily = 0,
+  prevAvgDaily = 0,
+  peakSpend = 0,
+  peakDate = null,
+  volatilityScore = 0,
+  concentrationRiskShare = 0,
+  concentrationRiskSource = null,
+  trust = null,
+}) => {
+  const totalDelta = roundTo(totalSpend - prevTotal, 2);
+  const totalDeltaPercent = roundTo(costGrowthRate(totalSpend, prevTotal), 2);
+  const runRateDeltaPercent = roundTo(costGrowthRate(avgDaily, prevAvgDaily), 2);
+  const peakVsRunRatePercent = avgDaily > 0 ? roundTo(((peakSpend - avgDaily) / avgDaily) * 100, 2) : 0;
+  const volatilityGap = roundTo(volatilityScore - VOLATILITY_STABILITY_TARGET, 2);
+  const volatilityGapPercent = VOLATILITY_STABILITY_TARGET > 0
+    ? roundTo((volatilityGap / VOLATILITY_STABILITY_TARGET) * 100, 2)
+    : 0;
+  const concentrationRiskGap = roundTo(concentrationRiskShare - CONCENTRATION_RISK_TARGET, 2);
+  const concentrationRiskGapPercent = CONCENTRATION_RISK_TARGET > 0
+    ? roundTo((concentrationRiskGap / CONCENTRATION_RISK_TARGET) * 100, 2)
+    : 0;
+  const concentrationSourceLabel = concentrationRiskSource?.dimension && concentrationRiskSource?.name
+    ? `${concentrationRiskSource.dimension}: ${concentrationRiskSource.name}`
+    : "No dominant source";
+  const concentrationSourceShare = Number(concentrationRiskSource?.sharePercent || 0);
+
+  return {
+    cards: [
+      {
+        key: "totalSpend",
+        title: "Total spend",
+        value: roundTo(totalSpend, 2),
+        valueType: "currency",
+        comparison: {
+          label: "vs prior period",
+          deltaValue: totalDelta,
+          deltaPercent: totalDeltaPercent,
+        },
+        status: toStatus(totalDeltaPercent, 3, 10),
+        trust,
+      },
+      {
+        key: "runRateDaily",
+        title: "Run-rate (avg daily)",
+        value: roundTo(avgDaily, 2),
+        valueType: "currency",
+        comparison: {
+          label: "vs prior daily average",
+          deltaValue: roundTo(avgDaily - prevAvgDaily, 2),
+          deltaPercent: runRateDeltaPercent,
+        },
+        status: toStatus(runRateDeltaPercent, 3, 8),
+        trust,
+      },
+      {
+        key: "peakDailySpend",
+        title: "Peak daily spend",
+        value: roundTo(peakSpend, 2),
+        valueType: "currency",
+        comparison: {
+          label: "vs run-rate",
+          deltaValue: roundTo(peakSpend - avgDaily, 2),
+          deltaPercent: peakVsRunRatePercent,
+        },
+        status: toStatus(peakVsRunRatePercent, 20, 50),
+        context: { peakDate },
+        trust,
+      },
+      {
+        key: "volatilityIndex",
+        title: "Volatility",
+        value: roundTo(volatilityScore, 2),
+        valueType: "percent",
+        comparison: {
+          label: `vs stability target (${VOLATILITY_STABILITY_TARGET}%)`,
+          deltaValue: volatilityGap,
+          deltaPercent: volatilityGapPercent,
+        },
+        status: toStatus(volatilityScore, 12, 20),
+        context: {
+          insightPoints: [
+            "Lower is better for stable cost behavior.",
+            `Stability target: <= ${VOLATILITY_STABILITY_TARGET}%`,
+          ],
+        },
+        trust,
+      },
+      {
+        key: "concentrationRisk",
+        title: "Concentration risk",
+        value: roundTo(concentrationRiskShare, 2),
+        valueType: "percent",
+        comparison: {
+          label: `vs concentration target (${CONCENTRATION_RISK_TARGET}%)`,
+          deltaValue: concentrationRiskGap,
+          deltaPercent: concentrationRiskGapPercent,
+        },
+        status: toStatus(concentrationRiskShare, 25, 40),
+        context: {
+          insightPoints: [
+            `Highest concentration source: ${concentrationSourceLabel}`,
+            `Source share: ${concentrationSourceShare.toFixed(2)}%`,
+          ],
+        },
+        trust,
+      },
+    ],
+    totalSpend: roundTo(totalSpend, 2),
+    avgDailySpend: roundTo(avgDaily, 2),
+    peakDailySpend: roundTo(peakSpend, 2),
+    trendPercent: totalDeltaPercent,
+  };
+};
+
 const emptySpendAnalytics = () => ({
   controls: {
     timeRange: DEF_RANGE,
     granularity: DEF_GRAN,
     compareTo: DEF_COMPARE,
     costBasis: DEF_BASIS,
+    currencyMode: DEF_CURRENCY_MODE,
     groupBy: DEF_GROUP,
     startDate: null,
     endDate: null,
@@ -496,17 +717,72 @@ const emptySpendAnalytics = () => ({
       granularities: ["daily", "weekly", "monthly"],
       compareTo: ["previous_period", "same_period_last_month", "none"],
       costBasis: ["actual", "amortized", "net"],
+      currencyModes: ["usd"],
       groupBy: Object.keys(GROUP_DIM),
     },
   },
-  kpiDeck: { totalSpend: 0, avgDailySpend: 0, peakDailySpend: 0, trendPercent: 0, volatilityScore: 0, topConcentrationShare: 0, anomalyImpact: 0, predictabilityScore: 0 },
+  trust: {
+    lastUpdatedAt: null,
+    freshnessHours: null,
+    coveragePercent: 0,
+    providerCoverage: 0,
+    serviceCoverage: 0,
+    regionCoverage: 0,
+    confidence: "Low",
+    scopedRows: 0,
+    totalRows: 0,
+  },
+  kpiDeck: {
+    cards: [],
+    totalSpend: 0,
+    avgDailySpend: 0,
+    peakDailySpend: 0,
+    trendPercent: 0,
+    topConcentrationShare: 0,
+    anomalyImpact: 0,
+  },
   trend: { granularity: DEF_GRAN, compareLabel: "Previous period", activeKeys: [], series: [] },
-  breakdown: { byProvider: [], byService: [], byRegion: [], byAccount: [], byTeam: [], byApp: [], byEnv: [], byCostCategory: [] },
+  breakdown: {
+    activeDimension: "service",
+    byProvider: [],
+    byService: [],
+    byRegion: [],
+    byAccount: [],
+    byTeam: [],
+    byApp: [],
+    byEnv: [],
+    byCostCategory: [],
+    preview: [],
+  },
+  concentration: {
+    topServiceShare: 0,
+    topProviderShare: 0,
+    top3ServiceShare: 0,
+    top5ServiceShare: 0,
+    paretoByService: [],
+    paretoByProvider: [],
+  },
+  anomalyImpact: {
+    impactTotal: 0,
+    shareOfSpend: 0,
+    cards: [],
+    markers: [],
+  },
   topMovers: [],
   anomalyDetection: { threshold: 0, mean: 0, stdDev: 0, list: [], highlights: [], markers: [], impactTotal: 0 },
-  predictabilityRisk: { forecast: { projectedSpend: 0, lowerBound: 0, upperBound: 0, confidence: "Low", points: [] }, predictabilityScore: 0, volatilityScore: 0, riskMatrix: [] },
   concentrationPareto: { top10ServicesShare: 0, top3AccountsShare: 0, singleRegionShare: 0, topServices: [], topAccounts: [], topRegions: [] },
-  drilldownPaths: { varianceDrivers: "/dashboard/cost-drivers", resourceInventory: "/dashboard/data-explorer", billingExplorer: "/dashboard/data-explorer" },
+  routes: {
+    overview: "/dashboard/cost-analysis?view=overview",
+    breakdownExplorer: "/dashboard/cost-analysis?view=breakdown",
+    concentration: "/dashboard/cost-analysis?view=concentration",
+    anomalyImpact: "/dashboard/cost-analysis?view=anomaly-impact",
+  },
+  drilldownPaths: {
+    overview: "/dashboard/cost-analysis?view=overview",
+    breakdownExplorer: "/dashboard/cost-analysis?view=breakdown",
+    concentration: "/dashboard/cost-analysis?view=concentration",
+    anomalyImpact: "/dashboard/cost-analysis?view=anomaly-impact",
+  },
 });
 
 export const generateCostAnalysis = async (filters = {}, groupByParam) => {
@@ -517,6 +793,7 @@ export const generateCostAnalysis = async (filters = {}, groupByParam) => {
   const gran = String(filters.granularity || DEF_GRAN).toLowerCase();
   const compareTo = String(filters.compareTo || DEF_COMPARE).toLowerCase();
   const basis = String(filters.costBasis || DEF_BASIS).toLowerCase();
+  const currencyMode = String(filters.currencyMode || DEF_CURRENCY_MODE).toLowerCase();
   const groupBy = groupByParam || filters.groupBy || DEF_GROUP;
   const groupDim = GROUP_DIM[groupBy] || "service";
 
@@ -593,7 +870,8 @@ export const generateCostAnalysis = async (filters = {}, groupByParam) => {
     prevBucketTotals.set(b, (prevBucketTotals.get(b) || 0) + rowCost(r, basis));
   }
 
-  const trend = buildSeries(curRows, gran, groupDim, basis, prevBucketTotals);
+  // Keep trend as service-level series so the spend graph always shows service lines.
+  const trend = buildSeries(curRows, gran, "service", basis, prevBucketTotals);
   const chartData = trend.series.map((x) => {
     const y = { ...x };
     delete y.previousTotal;
@@ -603,12 +881,20 @@ export const generateCostAnalysis = async (filters = {}, groupByParam) => {
   });
   const totalSpend = roundTo(trend.series.reduce((s, x) => s + Number(x.total || 0), 0), 2);
   const avgDaily = roundTo(dailyAverageSpend(totalSpend, trend.series.length || 1), 2);
-  const peak = trend.series.reduce((m, x) => (Number(x.total || 0) > Number(m.total || 0) ? x : m), { total: 0, date: null });
   const prevTotal = roundTo(prevRows.reduce((s, r) => s + rowCost(r, basis), 0), 2);
+  const prevAvgDaily = roundTo(
+    dailyAverageSpend(prevTotal, previousDayKeys.length || trend.series.length || 1),
+    2
+  );
+  const peak = trend.series.reduce((m, x) => (Number(x.total || 0) > Number(m.total || 0) ? x : m), { total: 0, date: null });
   const trendPct = compareTo === "none" ? 0 : roundTo(costGrowthRate(totalSpend, prevTotal), 2);
   const anoms = detectAnoms(trend.series, curRows, basis, scopeParams);
+  const trustCue = buildTrustCue({
+    rows: scoped,
+    currentDayKeys,
+    currentRows: curRows,
+  });
   const volScore = roundTo(volatility(trend.series.map((x) => Number(x.total || 0))), 2);
-  const predictabilityScore = roundTo(Math.max(0, 100 - volScore * 1.5), 2);
   const forecast = buildForecast(trend.series, refDate, volScore);
 
   const byService = breakdownWithDelta(curRows, prevRows, "service", totalSpend, compareLabel, basis, scopeParams);
@@ -619,16 +905,87 @@ export const generateCostAnalysis = async (filters = {}, groupByParam) => {
   const byApp = breakdownWithDelta(curRows, prevRows, "app", totalSpend, compareLabel, basis, scopeParams);
   const byEnv = breakdownWithDelta(curRows, prevRows, "env", totalSpend, compareLabel, basis, scopeParams);
   const byCostCategory = breakdownWithDelta(curRows, prevRows, "costCategory", totalSpend, compareLabel, basis, scopeParams);
-  const concentrationShare = roundTo(Math.max(byService[0]?.sharePercent || 0, byAccount[0]?.sharePercent || 0), 2);
+  const concentrationShare = roundTo(Math.max(byService[0]?.sharePercent || 0, byProvider[0]?.sharePercent || 0), 2);
 
   const risks = riskMatrix(curRows, gran, basis);
   const atRiskSpend = roundTo(risks.filter((x) => x.riskLevel === "High").reduce((s, x) => s + Number(x.spend || 0), 0), 2);
   const paretoBlock = pareto(curRows, basis);
   const drivers = byService
+    .filter((item) => !item.isOthers)
     .slice(0, 8)
     .map((x) => ({ name: x.name, deltaValue: x.deltaValue, deltaPercent: x.deltaPercent, direction: x.deltaValue >= 0 ? "increase" : "decrease" }))
     .sort((a, b) => Math.abs(b.deltaValue) - Math.abs(a.deltaValue))
     .slice(0, 5);
+
+  const servicePareto = buildParetoRows(
+    paretoBlock.topServices,
+    totalSpend,
+    TOP_N
+  );
+  const providerPareto = buildParetoRows(
+    aggBy(curRows, "provider", basis),
+    totalSpend,
+    TOP_PREVIEW_N
+  );
+  const topServiceShare = roundTo(servicePareto[0]?.sharePercent || 0, 2);
+  const topProviderShare = roundTo(providerPareto[0]?.sharePercent || 0, 2);
+  const top3ServiceShare = roundTo(
+    servicePareto.slice(0, 3).reduce((sum, row) => sum + Number(row.sharePercent || 0), 0),
+    2
+  );
+  const top5ServiceShare = roundTo(
+    servicePareto.slice(0, 5).reduce((sum, row) => sum + Number(row.sharePercent || 0), 0),
+    2
+  );
+  const topAccountShare = roundTo(byAccount[0]?.sharePercent || 0, 2);
+  const concentrationRiskShare = roundTo(Math.max(topServiceShare, topAccountShare), 2);
+  const concentrationRiskSource = topServiceShare >= topAccountShare
+    ? {
+      dimension: "Service",
+      name: byService[0]?.name || "N/A",
+      sharePercent: topServiceShare,
+    }
+    : {
+      dimension: "Account",
+      name: byAccount[0]?.name || "N/A",
+      sharePercent: topAccountShare,
+    };
+
+  const kpiDeck = summarizeKpis({
+    totalSpend,
+    prevTotal,
+    avgDaily,
+    prevAvgDaily,
+    peakSpend: roundTo(Number(peak.total || 0), 2),
+    peakDate: peak.date || null,
+    volatilityScore: volScore,
+    concentrationRiskShare,
+    concentrationRiskSource,
+    trust: {
+      confidence: trustCue.confidence,
+      freshnessHours: trustCue.freshnessHours,
+      coveragePercent: trustCue.coveragePercent,
+    },
+  });
+  kpiDeck.topConcentrationShare = concentrationShare;
+  kpiDeck.anomalyImpact = roundTo(anoms.impactTotal, 2);
+
+  const anomalyCards = (Array.isArray(anoms.highlights) ? anoms.highlights : [])
+    .slice(0, TOP_ANOMALY_HIGHLIGHTS)
+    .map((item) => {
+      const severity = item.impact >= avgDaily ? "high" : item.impact >= avgDaily * 0.5 ? "medium" : "low";
+      return {
+        id: item.id,
+        title: `${item.serviceHint} spend anomaly`,
+        impactToDate: roundTo(item.impact, 2),
+        detectedAt: item.detectedAt,
+        windowStart: item.detectedAt,
+        windowEnd: item.detectedAt,
+        confidence: item.confidence,
+        severity,
+        likelyDrivers: item.likelyDrivers,
+      };
+    });
 
   const spendAnalytics = {
     controls: {
@@ -636,6 +993,7 @@ export const generateCostAnalysis = async (filters = {}, groupByParam) => {
       granularity: gran,
       compareTo,
       costBasis: basis,
+      currencyMode,
       groupBy,
       startDate: currentDayKeys[0] || null,
       endDate: currentDayKeys[currentDayKeys.length - 1] || null,
@@ -644,19 +1002,12 @@ export const generateCostAnalysis = async (filters = {}, groupByParam) => {
         granularities: ["daily", "weekly", "monthly"],
         compareTo: ["previous_period", "same_period_last_month", "none"],
         costBasis: ["actual", "amortized", "net"],
+        currencyModes: ["usd"],
         groupBy: Object.keys(GROUP_DIM),
       },
     },
-    kpiDeck: {
-      totalSpend,
-      avgDailySpend: avgDaily,
-      peakDailySpend: roundTo(Number(peak.total || 0), 2),
-      trendPercent: trendPct,
-      volatilityScore: volScore,
-      topConcentrationShare: concentrationShare,
-      anomalyImpact: anoms.impactTotal,
-      predictabilityScore,
-    },
+    trust: trustCue,
+    kpiDeck,
     trend: {
       granularity: gran,
       compareLabel,
@@ -667,15 +1018,46 @@ export const generateCostAnalysis = async (filters = {}, groupByParam) => {
         anomalyImpact: anoms.markers.find((m) => m.date === x.date)?.impact || 0,
       })),
     },
-    breakdown: { byProvider, byService, byRegion, byAccount, byTeam, byApp, byEnv, byCostCategory },
+    breakdown: {
+      activeDimension: groupDim,
+      byProvider,
+      byService,
+      byRegion,
+      byAccount,
+      byTeam,
+      byApp,
+      byEnv,
+      byCostCategory,
+      preview: byService.filter((row) => !row.isOthers).slice(0, TOP_PREVIEW_N),
+    },
+    concentration: {
+      topServiceShare,
+      topProviderShare,
+      top3ServiceShare,
+      top5ServiceShare,
+      paretoByService: servicePareto,
+      paretoByProvider: providerPareto,
+    },
+    anomalyImpact: {
+      impactTotal: roundTo(anoms.impactTotal, 2),
+      shareOfSpend: roundTo(totalSpend > 0 ? (anoms.impactTotal / totalSpend) * 100 : 0, 2),
+      cards: anomalyCards,
+      markers: anoms.markers,
+    },
     topMovers: drivers,
     anomalyDetection: anoms,
-    predictabilityRisk: { forecast, predictabilityScore, volatilityScore: volScore, riskMatrix: risks },
     concentrationPareto: paretoBlock,
+    routes: {
+      overview: scopedLink("/dashboard/cost-analysis", scopeParams, { view: "overview" }),
+      breakdownExplorer: scopedLink("/dashboard/cost-analysis", scopeParams, { view: "breakdown" }),
+      concentration: scopedLink("/dashboard/cost-analysis", scopeParams, { view: "concentration" }),
+      anomalyImpact: scopedLink("/dashboard/cost-analysis", scopeParams, { view: "anomaly-impact" }),
+    },
     drilldownPaths: {
-      varianceDrivers: scopedLink("/dashboard/cost-drivers", scopeParams),
-      resourceInventory: scopedLink("/dashboard/data-explorer", scopeParams),
-      billingExplorer: scopedLink("/dashboard/data-explorer", scopeParams),
+      overview: scopedLink("/dashboard/cost-analysis", scopeParams, { view: "overview" }),
+      breakdownExplorer: scopedLink("/dashboard/cost-analysis", scopeParams, { view: "breakdown" }),
+      concentration: scopedLink("/dashboard/cost-analysis", scopeParams, { view: "concentration" }),
+      anomalyImpact: scopedLink("/dashboard/cost-analysis", scopeParams, { view: "anomaly-impact" }),
     },
   };
 

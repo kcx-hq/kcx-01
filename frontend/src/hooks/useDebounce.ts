@@ -3,7 +3,9 @@ import { useEffect, useState } from 'react';
 /**
  * Custom hook to debounce a value
  * @param value - The value to debounce
+ * @param value - The value to debounce
  * @param {number} delay - Delay in milliseconds (default: 500ms)
+ * @returns The debounced value
  * @returns The debounced value
  */
 export function useDebounce<T>(value: T, delay = 500): T {
