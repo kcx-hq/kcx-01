@@ -144,10 +144,16 @@ const getLockoutMeta = (error: unknown): SignInLockoutMeta => {
       ? blockedUntilRaw
       : undefined;
 
-  return { retryAfterSeconds, blockedUntil };
+  const result: SignInLockoutMeta = {};
+  if (typeof retryAfterSeconds === "number") {
+    result.retryAfterSeconds = retryAfterSeconds;
+  }
+  if (typeof blockedUntil === "string") {
+    result.blockedUntil = blockedUntil;
+  }
+  return result;
 };
 
-export const useAuthStore = create<AuthStore>((set) => ({
 export const useAuthStore = create<AuthStore>((set) => ({
   user: null,
   isSigningIn: false,
@@ -157,7 +163,6 @@ export const useAuthStore = create<AuthStore>((set) => ({
 
   fetchUser: async () => {
     try {
-      const user = await apiGet<AuthUser>("/api/auth/me");
       const user = await apiGet<AuthUser>("/api/auth/me");
       set({ user });
 
@@ -174,7 +179,6 @@ export const useAuthStore = create<AuthStore>((set) => ({
 
       return { success: true, user };
     } catch {
-    } catch {
       set({ user: null });
       localStorage.removeItem("capabilities");
       return { success: false };
@@ -183,11 +187,6 @@ export const useAuthStore = create<AuthStore>((set) => ({
 
   updateProfile: async ({ full_name }: UpdateProfileInput) => {
     try {
-      const response = await apiPut<UpdateProfileResponse>("/api/auth/profile", { full_name });
-      set({ user: response.user });
-      return { success: true, message: response.message, user: response.user };
-    } catch (err: unknown) {
-      const errorMessage = getAuthErrorMessage(err, "Failed to update profile", "updateProfile");
       const response = await apiPut<UpdateProfileResponse>("/api/auth/profile", { full_name });
       set({ user: response.user });
       return { success: true, message: response.message, user: response.user };
@@ -238,7 +237,6 @@ export const useAuthStore = create<AuthStore>((set) => ({
 
     try {
       const signInResponse = await apiPost<SignInResponse>("/api/auth/signin", {
-      const signInResponse = await apiPost<SignInResponse>("/api/auth/signin", {
         email,
         password,
       });
@@ -261,13 +259,18 @@ export const useAuthStore = create<AuthStore>((set) => ({
       const errorMessage = getAuthErrorMessage(err, "Login failed", "signIn");
       const lockoutMeta = getLockoutMeta(err);
       set({ isSigningIn: false, error: errorMessage });
-      return {
+      const result: SignInResultWithLockout = {
         success: false,
         message: errorMessage,
         status: isApiError(err) ? err.status : undefined,
-        retryAfterSeconds: lockoutMeta.retryAfterSeconds,
-        blockedUntil: lockoutMeta.blockedUntil,
       };
+      if (typeof lockoutMeta.retryAfterSeconds === "number") {
+        result.retryAfterSeconds = lockoutMeta.retryAfterSeconds;
+      }
+      if (typeof lockoutMeta.blockedUntil === "string") {
+        result.blockedUntil = lockoutMeta.blockedUntil;
+      }
+      return result;
     }
   },
 
@@ -275,7 +278,6 @@ export const useAuthStore = create<AuthStore>((set) => ({
     set({ isVerifying: true, error: null });
 
     try {
-      const response = await apiPost<VerifyEmailResponse>("/api/auth/verify-email", {
       const response = await apiPost<VerifyEmailResponse>("/api/auth/verify-email", {
         email,
         otp,

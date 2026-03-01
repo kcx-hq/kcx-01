@@ -34,24 +34,17 @@ const STAGE_COLOR = {
 };
 
 export default function ActionCenterOverviewTab({ model, onSelectInsight }) {
-  if (!model) {
-    return (
-      <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-        <p className="text-sm font-semibold text-slate-600">No action center insights available for selected filters.</p>
-      </section>
-    );
-  }
-
   const [stageFilter, setStageFilter] = useState("all");
   const [ownerFilter, setOwnerFilter] = useState("all");
+  const opportunities = model?.opportunities ?? [];
 
   const owners = useMemo(
-    () => [...new Set(model.opportunities.map((opp) => opp.ownerTeam))].sort(),
-    [model.opportunities],
+    () => [...new Set(opportunities.map((opp) => opp.ownerTeam))].sort(),
+    [opportunities],
   );
 
   const rankedRows = useMemo(() => {
-    const rows = model.opportunities.filter((opp) => {
+    const rows = opportunities.filter((opp) => {
       const passStage = stageFilter === "all" || opp.stage === stageFilter;
       const passOwner = ownerFilter === "all" || opp.ownerTeam === ownerFilter;
       return passStage && passOwner;
@@ -63,16 +56,27 @@ export default function ActionCenterOverviewTab({ model, onSelectInsight }) {
         return a.etaDays - b.etaDays;
       })
       .slice(0, 10);
-  }, [model.opportunities, ownerFilter, stageFilter]);
+  }, [opportunities, ownerFilter, stageFilter]);
 
   const funnelData = STAGES.map((stage) => ({
     stage,
     label: STAGE_LABEL[stage],
-    amount: model.funnel.stageTotals[stage],
-    count: model.funnel.stageCounts[stage],
+    amount: model?.funnel?.stageTotals?.[stage] ?? 0,
+    count: model?.funnel?.stageCounts?.[stage] ?? 0,
   }));
 
-  const maxWaste = Math.max(1, ...model.wasteCategories.map((row) => row.savings));
+  const wasteCategories = model?.wasteCategories ?? [];
+  const maxWaste = Math.max(1, ...wasteCategories.map((row) => row.savings));
+
+  if (!model) {
+    return (
+      <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+        <p className="text-sm font-semibold text-slate-600">
+          No action center insights available for selected filters.
+        </p>
+      </section>
+    );
+  }
 
   return (
     <div className="space-y-4">

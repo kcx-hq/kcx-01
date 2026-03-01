@@ -3,7 +3,7 @@ import { toNumber, toDate, toText , safeParseJSON } from "../../../../utils/sani
 import logger from "../../../../lib/logger.js";
 
 
-const BATCH_SIZE = 1000;
+const BATCH_SIZE = 2000;
 let buffer = [];
 let stats = { attempted: 0 };
 
@@ -16,15 +16,8 @@ export function getFactStats() {
   return { ...stats };
 }
 
-function getBuffer(uploadId) {
-  if (!buffersByUpload.has(uploadId)) {
-    buffersByUpload.set(uploadId, []);
-  }
-  return buffersByUpload.get(uploadId);
-}
-
-function buildFact(uploadId, row, dims) {
-  return {
+export async function pushFact(uploadId, row, dims) {
+  buffer.push({
     uploadid: uploadId,
 
     cloudaccountid: dims.cloudaccountid,
@@ -69,14 +62,9 @@ function buildFact(uploadId, row, dims) {
   }
 }
 
-async function flushByUpload(uploadId) {
-  const current = buffersByUpload.get(uploadId);
-  if (!current || !current.length) {
-    return;
-  }
 
-  const data = current;
-  buffersByUpload.set(uploadId, []);
+export async function flushFacts() {
+  if (!buffer.length) return;
 
   const data = buffer;
   buffer = [];

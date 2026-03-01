@@ -5,7 +5,6 @@ import { useNavigate } from "react-router-dom";
 import { useAuthStore } from "../../../store/Authstore"; 
 import { toast } from "react-hot-toast";
 import type { AuthView, LoginData, SignupData, SignupPayload } from "../types";
-import type { AuthView, LoginData, SignupData, SignupPayload } from "../types";
 
 import LoginForm from "./LoginForm";
 import SignupForm from "./SignupForm";
@@ -18,24 +17,14 @@ interface AuthModalProps {
 }
 
 const AuthModal = ({ isOpen, onClose, initialView = "login" }: AuthModalProps) => {
-interface AuthModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  initialView?: AuthView;
-}
-
-const AuthModal = ({ isOpen, onClose, initialView = "login" }: AuthModalProps) => {
   const navigate = useNavigate();
   const { isSigningIn, signIn, isSigningUp, signUp, isVerifying, verifyEmail } = useAuthStore();
 
   // --- VIEW STATE ---
   const [view, setView] = useState<AuthView>(initialView);
-  const [view, setView] = useState<AuthView>(initialView);
   const [emailForVerify, setEmailForVerify] = useState("");
 
   // --- FORM DATA ---
-  const [loginData, setLoginData] = useState<LoginData>({ email: "", password: "" });
-  const [signupData, setSignupData] = useState<SignupData>({
   const [loginData, setLoginData] = useState<LoginData>({ email: "", password: "" });
   const [signupData, setSignupData] = useState<SignupData>({
     fullName: "",
@@ -61,7 +50,6 @@ const AuthModal = ({ isOpen, onClose, initialView = "login" }: AuthModalProps) =
   }, [isOpen, initialView]);
 
   // --- HANDLERS (Unchanged) ---
-  const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
   const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const response = await signIn(loginData);
@@ -89,9 +77,7 @@ const AuthModal = ({ isOpen, onClose, initialView = "login" }: AuthModalProps) =
   };
 
   const handleSignup = async (e: React.FormEvent<HTMLFormElement>) => {
-  const handleSignup = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const payload: SignupPayload = {
     const payload: SignupPayload = {
       full_name: signupData.fullName,
       email: signupData.email,
@@ -108,11 +94,9 @@ const AuthModal = ({ isOpen, onClose, initialView = "login" }: AuthModalProps) =
       setView("verify");
     } else {
       toast.error(response.message || "Sign up failed");
-      toast.error(response.message || "Sign up failed");
     }
   };
 
-  const handleVerify = async (e: React.FormEvent<HTMLFormElement>) => {
   const handleVerify = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const response = await verifyEmail({ email: emailForVerify, otp });
@@ -244,4 +228,3 @@ const AuthModal = ({ isOpen, onClose, initialView = "login" }: AuthModalProps) =
 };
 
 export default AuthModal;
-

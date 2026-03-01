@@ -6,11 +6,11 @@ import type {
   SpendAnalyticsPayload,
 } from "./types";
 import GlobalControlsSection from "./components/sections/GlobalControlsSection";
-import SpendKpiDeckSection from "./components/sections/SpendKpiDeckSection";
 import SpendTrendSection from "./components/sections/SpendTrendSection";
 import BreakdownCompositionSection from "./components/sections/BreakdownCompositionSection";
 import ConcentrationSection from "./components/sections/ConcentrationSection";
 import TrustCueSection from "./components/sections/TrustCueSection";
+import SpendDistributionSection from "./components/sections/SpendDistributionSection";
 import { formatDate } from "./utils/format";
 import { SectionRefreshOverlay } from "../common/SectionStates";
 
@@ -130,7 +130,10 @@ const CostAnalysisView = ({
         {isLoading ? <SectionRefreshOverlay label="Refreshing cost analysis..." rounded="rounded-3xl" /> : null}
         <div className="space-y-5">
           <TrustCueSection trust={spendAnalytics.trust} filters={filters} />
-          <SpendKpiDeckSection cards={spendAnalytics.kpiDeck.cards} contextLabel={contextLabel} />
+          <SpendDistributionSection
+            spendDistribution={spendAnalytics.spendDistribution}
+            controls={spendAnalytics.controls}
+          />
 
           <section className="grid grid-cols-1 items-stretch gap-5 xl:grid-cols-12">
             <div className="xl:col-span-8 xl:h-full">

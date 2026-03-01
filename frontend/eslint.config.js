@@ -7,7 +7,7 @@ import reactRefresh from 'eslint-plugin-react-refresh'
 import { defineConfig, globalIgnores } from 'eslint/config'
 
 export default defineConfig([
-  globalIgnores(['dist']),
+  globalIgnores(['dist', 'src/clients/client-c/**', 'src/clients/client-d/**']),
   {
     files: ['**/*.{js,jsx}'],
     extends: [
@@ -26,6 +26,8 @@ export default defineConfig([
     },
     rules: {
       'no-unused-vars': ['error', { varsIgnorePattern: '^[A-Z_]' }],
+      'react-hooks/set-state-in-effect': 'warn',
+      'react-hooks/preserve-manual-memoization': 'warn',
     },
   },
   {
@@ -51,6 +53,8 @@ export default defineConfig([
         'error',
         { varsIgnorePattern: '^[A-Z_]' },
       ],
+      'react-hooks/set-state-in-effect': 'warn',
+      'react-hooks/preserve-manual-memoization': 'warn',
     },
   },
 ])

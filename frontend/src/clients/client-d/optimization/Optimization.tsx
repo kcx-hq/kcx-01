@@ -11,28 +11,16 @@ import type {
   OptimizationTab,
   RightSizingRecommendation,
 } from "./types";
-import type {
-  IdleFilter,
-  IdleResource,
-  IdleSort,
-  Opportunity,
-  OptimizationProps,
-  OptimizationTab,
-  RightSizingRecommendation,
-} from "./types";
 
-export default function Optimization({ filters: parentFilters = {}, api, caps }: OptimizationProps) {
 export default function Optimization({ filters: parentFilters = {}, api, caps }: OptimizationProps) {
   const { user } = useAuthStore();
   const isMasked = !user?.is_premium; // NOT premium => masked
 
-  const [activeTab, setActiveTab] = useState<OptimizationTab>("opportunities");
+  const [activeTab, setActiveTab] = useState<OptimizationTab>("overview");
   const [expandedItems, setExpandedItems] = useState<Record<string, boolean>>({});
   const [selectedInsight, setSelectedInsight] = useState<Opportunity | RightSizingRecommendation | null>(null);
   const [selectedResource, setSelectedResource] = useState<IdleResource | null>(null);
 
-  const [idleFilter, setIdleFilter] = useState<IdleFilter>("all");
-  const [idleSort, setIdleSort] = useState<IdleSort>("savings-desc");
   const [idleFilter, setIdleFilter] = useState<IdleFilter>("all");
   const [idleSort, setIdleSort] = useState<IdleSort>("savings-desc");
   const [idleSearch, setIdleSearch] = useState("");
@@ -45,8 +33,6 @@ export default function Optimization({ filters: parentFilters = {}, api, caps }:
 
   const toggleExpand = useCallback((id: string) => {
     setExpandedItems((prev: Record<string, boolean>) => ({ ...prev, [id]: !prev[id] }));
-  const toggleExpand = useCallback((id: string) => {
-    setExpandedItems((prev: Record<string, boolean>) => ({ ...prev, [id]: !prev[id] }));
   }, []);
 
   const filteredIdleResources = useMemo(() => {
@@ -57,7 +43,6 @@ export default function Optimization({ filters: parentFilters = {}, api, caps }:
       const searchLower = idleSearch.toLowerCase();
       filtered = filtered.filter(
         (r: IdleResource) =>
-        (r: IdleResource) =>
           r.name?.toLowerCase().includes(searchLower) ||
           r.type?.toLowerCase().includes(searchLower) ||
           r.region?.toLowerCase().includes(searchLower)
@@ -66,10 +51,7 @@ export default function Optimization({ filters: parentFilters = {}, api, caps }:
 
     if (idleFilter === "prod") filtered = filtered.filter((r: IdleResource) => r.risk === "Prod");
     if (idleFilter === "non-prod") filtered = filtered.filter((r: IdleResource) => r.risk === "Non-prod");
-    if (idleFilter === "prod") filtered = filtered.filter((r: IdleResource) => r.risk === "Prod");
-    if (idleFilter === "non-prod") filtered = filtered.filter((r: IdleResource) => r.risk === "Non-prod");
 
-    return [...filtered].sort((a: IdleResource, b: IdleResource) => {
     return [...filtered].sort((a: IdleResource, b: IdleResource) => {
       switch (idleSort) {
         case "savings-desc":

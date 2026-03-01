@@ -785,6 +785,8 @@ const emptySpendAnalytics = () => ({
   },
 });
 
+/* ===================== MAIN ===================== */
+
 export const generateCostAnalysis = async (filters = {}, groupByParam) => {
   const uploadIds = normalizeUploadIds(filters);
   if (!uploadIds.length) throw new Error("uploadIds is required for cost analysis");

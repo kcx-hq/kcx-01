@@ -23,6 +23,7 @@ import {
   burnRatePerDay,
   percent,
   breachEtaDays as formulaBreachEtaDays,
+  clamp,
 } from '../shared/core-dashboard.formulas.js';
 import { optimizationService } from '../optimization/optimization.service.js';
 import { costDriversService } from '../analytics/cost-drivers/cost-drivers.service.js';
@@ -215,6 +216,38 @@ const uniqueBy = (items = [], keyResolver) => {
   });
 };
 
+const rollingWindowDeltaPercent = (dailyRows = [], windowSize = 7) => {
+  if (!Array.isArray(dailyRows) || dailyRows.length === 0 || windowSize <= 0) return 0;
+
+  const sorted = [...dailyRows]
+    .map((row) => ({
+      date: toSafeDate(row?.date),
+      cost: moneyToNumber(row?.cost),
+    }))
+    .filter((row) => row.date)
+    .sort((a, b) => a.date - b.date);
+
+  if (sorted.length < windowSize * 2) return 0;
+
+  const current = sorted.slice(-windowSize);
+  const previous = sorted.slice(-(windowSize * 2), -windowSize);
+
+  const currentAvg =
+    current.reduce((sum, row) => sum + moneyToNumber(row?.cost), 0) / Math.max(1, current.length);
+  const previousAvg =
+    previous.reduce((sum, row) => sum + moneyToNumber(row?.cost), 0) / Math.max(1, previous.length);
+
+  if (previousAvg <= 0) return currentAvg > 0 ? 100 : 0;
+  return roundTo(((currentAvg - previousAvg) / previousAvg) * 100, 2);
+};
+
+const statusFromDelta = (value, { watch = 3, high = 8 } = {}) => {
+  const pct = Math.abs(moneyToNumber(value));
+  if (pct >= high) return 'Over budget';
+  if (pct >= watch) return 'Watch';
+  return 'On track';
+};
+
 const formatSignedPercentLabel = (value, digits = 1) => {
   const num = moneyToNumber(value);
   const sign = num > 0 ? '+' : '';
@@ -236,13 +269,31 @@ const buildEmptyExecutiveOverview = () => ({
     budget: 0,
     budgetVarianceValue: 0,
     budgetVariancePercent: 0,
+    trend7dDeltaPercent: 0,
+    trend30dDeltaPercent: 0,
+    openAlertRiskCount: 0,
+    highRiskAlertCount: 0,
+    trustScore: 0,
+    potentialSavings30d: 0,
     realizedSavingsMtd: 0,
     pipelineSavings: 0,
     presentation: {
       mtdSpend: { comparison: 'vs prior 0.0%', comparisonValue: 0, status: 'On track' },
       eomForecast: { comparison: 'vs budget 0.0%', comparisonValue: 0, status: 'On track' },
       budgetVariance: { comparison: 'variance 0.0%', comparisonValue: 0, status: 'On track' },
+      costTrend: { comparison: '30d 0.0%', comparisonValue: 0, status: 'On track' },
+      openAlertRisk: { comparison: '0 high', comparisonValue: 0, status: 'On track' },
+      trustScore: { comparison: 'Low confidence', comparisonValue: 0, status: 'Watch' },
+      potentialSavings: { comparison: '0 actions', comparisonValue: 0, status: 'Watch' },
       realizedSavings: { comparison: 'Pipeline unavailable', comparisonValue: 0, status: 'Watch', coveragePercent: 0 },
+    },
+    ownerLinks: {
+      mtdSpend: '/dashboard/forecasting-budgets',
+      eomForecast: '/dashboard/forecasting-budgets',
+      costTrend: '/dashboard/cost-drivers',
+      openAlertRisk: '/dashboard/alerts-incidents',
+      trustScore: '/dashboard/data-quality',
+      potentialSavings: '/dashboard/optimization',
     },
     calculationContext: {
       asOfDate: null,
@@ -755,6 +806,35 @@ export const dashboardService = {
       confidenceLevel = 'Medium';
     }
 
+    const freshnessScore =
+      freshnessHours == null ? 30 : freshnessHours <= 24 ? 100 : freshnessHours <= 48 ? 70 : 35;
+    const trustScore = roundTo(
+      clamp(
+        providerCoveragePercent * 0.25 +
+          costCoveragePercent * 0.35 +
+          allocationPercent * 0.25 +
+          freshnessScore * 0.15,
+        0,
+        100
+      ),
+      2
+    );
+
+    const trend7dDeltaPercent = rollingWindowDeltaPercent(dailyTrend, 7);
+    const trend30dDeltaPercent = rollingWindowDeltaPercent(dailyTrend, 30);
+    const trendStatus = statusFromDelta(trend7dDeltaPercent, { watch: 3, high: 8 });
+    const alertRiskCount = riskFlags.filter((flag) => flag.active).length;
+    const highRiskAlertCount = riskFlags.filter(
+      (flag) => flag.active && String(flag.severity).toLowerCase() === 'high'
+    ).length;
+    const alertStatus =
+      highRiskAlertCount > 0
+        ? 'Over budget'
+        : alertRiskCount > 0
+          ? 'Watch'
+          : 'On track';
+    const trustStatus = trustScore >= 85 ? 'On track' : trustScore >= 70 ? 'Watch' : 'Over budget';
+
     const mtdStatus = budgetStatusByPercent(spendChangePercent);
     const forecastDeltaPercent = roundTo(percent(budgetVarianceValue, resolvedBudget, null), 2);
     const forecastStatus = budgetStatusByPercent(forecastDeltaPercent);
@@ -772,6 +852,8 @@ export const dashboardService = {
       pipelineSavings > 0
         ? -Math.abs(realizedCoveragePercent)
         : (realizedSavingsMtd > 0 ? -1 : 1);
+    const potentialSavingsStatus =
+      pipelineSavings >= 5000 ? 'On track' : pipelineSavings >= 500 ? 'Watch' : 'Over budget';
 
     const topUniqueAnomalies = uniqueBy(
       anomalyList,
@@ -786,6 +868,12 @@ export const dashboardService = {
         budget: roundTo(resolvedBudget, 2),
         budgetVarianceValue: roundTo(budgetVarianceValue, 2),
         budgetVariancePercent: roundTo(budgetVariancePercent, 2),
+        trend7dDeltaPercent: roundTo(trend7dDeltaPercent, 2),
+        trend30dDeltaPercent: roundTo(trend30dDeltaPercent, 2),
+        openAlertRiskCount: alertRiskCount,
+        highRiskAlertCount,
+        trustScore,
+        potentialSavings30d: roundTo(pipelineSavings, 2),
         realizedSavingsMtd,
         pipelineSavings: roundTo(pipelineSavings, 2),
         presentation: {
@@ -804,12 +892,40 @@ export const dashboardService = {
             comparisonValue: roundTo(budgetVariancePercent, 2),
             status: varianceStatus,
           },
+          costTrend: {
+            comparison: `30d ${formatSignedPercentLabel(trend30dDeltaPercent)}`,
+            comparisonValue: roundTo(trend7dDeltaPercent, 2),
+            status: trendStatus,
+          },
+          openAlertRisk: {
+            comparison: `${highRiskAlertCount} high`,
+            comparisonValue: alertRiskCount,
+            status: alertStatus,
+          },
+          trustScore: {
+            comparison: `${confidenceLevel} confidence`,
+            comparisonValue: roundTo(trustScore, 2),
+            status: trustStatus,
+          },
+          potentialSavings: {
+            comparison: `${topActions.length} actions`,
+            comparisonValue: roundTo(pipelineSavings, 2),
+            status: potentialSavingsStatus,
+          },
           realizedSavings: {
             comparison: realizedComparison,
             comparisonValue: roundTo(realizedComparisonValue, 2),
             status: realizedStatus,
             coveragePercent: roundTo(realizedCoveragePercent, 2),
           },
+        },
+        ownerLinks: {
+          mtdSpend: '/dashboard/forecasting-budgets',
+          eomForecast: '/dashboard/forecasting-budgets',
+          costTrend: '/dashboard/cost-drivers',
+          openAlertRisk: '/dashboard/alerts-incidents',
+          trustScore: '/dashboard/data-quality',
+          potentialSavings: '/dashboard/optimization',
         },
         calculationContext: {
           asOfDate,

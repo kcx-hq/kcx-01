@@ -160,6 +160,30 @@ export interface SpendAnalyticsPayload {
     topConcentrationShare: number;
     anomalyImpact: number;
   };
+  spendDistribution: {
+    kpiStrip: {
+      totalScopedSpend: number;
+      topServiceSharePct: number;
+      topRegionSharePct: number;
+      top3SharePct: number;
+      concentrationBand: "on_track" | "warning" | "critical" | string;
+    };
+    compareLabel: string;
+    compareRows: Array<{
+      dimension: "service" | "region" | "provider" | "account" | string;
+      name: string;
+      currentSpend: number;
+      previousSpend: number;
+      deltaValue: number;
+      deltaPercent: number;
+      sharePercent: number;
+      drillLinks: {
+        costAnalysis: string;
+        costDrivers: string;
+        optimization: string;
+      };
+    }>;
+  };
   trend: {
     granularity: Granularity | string;
     compareLabel: string;

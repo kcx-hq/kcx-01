@@ -81,60 +81,58 @@ export async function preloadDimensionMaps(dims) {
     commitmentDiscounts: new Map(),
   };
 
-  const cloudAccounts = await loadRows(
-    CloudAccount,
-    dims ? toCloudAccountWhere(dims) : undefined,
-  );
+  const cloudAccountsWhere = dims ? toCloudAccountWhere(dims) : undefined;
+  const servicesWhere = dims ? toServiceWhere(dims) : undefined;
+  const regionsWhere = dims ? toRegionWhere(dims) : undefined;
+  const skusWhere = dims ? toSingleKeyWhere(dims, "skus", "skuid") : undefined;
+  const resourcesWhere = dims ? toSingleKeyWhere(dims, "resources", "resourceid") : undefined;
+  const subAccountsWhere = dims ? toSingleKeyWhere(dims, "subAccounts", "subaccountid") : undefined;
+  const commitmentDiscountsWhere = dims
+    ? toSingleKeyWhere(dims, "commitmentDiscounts", "commitmentdiscountid")
+    : undefined;
+
+  const [
+    cloudAccounts,
+    services,
+    regions,
+    skus,
+    resources,
+    subAccounts,
+    commitmentDiscounts,
+  ] = await Promise.all([
+    loadRows(CloudAccount, cloudAccountsWhere),
+    loadRows(Service, servicesWhere),
+    loadRows(Region, regionsWhere),
+    loadRows(Sku, skusWhere),
+    loadRows(Resource, resourcesWhere),
+    loadRows(SubAccount, subAccountsWhere),
+    loadRows(CommitmentDiscount, commitmentDiscountsWhere),
+  ]);
+
   for (const row of cloudAccounts) {
     maps.cloudAccounts.set(`${row.providername}:${row.billingaccountid}`, row.id);
   }
 
-  const services = await loadRows(
-    Service,
-    dims ? toServiceWhere(dims) : undefined,
-  );
   for (const row of services) {
     maps.services.set(`${row.providername}:${row.servicename}`, row.serviceid);
   }
 
-  const regions = await loadRows(
-    Region,
-    dims ? toRegionWhere(dims) : undefined,
-  );
   for (const row of regions) {
     maps.regions.set(`${row.providername}:${row.regioncode}`, row.id);
   }
 
-  const skus = await loadRows(
-    Sku,
-    dims ? toSingleKeyWhere(dims, "skus", "skuid") : undefined,
-  );
   for (const row of skus) {
     maps.skus.set(row.skuid, row.skuid);
   }
 
-  const resources = await loadRows(
-    Resource,
-    dims ? toSingleKeyWhere(dims, "resources", "resourceid") : undefined,
-  );
   for (const row of resources) {
     maps.resources.set(row.resourceid, row.resourceid);
   }
 
-  const subAccounts = await loadRows(
-    SubAccount,
-    dims ? toSingleKeyWhere(dims, "subAccounts", "subaccountid") : undefined,
-  );
   for (const row of subAccounts) {
     maps.subAccounts.set(row.subaccountid, row.subaccountid);
   }
 
-  const commitmentDiscounts = await loadRows(
-    CommitmentDiscount,
-    dims
-      ? toSingleKeyWhere(dims, "commitmentDiscounts", "commitmentdiscountid")
-      : undefined,
-  );
   for (const row of commitmentDiscounts) {
     maps.commitmentDiscounts.set(row.commitmentdiscountid, row.commitmentdiscountid);
   }

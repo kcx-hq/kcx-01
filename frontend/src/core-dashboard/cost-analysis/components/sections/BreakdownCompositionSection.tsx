@@ -1,5 +1,6 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Layers } from "lucide-react";
+import { useLocation } from "react-router-dom";
 import type {
   BreakdownRow,
   SpendAnalyticsFilterPatch,
@@ -51,6 +52,30 @@ const filterMap: Record<BreakdownTabKey, keyof SpendAnalyticsFilters> = {
 const VISIBLE_ROWS = 4;
 const ESTIMATED_ROW_HEIGHT_PX = 122;
 const ROW_GAP_PX = 8;
+const RESET_SCOPE_PATCH: SpendAnalyticsFilterPatch = {
+  provider: "All",
+  service: "All",
+  region: "All",
+  account: "All",
+  subAccount: "All",
+  team: "All",
+  app: "All",
+  env: "All",
+  costCategory: "All",
+  tagKey: "",
+  tagValue: "",
+};
+
+const dimensionToTab: Record<string, BreakdownTabKey> = {
+  service: "byService",
+  provider: "byProvider",
+  region: "byRegion",
+  account: "byAccount",
+  team: "byTeam",
+  app: "byApp",
+  env: "byEnv",
+  costcategory: "byCostCategory",
+};
 
 const BreakdownCompositionSection = ({
   breakdown,
@@ -58,6 +83,8 @@ const BreakdownCompositionSection = ({
   onFiltersChange,
   serviceKeys = [],
 }: BreakdownCompositionSectionProps) => {
+  const location = useLocation();
+  const lastHandledSearchRef = useRef<string>("");
   const [tab, setTab] = useState<BreakdownTabKey>("byService");
   const serviceColorMap = useMemo(
     () => buildSeriesColorMap(serviceKeys.filter((key) => key && key !== "Other")),
@@ -72,6 +99,31 @@ const BreakdownCompositionSection = ({
   const shouldScroll = rows.length > VISIBLE_ROWS;
   const activeFilterField = filterMap[tab];
   const activeFilterValue = String(filters[activeFilterField] || "All");
+
+  const buildScopePatch = (field: keyof SpendAnalyticsFilters, value: string): SpendAnalyticsFilterPatch => ({
+    ...RESET_SCOPE_PATCH,
+    [field]: value,
+  });
+
+  useEffect(() => {
+    if (lastHandledSearchRef.current === location.search) return;
+    lastHandledSearchRef.current = location.search;
+
+    const params = new URLSearchParams(location.search);
+    const view = String(params.get("view") || "");
+    if (view.toLowerCase() !== "breakdown") return;
+
+    const dimension = String(params.get("dimension") || "").toLowerCase();
+    const focus = String(params.get("focus") || "");
+    const nextTab = dimensionToTab[dimension];
+    if (nextTab && tab !== nextTab) setTab(nextTab);
+    if (!nextTab || !focus) return;
+
+    const field = filterMap[nextTab];
+    const currentValue = String(filters[field] || "All");
+    if (currentValue === focus) return;
+    onFiltersChange(buildScopePatch(field, focus));
+  }, [filters, location.search, onFiltersChange, tab]);
 
   return (
     <section className="flex h-full min-h-0 flex-col rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
@@ -93,19 +145,7 @@ const BreakdownCompositionSection = ({
           type="button"
           onClick={() => {
             setTab("byService");
-            onFiltersChange({
-              provider: "All",
-              service: "All",
-              region: "All",
-              account: "All",
-              subAccount: "All",
-              team: "All",
-              app: "All",
-              env: "All",
-              costCategory: "All",
-              tagKey: "",
-              tagValue: "",
-            });
+            onFiltersChange(RESET_SCOPE_PATCH);
           }}
           className="rounded-full border border-slate-200 bg-white px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-slate-600 hover:border-emerald-200 hover:text-emerald-700"
         >
@@ -141,16 +181,7 @@ const BreakdownCompositionSection = ({
               type="button"
               onClick={() => {
                 if (row.isOthers) return;
-                onFiltersChange({
-                  provider: activeFilterField === "provider" ? row.name : "All",
-                  service: activeFilterField === "service" ? row.name : "All",
-                  region: activeFilterField === "region" ? row.name : "All",
-                  account: activeFilterField === "account" ? row.name : "All",
-                  team: activeFilterField === "team" ? row.name : "All",
-                  app: activeFilterField === "app" ? row.name : "All",
-                  env: activeFilterField === "env" ? row.name : "All",
-                  costCategory: activeFilterField === "costCategory" ? row.name : "All",
-                });
+                onFiltersChange(buildScopePatch(activeFilterField, row.name));
               }}
               className={`w-full rounded-xl border p-3 text-left transition ${
                 !row.isOthers && activeFilterValue === row.name

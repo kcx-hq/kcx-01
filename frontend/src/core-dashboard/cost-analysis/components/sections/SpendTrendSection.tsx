@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Activity, AlertTriangle } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import {
   Area,
   Brush,
@@ -33,6 +34,7 @@ const formatAxisCurrency = (value: number): string => {
 };
 
 const SpendTrendSection = ({ trend, trust, filters }: SpendTrendSectionProps) => {
+  const navigate = useNavigate();
   const allSeries = useMemo(
     () => trend.activeKeys.filter((key) => key && key !== "Other"),
     [trend.activeKeys]
@@ -71,6 +73,20 @@ const SpendTrendSection = ({ trend, trust, filters }: SpendTrendSectionProps) =>
     if (!anomalyIndexes.length) return;
     const start = Math.max(0, anomalyIndexes[0] - 3);
     const end = Math.min(Math.max(0, chartRows.length - 1), anomalyIndexes[anomalyIndexes.length - 1] + 3);
+    setBrushWindow({ start, end });
+  };
+  const focusPeakDay = (): void => {
+    if (!chartRows.length) return;
+    const peak = chartRows.reduce(
+      (acc, row, index) => {
+        const total = Number(row.total || 0);
+        return total > acc.value ? { value: total, index } : acc;
+      },
+      { value: Number.NEGATIVE_INFINITY, index: -1 }
+    );
+    if (peak.index < 0) return;
+    const start = Math.max(0, peak.index - 3);
+    const end = Math.min(Math.max(0, chartRows.length - 1), peak.index + 3);
     setBrushWindow({ start, end });
   };
 
@@ -192,34 +208,79 @@ const SpendTrendSection = ({ trend, trust, filters }: SpendTrendSectionProps) =>
       </div>
 
       <div className="mb-4 grid grid-cols-1 gap-2 sm:grid-cols-2 xl:grid-cols-5">
-        <div className="rounded-xl border border-slate-100 bg-white p-3">
+        <button
+          type="button"
+          onClick={() =>
+            setBrushWindow({
+              start: 0,
+              end: Math.max(0, chartRows.length - 1),
+            })
+          }
+          className="rounded-xl border border-slate-100 bg-white p-3 text-left transition hover:border-emerald-200 hover:bg-emerald-50/30"
+        >
           <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Current period</p>
           <p className="mt-1 text-sm font-black text-slate-900">{formatCurrency(summary.currentTotal)}</p>
-        </div>
-        <div className="rounded-xl border border-slate-100 bg-white p-3">
+          <p className="mt-1 text-[10px] font-bold uppercase tracking-wider text-emerald-700">Reset focus</p>
+        </button>
+        <button
+          type="button"
+          onClick={() =>
+            setBrushWindow({
+              start: 0,
+              end: Math.max(0, chartRows.length - 1),
+            })
+          }
+          className="rounded-xl border border-slate-100 bg-white p-3 text-left transition hover:border-emerald-200 hover:bg-emerald-50/30"
+        >
           <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{trend.compareLabel}</p>
           <p className="mt-1 text-sm font-black text-slate-900">{formatCurrency(summary.previousTotal)}</p>
-        </div>
-        <div className="rounded-xl border border-slate-100 bg-white p-3">
+          <p className="mt-1 text-[10px] font-bold uppercase tracking-wider text-emerald-700">Reset focus</p>
+        </button>
+        <button
+          type="button"
+          onClick={() => navigate("/dashboard/cost-drivers")}
+          className="rounded-xl border border-slate-100 bg-white p-3 text-left transition hover:border-emerald-200 hover:bg-emerald-50/30"
+        >
           <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Change</p>
           <p className={`mt-1 text-sm font-black ${summary.deltaValue >= 0 ? "text-rose-700" : "text-emerald-700"}`}>
             {formatSignedPercent(summary.deltaPercent)}
           </p>
           <p className="text-[11px] text-slate-600">{summary.deltaValue >= 0 ? "+" : ""}{formatCurrency(summary.deltaValue)}</p>
-        </div>
-        <div className="rounded-xl border border-slate-100 bg-white p-3">
+          <p className="mt-1 text-[10px] font-bold uppercase tracking-wider text-emerald-700">Open drivers</p>
+        </button>
+        <button
+          type="button"
+          onClick={focusPeakDay}
+          disabled={!summary.peakDate}
+          className={`rounded-xl border bg-white p-3 text-left transition ${
+            summary.peakDate
+              ? "border-slate-100 hover:border-emerald-200 hover:bg-emerald-50/30"
+              : "cursor-not-allowed border-slate-100 opacity-70"
+          }`}
+        >
           <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Peak day</p>
           <p className="mt-1 text-sm font-black text-slate-900">{formatCurrency(summary.peakValue)}</p>
           <p className="text-[11px] text-slate-600">{summary.peakDate ? formatDate(summary.peakDate) : "N/A"}</p>
-        </div>
-        <div className="rounded-xl border border-slate-100 bg-white p-3">
+          <p className="mt-1 text-[10px] font-bold uppercase tracking-wider text-emerald-700">Focus peak window</p>
+        </button>
+        <button
+          type="button"
+          onClick={focusAnomalies}
+          disabled={!anomalyIndexes.length}
+          className={`rounded-xl border bg-white p-3 text-left transition ${
+            anomalyIndexes.length
+              ? "border-slate-100 hover:border-emerald-200 hover:bg-emerald-50/30"
+              : "cursor-not-allowed border-slate-100 opacity-70"
+          }`}
+        >
           <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Anomaly days</p>
           <p className="mt-1 flex items-center gap-1 text-sm font-black text-slate-900">
             <AlertTriangle size={12} className="text-rose-600" />
             {summary.anomalyDays}
           </p>
           <p className="text-[11px] text-slate-600">Impact {formatCurrency(summary.anomalyImpact)}</p>
-        </div>
+          <p className="mt-1 text-[10px] font-bold uppercase tracking-wider text-emerald-700">Focus anomalies</p>
+        </button>
       </div>
 
       <div className="mb-3 flex flex-wrap items-center gap-2">

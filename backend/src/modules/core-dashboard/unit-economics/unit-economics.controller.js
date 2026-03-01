@@ -41,12 +41,6 @@ const withSummary = (handler) => async (req, res, next) => {
       return next(new AppError(401, "UNAUTHENTICATED", "Authentication required"));
     }
 
-    const filters = {
-      provider: req.query.provider || "All",
-      service: req.query.service || "All",
-      region: req.query.region || "All",
-    };
-
     const options = await buildSummaryOptions(req);
     if (!options) return res.ok({});
 

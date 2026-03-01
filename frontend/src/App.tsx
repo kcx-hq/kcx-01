@@ -31,12 +31,9 @@ import CSVUpload from "./shared/csv-upload/CSVUpload";
 import "./index.css";
 import BillingUploads from "./shared/csv-upload/BillingUpload";
 import CsvUploadInput from "./shared/csv-upload/CSVUploadInput";
-import ClientDDashboard from "./clients/client-d/dashboard/client-d.dashboard.page";
 
 import { useCaps } from "./hooks/useCaps";
 import { useDashboardStore } from "./store/Dashboard.store";
-
-import ClientC from "./clients/client-c/client-c";
 
 import Chatbot from "./shared/chatbot/Chatbot";
 import ForgotPassword from "./shared/auth/components/ForgotPassword";
@@ -79,6 +76,7 @@ const Home = () => {
           isCTAActivated={isCTAActivated}
           deactivateCTA={deactivateCTA}
           showAttentionGrabber={showAttentionGrabber}
+          onAuthModalChange={setIsAuthModalOpen}
         />
 
         <About />
@@ -153,7 +151,7 @@ function App() {
         <Route path="/how-it-works" element={<HowItWorks />} />
 
         {/* Dashboard Route */}
-        <Route path="/client-d/dashboard/*" element={<ClientDDashboard />} />
+        <Route path="/client-d/dashboard/*" element={<Navigate to="/" replace />} />
         <Route path="/dashboard/*" element={<Dashboard />} />
 
         <Route path="/book-slot" element={<SlotBookingPage />} />
@@ -166,7 +164,7 @@ function App() {
         <Route path="/upload" element={<CSVUpload />} />
 
         {/* Client C Dashboard Route - Use nested routing */}
-        <Route path="/client-c/*" element={<ClientC />} />
+        <Route path="/client-c/*" element={<Navigate to="/" replace />} />
         <Route path="/upload-csv-file-input" element={<CsvUploadInput />} />
 
         <Route path="*" element={<Navigate to="/" replace />} />

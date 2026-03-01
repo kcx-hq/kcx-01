@@ -10,10 +10,6 @@ import type {
 } from "../types";
 
 export function InsightModal({ selectedInsight, onClose }: InsightModalProps) {
-  const isRightSizingInsight = (
-    insight: Opportunity | RightSizingRecommendation,
-  ): insight is RightSizingRecommendation => insight.type === "rightsizing";
-
   return (
     <AnimatePresence>
       {selectedInsight && (

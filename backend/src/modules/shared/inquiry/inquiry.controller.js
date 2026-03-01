@@ -1,5 +1,4 @@
 import logger from "../../../lib/logger.js";
-import logger from "../../../lib/logger.js";
 import {
   sendInquiryAcknowledgementEmail,
   sendMeetingConfirmationEmail,
@@ -24,25 +23,11 @@ import {
   validateInquiryActionState,
 } from "./inquiry.utils.js";
 const BUSINESS_TZ = DEFAULT_BUSINESS_TIMEZONE; // Company timezone
-import AppError from "../../../errors/AppError.js";
-import {
-  buildInquiryActionLinks,
-  DEFAULT_BUSINESS_TIMEZONE,
-  formatSlotsForViewer,
-  hasRequiredInquirySubmitFields,
-  resolveViewerTimezone,
-  toUtcIsoRange,
-  validateInquiryActionState,
-} from "./inquiry.utils.js";
-const BUSINESS_TZ = DEFAULT_BUSINESS_TIMEZONE; // Company timezone
 
-export const submitInquiry = async (req, res, next) => {
 export const submitInquiry = async (req, res, next) => {
   try {
     const { name, email, message, preferred_datetime, timezone } = req.body;
 
-    if (!hasRequiredInquirySubmitFields({ preferred_datetime, timezone })) {
-      return next(new AppError(400, "VALIDATION_ERROR", "Invalid request"));
     if (!hasRequiredInquirySubmitFields({ preferred_datetime, timezone })) {
       return next(new AppError(400, "VALIDATION_ERROR", "Invalid request"));
     }
@@ -70,7 +55,6 @@ export const submitInquiry = async (req, res, next) => {
       timezone
     );
 
-    return res.created({
     return res.created({
       message: "Inquiry submitted successfully",
       data: newInquiry,
@@ -264,7 +248,6 @@ export const acceptInquiry = async (req, res, next) => {
 
     if (!event.success) {
       return next(new AppError(500, "INTERNAL", "Internal server error"));
-      return next(new AppError(500, "INTERNAL", "Internal server error"));
     }
 
     await inquiry.update({
@@ -305,19 +288,15 @@ export const acceptInquiry = async (req, res, next) => {
   } catch (error) {
     logger.error({ err: error, requestId: req.requestId }, "acceptInquiry failed");
     return next(new AppError(500, "INTERNAL", "Internal server error", { cause: error }));
-    logger.error({ err: error, requestId: req.requestId }, "acceptInquiry failed");
-    return next(new AppError(500, "INTERNAL", "Internal server error", { cause: error }));
   }
 };
 
-export const rejectInquiry = async (req, res, next) => {
 export const rejectInquiry = async (req, res, next) => {
   try {
     const { id } = req.params;
     const { token } = req.query;
 
     if (!token) {
-      return next(new AppError(400, "VALIDATION_ERROR", "Invalid request"));
       return next(new AppError(400, "VALIDATION_ERROR", "Invalid request"));
     }
 
@@ -326,18 +305,15 @@ export const rejectInquiry = async (req, res, next) => {
 
     if (!inquiry) {
       return next(new AppError(404, "NOT_FOUND", "Not found"));
-      return next(new AppError(404, "NOT_FOUND", "Not found"));
     }
 
     // 2️⃣ Already processed
     if (inquiry.status !== "PENDING") {
       return next(new AppError(409, "CONFLICT", "Conflict"));
-      return next(new AppError(409, "CONFLICT", "Conflict"));
     }
 
     // 3️⃣ Validate token
     if (token !== inquiry.action_token) {
-      return next(new AppError(403, "UNAUTHORIZED", "You do not have permission to perform this action"));
       return next(new AppError(403, "UNAUTHORIZED", "You do not have permission to perform this action"));
     }
 
@@ -402,8 +378,6 @@ export const rejectInquiry = async (req, res, next) => {
   } catch (error) {
     logger.error({ err: error, requestId: req.requestId }, "rejectInquiry failed");
     return next(new AppError(500, "INTERNAL", "Internal server error", { cause: error }));
-    logger.error({ err: error, requestId: req.requestId }, "rejectInquiry failed");
-    return next(new AppError(500, "INTERNAL", "Internal server error", { cause: error }));
   }
 };
 
@@ -414,13 +388,11 @@ export const rejectInquiry = async (req, res, next) => {
  *  - slotMinutes (default 60)
  */
 export async function getSlotsByDate(req, res, next) {
-export async function getSlotsByDate(req, res, next) {
   try {
     const { date, userTimezone } = req.query;
     const slotMinutes = Number(req.query.slotMinutes) || 60;
 
     if (!date) {
-      return next(new AppError(400, "VALIDATION_ERROR", "Invalid request"));
       return next(new AppError(400, "VALIDATION_ERROR", "Invalid request"));
     }
 
@@ -446,7 +418,6 @@ export async function getSlotsByDate(req, res, next) {
 
     if (start >= end) {
       return res.ok({
-      return res.ok({
         date,
         businessTimezone: BUSINESS_TZ,
         slots: [],
@@ -455,7 +426,6 @@ export async function getSlotsByDate(req, res, next) {
 
     // 3️⃣ Convert ONCE to UTC
     const { fromUTC, toUTC } = toUtcIsoRange({ start, end });
-    const { fromUTC, toUTC } = toUtcIsoRange({ start, end });
 
     // 4️⃣ Get free slots (UTC)
     const freeSlots = await getFreeSlots(fromUTC, toUTC, slotMinutes);
@@ -463,10 +433,7 @@ export async function getSlotsByDate(req, res, next) {
     // 5️⃣ Convert slots to USER timezone for response
     const viewerTZ = resolveViewerTimezone(userTimezone, BUSINESS_TZ);
     const slots = formatSlotsForViewer(freeSlots, viewerTZ);
-    const viewerTZ = resolveViewerTimezone(userTimezone, BUSINESS_TZ);
-    const slots = formatSlotsForViewer(freeSlots, viewerTZ);
 
-    return res.ok({
     return res.ok({
       date,
       businessTimezone: BUSINESS_TZ,
@@ -474,8 +441,6 @@ export async function getSlotsByDate(req, res, next) {
       slots,
     });
   } catch (error) {
-    logger.error({ err: error, requestId: req.requestId }, "getSlotsByDate failed");
-    return next(new AppError(500, "INTERNAL", "Internal server error", { cause: error }));
     logger.error({ err: error, requestId: req.requestId }, "getSlotsByDate failed");
     return next(new AppError(500, "INTERNAL", "Internal server error", { cause: error }));
   }

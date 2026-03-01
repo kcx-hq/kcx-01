@@ -23,8 +23,6 @@ import type {
 } from "./types";
 
 const MAX_MB = 50;
-const ETL_POLL_INTERVAL_MS = 2500;
-const ETL_POLL_TIMEOUT_MS = 15 * 60 * 1000;
 
 type InputMode = "csv" | "cloud";
 type CsvStatus = "idle" | "uploading" | "error";
@@ -66,9 +64,6 @@ const isBillingUploadRecord = (value: unknown): value is BillingUploadRecord => 
   }
   return typeof (value as Record<string, unknown>)["uploadid"] === "string";
 };
-
-const normalizeUploadStatus = (value: unknown): string =>
-  typeof value === "string" ? value.trim().toUpperCase() : "";
 
 const getAxiosMessage = (error: unknown, fallback: string): string => {
   const message = getApiErrorMessageWithRequestId(error, fallback);
@@ -158,54 +153,6 @@ const CsvUploadInput = ({ uploadUrl, withCredentials = true }: CsvUploadInputPro
     checkExistingUploads();
   }, [withCredentials]);
 
-  const sleep = (ms: number) =>
-    new Promise<void>((resolve) => {
-      window.setTimeout(resolve, ms);
-    });
-
-  const fetchUploadStatus = async (uploadId: string): Promise<string | null> => {
-    const response = await apiGet<unknown>("/api/etl/get-billing-uploads", { withCredentials });
-    const uploads = Array.isArray(response) ? response.filter(isBillingUploadRecord) : [];
-    const normalizedUploadId = String(uploadId).trim().toLowerCase();
-    const match = uploads.find(
-      (row) => String(row.uploadid || "").trim().toLowerCase() === normalizedUploadId,
-    );
-    if (!match) {
-      return null;
-    }
-    return normalizeUploadStatus(match.status);
-  };
-
-  const waitForEtlCompletion = async (uploadId: string) => {
-    const startedAt = Date.now();
-
-    while (Date.now() - startedAt <= ETL_POLL_TIMEOUT_MS) {
-      if (!isMountedRef.current) {
-        return;
-      }
-
-      const status = await fetchUploadStatus(uploadId);
-      if (status === "COMPLETED") {
-        setCsvProcessingMessageSafe("ETL completed. Opening dashboard...");
-        return;
-      }
-
-      if (status === "FAILED") {
-        throw new Error("ETL processing failed. Please retry with a valid CSV.");
-      }
-
-      if (status === "PENDING") {
-        setCsvProcessingMessageSafe("Upload received. Waiting for ETL to start...");
-      } else {
-        setCsvProcessingMessageSafe("ETL is processing your data...");
-      }
-
-      await sleep(ETL_POLL_INTERVAL_MS);
-    }
-
-    throw new Error("ETL is taking longer than expected. Please check Billing Uploads for progress.");
-  };
-
   const uploadFile = async (file: File | null | undefined) => {
     const msg = validate(file);
     if (msg) {
@@ -241,13 +188,6 @@ const CsvUploadInput = ({ uploadUrl, withCredentials = true }: CsvUploadInputPro
       }
 
       setUploadIds([uploadId]);
-      setCsvProcessingMessageSafe("File uploaded. ETL is processing your data...");
-      await waitForEtlCompletion(uploadId);
-
-      if (!isMountedRef.current) {
-        return;
-      }
-
       setCsvProcessingMessageSafe("ETL completed. Redirecting to dashboard...");
       redirectToDashboard();
       return;

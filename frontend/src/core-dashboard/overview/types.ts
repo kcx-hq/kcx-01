@@ -112,13 +112,31 @@ export interface ExecutiveOverview {
     budget: number;
     budgetVarianceValue: number;
     budgetVariancePercent: number;
+    trend7dDeltaPercent: number;
+    trend30dDeltaPercent: number;
+    openAlertRiskCount: number;
+    highRiskAlertCount: number;
+    trustScore: number;
+    potentialSavings30d: number;
     realizedSavingsMtd: number;
     pipelineSavings: number;
     presentation?: {
       mtdSpend: ExecutiveKpiPresentationItem;
       eomForecast: ExecutiveKpiPresentationItem;
       budgetVariance: ExecutiveKpiPresentationItem;
+      costTrend: ExecutiveKpiPresentationItem;
+      openAlertRisk: ExecutiveKpiPresentationItem;
+      trustScore: ExecutiveKpiPresentationItem;
+      potentialSavings: ExecutiveKpiPresentationItem;
       realizedSavings: ExecutiveKpiPresentationItem;
+    };
+    ownerLinks?: {
+      mtdSpend: string;
+      eomForecast: string;
+      costTrend: string;
+      openAlertRisk: string;
+      trustScore: string;
+      potentialSavings: string;
     };
     calculationContext?: {
       asOfDate: string | null;

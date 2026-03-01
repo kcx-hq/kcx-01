@@ -13,18 +13,36 @@ const emptyExecutiveOverview: ExecutiveOverview = {
     budget: 0,
     budgetVarianceValue: 0,
     budgetVariancePercent: 0,
+    trend7dDeltaPercent: 0,
+    trend30dDeltaPercent: 0,
+    openAlertRiskCount: 0,
+    highRiskAlertCount: 0,
+    trustScore: 0,
+    potentialSavings30d: 0,
     realizedSavingsMtd: 0,
     pipelineSavings: 0,
     presentation: {
       mtdSpend: { comparison: "vs prior 0.0%", comparisonValue: 0, status: "On track" },
       eomForecast: { comparison: "vs budget 0.0%", comparisonValue: 0, status: "On track" },
       budgetVariance: { comparison: "variance 0.0%", comparisonValue: 0, status: "On track" },
+      costTrend: { comparison: "30d 0.0%", comparisonValue: 0, status: "On track" },
+      openAlertRisk: { comparison: "0 high", comparisonValue: 0, status: "On track" },
+      trustScore: { comparison: "Low confidence", comparisonValue: 0, status: "Watch" },
+      potentialSavings: { comparison: "0 actions", comparisonValue: 0, status: "Watch" },
       realizedSavings: {
         comparison: "Pipeline unavailable",
         comparisonValue: 0,
         status: "Watch",
         coveragePercent: 0,
       },
+    },
+    ownerLinks: {
+      mtdSpend: "/dashboard/forecasting-budgets",
+      eomForecast: "/dashboard/forecasting-budgets",
+      costTrend: "/dashboard/cost-drivers",
+      openAlertRisk: "/dashboard/alerts-incidents",
+      trustScore: "/dashboard/data-quality",
+      potentialSavings: "/dashboard/optimization",
     },
     calculationContext: {
       asOfDate: null,
@@ -111,6 +129,10 @@ const normalizeExecutiveOverview = (
       presentation: {
         ...emptyExecutiveOverview.kpiHeader.presentation,
         ...(source.kpiHeader?.presentation ?? {}),
+      },
+      ownerLinks: {
+        ...emptyExecutiveOverview.kpiHeader.ownerLinks,
+        ...(source.kpiHeader?.ownerLinks ?? {}),
       },
       calculationContext: {
         ...emptyExecutiveOverview.kpiHeader.calculationContext,

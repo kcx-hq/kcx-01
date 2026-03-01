@@ -1,7 +1,7 @@
-import { readCsv, readCsvHeaders } from "../../../utils/csvReader.js";
+import { readCsvWithHeaders } from "../../../utils/csvReader.js";
 import {
-  createDimensionsAccumulator,
   collectDimensionRow,
+  createDimensionsAccumulator,
 } from "./dimensions/collectDimensions.js";
 import { bulkUpsertDimensions } from "./dimensions/bulkUpsertDimensions.js";
 import { preloadDimensionMaps } from "./dimensions/preloadDimensionsMaps.js";
@@ -10,7 +10,6 @@ import {
   pushFact,
   flushFacts,
   resetFactBuffer,
-  getFactStats,
 } from "./fact/billingUsageFact.js";
 import sequelize from "../../../config/db.config.js";
 import {
@@ -18,31 +17,62 @@ import {
   storeAutoSuggestions,
   storeDetectedColumns,
 } from "./mapping.service.js";
-import { mapRow } from "../../../utils/sanitize.js";
+import { normalizeHeader } from "../../../utils/sanitize.js";
 import { detectProvider } from "./provider-detect.service.js";
 import { autoSuggest } from "../../../utils/mapping/autoSuggest.js";
 import { internalFields } from "../../../utils/mapping/internalFields.js";
+
+function buildCompiledMapping(mapping, headers) {
+  const headerByNormalized = new Map();
+  for (const header of headers || []) {
+    if (typeof header !== "string") {
+      continue;
+    }
+    headerByNormalized.set(normalizeHeader(header), header);
+  }
+
+  return Object.entries(mapping || {}).map(([internalField, sourceColumn]) => {
+    if (typeof sourceColumn !== "string" || sourceColumn.trim() === "") {
+      return [internalField, null];
+    }
+
+    const direct = headerByNormalized.get(normalizeHeader(sourceColumn));
+    return [internalField, direct || sourceColumn];
+  });
+}
+
+function mapRowWithCompiledMapping(rawRow, compiledMapping) {
+  const result = {};
+
+  for (const [internalField, sourceKey] of compiledMapping) {
+    result[internalField] = sourceKey ? rawRow[sourceKey] ?? null : null;
+  }
+
+  return result;
+}
+
 export async function ingestBillingCsv({ uploadId, filePath, clientid }) {
   resetFactBuffer();
-  // 1️⃣ Detect provider & headers
-  const { headers, rows } = await readCsvWithHeaders(filePath);
 
+  const { headers, rows } = await readCsvWithHeaders(filePath);
   const provider = detectProvider(headers);
 
-  await storeDetectedColumns(provider, headers, clientid); // buffer
+  await storeDetectedColumns(provider, headers, clientid);
 
   const suggestions = autoSuggest(headers, rows, internalFields);
-
   await storeAutoSuggestions(provider, uploadId, suggestions, clientid);
-  const resolvedMapping = await loadResolvedMapping(
-    provider,
-    headers,
-    clientid,
-  );
 
-  const mappedRows = rows.map((raw) => mapRow(raw, resolvedMapping));
+  const resolvedMapping = await loadResolvedMapping(provider, headers, clientid);
+  const compiledMapping = buildCompiledMapping(resolvedMapping, headers);
 
-  const dims = await collectDimensions(mappedRows);
+  const dims = createDimensionsAccumulator();
+  const mappedRows = new Array(rows.length);
+
+  for (let idx = 0; idx < rows.length; idx += 1) {
+    const mappedRow = mapRowWithCompiledMapping(rows[idx], compiledMapping);
+    mappedRows[idx] = mappedRow;
+    collectDimensionRow(mappedRow, dims);
+  }
 
   const transaction = await sequelize.transaction();
   try {
@@ -53,12 +83,11 @@ export async function ingestBillingCsv({ uploadId, filePath, clientid }) {
     throw err;
   }
 
-  const maps = await preloadDimensionMaps();
-  for await (const row of mappedRows) {
+  const maps = await preloadDimensionMaps(dims);
+
+  for (const row of mappedRows) {
     const dimensionIds = resolveDimensionIdsFromMaps(row, maps);
 
-    // Only core dimensions are mandatory as per BillingUsageFact model:
-    // uploadid (provided), cloudaccountid, serviceid, regionid
     if (
       !dimensionIds.regionid ||
       !dimensionIds.cloudaccountid ||

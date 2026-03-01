@@ -26,7 +26,7 @@ type DashboardStore = {
  * - Stores selected uploadIds
  * - Accessible across dashboard pages, widgets, filters
  */
-export const useDashboardStore = create<DashboardStore>(
+export const useDashboardStore = create<DashboardStore>()(
   persist(
     (set, get) => ({
       /* =========================
@@ -34,8 +34,6 @@ export const useDashboardStore = create<DashboardStore>(
       ========================= */
       uploadIds: [], // array of uploadId strings
       selectedUploads: [], // [{ uploadId, filename }]
-      dashboardPath: "/dashboard", // default fallback
-      setDashboardPath: (dashboardPath: string) => set({ dashboardPath }),
       dashboardPath: "/dashboard", // default fallback
       setDashboardPath: (dashboardPath: string) => set({ dashboardPath }),
 
@@ -47,7 +45,6 @@ export const useDashboardStore = create<DashboardStore>(
        * Replace all uploadIds
        * @param {string[]} ids
        */
-      setUploadIds: (ids: string[] = []) =>
       setUploadIds: (ids: string[] = []) =>
         set((state) => {
           const nextIds = Array.isArray(ids) ? ids : [];
@@ -65,12 +62,8 @@ export const useDashboardStore = create<DashboardStore>(
        * @param {{ uploadId: string, filename: string }[]} uploads
        */
       setSelectedUploads: (uploads: SelectedUpload[] = []) =>
-      setSelectedUploads: (uploads: SelectedUpload[] = []) =>
         set({
           selectedUploads: Array.isArray(uploads)
-            ? uploads
-                .filter((u: SelectedUpload) => Boolean(u?.uploadId))
-                .map((u: SelectedUpload) => ({ uploadId: u.uploadId, filename: u.filename || "" }))
             ? uploads
                 .filter((u: SelectedUpload) => Boolean(u?.uploadId))
                 .map((u: SelectedUpload) => ({ uploadId: u.uploadId, filename: u.filename || "" }))
@@ -82,7 +75,6 @@ export const useDashboardStore = create<DashboardStore>(
        * (idempotent)
        */
       addUploadId: (id: string) =>
-      addUploadId: (id: string) =>
         set((state) => {
           if (!id || state.uploadIds.includes(id)) return state;
           return { uploadIds: [...state.uploadIds, id] };
@@ -91,7 +83,6 @@ export const useDashboardStore = create<DashboardStore>(
       /**
        * Remove a single uploadId
        */
-      removeUploadId: (id: string) =>
       removeUploadId: (id: string) =>
         set((state) => ({
           uploadIds: state.uploadIds.filter((x) => x !== id),
@@ -103,7 +94,6 @@ export const useDashboardStore = create<DashboardStore>(
       /**
        * Toggle uploadId selection
        */
-      toggleUploadId: (id: string) =>
       toggleUploadId: (id: string) =>
         set((state) => {
           const exists = state.uploadIds.includes(id);
@@ -136,7 +126,6 @@ export const useDashboardStore = create<DashboardStore>(
       /**
        * Check if an uploadId is selected
        */
-      hasUploadId: (id: string) => get().uploadIds.includes(id),
       hasUploadId: (id: string) => get().uploadIds.includes(id),
 
       /**
