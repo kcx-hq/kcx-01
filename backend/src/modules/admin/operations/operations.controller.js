@@ -1,20 +1,24 @@
 import { getUploadById, listUploads } from "./operations.service.js";
+import AppError from "../../../errors/AppError.js";
+import logger from "../../../lib/logger.js";
 
-export const getUploads = async (req, res) => {
+export const getUploads = async (req, res, next) => {
   try {
     const result = await listUploads(req.query);
-    return res.status(200).json(result);
+    return res.ok(result);
   } catch (error) {
-    return res.status(500).json({ message: "Internal server error" });
+    logger.error({ err: error, requestId: req.requestId }, "getUploads failed");
+    return next(new AppError(500, "INTERNAL", "Internal server error", { cause: error }));
   }
 };
 
-export const getUpload = async (req, res) => {
+export const getUpload = async (req, res, next) => {
   try {
     const upload = await getUploadById(req.params.id);
-    if (!upload) return res.status(404).json({ message: "Upload not found" });
-    return res.status(200).json(upload);
+    if (!upload) return next(new AppError(404, "NOT_FOUND", "Not found"));
+    return res.ok(upload);
   } catch (error) {
-    return res.status(500).json({ message: "Internal server error" });
+    logger.error({ err: error, requestId: req.requestId }, "getUpload failed");
+    return next(new AppError(500, "INTERNAL", "Internal server error", { cause: error }));
   }
 };

@@ -177,6 +177,17 @@ const COST_ANALYSIS_COMMON_QUERY_SCHEMA = z.preprocess(
     .strict()
 );
 
+const ADMIN_UPLOADS_QUERY_SCHEMA = z.preprocess(
+  normalizeRecordInput,
+  z
+    .object({
+      page: z.coerce.number().int().min(1).max(100000).optional(),
+      limit: z.coerce.number().int().min(1).max(1000).optional(),
+    })
+    .strict()
+);
+
+
 const COST_ANALYSIS_FILTERS_QUERY_SCHEMA = z.preprocess(
   normalizeRecordInput,
   z
@@ -442,6 +453,19 @@ const REPORTS_DOWNLOAD_BODY_SCHEMA = z.preprocess(
 );
 
 const REQUEST_RULES = [
+  {
+    method: "GET",
+    pattern: /^\/api(?:\/v1)?\/admin\/operations\/uploads\/?$/i,
+    query: ADMIN_UPLOADS_QUERY_SCHEMA,
+  },
+  {
+    method: "GET",
+    pattern: /^\/api(?:\/v1)?\/admin\/operations\/uploads\/(?<id>[^/]+)\/?$/i,
+    params: z.object({
+      id: UUID_SCHEMA,
+    }).strict(),
+  },
+
   {
     method: "POST",
     pattern: /^\/api(?:\/v1)?\/auth\/(login|signin)\/?$/i,
