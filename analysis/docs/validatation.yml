@@ -1,0 +1,402 @@
+version: 1
+dataset: cloud_cost
+notes:
+  - "All timestamps stored in UTC (TIMESTAMPTZ)."
+  - "Costs DECIMAL(38,12); do not round in storage."
+  - "Validation rules are multi-cloud; use mapping tables for canonicalization."
+
+columns:
+  AvailabilityZone:
+    type: string
+    nullable: true
+    transforms: ["trim"]
+    rules:
+      - name: "zone_format_soft_check"
+        level: warn
+        any_of_regex:
+          - "^[a-z]{2}-[a-z]+-\\d[a-z]$"         # AWS-like (us-east-1a)
+          - "^[a-z]+-[a-z0-9]+-\\d-[a-z]$"       # GCP-like (us-central1-a)
+        allow_null: true
+
+  BilledCost:
+    type: decimal(38,12)
+    nullable: false
+    rules:
+      - name: "is_numeric"
+        level: error
+      - name: "allow_negative"
+        level: info
+
+  BillingAccountId:
+    type: string
+    nullable: false
+    transforms: ["trim"]
+    rules:
+      - name: "non_empty"
+        level: error
+
+  BillingAccountName:
+    type: string
+    nullable: true
+    transforms: ["trim"]
+    rules:
+      - name: "no_control_chars"
+        level: warn
+
+  BillingCurrency:
+    type: string
+    nullable: false
+    transforms: ["trim", "upper"]
+    rules:
+      - name: "iso_4217_like"
+        level: error
+        regex: "^[A-Z]{3}$"
+
+  BillingPeriodStart:
+    type: timestamp
+    nullable: false
+    rules:
+      - name: "parseable_timestamp"
+        level: error
+
+  BillingPeriodEnd:
+    type: timestamp
+    nullable: false
+    rules:
+      - name: "parseable_timestamp"
+        level: error
+
+  ChargeCategory:
+    type: string
+    nullable: false
+    transforms: ["trim"]
+    rules:
+      - name: "canonicalize_via_mapping"
+        level: warn
+      - name: "allowed_values_soft"
+        level: warn
+        allowed:
+          - Usage
+          - Credit
+          - Tax
+          - Adjustment
+          - Fee
+          - Refund
+          - Purchase
+
+  ChargeClass:
+    type: string
+    nullable: true
+    transforms: ["trim"]
+    rules:
+      - name: "keep_raw"
+        level: info
+
+  ChargeDescription:
+    type: string
+    nullable: true
+    transforms: ["trim"]
+    rules:
+      - name: "no_control_chars"
+        level: warn
+
+  ChargeFrequency:
+    type: string
+    nullable: true
+    transforms: ["trim"]
+    rules:
+      - name: "canonical_values_soft"
+        level: warn
+        allowed:
+          - One-Time
+          - Recurring
+          - Usage-Based
+
+  ChargePeriodStart:
+    type: timestamp
+    nullable: false
+    rules:
+      - name: "parseable_timestamp"
+        level: error
+
+  ChargePeriodEnd:
+    type: timestamp
+    nullable: false
+    rules:
+      - name: "parseable_timestamp"
+        level: error
+
+  CommitmentDiscountCategory:
+    type: string
+    nullable: true
+    transforms: ["trim"]
+    rules:
+      - name: "canonicalize_via_mapping"
+        level: warn
+
+  CommitmentDiscountId:
+    type: string
+    nullable: true
+    transforms: ["trim"]
+    rules:
+      - name: "opaque_identifier"
+        level: info
+
+  CommitmentDiscountName:
+    type: string
+    nullable: true
+    transforms: ["trim"]
+    rules:
+      - name: "no_control_chars"
+        level: warn
+
+  CommitmentDiscountStatus:
+    type: string
+    nullable: true
+    transforms: ["trim"]
+    rules:
+      - name: "canonicalize_via_mapping"
+        level: warn
+
+  CommitmentDiscountType:
+    type: string
+    nullable: true
+    transforms: ["trim"]
+    rules:
+      - name: "canonicalize_via_mapping"
+        level: warn
+
+  ConsumedQuantity:
+    type: decimal(38,12)
+    nullable: true
+    rules:
+      - name: "is_numeric"
+        level: error
+      - name: "non_negative_soft"
+        level: warn
+        min: 0
+
+  ConsumedUnit:
+    type: string
+    nullable: true
+    transforms: ["trim"]
+    rules:
+      - name: "unit_normalize_via_mapping"
+        level: warn
+
+  ContractedCost:
+    type: decimal(38,12)
+    nullable: true
+    rules:
+      - name: "is_numeric"
+        level: error
+
+  ContractedUnitPrice:
+    type: decimal(38,12)
+    nullable: true
+    rules:
+      - name: "is_numeric"
+        level: error
+
+  EffectiveCost:
+    type: decimal(38,12)
+    nullable: true
+    rules:
+      - name: "is_numeric"
+        level: error
+
+  InvoiceIssuerName:
+    type: string
+    nullable: true
+    transforms: ["trim"]
+    rules:
+      - name: "no_control_chars"
+        level: warn
+
+  ListCost:
+    type: decimal(38,12)
+    nullable: true
+    rules:
+      - name: "is_numeric"
+        level: error
+
+  ListUnitPrice:
+    type: decimal(38,12)
+    nullable: true
+    rules:
+      - name: "is_numeric"
+        level: error
+
+  PricingCategory:
+    type: string
+    nullable: true
+    transforms: ["trim"]
+    rules:
+      - name: "canonicalize_via_mapping"
+        level: warn
+
+  PricingQuantity:
+    type: decimal(38,12)
+    nullable: true
+    rules:
+      - name: "is_numeric"
+        level: error
+      - name: "non_negative_soft"
+        level: warn
+        min: 0
+
+  PricingUnit:
+    type: string
+    nullable: true
+    transforms: ["trim"]
+    rules:
+      - name: "unit_normalize_via_mapping"
+        level: warn
+
+  ProviderName:
+    type: string
+    nullable: false
+    transforms: ["trim"]
+    rules:
+      - name: "canonicalize_via_mapping"
+        level: error
+      - name: "known_set_soft"
+        level: warn
+        allowed:
+          - AWS
+          - Azure
+          - GCP
+          - Oracle
+          - Alibaba
+          - IBM
+          - Other
+
+  PublisherName:
+    type: string
+    nullable: true
+    transforms: ["trim"]
+    rules:
+      - name: "no_control_chars"
+        level: warn
+
+  RegionId:
+    type: string
+    nullable: true
+    transforms: ["trim"]
+    rules:
+      - name: "opaque_region_code"
+        level: info
+
+  RegionName:
+    type: string
+    nullable: true
+    transforms: ["trim"]
+    rules:
+      - name: "backfill_via_lookup"
+        level: warn
+
+  ResourceId:
+    type: string
+    nullable: true
+    transforms: ["trim"]
+    rules:
+      - name: "opaque_identifier"
+        level: info
+
+  ResourceName:
+    type: string
+    nullable: true
+    transforms: ["trim"]
+    rules:
+      - name: "no_control_chars"
+        level: warn
+
+  ResourceType:
+    type: string
+    nullable: true
+    transforms: ["trim"]
+    rules:
+      - name: "canonicalize_via_mapping"
+        level: warn
+
+  ServiceCategory:
+    type: string
+    nullable: true
+    transforms: ["trim"]
+    rules:
+      - name: "canonicalize_via_mapping"
+        level: warn
+
+  Id:
+    type: string
+    nullable: true
+    transforms: ["trim"]
+    rules:
+      - name: "not_a_business_key"
+        level: info
+
+  ServiceName:
+    type: string
+    nullable: true
+    transforms: ["trim"]
+    rules:
+      - name: "canonicalize_via_mapping"
+        level: warn
+
+  SkuId:
+    type: string
+    nullable: true
+    transforms: ["trim"]
+    rules:
+      - name: "opaque_identifier"
+        level: info
+
+  SkuPriceId:
+    type: string
+    nullable: true
+    transforms: ["trim"]
+    rules:
+      - name: "opaque_identifier"
+        level: info
+
+  SubAccountId:
+    type: string
+    nullable: true
+    transforms: ["trim"]
+    rules:
+      - name: "non_empty_soft"
+        level: warn
+
+  SubAccountName:
+    type: string
+    nullable: true
+    transforms: ["trim"]
+    rules:
+      - name: "no_control_chars"
+        level: warn
+
+  Tags:
+    type: json
+    nullable: true
+    rules:
+      - name: "valid_json_object"
+        level: error
+      - name: "normalize_keys"
+        level: warn
+
+cross_field_rules:
+  - name: "billing_period_order"
+    level: error
+    expr: "BillingPeriodStart < BillingPeriodEnd"
+
+  - name: "charge_period_order"
+    level: error
+    expr: "ChargePeriodStart < ChargePeriodEnd"
+
+  - name: "charge_within_billing_period_soft"
+    level: warn
+    expr: "ChargePeriodStart >= BillingPeriodStart AND ChargePeriodEnd <= BillingPeriodEnd"
+
+  - name: "negative_quantity_must_be_adjustment_soft"
+    level: warn
+    expr: "(ConsumedQuantity IS NULL OR ConsumedQuantity >= 0) OR (ChargeCategory IN ('Credit','Adjustment','Refund'))"
