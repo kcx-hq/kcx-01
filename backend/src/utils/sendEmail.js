@@ -7,7 +7,7 @@ import logger from "../lib/logger.js";
 // Generic Mailgun send function
 export const sendEmail = async ({ to, subject, html }) => {
   const data = {
-    from: `KandCo <${process.env.MAILGUN_FROM}>`,
+    from: `KCX <${process.env.MAILGUN_FROM}>`,
     to,
     subject,
     html,
