@@ -24,6 +24,8 @@ const Users = () => {
   const [data, setData] = useState<AdminUser[]>([]);
   const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [selected, setSelected] = useState<AdminUser | null>(null);
   const [updatingId, setUpdatingId] = useState<string | null>(null);
@@ -73,13 +75,16 @@ const Users = () => {
         setError(err.message || "Failed to load users");
       })
       .finally(() => {
-        if (active) setLoading(false);
+        if (active) {
+          setLoading(false);
+          setRefreshing(false);
+        }
       });
 
     return () => {
       active = false;
     };
-  }, [queryParams]);
+  }, [queryParams, refreshKey]);
 
   const applyFilters = () => {
     setError(null);
@@ -204,6 +209,13 @@ const Users = () => {
     setDeleteError(null);
   };
 
+  const handleRefresh = () => {
+    if (loading || refreshing) return;
+    setError(null);
+    setRefreshing(true);
+    setRefreshKey((prev) => prev + 1);
+  };
+
   return (
     <div className="users-page">
       <Header title="Users" subtitle="Manage client access and roles" />
@@ -270,6 +282,29 @@ const Users = () => {
             </select>
           </div>
           <div className="filter-actions">
+            <button
+              className="ghost-btn icon-btn"
+              onClick={handleRefresh}
+              disabled={loading || refreshing}
+              title="Refresh users"
+              aria-label="Refresh users"
+            >
+              <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                <path
+                  d="M16.4 10a6.4 6.4 0 1 1-1.6-4.2"
+                  stroke="currentColor"
+                  strokeWidth="1.6"
+                  strokeLinecap="round"
+                />
+                <path
+                  d="M16.4 4.2v4.2h-4.2"
+                  stroke="currentColor"
+                  strokeWidth="1.6"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </button>
             <button className="ghost-btn" onClick={clearFilters}>
               Clear
             </button>

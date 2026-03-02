@@ -14,6 +14,7 @@ export type AdminInquiry = {
   relay_note?: string | null;
   relayed_at?: string | null;
   trashed_at?: string | null;
+  handled_at?: string | null;
 };
 
 export type InquiriesListResponse = {

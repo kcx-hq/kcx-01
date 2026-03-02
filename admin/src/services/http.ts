@@ -109,7 +109,7 @@ const toRequestId = (response: Response, payload?: unknown): string | undefined 
   return fromHeader || undefined;
 };
 
-const buildUrl = (
+export const buildUrl = (
   path: string,
   params?: Record<string, string | number | undefined>,
 ): string => {

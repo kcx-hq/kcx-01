@@ -389,7 +389,7 @@ export const rejectInquiry = async (req, res, next) => {
  */
 export async function getSlotsByDate(req, res, next) {
   try {
-    const { date, userTimezone } = req.query;
+    const { date, userTimezone, timezone } = req.query;
     const slotMinutes = Number(req.query.slotMinutes) || 60;
 
     if (!date) {
@@ -431,7 +431,7 @@ export async function getSlotsByDate(req, res, next) {
     const freeSlots = await getFreeSlots(fromUTC, toUTC, slotMinutes);
 
     // 5️⃣ Convert slots to USER timezone for response
-    const viewerTZ = resolveViewerTimezone(userTimezone, BUSINESS_TZ);
+    const viewerTZ = resolveViewerTimezone(userTimezone || timezone, BUSINESS_TZ);
     const slots = formatSlotsForViewer(freeSlots, viewerTZ);
 
     return res.ok({

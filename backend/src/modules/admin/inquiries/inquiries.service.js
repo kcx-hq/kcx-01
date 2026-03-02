@@ -54,6 +54,7 @@ export const listInquiries = async (query = {}) => {
       "activity_time",
       "updated_at",
       "trashed_at",
+      "handled_at",
       "relay_severity",
       "relay_note",
       "relayed_at",
@@ -86,6 +87,7 @@ export const getInquiryById = async (id) => {
       "activity_time",
       "updated_at",
       "trashed_at",
+      "handled_at",
       "relay_severity",
       "relay_note",
       "relayed_at",
@@ -104,6 +106,12 @@ export const updateInquiryStatus = async (id, status, adminId, meetLink) => {
 
   const inquiry = await Inquiry.findByPk(id);
   if (!inquiry) return null;
+  if (normalizedStatus === "PENDING" && inquiry.status !== "PENDING") {
+    const err = new Error("Cannot restore trashed inquiry to active status.");
+    err.code = "INVALID_STATUS";
+    throw err;
+  }
+
   if (inquiry.status === "PENDING" && normalizedStatus !== "PENDING") {
     const err = new Error("Pending inquiries can only be handled by boss.");
     err.code = "PENDING_LOCKED";
@@ -134,6 +142,12 @@ export const bulkUpdateInquiryStatus = async (ids = [], status) => {
     throw err;
   }
 
+  if (normalizedStatus === "PENDING") {
+    const err = new Error("Cannot restore trashed inquiry to active status.");
+    err.code = "INVALID_STATUS";
+    throw err;
+  }
+
   if (!Array.isArray(ids) || ids.length === 0) {
     return { updated: 0 };
   }
@@ -141,7 +155,7 @@ export const bulkUpdateInquiryStatus = async (ids = [], status) => {
   const updates = { status: normalizedStatus };
   if (normalizedStatus === "TRASHED") {
     updates.trashed_at = new Date();
-  } else {
+  } else if (!("trashed_at" in updates)) {
     updates.trashed_at = null;
   }
 

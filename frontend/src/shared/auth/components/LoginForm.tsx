@@ -109,7 +109,9 @@ const LoginForm = ({
         <button
           type="button"
           onClick={() => navigate("/forgot-password")}
-          className={`text-sm font-semibold text-[var(--brand-primary)] hover:underline ${isLocked ? "text-red-600 animate-pulse underline" : ""}`}
+          className={`text-sm font-semibold text-[var(--brand-primary)] hover:underline ${
+            isLocked ? "forgot-attention-once" : ""
+          }`}
         >
           Forgot password?
         </button>

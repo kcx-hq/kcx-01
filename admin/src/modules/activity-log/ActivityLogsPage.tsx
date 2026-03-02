@@ -27,6 +27,8 @@ const ActivityLogs = () => {
   const [data, setData] = useState<AdminActivityLog[]>([]);
   const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [selected, setSelected] = useState<AdminActivityLog | null>(null);
 
@@ -63,7 +65,7 @@ const ActivityLogs = () => {
     return () => {
       active = false;
     };
-  }, [mode]);
+  }, [mode, refreshKey]);
 
   useEffect(() => {
     if (mode !== "internal") return;
@@ -81,13 +83,16 @@ const ActivityLogs = () => {
         setError(err.message || "Failed to load activity logs");
       })
       .finally(() => {
-        if (active) setLoading(false);
+        if (active) {
+          setLoading(false);
+          setRefreshing(false);
+        }
       });
 
     return () => {
       active = false;
     };
-  }, [queryParams, mode]);
+  }, [queryParams, mode, refreshKey]);
 
   const applyFilters = () => {
     setFilters(draftFilters);
@@ -106,6 +111,13 @@ const ActivityLogs = () => {
     setFilters(cleared);
     setDraftFilters(cleared);
     setPage(1);
+  };
+
+  const handleRefresh = () => {
+    if (mode !== "internal" || loading || refreshing) return;
+    setError(null);
+    setRefreshing(true);
+    setRefreshKey((prev) => prev + 1);
   };
 
   return (
@@ -190,6 +202,29 @@ const ActivityLogs = () => {
                 </select>
               </div>
               <div className="filter-actions">
+                <button
+                  className="ghost-btn icon-btn"
+                  onClick={handleRefresh}
+                  disabled={mode !== "internal" || loading || refreshing}
+                  title="Refresh activity logs"
+                  aria-label="Refresh activity logs"
+                >
+                  <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                    <path
+                      d="M16.4 10a6.4 6.4 0 1 1-1.6-4.2"
+                      stroke="currentColor"
+                      strokeWidth="1.6"
+                      strokeLinecap="round"
+                    />
+                    <path
+                      d="M16.4 4.2v4.2h-4.2"
+                      stroke="currentColor"
+                      strokeWidth="1.6"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                </button>
                 <button className="ghost-btn" onClick={clearFilters}>
                   Clear
                 </button>

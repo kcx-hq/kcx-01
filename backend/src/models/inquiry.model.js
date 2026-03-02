@@ -1,8 +1,5 @@
-import { createRequire } from "module";
+import sequelize from "../config/db.config.js";
 import { DataTypes } from "sequelize";
-
-const require = createRequire(import.meta.url);
-const { sequelize } = require("../db/index.cjs");
 
 const Inquiry = sequelize.define(
   "Inquiry",
@@ -82,6 +79,10 @@ const Inquiry = sequelize.define(
       type: DataTypes.DATE,
       allowNull: true,
     },
+    handled_at: {
+      type: DataTypes.DATE,
+      allowNull: true,
+    },
   },
   {
     tableName: "inquiries",
@@ -92,5 +93,3 @@ const Inquiry = sequelize.define(
 );
 
 export default Inquiry;
-
-

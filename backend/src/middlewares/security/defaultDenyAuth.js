@@ -4,6 +4,10 @@ import AppError from "../../errors/AppError.js";
 const PUBLIC_ROUTE_RULES = [
   { method: "GET", pattern: /^\/healthz\/?$/i },
   { method: "GET", pattern: /^\/readyz\/?$/i },
+  { method: "GET", pattern: /^\/api(?:\/v1)?\/inquiry\/slots\/by-date\/?$/i },
+  { method: "POST", pattern: /^\/api(?:\/v1)?\/inquiry\/submit\/?$/i },
+  { method: "GET", pattern: /^\/api(?:\/v1)?\/inquiry\/review\/[^/]+\/?$/i },
+  { method: "POST", pattern: /^\/api(?:\/v1)?\/inquiry\/review\/[^/]+\/decision\/?$/i },
   { method: "POST", pattern: /^\/api(?:\/v1)?\/auth\/login\/?$/i },
   { method: "POST", pattern: /^\/api(?:\/v1)?\/auth\/signin\/?$/i },
   { method: "POST", pattern: /^\/api(?:\/v1)?\/auth\/signup\/?$/i },
