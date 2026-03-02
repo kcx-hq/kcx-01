@@ -19,7 +19,7 @@ export function CostDriversHeader({
     <div className="flex flex-col xl:flex-row justify-between items-start xl:items-center gap-3">
       <div className="min-w-0">
         <h1 className="text-xl font-bold flex items-center gap-2">
-          <TrendingUp className="text-[#007758]" size={20} /> Cost Drivers
+          <TrendingUp className="text-[#23a282]" size={20} /> Cost Drivers
         </h1>
 
         {periods?.prev && periods?.current && (
@@ -46,7 +46,7 @@ export function CostDriversHeader({
                   "relative px-2.5 py-1 text-[10px] font-bold rounded-md transition-all",
                   isPremiumPeriod ? "opacity-60 cursor-not-allowed" : "cursor-pointer",
                   isActive
-                    ? "bg-[#007758] text-white shadow-[0_0_10px_rgba(0,119,88,0.5)]"
+                    ? "bg-[#23a282] text-white shadow-[0_0_10px_rgba(35,162,130,0.5)]"
                     : "bg-white/5 text-gray-400 hover:text-gray-200 hover:bg-white/10 border border-transparent",
                 ].join(" ")}
               >
@@ -79,7 +79,7 @@ export function CostDriversHeader({
             onChange={(e: SelectChangeEvent) => !isMasked && setActiveServiceFilter(e.target.value)}
             disabled={isMasked}
             className={[
-              "appearance-none bg-[#0f0f11] border border-white/10 hover:border-[#007758]/50 rounded-lg pl-3 pr-8 py-2 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-[#007758]/50 transition-all min-w-[140px] relative",
+              "appearance-none bg-[#0f0f11] border border-white/10 hover:border-[#23a282]/50 rounded-lg pl-3 pr-8 py-2 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-[#23a282]/50 transition-all min-w-[140px] relative",
               isMasked
                 ? "cursor-not-allowed text-gray-300 opacity-50 pointer-events-none"
                 : "cursor-pointer text-gray-300",
@@ -106,7 +106,7 @@ export function CostDriversHeader({
           className={[
             "p-2 rounded-lg transition-all border",
             showTreeMap
-              ? "bg-[#007758] text-white border-[#007758]"
+              ? "bg-[#23a282] text-white border-[#23a282]"
               : "bg-black/40 hover:bg-black/60 text-gray-400 hover:text-gray-200 border-white/10",
           ].join(" ")}
           title="Toggle View"

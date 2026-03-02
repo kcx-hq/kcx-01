@@ -82,10 +82,14 @@ const Navbar = () => {
               alt="KCX Logo"
               className="h-8 w-auto object-contain shrink-0"
             />
-            <span className="text-[1.9rem] font-bold leading-none tracking-tight text-[var(--text-on-dark)]">
-              KCX
-              <span style={{ color: "var(--brand-primary)" }}>.</span>
-            </span>
+            <div className="leading-none">
+              <span className="block text-[1.75rem] font-bold tracking-tight text-[var(--text-on-dark)]">
+                KC<span style={{ color: "var(--brand-primary)" }}>X</span>
+              </span>
+              <span className="mt-0.5 block text-[10px] font-medium tracking-wide text-[var(--text-on-dark-muted)]">
+                FINOPS PLATFORM
+              </span>
+            </div>
           </Link>
 
           {/* Desktop Nav */}

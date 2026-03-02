@@ -48,7 +48,7 @@ const DriversList = ({ drivers, onDriverSelect, selectedDriver }: LegacyDriversL
                 key={index}
                 className={`p-4 rounded-lg border cursor-pointer transition-all ${
                   isSelected 
-                    ? 'border-[#007758] bg-[#007758]/10' 
+                    ? 'border-[#23a282] bg-[#23a282]/10' 
                     : 'border-gray-700 hover:border-gray-600 bg-gray-800/50'
                 }`}
                 onClick={() => onDriverSelect(driver)}

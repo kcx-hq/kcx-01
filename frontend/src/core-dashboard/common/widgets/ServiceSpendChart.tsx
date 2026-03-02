@@ -12,7 +12,7 @@ import {
 import { BarChart3, ChevronDown, Activity, Sparkles, Inbox } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
-const COLORS = ["#007758", "#3B82F6", "#0EA5E9", "#34d399", "#14B8A6", "#10b981", "#F59E0B"];
+const COLORS = ["#23a282", "#3B82F6", "#0EA5E9", "#23a282", "#14B8A6", "#23a282", "#F59E0B"];
 
 interface ServiceSpendDatum {
   name: string;

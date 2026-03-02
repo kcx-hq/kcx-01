@@ -314,11 +314,11 @@ const CsvUploadInput = ({ uploadUrl, withCredentials = true }: CsvUploadInputPro
 
   const csvModeClass =
     mode === "csv"
-      ? "border-[var(--brand-primary)] bg-[var(--brand-primary-soft)]/50 shadow-[0_0_0_3px_rgba(0,119,88,0.08)]"
+      ? "border-[var(--brand-primary)] bg-[var(--brand-primary-soft)]/50 shadow-[0_0_0_3px_rgba(35,162,130,0.08)]"
       : "border-[var(--border-light)] bg-white hover:bg-[var(--bg-surface)]";
   const cloudModeClass =
     mode === "cloud"
-      ? "border-[var(--brand-primary)] bg-[var(--brand-primary-soft)]/50 shadow-[0_0_0_3px_rgba(0,119,88,0.08)]"
+      ? "border-[var(--brand-primary)] bg-[var(--brand-primary-soft)]/50 shadow-[0_0_0_3px_rgba(35,162,130,0.08)]"
       : "border-[var(--border-light)] bg-white hover:bg-[var(--bg-surface)]";
 
   return (

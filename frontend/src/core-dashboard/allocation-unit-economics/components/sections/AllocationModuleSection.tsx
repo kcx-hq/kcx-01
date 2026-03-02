@@ -19,7 +19,10 @@ export default function AllocationModuleSection({
 }: AllocationModuleSectionProps) {
   return (
     <div className="space-y-4">
-      <AllocationOverviewSection model={model.allocationOverview} contextLabel={kpiContextLabel} />
+      <div className="grid grid-cols-1 gap-4 xl:grid-cols-[2fr_1fr]">
+        <AllocationOverviewSection model={model.allocationOverview} contextLabel={kpiContextLabel} />
+        <AllocationConfidencePanel model={model.allocationOverview.allocationConfidence} />
+      </div>
 
       <ShowbackTableSection
         rows={model.showbackRows}
@@ -31,7 +34,6 @@ export default function AllocationModuleSection({
       />
 
       <SharedPoolTransparencySection rows={model.sharedPoolTransparency} />
-      <AllocationConfidencePanel model={model.allocationOverview.allocationConfidence} />
       <OwnershipDriftTrend model={model.ownershipDrift} />
     </div>
   );

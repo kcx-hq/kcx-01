@@ -198,8 +198,8 @@ const Pricing = () => {
           <motion.div
             variants={cardVariants}
             whileHover={{ y: -10 }}
-            className="bg-[var(--bg-surface)] border-2 rounded-[var(--radius-lg)] p-8 relative flex flex-col h-full shadow-[0_0_40px_rgba(0,198,147,0.10)]"
-            style={{ borderColor: "rgba(0,198,147,0.40)" }}
+            className="bg-[var(--bg-surface)] border-2 rounded-[var(--radius-lg)] p-8 relative flex flex-col h-full shadow-[0_0_40px_rgba(35,162,130,0.10)]"
+            style={{ borderColor: "rgba(35,162,130,0.40)" }}
           >
             {/* ===== Card Background Grid (only bg) ===== */}
             <div

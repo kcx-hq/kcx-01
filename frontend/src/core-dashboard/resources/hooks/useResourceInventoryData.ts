@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type {
   ApiLikeError,
   ResourceItem,
@@ -25,14 +25,20 @@ export function useResourceInventoryData({
   caps,
 }: UseResourceInventoryDataParams): UseResourceInventoryDataResult {
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [inventory, setInventory] = useState<ResourceItem[]>([]);
   const [stats, setStats] = useState<ResourceStats>(DEFAULT_STATS);
+  const hasLoadedOnceRef = useRef(false);
 
   useEffect(() => {
     if (!api || !caps) return;
 
     const fetchData = async () => {
-      setLoading(true);
+      if (hasLoadedOnceRef.current) {
+        setRefreshing(true);
+      } else {
+        setLoading(true);
+      }
       try {
         const data = await api.call<{ data?: ResourceInventoryPayload }>('resources', 'inventory', {
           params: {
@@ -55,13 +61,15 @@ export function useResourceInventoryData({
         console.error('Failed to fetch inventory:', error);
       } finally {
         setLoading(false);
+        setRefreshing(false);
+        hasLoadedOnceRef.current = true;
       }
     };
 
     fetchData();
   }, [filters, api, caps]);
 
-  return { loading, inventory, stats };
+  return { loading, refreshing, inventory, stats };
 }
 
 

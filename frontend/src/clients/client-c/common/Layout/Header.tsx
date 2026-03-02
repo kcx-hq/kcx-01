@@ -105,11 +105,11 @@ const Header = ({ title, anomalies = [], anomaliesCount = 0 }: HeaderProps) => {
       {/* Left: Title */}
       <div className="flex flex-col justify-center">
         <div className="flex items-center gap-2 text-[10px] text-gray-500 font-medium uppercase tracking-wider mb-0.5">
-          <span className="hover:text-[#007758] cursor-pointer">
-            KCX<span className="text-[#00b889]">.</span>
+          <span className="hover:text-white cursor-pointer">
+            KC<span className="text-[#23a282]">X</span><span className="text-white">.</span>
           </span>
           <span>/</span>
-          <span className="text-[#007758]">Dashboard</span>
+          <span className="text-[#23a282]">Dashboard</span>
         </div>
         <h1 className="text-lg font-bold text-white tracking-tight">{title}</h1>
       </div>
@@ -117,11 +117,11 @@ const Header = ({ title, anomalies = [], anomaliesCount = 0 }: HeaderProps) => {
       {/* Center: Search */}
       <div className="hidden md:flex flex-1 justify-center px-8">
         <div className="relative w-full max-w-sm group/search">
-          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 group-focus-within/search:text-[#007758] transition-colors" />
+          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 group-focus-within/search:text-[#23a282] transition-colors" />
           <input 
             type="text" 
             placeholder="Search..." 
-            className="w-full bg-[#1a1b20]/50 border border-white/10 rounded-lg pl-9 pr-4 py-2 text-xs text-white outline-none focus:bg-[#0f0f11] focus:border-[#007758] transition-all"
+            className="w-full bg-[#1a1b20]/50 border border-white/10 rounded-lg pl-9 pr-4 py-2 text-xs text-white outline-none focus:bg-[#0f0f11] focus:border-[#23a282] transition-all"
           />
         </div>
       </div>
@@ -160,12 +160,12 @@ const Header = ({ title, anomalies = [], anomaliesCount = 0 }: HeaderProps) => {
             onClick={() => setShowProfileMenu(!showProfileMenu)}
             className="group flex items-center gap-2 p-1 rounded-full hover:bg-white/5 transition-all"
           >
-            <div className="w-7 h-7 rounded-full bg-gradient-to-tr from-[#007758] to-[#60a5fa] flex items-center justify-center text-white font-bold text-xs shadow-lg ring-1 ring-[#0f0f11]">
+            <div className="w-7 h-7 rounded-full bg-gradient-to-tr from-[#23a282] to-[#60a5fa] flex items-center justify-center text-white font-bold text-xs shadow-lg ring-1 ring-[#0f0f11]">
                 {user?.full_name ? user.full_name.charAt(0).toUpperCase() : (user?.email ? user.email.charAt(0).toUpperCase() : 'KC')}
             </div>
             
             <div className="hidden sm:block text-left">
-                <div className="text-xs font-bold text-white group-hover:text-[#007758] transition-colors">
+                <div className="text-xs font-bold text-white group-hover:text-[#23a282] transition-colors">
                   {user?.full_name || user?.email || 'Client Admin'}
                 </div>
             </div>
@@ -190,7 +190,7 @@ const Header = ({ title, anomalies = [], anomaliesCount = 0 }: HeaderProps) => {
                 {/* User Info */}
                 <div className="p-3 border-b border-white/10">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-[#007758] to-[#60a5fa] flex items-center justify-center text-white font-bold text-sm shadow-lg">
+                    <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-[#23a282] to-[#60a5fa] flex items-center justify-center text-white font-bold text-sm shadow-lg">
                       {user?.full_name ? user.full_name.charAt(0).toUpperCase() : (user?.email ? user.email.charAt(0).toUpperCase() : 'KC')}
                     </div>
                     <div className="flex-1 min-w-0">
@@ -323,7 +323,7 @@ const Header = ({ title, anomalies = [], anomaliesCount = 0 }: HeaderProps) => {
                   <div className="flex justify-center pt-3">
                     <button
                       onClick={() => setVisibleAnomaliesCount(anomalies.length)}
-                      className="px-4 py-2 bg-[#0f0f11] border border-white/10 hover:border-[#007758]/50 rounded-lg text-xs font-semibold text-gray-300 hover:text-[#007758] transition-all"
+                      className="px-4 py-2 bg-[#0f0f11] border border-white/10 hover:border-[#23a282]/50 rounded-lg text-xs font-semibold text-gray-300 hover:text-[#23a282] transition-all"
                     >
                       Load More ({anomalies.length - visibleAnomaliesCount} remaining)
                     </button>
@@ -332,7 +332,7 @@ const Header = ({ title, anomalies = [], anomaliesCount = 0 }: HeaderProps) => {
                   <div className="flex justify-center pt-3">
                     <button
                       onClick={() => setVisibleAnomaliesCount(5)}
-                      className="px-4 py-2 bg-[#0f0f11] border border-white/10 hover:border-[#007758]/50 rounded-lg text-xs font-semibold text-gray-300 hover:text-[#007758] transition-all"
+                      className="px-4 py-2 bg-[#0f0f11] border border-white/10 hover:border-[#23a282]/50 rounded-lg text-xs font-semibold text-gray-300 hover:text-[#23a282] transition-all"
                     >
                       Show Less
                     </button>
@@ -373,8 +373,8 @@ const Header = ({ title, anomalies = [], anomaliesCount = 0 }: HeaderProps) => {
             {/* Modal Header */}
             <div className="p-5 border-b border-white/10 flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-[#007758]/10 ring-1 ring-[#007758]/20">
-                  <User size={20} className="text-[#007758]" />
+                <div className="p-2 rounded-lg bg-[#23a282]/10 ring-1 ring-[#23a282]/20">
+                  <User size={20} className="text-[#23a282]" />
                 </div>
                 <div>
                   <h2 className="text-lg font-bold text-white">Profile Settings</h2>
@@ -399,7 +399,7 @@ const Header = ({ title, anomalies = [], anomaliesCount = 0 }: HeaderProps) => {
                   type="text"
                   value={fullName}
                   onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFullName(e.target.value)}
-                  className="w-full bg-[#0f0f11] border border-white/10 rounded-lg px-4 py-3 text-sm text-white focus:outline-none focus:border-[#007758] transition-all"
+                  className="w-full bg-[#0f0f11] border border-white/10 rounded-lg px-4 py-3 text-sm text-white focus:outline-none focus:border-[#23a282] transition-all"
                   placeholder="Enter your full name"
                   required
                 />
@@ -436,7 +436,7 @@ const Header = ({ title, anomalies = [], anomaliesCount = 0 }: HeaderProps) => {
                 <button
                   type="submit"
                   disabled={isUpdating}
-                  className="flex-1 px-4 py-2.5 bg-[#007758] hover:bg-[#006b4f] rounded-lg text-sm font-semibold text-white transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex-1 px-4 py-2.5 bg-[#23a282] hover:bg-[#23a282] rounded-lg text-sm font-semibold text-white transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {isUpdating ? 'Updating...' : 'Save Changes'}
                 </button>

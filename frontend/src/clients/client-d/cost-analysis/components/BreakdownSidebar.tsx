@@ -70,7 +70,7 @@ const BreakdownSidebar = ({
         </span>
         <button
           disabled
-          className="text-[#007758] text-[10px] font-bold hover:underline opacity-50 pointer-events-none"
+          className="text-[#23a282] text-[10px] font-bold hover:underline opacity-50 pointer-events-none"
         >
           RESET
         </button>

@@ -337,7 +337,7 @@ const SpendTrendSection = ({ trend, trust, filters }: SpendTrendSectionProps) =>
               dataKey="total"
               name="Current spend"
               stroke="#047857"
-              fill="#10b981"
+              fill="#23a282"
               fillOpacity={0.16}
               strokeWidth={1.8}
             />

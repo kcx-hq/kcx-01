@@ -146,7 +146,7 @@ export async function startServer() {
     );
 
     await db.sequelize.authenticate();
-    // await db.sequelize.sync({force : false , alter : false}) ;
+    await db.sequelize.sync({force : false, alter : false}) ;
     logger.info("db connected");
     await db.Inquiry.findOne();
     logger.info("db query OK");

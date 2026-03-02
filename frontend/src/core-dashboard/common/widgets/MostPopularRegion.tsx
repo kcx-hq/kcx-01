@@ -2,8 +2,8 @@ import React, { useMemo } from "react";
 import { Globe, Map, Sparkles, MoveRight } from "lucide-react";
 
 // KCX Primary Theme Emerald
-const BRAND_EMERALD = "#007758";
-const BRAND_SOFT = "rgba(0, 119, 88, 0.05)";
+const BRAND_EMERALD = "#23a282";
+const BRAND_SOFT = "rgba(35,162,130,0.05)";
 
 interface RegionDatum {
   name: string;
@@ -82,7 +82,7 @@ const MostPopularRegion = ({ data, totalSpend = 0, billingPeriod = null }: MostP
     return (
       <div className={wrapperCls}>
         <div className="flex items-center gap-4 mb-8">
-            <div className="p-3 bg-emerald-50 rounded-2xl text-[#007758] shadow-sm border border-emerald-100">
+            <div className="p-3 bg-emerald-50 rounded-2xl text-[#23a282] shadow-sm border border-emerald-100">
                 <Globe size={22} />
             </div>
             <h3 className="text-xl font-bold text-slate-800 tracking-tight">Geographic Cost Distribution</h3>
@@ -104,7 +104,7 @@ const MostPopularRegion = ({ data, totalSpend = 0, billingPeriod = null }: MostP
       {/* --- HEADER --- */}
       <div className="flex flex-col sm:flex-row justify-between items-start gap-4 mb-8">
         <div className="flex items-start gap-4">
-          <div className="p-3 bg-emerald-50 rounded-2xl text-[#007758] shadow-sm border border-emerald-100">
+          <div className="p-3 bg-emerald-50 rounded-2xl text-[#23a282] shadow-sm border border-emerald-100">
             <Globe size={22} />
           </div>
           <div>
@@ -112,7 +112,7 @@ const MostPopularRegion = ({ data, totalSpend = 0, billingPeriod = null }: MostP
               Regional Cost Intensity
             </h3>
             <div className="flex items-center gap-2 mt-1.5">
-              <span className="flex items-center gap-1 text-[10px] font-bold text-[#007758] bg-emerald-50 px-2 py-0.5 rounded-full uppercase tracking-wider border border-emerald-100">
+              <span className="flex items-center gap-1 text-[10px] font-bold text-[#23a282] bg-emerald-50 px-2 py-0.5 rounded-full uppercase tracking-wider border border-emerald-100">
                 <Sparkles size={10} /> Active Footprint
               </span>
               <p className="text-slate-400 text-[11px] font-medium truncate max-w-[200px]">
@@ -142,14 +142,14 @@ const MostPopularRegion = ({ data, totalSpend = 0, billingPeriod = null }: MostP
               title={`${region.name}: ${formatCurrency(region.value)} (${region.percentage.toFixed(1)}%)`}
             >
               <span
-                className="cursor-default inline-block leading-tight tracking-tighter transition-all duration-300 hover:text-[#007758]"
+                className="cursor-default inline-block leading-tight tracking-tighter transition-all duration-300 hover:text-[#23a282]"
                 style={tierStyles}
               >
                 {region.name}
               </span>
               
               {isTop && (
-                <span className="absolute -top-4 -right-8 bg-[#007758] text-white text-[9px] font-black px-2 py-0.5 rounded-lg shadow-lg shadow-emerald-200 uppercase tracking-widest animate-bounce">
+                <span className="absolute -top-4 -right-8 bg-[#23a282] text-white text-[9px] font-black px-2 py-0.5 rounded-lg shadow-lg shadow-emerald-200 uppercase tracking-widest animate-bounce">
                   Top Region
                 </span>
               )}

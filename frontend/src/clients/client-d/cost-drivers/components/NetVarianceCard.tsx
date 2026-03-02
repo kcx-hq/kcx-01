@@ -11,7 +11,7 @@ export function NetVarianceCard({ overallStats }: NetVarianceCardProps) {
     <div className="bg-[#1a1b20] border border-white/10 rounded-2xl p-4 shadow-lg">
       <div className="flex items-center justify-between mb-3">
         <h3 className="text-xs font-bold text-gray-400 uppercase flex items-center gap-2">
-          <Activity size={14} className="text-[#007758]" /> Net Variance
+          <Activity size={14} className="text-[#23a282]" /> Net Variance
         </h3>
 
         <span

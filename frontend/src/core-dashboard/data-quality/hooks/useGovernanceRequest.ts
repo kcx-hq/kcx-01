@@ -13,6 +13,7 @@ interface UseGovernanceRequestParams<T> {
 interface UseGovernanceRequestResult<T> {
   data: T | null;
   loading: boolean;
+  refreshing: boolean;
   error: string | null;
   refetch: () => Promise<void>;
 }
@@ -26,8 +27,10 @@ export function useGovernanceRequest<T>({
 }: UseGovernanceRequestParams<T>): UseGovernanceRequestResult<T> {
   const [data, setData] = useState<T | null>(null);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const fallbackRef = useRef(fallback);
+  const hasLoadedOnceRef = useRef(false);
 
   useEffect(() => {
     fallbackRef.current = fallback;
@@ -50,10 +53,15 @@ export function useGovernanceRequest<T>({
     if (!api || !caps?.modules?.dataQuality?.enabled) {
       setData(null);
       setLoading(false);
+      setRefreshing(false);
       return;
     }
 
-    setLoading(true);
+    if (hasLoadedOnceRef.current) {
+      setRefreshing(true);
+    } else {
+      setLoading(true);
+    }
     setError(null);
 
     try {
@@ -80,6 +88,8 @@ export function useGovernanceRequest<T>({
       setData(null);
     } finally {
       setLoading(false);
+      setRefreshing(false);
+      hasLoadedOnceRef.current = true;
     }
   }, [api, caps, endpoint, stableParams]);
 
@@ -87,7 +97,7 @@ export function useGovernanceRequest<T>({
     fetchData();
   }, [fetchData]);
 
-  return { data, loading, error, refetch: fetchData };
+  return { data, loading, refreshing, error, refetch: fetchData };
 }
 
 export default useGovernanceRequest;

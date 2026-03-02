@@ -30,6 +30,11 @@ const n = toNumber;
 const isObject = (v) => v && typeof v === "object" && !Array.isArray(v);
 const DAY_MS = 24 * 60 * 60 * 1000;
 const clampPct = (value) => clamp(roundTo(n(value), 2), 0, 100);
+const roundCurrency = (value) => {
+  const amount = n(value);
+  const abs = Math.abs(amount);
+  return abs > 0 && abs < 0.01 ? roundTo(amount, 6) : roundTo(amount, 2);
+};
 const computeRuleCompletenessPct = (coverage = {}) =>
   clampPct((n(coverage.teamPct) + n(coverage.ownerPct) + n(coverage.productPct)) / 3);
 const computeDataConsistencyPct = ({
@@ -199,6 +204,65 @@ const normalizeCompareMode = (value) => {
   return "previous_period";
 };
 
+const normalizeUnitMetric = (value) => {
+  const metric = String(value || "consumed_quantity").toLowerCase();
+  if (["consumed_quantity", "requests", "orders", "gb", "minutes"].includes(metric)) {
+    return metric;
+  }
+  return "consumed_quantity";
+};
+
+const readTagNumber = (tags = {}, keys = []) => {
+  for (const key of keys) {
+    const raw = tags?.[String(key).toLowerCase()];
+    const parsed = Number(raw);
+    if (Number.isFinite(parsed) && parsed > 0) return parsed;
+  }
+  return 0;
+};
+
+const resolveUnitMetricQuantity = (row, metricInput, tagsInput = null) => {
+  const metric = normalizeUnitMetric(metricInput);
+  const tags = tagsInput || normalizeTags(row?.tags);
+  const consumedQuantity = n(row?.consumedquantity ?? row?.ConsumedQuantity);
+  const pricingQuantity = n(row?.pricingquantity ?? row?.PricingQuantity);
+  const consumedUnit = String(row?.consumedunit ?? row?.ConsumedUnit ?? "").toLowerCase();
+  const pricingUnit = String(row?.pricingunit ?? row?.PricingUnit ?? "").toLowerCase();
+
+  if (metric === "consumed_quantity") return Math.max(0, consumedQuantity);
+
+  if (metric === "requests") {
+    if (consumedUnit.includes("request")) return Math.max(0, consumedQuantity);
+    if (pricingUnit.includes("request")) return Math.max(0, pricingQuantity);
+    return Math.max(
+      0,
+      readTagNumber(tags, ["requests", "request_count", "requestcount", "api_requests"]),
+    );
+  }
+
+  if (metric === "orders") {
+    if (consumedUnit.includes("order")) return Math.max(0, consumedQuantity);
+    if (pricingUnit.includes("order")) return Math.max(0, pricingQuantity);
+    return Math.max(0, readTagNumber(tags, ["orders", "order_count", "ordercount"]));
+  }
+
+  if (metric === "gb") {
+    if (consumedUnit.includes("tb")) return Math.max(0, consumedQuantity * 1024);
+    if (consumedUnit.includes("mb")) return Math.max(0, consumedQuantity / 1024);
+    if (consumedUnit.includes("gib") || consumedUnit.includes("gb")) return Math.max(0, consumedQuantity);
+    return Math.max(0, readTagNumber(tags, ["gb", "gb_processed", "gigabytes", "volume_gb"]));
+  }
+
+  if (metric === "minutes") {
+    if (consumedUnit.includes("hour")) return Math.max(0, consumedQuantity * 60);
+    if (consumedUnit.includes("second")) return Math.max(0, consumedQuantity / 60);
+    if (consumedUnit.includes("minute")) return Math.max(0, consumedQuantity);
+    return Math.max(0, readTagNumber(tags, ["minutes", "duration_minutes", "processing_minutes"]));
+  }
+
+  return Math.max(0, consumedQuantity);
+};
+
 const shiftMonth = (value, months) => {
   const d = toDate(value);
   if (!d) return null;
@@ -241,7 +305,9 @@ const calcCommitmentBenefit = (row) => {
   return (listUnit - contractedUnit) * quantity;
 };
 
-const aggregateWindow = (rows = [], basis = "actual") => {
+const aggregateWindow = (rows = [], basis = "actual", unitMetric = "consumed_quantity") => {
+  const metric = normalizeUnitMetric(unitMetric);
+  const metricScoped = metric !== "consumed_quantity";
   const daily = new Map();
   let totalCost = 0;
   let totalQuantity = 0;
@@ -254,8 +320,9 @@ const aggregateWindow = (rows = [], basis = "actual") => {
     if (!key) continue;
 
     const cost = rowCostByBasis(row, basis);
-    const quantity = n(row.consumedquantity);
     const tags = normalizeTags(row.tags);
+    const quantity = resolveUnitMetricQuantity(row, unitMetric, tags);
+    if (metricScoped && quantity <= 0) continue;
     const team = pickDimension(row, tags, ["team", "business_unit", "squad"], "Unassigned Team");
     const product = pickDimension(row, tags, ["product", "application", "app"], "Unmapped Product");
     const isShared = sharedRow(tags, product, team);
@@ -279,7 +346,7 @@ const aggregateWindow = (rows = [], basis = "actual") => {
     .sort((a, b) => String(a.date).localeCompare(String(b.date)))
     .map((row) => ({
       date: row.date,
-      cost: roundTo(row.cost, 2),
+      cost: roundCurrency(row.cost),
       quantity: roundTo(row.quantity, 2),
       unitPrice: row.quantity > 0 ? roundTo(row.cost / row.quantity, 6) : 0,
     }));
@@ -287,12 +354,12 @@ const aggregateWindow = (rows = [], basis = "actual") => {
   const avgUnitPrice = totalQuantity > 0 ? totalCost / totalQuantity : 0;
   return {
     trend,
-    totalCost: roundTo(totalCost, 2),
+    totalCost: roundCurrency(totalCost),
     totalQuantity: roundTo(totalQuantity, 2),
     avgUnitPrice: roundTo(avgUnitPrice, 6),
-    directCost: roundTo(directCost, 2),
-    sharedCost: roundTo(sharedCost, 2),
-    commitmentBenefit: roundTo(commitmentBenefit, 2),
+    directCost: roundCurrency(directCost),
+    sharedCost: roundCurrency(sharedCost),
+    commitmentBenefit: roundCurrency(commitmentBenefit),
   };
 };
 
@@ -329,16 +396,18 @@ const buildDenominatorGate = ({
   trend = [],
   unitMetric = "consumed_quantity",
 }) => {
-  const metric = String(unitMetric || "consumed_quantity").toLowerCase();
-  const positiveQuantityRows = rows.filter((row) => n(row?.consumedquantity) > 0).length;
+  const metric = normalizeUnitMetric(unitMetric);
+  const positiveQuantityRows = rows.filter((row) =>
+    resolveUnitMetricQuantity(row, metric, normalizeTags(row?.tags)) > 0,
+  ).length;
   const quantityCoveragePct = rows.length > 0 ? (positiveQuantityRows / rows.length) * 100 : 0;
   const reasons = [];
 
-  if (metric !== "consumed_quantity") {
-    reasons.push("Selected unit metric is not fully supported; default quantity mapping applied.");
-  }
   if (totalQuantity <= 0) {
     reasons.push("No positive denominator volume found in selected scope.");
+  }
+  if (metric !== "consumed_quantity" && positiveQuantityRows === 0) {
+    reasons.push(`No usable ${metric} values found in selected scope.`);
   }
   if (quantityCoveragePct < 85) {
     reasons.push(`Quantity coverage is ${roundTo(quantityCoveragePct, 2)}%, below recommended threshold.`);
@@ -349,7 +418,7 @@ const buildDenominatorGate = ({
 
   let status = "pass";
   if (totalQuantity <= 0 || quantityCoveragePct < 60 || trend.length < 3) status = "fail";
-  else if (quantityCoveragePct < 85 || trend.length < 7 || metric !== "consumed_quantity") status = "warn";
+  else if (quantityCoveragePct < 85 || trend.length < 7) status = "warn";
 
   return {
     status,
@@ -451,6 +520,7 @@ export const unitEconomicsService = {
     const compareMode = normalizeCompareMode(compareTo);
     const previousWindow = resolvePreviousWindow(currentWindow, compareMode);
     const safeBasis = sanitizeBasis(costBasis);
+    const safeUnitMetric = normalizeUnitMetric(unitMetric);
     const attachViewModel = (payload) => ({
       ...payload,
       viewModel: buildAllocationUnitEconomicsViewModel({
@@ -458,7 +528,7 @@ export const unitEconomicsService = {
         period,
         costBasis: safeBasis,
         compareMode,
-        unitMetric,
+        unitMetric: safeUnitMetric,
       }),
     });
     const queryStartDate =
@@ -592,7 +662,7 @@ export const unitEconomicsService = {
         denominatorGate: {
           status: "fail",
           reasons: ["No denominator volume found in selected scope."],
-          metric: String(unitMetric || "consumed_quantity"),
+          metric: String(safeUnitMetric || "consumed_quantity"),
           quantity_coverage_pct: 0,
         },
         trust: buildTrustEnvelope({
@@ -609,7 +679,7 @@ export const unitEconomicsService = {
           flags: [],
         },
         unitMetricDefinitions: {
-          selectedMetric: String(unitMetric || "consumed_quantity"),
+          selectedMetric: String(safeUnitMetric || "consumed_quantity"),
           availableMetrics: [
             { key: "consumed_quantity", label: "Consumed Quantity" },
             { key: "requests", label: "Requests" },
@@ -630,8 +700,8 @@ export const unitEconomicsService = {
     const previousRows = previousWindow
       ? rows.filter((row) => inRange(row.chargeperiodstart, previousWindow))
       : [];
-    const currentWindowAggregate = aggregateWindow(currentRows, safeBasis);
-    const previousWindowAggregate = aggregateWindow(previousRows, safeBasis);
+    const currentWindowAggregate = aggregateWindow(currentRows, safeBasis, safeUnitMetric);
+    const previousWindowAggregate = aggregateWindow(previousRows, safeBasis, safeUnitMetric);
 
     /** ---- Daily aggregation ---- */
     const allocationBuckets = new Map();
@@ -664,7 +734,7 @@ export const unitEconomicsService = {
       const environment = pickDimension(r, tags, ["environment", "env", "stage"], "Unspecified");
       const region = rowRegion(r);
       const serviceName = rowService(r);
-      const quantity = n(r.consumedquantity);
+      const quantity = resolveUnitMetricQuantity(r, safeUnitMetric, tags);
       const isShared = sharedRow(tags, product, team);
       revenueCurrent += revenueFromTags(tags);
 
@@ -724,7 +794,7 @@ export const unitEconomicsService = {
       const product = pickDimension(r, tags, ["product", "application", "app"], "Unmapped Product");
       const environment = pickDimension(r, tags, ["environment", "env", "stage"], "Unspecified");
       const region = rowRegion(r);
-      const quantity = n(r.consumedquantity);
+      const quantity = resolveUnitMetricQuantity(r, safeUnitMetric, tags);
       const isShared = sharedRow(tags, product, team);
       revenuePrevious += revenueFromTags(tags);
 
@@ -1085,7 +1155,7 @@ export const unitEconomicsService = {
       rows: currentRows,
       totalQuantity: currentWindowAggregate.totalQuantity,
       trend,
-      unitMetric,
+      unitMetric: safeUnitMetric,
     });
     const trust = buildTrustEnvelope({
       rows: currentRows,
@@ -1102,7 +1172,7 @@ export const unitEconomicsService = {
 
     return attachViewModel({
       kpis: {
-        totalCost: roundTo(totalCost, 2),
+        totalCost: roundCurrency(totalCost),
         totalQuantity: roundTo(totalQuantity, 2),
         avgUnitPrice: roundTo(avgUnitPrice, 6),
         unitPriceChangePct: roundTo(changePct, 2),
@@ -1148,7 +1218,7 @@ export const unitEconomicsService = {
           commitmentBenefit: previousWindowAggregate.commitmentBenefit,
         },
         deltas: {
-          costDelta: roundTo(costDelta, 2),
+          costDelta: roundCurrency(costDelta),
           costGrowthPct: roundTo(costGrowthPct, 2),
           volumeDelta: roundTo(quantityDelta, 2),
           volumeGrowthPct: roundTo(volumeGrowthPct, 2),
@@ -1179,7 +1249,7 @@ export const unitEconomicsService = {
       trust,
       ownershipDrift,
       unitMetricDefinitions: {
-        selectedMetric: String(unitMetric || "consumed_quantity"),
+        selectedMetric: String(safeUnitMetric || "consumed_quantity"),
         availableMetrics: [
           { key: "consumed_quantity", label: "Consumed Quantity" },
           { key: "requests", label: "Requests" },

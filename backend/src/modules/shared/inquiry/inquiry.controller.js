@@ -28,9 +28,9 @@ export const submitInquiry = async (req, res, next) => {
   try {
     const { name, email, message, preferred_datetime, timezone } = req.body;
 
-    if (!hasRequiredInquirySubmitFields({ preferred_datetime, timezone })) {
-      return next(new AppError(400, "VALIDATION_ERROR", "Invalid request"));
-    }
+    // if (!hasRequiredInquirySubmitFields({ preferred_datetime, timezone })) {
+    //   return next(new AppError(400, "VALIDATION_ERROR", "Invalid request"));
+    // }
 
     // ✅ Convert client local time → UTC
     const utcPreferredDateTime = fromZonedTime(preferred_datetime, timezone);

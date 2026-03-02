@@ -5,21 +5,31 @@ import type { ForecastingControls } from "./types";
 
 interface ForecastingBudgetsProps {
   filters: { provider?: string; service?: string; region?: string };
-  api: { call: (module: string, endpoint: string, options?: { params?: Record<string, unknown> }) => Promise<unknown> } | null;
+  api: {
+    call: (
+      module: string,
+      endpoint: string,
+      options?: { params?: Record<string, unknown>; data?: unknown },
+    ) => Promise<unknown>;
+  } | null;
   caps: { modules?: Record<string, { enabled?: boolean }> } | null;
 }
+
+const CURRENT_MONTH_LABEL =
+  new Date().toLocaleString("en-US", { month: "long" }) || "January";
 
 const INITIAL_CONTROLS: ForecastingControls = {
   period: "mtd",
   compareTo: "previous_period",
   costBasis: "actual",
+  budgetMonth: CURRENT_MONTH_LABEL,
 };
 
 export default function ForecastingBudgets({ filters, api, caps }: ForecastingBudgetsProps) {
   const isEnabled = Boolean(api && caps?.modules?.forecastingBudgets?.enabled);
 
   const [controls, setControls] = useState<ForecastingControls>(INITIAL_CONTROLS);
-  const { loading, refreshing, error, data } = useForecastingBudgetsData({
+  const { loading, refreshing, error, data, reload } = useForecastingBudgetsData({
     api,
     caps,
     filters,
@@ -40,6 +50,8 @@ export default function ForecastingBudgets({ filters, api, caps }: ForecastingBu
       controls={controls}
       onControlsChange={handleControlsChange}
       filters={filters}
+      api={api}
+      onBudgetSaved={reload}
     />
   );
 }

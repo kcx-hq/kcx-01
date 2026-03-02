@@ -68,6 +68,7 @@ export interface UseAccountsOwnershipDataResult {
 export interface AccountsOwnershipViewProps {
   isPremiumMasked: boolean;
   loading: boolean;
+  isFiltering: boolean;
   error: string | null;
   insights: AccountsOwnershipInsights;
   providers: string[];

@@ -261,22 +261,25 @@ function VerticalSidebarContent({
       >
         {/* Brand Area */}
         <div className="h-[64px] px-0 lg:px-6 flex items-center justify-center lg:justify-start border-b border-[var(--border-dark)]">
-          <div className="flex items-center gap-3">
-            {/* Logo placeholder if no src */}
-            <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-[var(--brand-primary)] text-white font-bold shadow-lg shadow-[var(--brand-primary)]/20">
-                {brand.logoSrc ? (
-                    <img src={brand.logoSrc} alt="Logo" className="w-5 h-5 object-contain" />
-                ) : (
-                    "K"
-                )}
-            </div>
+          <div className="flex items-center gap-2.5">
+            {brand.logoSrc ? (
+              <img src={brand.logoSrc} alt={`${brand.name} Logo`} className="h-6 w-auto object-contain" />
+            ) : (
+              <span className="text-sm font-bold text-white">{brand.name.charAt(0)}</span>
+            )}
             <div className="hidden lg:block">
-              <h1 className="text-base font-bold text-white tracking-tight leading-none">{brand.name}</h1>
-              {brand.subtitle && (
-                <p className="text-[10px] text-gray-400 font-medium tracking-wide mt-0.5">
-                  {brand.subtitle}
-                </p>
-              )}
+              <h1 className="text-base font-bold text-white tracking-tight leading-none">
+                {brand.name === "KCX" ? (
+                  <>
+                    KC<span className="text-[var(--brand-primary)]">X</span>
+                  </>
+                ) : (
+                  brand.name
+                )}
+              </h1>
+              {brand.subtitle ? (
+                <p className="mt-0.5 text-[10px] font-medium tracking-wide text-gray-400">{brand.subtitle}</p>
+              ) : null}
             </div>
           </div>
         </div>
@@ -302,9 +305,9 @@ function VerticalSidebarContent({
           <div className="p-3 mt-auto bg-[#162A38] border-t border-white/10">
             <button
               onClick={() => navigate(billingUploadsRoute)}
-              className="w-full mb-2 flex items-center justify-center gap-2 rounded-lg border border-[#1EA88A]/45 bg-[#162A38] hover:bg-[#1A3345] hover:border-[#35C9A7]/80 px-3 py-2 transition-all"
+              className="w-full mb-2 flex items-center justify-center gap-2 rounded-lg border border-[#23a282]/45 bg-[#162A38] hover:bg-[#1A3345] hover:border-[#23a282]/80 px-3 py-2 transition-all"
             >
-              <Files size={15} className="text-[#007758]" />
+              <Files size={15} className="text-[#23a282]" />
               <span className="hidden lg:inline text-xs font-semibold text-white">
                 Billing Uploads
               </span>
@@ -320,14 +323,14 @@ function VerticalSidebarContent({
                 w-full group relative overflow-hidden rounded-xl p-0 transition-all duration-300 border shadow-sm
                 ${isUploadLocked
                     ? "bg-amber-900/10 border-amber-500/20 hover:border-amber-500/40" 
-                    : "bg-[#162A38] border-[#1EA88A]/60 hover:border-[#35C9A7]/80 hover:shadow-[0_8px_24px_rgba(0,119,88,0.22)]"
+                    : "bg-[#162A38] border-[#23a282]/60 hover:border-[#23a282]/80 hover:shadow-[0_8px_24px_rgba(35,162,130,0.22)]"
                 }
                 ${isUploadLocked ? "cursor-not-allowed" : "cursor-pointer"}
               `}
             >
                 <div className="relative z-10 flex flex-col items-center lg:flex-row lg:justify-between p-3 gap-2">
                     <div className="flex items-center gap-3">
-                        <div className={`p-2 rounded-lg ${isUploadLocked ? "bg-amber-500/10 text-amber-400" : "bg-[var(--brand-primary)] text-white shadow-[0_6px_18px_rgba(0,119,88,0.32)]"}`}>
+                        <div className={`p-2 rounded-lg ${isUploadLocked ? "bg-amber-500/10 text-amber-400" : "bg-[var(--brand-primary)] text-white shadow-[0_6px_18px_rgba(35,162,130,0.32)]"}`}>
                             {isUploadLocked ? <Crown size={18} /> : <UploadIcon size={18} />}
                         </div>
                         <div className="hidden lg:block text-left">

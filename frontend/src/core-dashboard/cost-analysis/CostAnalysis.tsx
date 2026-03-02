@@ -86,7 +86,7 @@ const CostAnalysis = ({ filters: globalFilters, onFilterChange, api, caps }: Cos
   if (!api || !caps || !caps.modules?.["costAnalysis"]?.enabled) return null;
 
   if (loading && !apiData) {
-    return <SectionLoading label="Loading Spend Analytics..." />;
+    return <SectionLoading label="Analyzing Cost Analysis..." />;
   }
 
   if (error) {

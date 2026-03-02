@@ -65,7 +65,7 @@ export function CostDriversView(props: CostDriversViewProps) {
     return (
       <div className="p-10 text-center text-gray-500 flex items-center justify-center min-h-screen">
         <div className="flex flex-col items-center gap-4">
-          <Loader2 className="animate-spin text-[#007758]" size={32} />
+          <Loader2 className="animate-spin text-[#23a282]" size={32} />
           <span>Analyzing cost drivers...</span>
         </div>
       </div>
@@ -107,9 +107,9 @@ export function CostDriversView(props: CostDriversViewProps) {
             {/* Refreshing badge */}
             {isRefreshing && (
               <div className="flex justify-end">
-                <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-[#007758]/20 border border-[#007758]/30 rounded-lg backdrop-blur-sm">
-                  <Loader2 className="text-[#007758] animate-spin" size={14} />
-                  <span className="text-[#007758] text-xs font-medium">Updating...</span>
+                <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-[#23a282]/20 border border-[#23a282]/30 rounded-lg backdrop-blur-sm">
+                  <Loader2 className="text-[#23a282] animate-spin" size={14} />
+                  <span className="text-[#23a282] text-xs font-medium">Updating...</span>
                 </div>
               </div>
             )}
@@ -163,7 +163,7 @@ export function CostDriversView(props: CostDriversViewProps) {
             {/* Small footer note */}
             {periods?.prev && periods?.current && (
               <div className="text-[10px] text-gray-500 flex items-center gap-2 pt-2">
-                <TrendingUp size={12} className="text-[#007758]" />
+                <TrendingUp size={12} className="text-[#23a282]" />
                 Comparing <span className="text-gray-300 font-semibold">{formatDate(periods.prev)}</span>{" "}
                 → <span className="text-gray-300 font-semibold">{formatDate(periods.current)}</span>
               </div>

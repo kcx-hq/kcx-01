@@ -41,28 +41,7 @@ function normalizeUploadIds(req) {
  */
 export const getQualityAnalysis = async (req, res, next) => {
   try {
-    const filters = {
-      provider: req.query.provider || req.body?.provider || 'All',
-      service: req.query.service || req.body?.service || 'All',
-      region: req.query.region || req.body?.region || 'All',
-    };
-
-    // Optional date range (query preferred, fallback to body)
-    const startDate = req.query.startDate || req.body?.startDate || null;
-    const endDate = req.query.endDate || req.body?.endDate || null;
-
-    // uploadId(s) can be in query or body
-    const requestedUploadIds = normalizeUploadIds(req);
-
-    let uploadIds = [];
-
-    if (requestedUploadIds.length > 0) {
-      // If user explicitly requested uploadIds, use them
-      uploadIds = await assertUploadScope({
-        uploadIds: requestedUploadIds,
-        clientId: req.client_id,
-      });
-    } 
+    const { filters, startDate, endDate, uploadIds } = await extractCommonQualityParams(req);
 
     const data = await dataQualityService.analyzeDataQuality({
       filters,
@@ -81,7 +60,7 @@ export const getQualityAnalysis = async (req, res, next) => {
   }
 };
 
-function extractCommonQualityParams(req) {
+async function extractCommonQualityParams(req) {
   const filters = {
     provider: req.query.provider || req.body?.provider || 'All',
     service: req.query.service || req.body?.service || 'All',
@@ -90,14 +69,17 @@ function extractCommonQualityParams(req) {
 
   const startDate = req.query.startDate || req.body?.startDate || null;
   const endDate = req.query.endDate || req.body?.endDate || null;
-  const uploadIds = normalizeUploadIds(req);
+  const uploadIds = await assertUploadScope({
+    uploadIds: normalizeUploadIds(req),
+    clientId: req.client_id,
+  });
 
   return { filters, startDate, endDate, uploadIds };
 }
 
 async function withQualityCall(req, res, next, fnName) {
   try {
-    const params = extractCommonQualityParams(req);
+    const params = await extractCommonQualityParams(req);
     const data = await dataQualityService[fnName](params);
     return res.ok(data);
   } catch (error) {

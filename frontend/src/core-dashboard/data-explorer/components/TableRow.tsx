@@ -2,7 +2,7 @@ import React, { memo } from "react";
 import type { DataExplorerRow, TableRowProps } from "../types";
 
 // KCX Brand Primary
-const BRAND_EMERALD = "#007758";
+const BRAND_EMERALD = "#23a282";
 
 const TableRow = memo(
   ({
@@ -35,7 +35,7 @@ const TableRow = memo(
             type="checkbox"
             checked={isSelected}
             onChange={onSelect}
-            className="w-4 h-4 rounded-md border-slate-300 text-[#007758] focus:ring-emerald-500 transition-all cursor-pointer"
+            className="w-4 h-4 rounded-md border-slate-300 text-[#23a282] focus:ring-emerald-500 transition-all cursor-pointer"
           />
         </td>
 

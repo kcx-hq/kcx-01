@@ -74,11 +74,11 @@ const PreviewContent = ({ item }: { item: NavigationItem }) => {
           </div>
           <div className="bg-[#0f0f11] border border-white/10 rounded p-2">
             <div className="text-[8px] text-gray-500 mb-1">Forecast</div>
-            <div className="text-xs font-bold text-[#007758]">+12%</div>
+            <div className="text-xs font-bold text-[#23a282]">+12%</div>
           </div>
         </div>
         <div className="flex items-center gap-2 text-[8px] text-gray-400 mt-2">
-          <div className="w-1.5 h-1.5 rounded-full bg-[#007758]"></div>
+          <div className="w-1.5 h-1.5 rounded-full bg-[#23a282]"></div>
           <span>Real-time Metrics</span>
         </div>
       </div>
@@ -275,12 +275,12 @@ const VerticalSidebar = ({ caps = {} }: VerticalSidebarProps) => {
         className={({ isActive }: NavLinkRenderProps) => `
           group flex items-center justify-center lg:justify-between gap-0 lg:gap-3 px-2 lg:px-3 py-2.5 lg:py-2 mb-1 rounded-lg transition-all duration-200 border border-transparent
           ${isActive 
-            ? "bg-[#007758]/10 text-[#007758] border-[#007758]/20 shadow-[0_0_15px_rgba(0,119,88,0.1)]" 
+            ? "bg-[#23a282]/10 text-[#23a282] border-[#23a282]/20 shadow-[0_0_15px_rgba(35,162,130,0.1)]" 
             : "text-gray-400 hover:bg-white/5 hover:text-white"}
         `}
       >
         <div className="flex items-center gap-0 lg:gap-3">
-          <item.icon size={20} className="lg:w-4 lg:h-4 group-[.active]:text-[#007758] group-hover:text-white transition-colors" />
+          <item.icon size={20} className="lg:w-4 lg:h-4 group-[.active]:text-[#23a282] group-hover:text-white transition-colors" />
           <span className="hidden lg:inline text-sm font-medium">{item.label}</span>
         </div>
         {isPremium && item.isPremium && (
@@ -307,10 +307,10 @@ const VerticalSidebar = ({ caps = {} }: VerticalSidebarProps) => {
             onMouseLeave={() => { isHoveringTooltipRef.current = false; setHoveredItem(null); }}
           >
              {/* Tooltip UI Card */}
-             <div className="bg-[#1a1b20] border border-[#007758]/40 rounded-xl shadow-2xl overflow-hidden backdrop-blur-xl w-[280px] ring-1 ring-[#007758]/20">
-                <div className="bg-gradient-to-r from-[#25262b] to-[#1f2025] border-b border-[#007758]/20 px-4 py-2.5 flex items-center justify-between">
+             <div className="bg-[#1a1b20] border border-[#23a282]/40 rounded-xl shadow-2xl overflow-hidden backdrop-blur-xl w-[280px] ring-1 ring-[#23a282]/20">
+                <div className="bg-gradient-to-r from-[#25262b] to-[#1f2025] border-b border-[#23a282]/20 px-4 py-2.5 flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                        <hoveredItem.icon size={14} className="text-[#007758]" />
+                        <hoveredItem.icon size={14} className="text-[#23a282]" />
                         <span className="text-xs font-bold text-white">{hoveredItem.label}</span>
                     </div>
                 </div>
@@ -320,7 +320,7 @@ const VerticalSidebar = ({ caps = {} }: VerticalSidebarProps) => {
                 <div className="px-4 py-2 bg-[#1a1b20]">
                     <p className="text-[10px] text-gray-400 leading-relaxed">{hoveredItem.description}</p>
                 </div>
-                <div className="absolute left-0 top-1/2 -translate-x-1 -translate-y-1/2 w-3 h-3 bg-[#1a1b20] border-l border-b border-[#007758]/40 rotate-45"></div>
+                <div className="absolute left-0 top-1/2 -translate-x-1 -translate-y-1/2 w-3 h-3 bg-[#1a1b20] border-l border-b border-[#23a282]/40 rotate-45"></div>
              </div>
           </motion.div>
         )}
@@ -332,12 +332,12 @@ const VerticalSidebar = ({ caps = {} }: VerticalSidebarProps) => {
          {/* Logo */}
          <div className="px-2 lg:px-5 py-6 mb-2 flex items-center justify-center lg:justify-start gap-3">
            <img src="/KCX.logo.svg" alt="Logo" className="w-10 h-10 object-contain" />
-           <div className="hidden lg:block">
-             <h1 className="text-base font-bold text-white">
-               KCX<span className="text-[#00b889]">.</span>
-             </h1>
-             <p className="text-[10px] text-gray-500 font-mono">FINOPS OS v2.4</p>
-           </div>
+            <div className="hidden lg:block">
+              <h1 className="text-base font-bold text-white">
+                KC<span className="text-[#23a282]">X</span><span className="text-white">.</span>
+              </h1>
+              <p className="text-[10px] text-gray-500 font-mono">FinOps Platform</p>
+            </div>
          </div>
 
          {/* Navigation */}
@@ -358,7 +358,7 @@ const VerticalSidebar = ({ caps = {} }: VerticalSidebarProps) => {
          <div className="p-3 mt-auto bg-[#0f0f11] border-t border-white/5">
             <div className={`
                 group relative border border-dashed rounded-lg p-3 transition-all
-                ${uploadCount >= MAX_UPLOADS ? "border-red-500/50 bg-red-500/5" : "border-gray-700 hover:border-[#007758] bg-[#1a1b20]/50 hover:bg-[#007758]/5"}
+                ${uploadCount >= MAX_UPLOADS ? "border-red-500/50 bg-red-500/5" : "border-gray-700 hover:border-[#23a282] bg-[#1a1b20]/50 hover:bg-[#23a282]/5"}
             `}>
                <div className="flex items-center justify-center">
                  <button

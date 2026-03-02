@@ -17,7 +17,7 @@ const AccountsOwnershipView = ({
       <div className="animate-in fade-in zoom-in-95 duration-300 flex flex-col h-full">
         <div className="flex items-center justify-center h-full">
           <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#007758] mx-auto mb-4"></div>
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#23a282] mx-auto mb-4"></div>
             <p className="text-gray-400">Loading accounts data...</p>
           </div>
         </div>
@@ -31,7 +31,7 @@ const AccountsOwnershipView = ({
       {/* CONTENT */}
       <div className="flex-1 overflow-y-auto relative min-h-0">
         {isFiltering && (
-          <div className="absolute top-4 right-4 z-50 flex items-center gap-2 bg-[#1a1b20]/90 backdrop-blur-md border border-[#007758]/30 rounded-lg px-3 py-2 shadow-lg">
+          <div className="absolute top-4 right-4 z-50 flex items-center gap-2 bg-[#1a1b20]/90 backdrop-blur-md border border-[#23a282]/30 rounded-lg px-3 py-2 shadow-lg">
             <span className="text-xs text-gray-300 font-medium">Filtering...</span>
           </div>
         )}
@@ -97,7 +97,7 @@ const AccountsOwnershipView = ({
                       itemStyle={{ color: 'white' }}
                       formatter={(value) => [formatCurrency(value), 'Cost']}
                     />
-                    <Bar dataKey="ownedCost" fill="#48bb78" name="Owned" />
+                    <Bar dataKey="ownedCost" fill="#23a282" name="Owned" />
                     <Bar dataKey="unownedCost" fill="#f56565" name="Unowned" />
                   </BarChart>
                 </ResponsiveContainer>
@@ -124,7 +124,7 @@ const AccountsOwnershipView = ({
                       fill="#8884d8"
                       dataKey="value"
                     >
-                      <Cell key="cell-0" fill="#48bb78" />
+                      <Cell key="cell-0" fill="#23a282" />
                       <Cell key="cell-1" fill="#f56565" />
                     </Pie>
                     <Tooltip formatter={(value) => [formatCurrency(value), 'Cost']} />

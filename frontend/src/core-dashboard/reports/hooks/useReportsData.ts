@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { buildReportParams } from "../utils/reportUtils";
 import type {
   ApiLikeError,
@@ -10,14 +10,20 @@ import type {
 
 export function useReportsData({ api, caps, filters }: UseReportsDataParams): UseReportsDataResult {
   const [fetchingData, setFetchingData] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [reportData, setReportData] = useState<ReportsSummaryData | null>(null);
   const [optimizationData, setOptimizationData] = useState<ReportsOptimizationData | null>(null);
+  const hasLoadedOnceRef = useRef(false);
 
   useEffect(() => {
     if (!api || !caps) return;
 
     const fetchData = async () => {
-      setFetchingData(true);
+      if (hasLoadedOnceRef.current) {
+        setRefreshing(true);
+      } else {
+        setFetchingData(true);
+      }
       try {
         const params = buildReportParams(filters);
 
@@ -43,13 +49,15 @@ export function useReportsData({ api, caps, filters }: UseReportsDataParams): Us
         console.error("Error fetching report data:", error);
       } finally {
         setFetchingData(false);
+        setRefreshing(false);
+        hasLoadedOnceRef.current = true;
       }
     };
 
     fetchData();
   }, [api, caps, filters]);
 
-  return { fetchingData, reportData, optimizationData };
+  return { fetchingData, refreshing, reportData, optimizationData };
 }
 
 

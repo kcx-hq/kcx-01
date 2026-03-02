@@ -71,7 +71,7 @@ export function ClientCCostDriversView({
     return (
       <div className="p-10 text-center text-gray-500 flex items-center justify-center min-h-screen">
         <div className="flex flex-col items-center gap-4">
-          <Loader2 className="animate-spin text-[#007758]" size={32} />
+          <Loader2 className="animate-spin text-[#23a282]" size={32} />
           <span>Analyzing cost drivers...</span>
         </div>
       </div>
@@ -95,7 +95,7 @@ export function ClientCCostDriversView({
             <div className="flex flex-col xl:flex-row justify-between items-start xl:items-center gap-4">
               <div>
                 <h1 className="text-xl font-bold flex items-center gap-2">
-                  <TrendingUp className="text-[#007758]" size={20} /> Cost Drivers
+                  <TrendingUp className="text-[#23a282]" size={20} /> Cost Drivers
                 </h1>
 
                 {periods?.prev && periods?.current && (
@@ -125,7 +125,7 @@ export function ClientCCostDriversView({
                         className={[
                           'relative px-2.5 py-1 text-[10px] font-bold rounded-md transition-all',
                           isActive
-                            ? 'bg-[#007758] text-white shadow-[0_0_10px_rgba(0,119,88,0.5)]'
+                            ? 'bg-[#23a282] text-white shadow-[0_0_10px_rgba(35,162,130,0.5)]'
                             : 'bg-white/5 text-gray-400 hover:text-gray-200 hover:bg-white/10 border border-transparent',
                         ].join(' ')}
                       >
@@ -155,9 +155,9 @@ export function ClientCCostDriversView({
             {/* 2) Content Area (refreshing overlay only) */}
             <div className="relative">
               {isRefreshing && (
-                <div className="absolute top-4 right-4 z-50 flex items-center gap-2 px-3 py-1.5 bg-[#007758]/20 border border-[#007758]/30 rounded-lg backdrop-blur-sm">
-                  <Loader2 className="text-[#007758] animate-spin" size={14} />
-                  <span className="text-[#007758] text-xs font-medium">Updating...</span>
+                <div className="absolute top-4 right-4 z-50 flex items-center gap-2 px-3 py-1.5 bg-[#23a282]/20 border border-[#23a282]/30 rounded-lg backdrop-blur-sm">
+                  <Loader2 className="text-[#23a282] animate-spin" size={14} />
+                  <span className="text-[#23a282] text-xs font-medium">Updating...</span>
                 </div>
               )}
 
@@ -166,7 +166,7 @@ export function ClientCCostDriversView({
                 <div className="lg:col-span-2 bg-[#1a1b20] border border-white/10 rounded-xl p-4 flex flex-col sm:flex-row gap-6 items-center shadow-lg">
                   <div className="flex-1 min-w-[180px]">
                     <h3 className="text-xs font-bold text-gray-400 uppercase mb-2 flex items-center gap-2">
-                      <Activity size={14} className="text-[#007758]" /> Net Variance
+                      <Activity size={14} className="text-[#23a282]" /> Net Variance
                     </h3>
 
                     <div className="flex items-baseline gap-2">
@@ -211,7 +211,7 @@ export function ClientCCostDriversView({
                       className={[
                         'p-1.5 rounded-lg transition-all',
                         showTreeMap
-                          ? 'bg-[#007758] text-white border border-[#007758] shadow-[0_0_8px_rgba(0,119,88,0.4)]'
+                          ? 'bg-[#23a282] text-white border border-[#23a282] shadow-[0_0_8px_rgba(35,162,130,0.4)]'
                           : 'bg-black/40 hover:bg-black/60 text-gray-400 hover:text-gray-200 border border-white/10',
                       ].join(' ')}
                       title="Toggle View"
@@ -227,7 +227,7 @@ export function ClientCCostDriversView({
                           data={[...increases.slice(0, 10), ...decreases.slice(0, 10)].map((item: CostDriverItem) => ({
                             name: item.name,
                             value: Math.abs(item.diff || 0),
-                            fill: (item.diff || 0) > 0 ? '#ef4444' : '#10b981',
+                            fill: (item.diff || 0) > 0 ? '#ef4444' : '#23a282',
                           }))}
                           dataKey="value"
                           stroke="#1a1b20"

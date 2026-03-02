@@ -17,7 +17,7 @@ const BarRow = ({ name, value, percentage }: BarRowProps) => {
       </div>
 
       <div className="mt-2 h-2 rounded-full bg-black/30 overflow-hidden border border-white/10">
-        <div className="h-full bg-[#007758]/70" style={{ width: `${pct}%` }} />
+        <div className="h-full bg-[#23a282]/70" style={{ width: `${pct}%` }} />
       </div>
     </div>
   );

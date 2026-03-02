@@ -1,39 +1,57 @@
-import { ShieldCheck } from "lucide-react";
-import type { ConfidenceModel } from "../../types";
-import { formatPercent } from "../../utils/format";
-import { Metric, StatusPill } from "../shared/ui";
+import { AlertTriangle, CheckCircle2, ShieldCheck, XCircle } from "lucide-react";
+import type { ConfidenceModel, ForecastChecklistItem } from "../../types";
+import { SectionPanel, StatusPill } from "../shared/ui";
 
 interface ConfidenceGatingSectionProps {
   confidence: ConfidenceModel;
+  checklist?: ForecastChecklistItem[];
 }
 
-export function ConfidenceGatingSection({ confidence }: ConfidenceGatingSectionProps) {
+const statusIcon = (status: "pass" | "warn" | "fail") => {
+  if (status === "pass") return <CheckCircle2 size={14} className="text-emerald-600" />;
+  if (status === "warn") return <AlertTriangle size={14} className="text-amber-600" />;
+  return <XCircle size={14} className="text-rose-600" />;
+};
+
+export function ConfidenceGatingSection({ confidence, checklist = [] }: ConfidenceGatingSectionProps) {
+  const gates: ForecastChecklistItem[] = checklist.length
+    ? checklist
+    : (confidence.gates || []).slice(0, 4).map((gate) => ({
+        id: gate.id,
+        label: gate.label,
+        status: gate.status,
+        value: gate.value,
+        valueLabel: gate.value.toFixed(2),
+        threshold: gate.threshold,
+        detail: gate.consequence,
+      }));
+
+  const passCount = gates.filter((gate) => gate.status === "pass").length;
+  const warnCount = gates.filter((gate) => gate.status === "warn").length;
+  const failCount = gates.filter((gate) => gate.status === "fail").length;
+
   return (
-    <section className="rounded-2xl border border-[var(--border-light)] bg-white p-4 md:p-5">
-      <h2 className="flex items-center gap-2 text-sm font-black uppercase tracking-[0.12em] text-[var(--text-primary)] md:text-base">
-        <ShieldCheck size={16} className="text-[var(--brand-primary)]" />
-        Confidence Gates (Governance Inputs)
-      </h2>
-      <div className="mt-3 grid grid-cols-1 gap-3 md:grid-cols-3">
-        <Metric
-          label="Forecast Confidence"
-          value={`${confidence.forecastConfidence.score.toFixed(2)} (${confidence.forecastConfidence.level.toUpperCase()})`}
-          detail={confidence.forecastConfidence.advisoryOnly ? "Advisory only" : "Decisionable"}
-        />
-        <Metric
-          label="Budget Confidence"
-          value={`${confidence.budgetConfidence.score.toFixed(2)} (${confidence.budgetConfidence.level.toUpperCase()})`}
-          detail={confidence.budgetConfidence.advisoryOnly ? "Advisory only" : "Control-ready"}
-        />
-        <Metric
-          label="Confidence Band"
-          value={formatPercent(confidence.confidenceBandPct)}
-          detail="Derived from volatility + governance gates"
-        />
+    <SectionPanel title="Confidence Gates">
+      <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+        <p className="flex items-center gap-2 text-sm font-semibold text-slate-800">
+          <ShieldCheck size={15} className="text-[var(--brand-primary)]" />
+          Why confidence is {confidence.forecastConfidence.level.toUpperCase()}
+        </p>
+        <div className="flex flex-wrap items-center gap-2 text-[10px] font-bold uppercase tracking-[0.08em]">
+          <span className="rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-emerald-700">
+            Pass {passCount}
+          </span>
+          <span className="rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-amber-700">
+            Warn {warnCount}
+          </span>
+          <span className="rounded-full border border-rose-200 bg-rose-50 px-2 py-0.5 text-rose-700">
+            Fail {failCount}
+          </span>
+        </div>
       </div>
 
-      <div className="mt-4 grid grid-cols-1 gap-3 xl:grid-cols-2">
-        {(confidence.gates || []).map((gate) => (
+      <div className="space-y-2">
+        {gates.map((gate) => (
           <article
             key={gate.id}
             className={`rounded-xl border p-3 ${
@@ -45,27 +63,19 @@ export function ConfidenceGatingSection({ confidence }: ConfidenceGatingSectionP
             }`}
           >
             <div className="flex items-start justify-between gap-3">
-              <p className="text-sm font-semibold text-slate-900">{gate.label}</p>
+              <div className="flex items-center gap-2">
+                {statusIcon(gate.status)}
+                <p className="text-sm font-semibold text-slate-900">{gate.label}</p>
+              </div>
               <StatusPill status={gate.status} />
             </div>
-            <p className="mt-2 text-xl font-black text-slate-900">{gate.value.toFixed(2)}</p>
+            <p className="mt-2 text-lg font-black text-slate-900">{gate.valueLabel}</p>
             <p className="mt-1 text-xs text-slate-700">Threshold: {gate.threshold}</p>
-            <p className="mt-2 text-xs text-slate-600">{gate.consequence}</p>
+            <p className="mt-1 text-xs text-slate-600">{gate.detail}</p>
           </article>
         ))}
       </div>
-
-      <div className="mt-4 rounded-xl border border-slate-200 bg-slate-50/70 p-3">
-        <p className="text-[11px] font-bold uppercase tracking-[0.1em] text-slate-500">
-          Gate Impact Summary
-        </p>
-        <p className="mt-1 text-sm text-slate-700">
-          {confidence.consequences.length
-            ? confidence.consequences.join(" ")
-            : "All governance gates are passing for current planning confidence."}
-        </p>
-      </div>
-    </section>
+    </SectionPanel>
   );
 }
 

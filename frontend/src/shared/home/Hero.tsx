@@ -299,16 +299,16 @@ const Hero = ({
                     whileHover={{
                       scale: 1.05,
                       y: -2,
-                      boxShadow: "0 0 40px rgba(0,198,147,0.35)",
+                      boxShadow: "0 0 40px rgba(35,162,130,0.35)",
                     }}
                     whileTap={{ scale: 0.98 }}
                     animate={
                       isCTAActivated
                         ? {
                             boxShadow: [
-                              "0 0 18px rgba(0,198,147,0.22), inset 0 0 18px rgba(0,198,147,0.10)",
-                              "0 0 44px rgba(0,198,147,0.40), inset 0 0 34px rgba(0,198,147,0.16)",
-                              "0 0 18px rgba(0,198,147,0.22), inset 0 0 18px rgba(0,198,147,0.10)",
+                              "0 0 18px rgba(35,162,130,0.22), inset 0 0 18px rgba(35,162,130,0.10)",
+                              "0 0 44px rgba(35,162,130,0.40), inset 0 0 34px rgba(35,162,130,0.16)",
+                              "0 0 18px rgba(35,162,130,0.22), inset 0 0 18px rgba(35,162,130,0.10)",
                             ],
                           }
                         : {}
@@ -394,12 +394,12 @@ const Hero = ({
                   "0 30px 60px -18px rgba(0,0,0,0.18), 0 0 0 1px rgba(15,23,42,0.04)",
               }}
             >
-              {/* Dynamic Spotlight (theme updated: #00c693) */}
+              {/* Dynamic Spotlight (theme updated: #23a282) */}
               <motion.div
                 className="absolute inset-0 pointer-events-none opacity-40 z-0"
                 style={{
                   background: useTransform([spotX, spotY], ([sx, sy]: [string, string]) => {
-                    return `radial-gradient(600px circle at ${sx} ${sy}, rgba(0,198,147,0.12), transparent 45%)`;
+                    return `radial-gradient(600px circle at ${sx} ${sy}, rgba(35,162,130,0.12), transparent 45%)`;
                   }),
                 }}
               />
@@ -412,7 +412,7 @@ const Hero = ({
                   <div className="w-3 h-3 rounded-full bg-black/10 border border-black/15"></div>
                 </div>
                 <div className="text-[10px] font-mono text-[var(--text-disabled)] uppercase tracking-widest">
-                  KCX<span className="text-[var(--brand-primary)]">.</span> FinOps Platform
+                  KC<span className="text-[var(--brand-primary)]">X</span> FinOps Platform
                 </div>
               </div>
 
@@ -422,9 +422,9 @@ const Hero = ({
                 <motion.div
                   animate={{
                     background: [
-                      "linear-gradient(135deg, rgba(0,198,147,0.08) 0%, rgba(25,38,48,0.06) 100%)",
-                      "linear-gradient(135deg, rgba(25,38,48,0.07) 0%, rgba(0,198,147,0.09) 100%)",
-                      "linear-gradient(135deg, rgba(0,198,147,0.08) 0%, rgba(25,38,48,0.06) 100%)",
+                      "linear-gradient(135deg, rgba(35,162,130,0.08) 0%, rgba(25,38,48,0.06) 100%)",
+                      "linear-gradient(135deg, rgba(25,38,48,0.07) 0%, rgba(35,162,130,0.09) 100%)",
+                      "linear-gradient(135deg, rgba(35,162,130,0.08) 0%, rgba(25,38,48,0.06) 100%)",
                     ],
                   }}
                   transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
@@ -435,7 +435,7 @@ const Hero = ({
                   className="absolute inset-0 opacity-20"
                   style={{
                     backgroundImage:
-                      "linear-gradient(rgba(0,198,147,0.22) 1px, transparent 1px), linear-gradient(90deg, rgba(0,198,147,0.22) 1px, transparent 1px)",
+                      "linear-gradient(rgba(35,162,130,0.22) 1px, transparent 1px), linear-gradient(90deg, rgba(35,162,130,0.22) 1px, transparent 1px)",
                     backgroundSize: "30px 30px",
                     animation: "gridPulse 4s ease-in-out infinite",
                   }}
@@ -582,7 +582,7 @@ const Hero = ({
                       animate={{ rotateY: [0, 5, 0, -5, 0] }}
                       transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
                       className="relative w-32 h-32 flex items-center justify-center rounded-full bg-[var(--bg-surface)] border border-[var(--bg-dark)]/30 overflow-hidden"
-                      style={{ boxShadow: "0 0 30px rgba(0,198,147,0.18)" }}
+                      style={{ boxShadow: "0 0 30px rgba(35,162,130,0.18)" }}
                     >
                       {/* Scanning line */}
                       <motion.div
@@ -597,9 +597,9 @@ const Hero = ({
                         className="w-16 h-16 object-contain relative z-20"
                         animate={{
                           filter: [
-                            "drop-shadow(0 0 12px rgba(0,198,147,0.25)) brightness(1.05)",
-                            "drop-shadow(0 0 18px rgba(0,198,147,0.40)) brightness(1.08)",
-                            "drop-shadow(0 0 12px rgba(0,198,147,0.25)) brightness(1.05)",
+                            "drop-shadow(0 0 12px rgba(35,162,130,0.25)) brightness(1.05)",
+                            "drop-shadow(0 0 18px rgba(35,162,130,0.40)) brightness(1.08)",
+                            "drop-shadow(0 0 12px rgba(35,162,130,0.25)) brightness(1.05)",
                           ],
                         }}
                         transition={{ duration: 3, repeat: Infinity }}
@@ -650,15 +650,18 @@ const Hero = ({
                     animate={{
                       opacity: [0.75, 1, 0.75],
                       textShadow: [
-                        "0 0 8px rgba(0,198,147,0.18)",
-                        "0 0 16px rgba(0,198,147,0.28)",
-                        "0 0 8px rgba(0,198,147,0.18)",
+                        "0 0 8px rgba(35,162,130,0.18)",
+                        "0 0 16px rgba(35,162,130,0.28)",
+                        "0 0 8px rgba(35,162,130,0.18)",
                       ],
                     }}
                     transition={{ duration: 3, repeat: Infinity }}
                   >
-                    KCX<span className="text-[var(--brand-primary)]">.</span>
+                    KC<span className="text-[var(--brand-primary)]">X</span>
                   </motion.div>
+                  <div className="mb-3 text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--text-secondary)]">
+                    FinOps Platform
+                  </div>
 
                   <div className="flex items-center justify-center gap-6 mb-3">
                     <PillarIcon icon={Cloud} tone="green" delay={0} />

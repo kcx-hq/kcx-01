@@ -72,7 +72,7 @@ const ClientCCostAnalysisView = ({
         <div className="flex gap-3">
           <button 
             onClick={onReset}
-            className="px-4 py-2 bg-[#007758] hover:bg-[#8b2bd4] text-white rounded-lg text-sm font-medium transition-colors"
+            className="px-4 py-2 bg-[#23a282] hover:bg-[#8b2bd4] text-white rounded-lg text-sm font-medium transition-colors"
           >
             Reset Filters
           </button>
@@ -186,7 +186,7 @@ const ClientCCostAnalysisView = ({
     return (
       <div className="flex items-center justify-center h-64 bg-[#0f0f11] rounded-xl border border-white/5">
         <div className="text-center text-gray-500">
-          <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-[#007758] mb-2"></div>
+          <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-[#23a282] mb-2"></div>
           <p className="text-sm">Loading cost analysis...</p>
         </div>
       </div>
@@ -278,7 +278,7 @@ const ClientCCostAnalysisView = ({
       title: "Total Spend",
       value: new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(kpis.totalSpend || 0),
       icon: DollarSign,
-      color: "text-[#007758]",
+      color: "text-[#23a282]",
       description: "Total cloud spend",
       delay: 0,
       insights: `Your total spend is ${new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(kpis.totalSpend || 0)}. This represents your complete cloud expenditure for the selected period.`
@@ -317,8 +317,8 @@ const ClientCCostAnalysisView = ({
 
   // Chart Colors - Extended palette for department views
   const COLORS = [
-    '#007758', '#48bb78', '#f56565', '#ecc94b', 
-    '#4fd1c5', '#059669', '#ed64a6', '#38b2ac',
+    '#23a282', '#23a282', '#f56565', '#ecc94b', 
+    '#4fd1c5', '#23a282', '#ed64a6', '#38b2ac',
     '#f6ad55', '#63b3ed', '#fc8181', '#68d391',
     '#a7f3d0', '#6ee7b7', '#f472b6', '#7dd3fc'
   ];
@@ -421,7 +421,7 @@ const ClientCCostAnalysisView = ({
         <div className="shrink-0 space-y-4 mb-4">
           <div className="bg-[#1a1b20] border border-white/5 p-4 rounded-xl flex flex-wrap gap-4 items-center shadow-lg relative z-40">
             <div className="flex items-center gap-2 text-sm text-gray-400 font-bold mr-2 uppercase tracking-wider">
-              <Filter size={16} className="text-[#007758]" /> 
+              <Filter size={16} className="text-[#23a282]" /> 
             </div>
 
             {/* Group By Dropdown */}
@@ -436,7 +436,7 @@ const ClientCCostAnalysisView = ({
                 <select
                   value={filters.groupBy}
                   onChange={(e: SelectChangeEvent) => onGroupByChange(e.target.value as GroupByValue)}
-                  className="appearance-none bg-[#0f0f11] border border-white/10 hover:border-[#007758]/50 rounded-lg pl-3 pr-8 py-2 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-[#007758]/50 transition-all min-w-[140px] text-gray-300 z-40 relative cursor-pointer"
+                  className="appearance-none bg-[#0f0f11] border border-white/10 hover:border-[#23a282]/50 rounded-lg pl-3 pr-8 py-2 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-[#23a282]/50 transition-all min-w-[140px] text-gray-300 z-40 relative cursor-pointer"
                 >
                   <option value="ServiceName">Service</option>
                   <option value="RegionName">Region</option>
@@ -456,7 +456,7 @@ const ClientCCostAnalysisView = ({
         {/* CONTENT */}
         <div className="flex-1 overflow-y-auto relative min-h-0">
           {isFiltering && costAnalysisData && (
-            <div className="absolute top-4 right-4 z-50 flex items-center gap-2 bg-[#1a1b20]/90 backdrop-blur-md border border-[#007758]/30 rounded-lg px-3 py-2 shadow-lg">
+            <div className="absolute top-4 right-4 z-50 flex items-center gap-2 bg-[#1a1b20]/90 backdrop-blur-md border border-[#23a282]/30 rounded-lg px-3 py-2 shadow-lg">
               <span className="text-xs text-gray-300 font-medium">Filtering...</span>
             </div>
           )}
@@ -481,7 +481,7 @@ const ClientCCostAnalysisView = ({
                     transition={{ delay: card.delay }}
                     whileHover={{ y: -5 }} 
                     onClick={() => setSelectedCard(card)}
-                    className="bg-[#1a1b20]/60 backdrop-blur-md border border-white/5 p-4 rounded-xl shadow-lg relative overflow-hidden group min-h-[100px] hover:border-[#007758]/30 transition-all cursor-pointer"
+                    className="bg-[#1a1b20]/60 backdrop-blur-md border border-white/5 p-4 rounded-xl shadow-lg relative overflow-hidden group min-h-[100px] hover:border-[#23a282]/30 transition-all cursor-pointer"
                   >
                     <div className={`absolute -top-10 -right-10 p-16 ${card.color} bg-opacity-5 blur-[40px] rounded-full`} />
                     
@@ -514,7 +514,7 @@ const ClientCCostAnalysisView = ({
                 <div className="bg-[#1a1b20]/60 backdrop-blur-md border border-white/5 rounded-2xl p-5 shadow-xl">
                   <div className="flex justify-between items-center mb-4">
                     <div className="flex items-center gap-2">
-                      <Calendar size={16} className="text-[#007758]" />
+                      <Calendar size={16} className="text-[#23a282]" />
                       <h3 className="text-sm font-bold text-white">
                         {filters.groupBy === 'Department' ? 'Department Spend Over Time' : 'Spend Over Time'}
                       </h3>
@@ -596,10 +596,10 @@ const ClientCCostAnalysisView = ({
                           <Line 
                             type="monotone" 
                             dataKey="total" 
-                            stroke="#007758" 
+                            stroke="#23a282" 
                             strokeWidth={3}
                             dot={{ r: 3 }}
-                            activeDot={{ r: 6, stroke: '#007758', strokeWidth: 2, fill: '#1a1b20' }}
+                            activeDot={{ r: 6, stroke: '#23a282', strokeWidth: 2, fill: '#1a1b20' }}
                           />
                         </LineChart>
                       )}
@@ -614,7 +614,7 @@ const ClientCCostAnalysisView = ({
                       {filters.groupBy === 'Department' ? (
                         <Users size={16} className="text-emerald-400" />
                       ) : filters.groupBy === 'ServiceName' ? (
-                        <Settings size={16} className="text-[#007758]" />
+                        <Settings size={16} className="text-[#23a282]" />
                       ) : filters.groupBy === 'RegionName' ? (
                         <MapPin size={16} className="text-green-400" />
                       ) : (
@@ -703,7 +703,7 @@ const ClientCCostAnalysisView = ({
                       {filters.groupBy === 'Department' ? (
                         <Users size={16} className="text-emerald-400" />
                       ) : (
-                        <Tag size={16} className="text-[#007758]" />
+                        <Tag size={16} className="text-[#23a282]" />
                       )}
                       <h3 className="text-sm font-bold text-white">
                         {filters.groupBy === 'Department' ? 'Department Cost Breakdown' : 'Cost Breakdown'}
@@ -790,7 +790,7 @@ const ClientCCostAnalysisView = ({
                 <div className="flex flex-wrap justify-between items-center gap-4 text-[10px] text-gray-500">
                   <div className="flex items-center gap-4">
                     <span className="flex items-center gap-1">
-                      <span className="w-2 h-2 rounded-full bg-[#007758]"></span>
+                      <span className="w-2 h-2 rounded-full bg-[#23a282]"></span>
                       Data source: Database
                     </span>
                     <span>•</span>

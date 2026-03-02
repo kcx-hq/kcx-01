@@ -5,10 +5,12 @@ import LoadingState from "./components/LoadingState";
 import ReportCard from "./components/ReportCard";
 import AboutExecutiveReportsNote from "./components/AboutExecutiveReportsNote";
 import ComingSoonReports from "./components/ComingSoonReports";
+import { SectionRefreshOverlay } from "../common/SectionStates";
 import type { ReportDefinition, ReportsViewProps } from "./types";
 
 const ReportsView = ({
   fetchingData,
+  refreshing,
   reports,
   onDownloadReport,
   downloading,
@@ -20,25 +22,30 @@ const ReportsView = ({
 
   return (
     <div className="core-shell animate-in fade-in zoom-in-95 duration-300">
-      <div className="core-panel">
-        <h1 className="flex items-center gap-2 text-xl font-black text-[var(--text-primary)] md:text-2xl">
-          <FileText size={24} className="text-[var(--brand-primary)]" />
-          {title}
-        </h1>
-        <p className="mt-1 text-sm text-[var(--text-muted)]">{subtitle}</p>
-      </div>
+      <div className="relative">
+        {refreshing ? (
+          <SectionRefreshOverlay rounded="rounded-2xl" label="Refreshing reports..." />
+        ) : null}
+        <div className="core-panel">
+          <h1 className="flex items-center gap-2 text-xl font-black text-[var(--text-primary)] md:text-2xl">
+            <FileText size={24} className="text-[var(--brand-primary)]" />
+            {title}
+          </h1>
+          <p className="mt-1 text-sm text-[var(--text-muted)]">{subtitle}</p>
+        </div>
 
-      <div className="space-y-4">
-        {reports.map((report: ReportDefinition, index: number) => (
-          <ReportCard
-            key={report.id}
-            report={report}
-            index={index}
-            onDownload={onDownloadReport}
-            downloading={downloading}
-            canDownload={canDownload}
-          />
-        ))}
+        <div className="space-y-4">
+          {reports.map((report: ReportDefinition, index: number) => (
+            <ReportCard
+              key={report.id}
+              report={report}
+              index={index}
+              onDownload={onDownloadReport}
+              downloading={downloading}
+              canDownload={canDownload}
+            />
+          ))}
+        </div>
       </div>
 
       <AboutExecutiveReportsNote />

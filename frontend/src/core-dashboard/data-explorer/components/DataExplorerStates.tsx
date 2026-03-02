@@ -5,7 +5,7 @@ import type { DataExplorerStatesProps } from "../types";
 
 const DataExplorerStates = ({ type }: DataExplorerStatesProps) => {
   // Brand color constant
-  const BRAND_EMERALD = "#007758";
+  const BRAND_EMERALD = "#23a282";
 
   if (type === "loading") {
     return (
@@ -19,7 +19,7 @@ const DataExplorerStates = ({ type }: DataExplorerStatesProps) => {
           className="relative z-10 flex flex-col items-center"
         >
           <div className="p-5 bg-emerald-50 rounded-full mb-4 shadow-sm border border-emerald-100/50">
-            <Loader2 className="text-[#007758] animate-spin" size={40} strokeWidth={1.5} />
+            <Loader2 className="text-[#23a282] animate-spin" size={40} strokeWidth={1.5} />
           </div>
           <h3 className="text-slate-800 font-black text-lg tracking-tight mb-1">Retrieving Intelligence</h3>
           <p className="text-slate-400 text-sm font-medium">Syncing your cloud infrastructure data...</p>
@@ -37,7 +37,7 @@ const DataExplorerStates = ({ type }: DataExplorerStatesProps) => {
       >
         <div className="p-6 bg-white rounded-[2rem] shadow-sm border border-slate-200 mb-6 relative">
           <Inbox className="text-slate-200" size={48} strokeWidth={1} />
-          <div className="absolute -top-2 -right-2 p-2 bg-emerald-50 rounded-lg border border-emerald-100 shadow-sm text-[#007758]">
+          <div className="absolute -top-2 -right-2 p-2 bg-emerald-50 rounded-lg border border-emerald-100 shadow-sm text-[#23a282]">
             <Sparkles size={16} />
           </div>
         </div>

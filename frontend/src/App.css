@@ -2,13 +2,13 @@
 
 /* Define light green brand variables */
 :root {
-  --color-primary: #007758;
-  --color-primary-hover: #00b889;
+  --color-primary: #23a282;
+  --color-primary-hover: #23a282;
   --color-background: #f2f3f2;
   --color-surface: #ffffff;
   --color-text-primary: #1c2321;
   --color-text-secondary: #4b5a55;
-  --color-success: #4caf50;
+  --color-success: #23a282;
   --color-border: #dde3e0;
 }
 

@@ -8,19 +8,12 @@ interface AllocationOverviewSectionProps {
   contextLabel?: string;
 }
 
-const levelClass: Record<AllocationOverviewModel['allocationConfidence']['level'], string> = {
-  high: 'border-emerald-200 bg-emerald-50 text-emerald-700',
-  medium: 'border-amber-200 bg-amber-50 text-amber-700',
-  low: 'border-rose-200 bg-rose-50 text-rose-700',
-};
-
 type InsightKey =
   | 'total_cost'
   | 'allocated_pct'
   | 'unallocated_pct'
   | 'shared_pool'
-  | 'allocation_method'
-  | 'allocation_confidence';
+  | 'allocation_method';
 
 export default function AllocationOverviewSection({ model, contextLabel }: AllocationOverviewSectionProps) {
   const [activeInsight, setActiveInsight] = useState<InsightKey | null>(null);
@@ -92,17 +85,7 @@ export default function AllocationOverviewSection({ model, contextLabel }: Alloc
       };
     }
 
-    return {
-      title: 'Allocation Confidence',
-      value: `${formatPercent(model.allocationConfidence.score)} (${model.allocationConfidence.level})`,
-      summary: 'Composite trust score for allocation quality and reporting reliability.',
-      points: [
-        `Tag coverage factor: ${formatPercent(model.allocationConfidence.factors.tagCoveragePct)}`,
-        `Shared pool ratio factor: ${formatPercent(model.allocationConfidence.factors.sharedPoolRatioPct)}`,
-        `Rule completeness factor: ${formatPercent(model.allocationConfidence.factors.ruleCompletenessPct)}`,
-        `Data consistency factor: ${formatPercent(model.allocationConfidence.factors.dataConsistencyPct)}`,
-      ],
-    };
+    return null;
   }, [activeInsight, model]);
 
   const cardClass = (key: InsightKey) =>
@@ -120,7 +103,7 @@ export default function AllocationOverviewSection({ model, contextLabel }: Alloc
   return (
     <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
       <h3 className="mb-3 text-sm font-black uppercase tracking-wider text-slate-800">Allocation Overview</h3>
-      <div className="grid grid-cols-1 gap-3 md:grid-cols-3 xl:grid-cols-6">
+      <div className="grid grid-cols-1 gap-3 md:grid-cols-3 xl:grid-cols-5">
         <button type="button" className={cardClass('total_cost')} onClick={() => toggleInsight('total_cost')}>
           <p className="text-[10px] font-black uppercase tracking-wider text-slate-500">Total Cloud Cost</p>
           <p className="mt-1 text-xl font-black text-slate-900">{formatCurrency(model.totalCloudCost)}</p>
@@ -145,18 +128,6 @@ export default function AllocationOverviewSection({ model, contextLabel }: Alloc
           <p className="text-[10px] font-black uppercase tracking-wider text-slate-500">Allocation Method</p>
           <p className="mt-1 text-sm font-black uppercase tracking-wider text-slate-800">
             {model.allocationMethod.replaceAll('_', ' ')}
-          </p>
-          <p className="mt-1 text-[10px] font-semibold text-slate-500">Click for insight</p>
-        </button>
-        <button
-          type="button"
-          className={cardClass('allocation_confidence')}
-          onClick={() => toggleInsight('allocation_confidence')}
-        >
-          <p className="text-[10px] font-black uppercase tracking-wider text-slate-500">Allocation Confidence</p>
-          <p className="mt-1 text-xl font-black text-slate-900">{formatPercent(model.allocationConfidence.score)}</p>
-          <p className={['mt-2 inline-flex rounded-full border px-2 py-0.5 text-[10px] font-black uppercase tracking-wider', levelClass[model.allocationConfidence.level]].join(' ')}>
-            {model.allocationConfidence.level}
           </p>
           <p className="mt-1 text-[10px] font-semibold text-slate-500">Click for insight</p>
         </button>

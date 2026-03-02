@@ -162,6 +162,7 @@ export function useAllocationUnitEconomicsData({
   controls,
 }: UseAllocationUnitEconomicsDataInput) {
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [model, setModel] = useState<AllocationUnitEconomicsViewModel>(DEFAULT_VIEW_MODEL);
 
@@ -184,13 +185,15 @@ export function useAllocationUnitEconomicsData({
 
     if (!api || !caps || !canUnitEconomics) {
       setLoading(false);
+      setRefreshing(false);
       setError(null);
       setModel(DEFAULT_VIEW_MODEL);
       return;
     }
 
     let mounted = true;
-    setLoading(true);
+    setRefreshing(!loading);
+    if (loading) setLoading(true);
     setError(null);
 
     const run = async () => {
@@ -212,7 +215,10 @@ export function useAllocationUnitEconomicsData({
         setError('Failed to load Allocation & Unit Economics data.');
         setModel(DEFAULT_VIEW_MODEL);
       } finally {
-        if (mounted) setLoading(false);
+        if (mounted) {
+          setLoading(false);
+          setRefreshing(false);
+        }
       }
     };
 
@@ -223,6 +229,6 @@ export function useAllocationUnitEconomicsData({
     };
   }, [api, caps, requestParams]);
 
-  return { loading, error, model };
+  return { loading, refreshing, error, model };
 }
 

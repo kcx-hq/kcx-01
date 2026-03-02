@@ -14,7 +14,7 @@ const StatCard = ({ icon: Icon, label, value, locked }: StatCardProps) => {
 
       <div className={`flex items-center gap-3 ${locked ? "opacity-50" : ""}`}>
         <div className="p-2 rounded-lg bg-white/5 border border-white/10">
-          <Icon size={16} className="text-[#007758]" />
+          <Icon size={16} className="text-[#23a282]" />
         </div>
         <div className="min-w-0">
           <div className="text-[10px] uppercase tracking-widest text-gray-500 font-bold truncate">

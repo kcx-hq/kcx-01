@@ -57,7 +57,7 @@ const CostAnalysisView = ({
         label: "Total Spend",
         value: kpis.totalSpend ?? 0,
         icon: DollarSign,
-        iconColor: "text-[#007758]",
+        iconColor: "text-[#23a282]",
         premium: false,
         onClick: () => setActiveModal("breakdown"),
       },
@@ -139,7 +139,7 @@ const CostAnalysisView = ({
               <div className="flex items-center gap-2 shrink-0">
                 <button
                   onClick={() => setActiveModal("breakdown")}
-                  className="px-4 py-2 rounded-xl bg-[#007758]/10 hover:bg-[#007758]/20 border border-[#007758]/30 text-[#007758] text-xs font-extrabold transition flex items-center gap-2"
+                  className="px-4 py-2 rounded-xl bg-[#23a282]/10 hover:bg-[#23a282]/20 border border-[#23a282]/30 text-[#23a282] text-xs font-extrabold transition flex items-center gap-2"
                 >
                   <Info size={14} />
                   View Breakdown
@@ -271,7 +271,7 @@ const CostAnalysisView = ({
                 <div className="text-white font-bold">Insights</div>
                 <button
                   onClick={() => setActiveModal("trend")}
-                  className="text-xs text-[#007758] hover:underline"
+                  className="text-xs text-[#23a282] hover:underline"
                 >
                   Details
                 </button>
@@ -308,7 +308,7 @@ const CostAnalysisView = ({
 
                 <button
                   onClick={() => setActiveModal("breakdown")}
-                  className="w-full px-4 py-2 rounded-xl bg-[#007758]/10 hover:bg-[#007758]/20 border border-[#007758]/30 text-[#007758] text-xs font-extrabold transition"
+                  className="w-full px-4 py-2 rounded-xl bg-[#23a282]/10 hover:bg-[#23a282]/20 border border-[#23a282]/30 text-[#23a282] text-xs font-extrabold transition"
                 >
                   Open Full Breakdown
                 </button>

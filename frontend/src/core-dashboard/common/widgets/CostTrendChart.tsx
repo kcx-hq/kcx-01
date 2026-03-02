@@ -12,7 +12,7 @@ import {
 import { TrendingUp, ChevronDown, Activity } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
-const BRAND_COLOR = "#007758";
+const BRAND_COLOR = "#23a282";
 const TOOLTIP_BG = "#192630"; // Matches vertical navbar / service chart tooltip
 
 interface CostTrendDataPoint {
@@ -89,7 +89,7 @@ const CostTrendChart = ({
       {/* Header Section */}
       <div className="flex justify-between items-start mb-10 relative z-[60]">
         <div className="flex items-start gap-4">
-          <div className="p-3.5 bg-emerald-50 rounded-2xl text-[#007758] border border-emerald-100/50 shadow-inner">
+          <div className="p-3.5 bg-emerald-50 rounded-2xl text-[#23a282] border border-emerald-100/50 shadow-inner">
             <TrendingUp size={24} />
           </div>
           <div>
@@ -235,7 +235,7 @@ const CostTrendChart = ({
       {/* Legend / Footer */}
       <div className="flex items-center justify-center gap-8 mt-6 pt-6 border-t border-slate-50">
          <div className="flex items-center gap-2">
-            <div className="w-3 h-3 rounded-full bg-[#007758] shadow-sm shadow-emerald-200"></div>
+            <div className="w-3 h-3 rounded-full bg-[#23a282] shadow-sm shadow-emerald-200"></div>
             <span className="text-[10px] font-black text-slate-500 uppercase tracking-[0.12em]">Actual Spend</span>
          </div>
          {avgDailySpend > 0 && (

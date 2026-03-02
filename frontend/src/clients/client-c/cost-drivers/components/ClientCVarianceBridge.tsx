@@ -41,7 +41,7 @@ export function ClientCVarianceBridge({ overallStats }: ClientCVarianceBridgePro
 
   const getBarColor = (type: string, value: number): string => {
     if (type === 'change') {
-      return value >= 0 ? '#ef4444' : '#10b981';
+      return value >= 0 ? '#ef4444' : '#23a282';
     }
     return '#3b82f6';
   };

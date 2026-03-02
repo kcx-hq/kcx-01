@@ -1,7 +1,6 @@
 import React from 'react';
 import type { AllocationUnitEconomicsViewModel } from '../../types';
 import { formatNumber, formatPercent } from '../../utils/format';
-import DenominatorGateBadge from './DenominatorGateBadge';
 
 interface TargetGapCardProps {
   model: AllocationUnitEconomicsViewModel;
@@ -15,11 +14,6 @@ export default function TargetGapCard({ model }: TargetGapCardProps) {
     <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
       <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
         <h3 className="text-sm font-black uppercase tracking-wider text-slate-800">Target Gap</h3>
-        <DenominatorGateBadge
-          status={model.denominatorGate.status}
-          reasons={model.denominatorGate.reasons}
-          metric={model.denominatorGate.metric}
-        />
       </div>
 
       {hasTarget ? (
@@ -46,10 +40,6 @@ export default function TargetGapCard({ model }: TargetGapCardProps) {
           No target configured for selected metric and scope.
         </div>
       )}
-
-      {model.denominatorGate.status !== 'pass' ? (
-        <p className="mt-2 text-xs font-semibold text-amber-700">Top driver hint is limited due to denominator gate status.</p>
-      ) : null}
     </section>
   );
 }

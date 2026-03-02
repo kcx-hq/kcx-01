@@ -70,17 +70,17 @@ const HeaderBar = ({
     <div className="px-5 py-4 border-b border-white/10 bg-gradient-to-b from-[#171820] to-[#121319] relative">
       {/* subtle filtering indicator */}
       {isFiltering && !loading && (
-        <div className="absolute top-4 right-5 z-40 flex items-center gap-2 px-3 py-1.5 bg-[#007758]/15 border border-[#007758]/25 rounded-xl backdrop-blur-sm">
-          <Loader2 className="text-[#007758] animate-spin" size={14} />
-          <span className="text-[#007758] text-xs font-semibold">Filtering...</span>
+        <div className="absolute top-4 right-5 z-40 flex items-center gap-2 px-3 py-1.5 bg-[#23a282]/15 border border-[#23a282]/25 rounded-xl backdrop-blur-sm">
+          <Loader2 className="text-[#23a282] animate-spin" size={14} />
+          <span className="text-[#23a282] text-xs font-semibold">Filtering...</span>
         </div>
       )}
 
       <div className="flex items-start justify-between gap-4">
         <div className="min-w-0">
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-xl bg-[#007758]/10 border border-[#007758]/20">
-              <TableIcon size={18} className="text-[#007758]" />
+            <div className="p-2 rounded-xl bg-[#23a282]/10 border border-[#23a282]/20">
+              <TableIcon size={18} className="text-[#23a282]" />
             </div>
             <div className="min-w-0">
               <div className="text-white font-extrabold text-lg truncate">Data Explorer</div>
@@ -94,7 +94,7 @@ const HeaderBar = ({
             <button
               onClick={() => setViewMode("table")}
               className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-2 transition ${
-                viewMode === "table" ? "bg-[#007758] text-white" : "text-gray-400 hover:text-white"
+                viewMode === "table" ? "bg-[#23a282] text-white" : "text-gray-400 hover:text-white"
               }`}
             >
               <TableIcon size={14} /> List
@@ -102,7 +102,7 @@ const HeaderBar = ({
             <button
               onClick={() => setViewMode("pivot")}
               className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-2 transition ${
-                viewMode === "pivot" ? "bg-[#007758] text-white" : "text-gray-400 hover:text-white"
+                viewMode === "pivot" ? "bg-[#23a282] text-white" : "text-gray-400 hover:text-white"
               }`}
             >
               <PieChart size={14} /> Group
@@ -111,7 +111,7 @@ const HeaderBar = ({
 
           <button
             onClick={onExportCsv}
-            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[#007758]/10 hover:bg-[#007758]/20 border border-[#007758]/30 text-[#007758] text-xs font-extrabold transition"
+            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[#23a282]/10 hover:bg-[#23a282]/20 border border-[#23a282]/30 text-[#23a282] text-xs font-extrabold transition"
           >
             <Download size={14} />
             Export CSV
@@ -137,7 +137,7 @@ const HeaderBar = ({
               placeholder="Search columns..."
               value={searchTerm}
               onChange={(e: ExplorerInputChange) => setSearchTerm(e.target.value)}
-              className="pl-9 pr-3 py-2 bg-black/40 border border-white/10 rounded-xl text-xs text-white focus:outline-none focus:border-[#007758] w-56"
+              className="pl-9 pr-3 py-2 bg-black/40 border border-white/10 rounded-xl text-xs text-white focus:outline-none focus:border-[#23a282] w-56"
             />
           </div>
 
@@ -153,7 +153,7 @@ const HeaderBar = ({
             onClick={() => setShowDataBars((s: boolean) => !s)}
             className={`px-3 py-2 rounded-xl border text-xs font-bold transition flex items-center gap-2 ${
               showDataBars
-                ? "bg-[#007758]/10 border-[#007758]/30 text-[#007758]"
+                ? "bg-[#23a282]/10 border-[#23a282]/30 text-[#23a282]"
                 : "bg-white/5 border-white/10 text-gray-300 hover:bg-white/10"
             }`}
           >
@@ -165,7 +165,7 @@ const HeaderBar = ({
             onClick={() => setShowFilterRow((s: boolean) => !s)}
             className={`px-3 py-2 rounded-xl border text-xs font-bold transition flex items-center gap-2 ${
               showFilterRow
-                ? "bg-[#007758] text-white border-[#007758]"
+                ? "bg-[#23a282] text-white border-[#23a282]"
                 : "bg-white/5 border-white/10 text-gray-300 hover:bg-white/10"
             }`}
           >
@@ -214,7 +214,7 @@ const HeaderBar = ({
               <select
                 value={groupByCol || ""}
                 onChange={(e: ExplorerSelectChange) => setGroupByCol(e.target.value)}
-                className="bg-[#0f0f11] border border-white/10 rounded-xl px-3 py-2 text-xs text-gray-300 focus:border-[#007758] outline-none"
+                className="bg-[#0f0f11] border border-white/10 rounded-xl px-3 py-2 text-xs text-gray-300 focus:border-[#23a282] outline-none"
                 style={{ colorScheme: "dark" }}
               >
                 <option value="" disabled>
@@ -241,7 +241,7 @@ const HeaderBar = ({
             <button
               key={key}
               onClick={() => removeFilter(key)}
-              className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[#007758]/15 border border-[#007758]/25 text-[#007758] text-[10px] font-bold hover:bg-[#007758]/25 transition"
+              className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[#23a282]/15 border border-[#23a282]/25 text-[#23a282] text-[10px] font-bold hover:bg-[#23a282]/25 transition"
               title="Remove filter"
             >
               {key}: {String(val)}

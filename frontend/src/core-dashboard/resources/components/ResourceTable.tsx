@@ -57,7 +57,7 @@ const ResourceTableView = ({
                 <td className="px-4 py-3 md:px-6">
                   <Sparkline
                     data={item.trend}
-                    color={item.status === "Spiking" ? "#b45309" : "#007758"}
+                    color={item.status === "Spiking" ? "#b45309" : "#23a282"}
                   />
                 </td>
                 <td className="px-4 py-3 text-center md:px-6">

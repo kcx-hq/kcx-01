@@ -408,7 +408,7 @@ const ValueCard = ({ icon: Icon, title, desc, badgeBg, iconColor, details }: Val
                     transition={{ delay: index * 0.1 + 0.2 }}
                     className="flex items-start gap-3 text-sm text-[var(--text-secondary)]"
                   >
-                    <div className="mt-1.5 w-1.5 h-1.5 rounded-full bg-[var(--brand-primary)] flex-shrink-0 shadow-[0_0_8px_rgba(0,198,147,0.35)]" />
+                    <div className="mt-1.5 w-1.5 h-1.5 rounded-full bg-[var(--brand-primary)] flex-shrink-0 shadow-[0_0_8px_rgba(35,162,130,0.35)]" />
                     {item}
                   </motion.li>
                 ))}

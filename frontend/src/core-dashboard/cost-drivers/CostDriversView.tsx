@@ -10,6 +10,7 @@ import {
   UnexplainedVarianceSection,
   WaterfallSection,
 } from './components';
+import { SectionLoading, SectionRefreshOverlay } from '../common/SectionStates';
 import type { CostDriversViewProps } from './types';
 
 export function CostDriversView({
@@ -44,11 +45,7 @@ export function CostDriversView({
   if (!api || !caps || !caps.modules?.costDrivers?.enabled) return null;
 
   if (loading) {
-    return (
-      <div className="rounded-2xl border border-slate-200 bg-white px-4 py-10 text-center text-sm font-semibold text-slate-600">
-        Building cost driver variance...
-      </div>
-    );
+    return <SectionLoading label="Analyzing Cost Drivers..." />;
   }
 
   return (
@@ -61,34 +58,38 @@ export function CostDriversView({
 
       {errorMessage ? <StatusBanner variant="error" message={errorMessage} /> : null}
 
-      {isRefreshing ? <StatusBanner variant="refresh" message="Refreshing variance model..." /> : null}
+      <div className="relative space-y-4">
+        {isRefreshing ? (
+          <SectionRefreshOverlay rounded="rounded-2xl" label="Refreshing cost drivers..." />
+        ) : null}
 
-      <KpiStripSection cards={kpiStrip} activeKpiId={activeKpiId} onToggleKpi={onToggleKpi} />
+        <KpiStripSection cards={kpiStrip} activeKpiId={activeKpiId} onToggleKpi={onToggleKpi} />
 
-      <div className="min-w-0">
-        <WaterfallSection waterfall={waterfall} />
-      </div>
+        <div className="min-w-0">
+          <WaterfallSection waterfall={waterfall} />
+        </div>
 
-      <DecompositionSection
-        decomposition={decomposition}
-        topDrivers={topDrivers}
-        activeTab={activeTab}
-        onTabChange={onTabChange}
-        onOpenDetail={onOpenDriver}
-      />
-
-      <RateVsUsageSection rateVsUsage={rateVsUsage} onOpenDetail={onOpenDriver} />
-
-      <div className="min-w-0">
-        <UnexplainedVarianceSection
-          unexplainedVariance={unexplainedVariance}
-          attributionConfidence={attributionConfidence}
-          runMeta={runMeta}
-          trust={trust}
+        <DecompositionSection
+          decomposition={decomposition}
+          topDrivers={topDrivers}
+          activeTab={activeTab}
+          onTabChange={onTabChange}
+          onOpenDetail={onOpenDriver}
         />
-      </div>
 
-      <ExecutiveInsightsSection executiveInsights={executiveInsights} onOpenDetail={onOpenDriver} />
+        <RateVsUsageSection rateVsUsage={rateVsUsage} onOpenDetail={onOpenDriver} />
+
+        <div className="min-w-0">
+          <UnexplainedVarianceSection
+            unexplainedVariance={unexplainedVariance}
+            attributionConfidence={attributionConfidence}
+            runMeta={runMeta}
+            trust={trust}
+          />
+        </div>
+
+        <ExecutiveInsightsSection executiveInsights={executiveInsights} onOpenDetail={onOpenDriver} />
+      </div>
 
       <DriverDetailModal
         open={Boolean(selectedDriver)}

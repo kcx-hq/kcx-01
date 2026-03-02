@@ -44,7 +44,7 @@ const UnitEconomicsContent = ({ filters = {}, api, caps }: UnitEconomicsProps) =
 
   if (loading) {
     return (
-      <div className="flex h-96 items-center justify-center text-[#007758]">
+      <div className="flex h-96 items-center justify-center text-[#23a282]">
         <Loader2 className="animate-spin" size={48} />
       </div>
     );

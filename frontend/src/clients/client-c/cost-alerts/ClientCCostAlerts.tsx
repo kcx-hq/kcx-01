@@ -261,7 +261,7 @@ const ClientCCostAlerts = ({ api, caps }: ClientCCostAlertsProps) => {
   // Log the final extracted data for debugging
   console.log('Final extracted data:', extractedData);
 
-  const COLORS = ['#007758', '#48bb78', '#f56565', '#ecc94b', '#4fd1c5', '#059669', '#ed8936', '#68d391', '#4c77b6', '#d53f8c'];
+  const COLORS = ['#23a282', '#23a282', '#f56565', '#ecc94b', '#4fd1c5', '#23a282', '#ed8936', '#68d391', '#4c77b6', '#d53f8c'];
 
   return (
     <div className="animate-in fade-in zoom-in-95 duration-300 flex flex-col h-full">
@@ -282,8 +282,8 @@ const ClientCCostAlerts = ({ api, caps }: ClientCCostAlertsProps) => {
                     {extractedData.alerts.alerts?.length || 0}
                   </p>
                 </div>
-                <div className="p-3 bg-[#007758]/20 rounded-lg">
-                  <Bell className="text-[#007758]" size={24} />
+                <div className="p-3 bg-[#23a282]/20 rounded-lg">
+                  <Bell className="text-[#23a282]" size={24} />
                 </div>
               </div>
               <p className="text-[10px] text-gray-500 mt-2">Active cost alerts</p>
@@ -340,7 +340,7 @@ const ClientCCostAlerts = ({ api, caps }: ClientCCostAlertsProps) => {
             {/* Alert Distribution */}
             <div className="bg-[#1a1b20]/60 backdrop-blur-md border border-white/5 rounded-2xl p-5 shadow-xl">
               <div className="flex items-center gap-2 mb-4">
-                <PieChartIcon size={16} className="text-[#007758]" />
+                <PieChartIcon size={16} className="text-[#23a282]" />
                 <h3 className="text-sm font-bold text-white">Alert Distribution by Severity</h3>
               </div>
               <div className="h-80">
@@ -394,7 +394,7 @@ const ClientCCostAlerts = ({ api, caps }: ClientCCostAlertsProps) => {
             {/* Budget Status */}
             <div className="bg-[#1a1b20]/60 backdrop-blur-md border border-white/5 rounded-2xl p-5 shadow-xl">
               <div className="flex items-center gap-2 mb-4">
-                <DollarSign size={16} className="text-[#007758]" />
+                <DollarSign size={16} className="text-[#23a282]" />
                 <h3 className="text-sm font-bold text-white">Budget Status</h3>
               </div>
               <div className="h-80">
@@ -431,7 +431,7 @@ const ClientCCostAlerts = ({ api, caps }: ClientCCostAlertsProps) => {
                     <Bar 
                       dataKey={(budget: BudgetItem) => Math.min(budget.percentageUsed || 0, 100)} 
                       name="Used" 
-                      fill="#007758" 
+                      fill="#23a282" 
                       stackId="a" 
                     />
                     <Bar 
@@ -451,7 +451,7 @@ const ClientCCostAlerts = ({ api, caps }: ClientCCostAlertsProps) => {
             {/* Recent Alerts */}
             <div className="bg-[#1a1b20]/60 backdrop-blur-md border border-white/5 rounded-2xl p-5 shadow-xl">
               <div className="flex items-center gap-2 mb-4">
-                <AlertTriangle size={16} className="text-[#007758]" />
+                <AlertTriangle size={16} className="text-[#23a282]" />
                 <h3 className="text-sm font-bold text-white">Recent Alerts</h3>
               </div>
               <div className="overflow-x-auto">
@@ -496,7 +496,7 @@ const ClientCCostAlerts = ({ api, caps }: ClientCCostAlertsProps) => {
             {/* Budget Details */}
             <div className="bg-[#1a1b20]/60 backdrop-blur-md border border-white/5 rounded-2xl p-5 shadow-xl">
               <div className="flex items-center gap-2 mb-4">
-                <DollarSign size={16} className="text-[#007758]" />
+                <DollarSign size={16} className="text-[#23a282]" />
                 <h3 className="text-sm font-bold text-white">Budget Details</h3>
               </div>
               <div className="overflow-x-auto">

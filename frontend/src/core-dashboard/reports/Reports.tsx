@@ -21,7 +21,7 @@ const Reports = ({ filters = {}, api, caps }: ReportsProps) => {
 
   const [downloading, setDownloading] = useState(false);
 
-  const { fetchingData, reportData, optimizationData } = useReportsData({
+  const { fetchingData, refreshing, reportData, optimizationData } = useReportsData({
     api,
     caps,
     filters,
@@ -116,6 +116,7 @@ const Reports = ({ filters = {}, api, caps }: ReportsProps) => {
   return (
     <ReportsView
       fetchingData={fetchingData}
+      refreshing={refreshing}
       reports={reports}
       onDownloadReport={onDownloadReport}
       downloading={downloading}

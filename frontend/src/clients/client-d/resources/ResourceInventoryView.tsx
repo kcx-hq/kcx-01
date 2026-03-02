@@ -95,7 +95,7 @@ const ResourceInventoryView = ({
 }: ResourceInventoryViewProps) => {
   if (loading) {
     return (
-      <div className="flex h-96 items-center justify-center text-[#007758]">
+      <div className="flex h-96 items-center justify-center text-[#23a282]">
         <Loader2 className="animate-spin" size={48} />
       </div>
     );
@@ -130,8 +130,8 @@ const ResourceInventoryView = ({
           <div className="flex items-start justify-between gap-4">
             <div className="min-w-0">
               <div className="flex items-center gap-3">
-                <div className="h-10 w-10 rounded-2xl bg-[#007758]/10 border border-[#007758]/25 flex items-center justify-center">
-                  <Box className="text-[#007758]" />
+                <div className="h-10 w-10 rounded-2xl bg-[#23a282]/10 border border-[#23a282]/25 flex items-center justify-center">
+                  <Box className="text-[#23a282]" />
                 </div>
                 <div className="min-w-0">
                   <h1 className="text-2xl font-extrabold tracking-tight">
@@ -146,7 +146,7 @@ const ResourceInventoryView = ({
 
             <button
               onClick={onExportCSV}
-              className="shrink-0 flex items-center gap-2 px-4 py-2 rounded-2xl bg-[#007758]/10 hover:bg-[#007758]/20 border border-[#007758]/30 text-[#86efac] font-bold text-xs transition"
+              className="shrink-0 flex items-center gap-2 px-4 py-2 rounded-2xl bg-[#23a282]/10 hover:bg-[#23a282]/20 border border-[#23a282]/30 text-[#86efac] font-bold text-xs transition"
             >
               <Download size={14} /> CSV
             </button>
@@ -286,7 +286,7 @@ const ResourceInventoryView = ({
                       className={[
                         "relative px-4 py-2 rounded-2xl text-xs font-extrabold transition",
                         isActive
-                          ? "bg-[#007758] text-white shadow-[0_0_18px_rgba(0,119,88,0.35)]"
+                          ? "bg-[#23a282] text-white shadow-[0_0_18px_rgba(35,162,130,0.35)]"
                           : "bg-white/5 text-gray-300 hover:bg-white/10",
                       ].join(" ")}
                     >
@@ -338,7 +338,7 @@ const ResourceInventoryView = ({
                               setSearchTerm(e.target.value)
                             }
                             placeholder="Search resources..."
-                            className="w-full pl-9 pr-4 py-2 bg-black/30 border border-white/10 rounded-2xl text-xs text-white focus:border-[#007758] outline-none"
+                            className="w-full pl-9 pr-4 py-2 bg-black/30 border border-white/10 rounded-2xl text-xs text-white focus:border-[#23a282] outline-none"
                           />
                         </div>
                       )}

@@ -83,12 +83,12 @@ const formatDate = (dateStr: string | undefined) => {
   return `${date.toLocaleString("default", { month: "short" })} ${date.getDate()}`;
 };
 
-const BRAND_EMERALD = "#007758";
+const BRAND_EMERALD = "#23a282";
 
 // --- REDESIGNED COMPACT KPI ---
 const CompactKPI = ({ title, value, icon: Icon, tone = "brand", isActive, onClick, trend }: CompactKPIProps) => {
   const toneMap: Record<KpiTone, { bg: string; text: string; border: string }> = {
-    brand: { bg: "bg-emerald-50", text: "text-[#007758]", border: "border-emerald-100" },
+    brand: { bg: "bg-emerald-50", text: "text-[#23a282]", border: "border-emerald-100" },
     cyan: { bg: "bg-blue-50", text: "text-blue-600", border: "border-blue-100" },
     rose: { bg: "bg-rose-50", text: "text-rose-600", border: "border-rose-100" },
   };
@@ -120,7 +120,7 @@ const CompactKPI = ({ title, value, icon: Icon, tone = "brand", isActive, onClic
       </div>
 
       {isActive && (
-        <motion.div layoutId="active-dot" className="w-2 h-2 rounded-full bg-[#007758]" />
+        <motion.div layoutId="active-dot" className="w-2 h-2 rounded-full bg-[#23a282]" />
       )}
     </button>
   );
@@ -180,7 +180,7 @@ const CostPredictability = ({ chartData = [], anomalies = [], kpis = {} }: CostP
           <div>
             <div className="flex items-center gap-3">
                <div className="p-2 bg-emerald-50 rounded-lg">
-                  {activeView === "score" && <Target size={18} className="text-[#007758]" />}
+                  {activeView === "score" && <Target size={18} className="text-[#23a282]" />}
                   {activeView === "forecast" && <TrendingUp size={18} className="text-blue-600" />}
                   {activeView === "variance" && <AlertCircle size={18} className="text-rose-600" />}
                </div>
@@ -199,7 +199,7 @@ const CostPredictability = ({ chartData = [], anomalies = [], kpis = {} }: CostP
 
           <div className="flex gap-6 px-5 py-2.5 bg-slate-50 rounded-2xl border border-slate-100">
             <div className="flex items-center gap-2 text-[10px] font-black uppercase text-slate-500 tracking-widest">
-              <div className="w-2 h-2 rounded-full bg-[#007758]" /> Actual
+              <div className="w-2 h-2 rounded-full bg-[#23a282]" /> Actual
             </div>
             <div className="flex items-center gap-2 text-[10px] font-black uppercase text-slate-500 tracking-widest">
               <div className="w-2 h-2 rounded-full border-2 border-blue-400" /> Forecast
@@ -315,7 +315,7 @@ const CostPredictability = ({ chartData = [], anomalies = [], kpis = {} }: CostP
 
       {/* --- FOOTER INSIGHTS --- */}
       <div className="shrink-0 flex items-center gap-4 p-5 rounded-[1.5rem] bg-emerald-50/50 border border-emerald-100 shadow-sm transition-all hover:bg-emerald-50">
-        <div className="p-3 rounded-2xl bg-white border border-emerald-100 shadow-sm text-[#007758]">
+        <div className="p-3 rounded-2xl bg-white border border-emerald-100 shadow-sm text-[#23a282]">
           <Sparkles size={18} className="animate-pulse" />
         </div>
         <div className="flex-1">

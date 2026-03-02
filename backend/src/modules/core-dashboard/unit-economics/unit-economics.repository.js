@@ -70,6 +70,8 @@ export const unitEconomicsRepository = {
         "chargecategory",
         "consumedquantity",
         "consumedunit",
+        "pricingquantity",
+        "pricingunit",
         "effectivecost",
         "billedcost",
         "contractedcost",

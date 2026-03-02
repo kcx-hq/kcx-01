@@ -3,7 +3,7 @@ import { X, Copy, Info, CheckCircle2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import type { DetailPanelProps, ExplorerCell } from "../types";
 
-const BRAND_EMERALD = "#007758";
+const BRAND_EMERALD = "#23a282";
 
 const DetailPanel = ({ selectedRow, setSelectedRow, allColumns }: DetailPanelProps) => {
   const [copiedKey, setCopiedKey] = React.useState<string | null>(null);
@@ -43,7 +43,7 @@ const DetailPanel = ({ selectedRow, setSelectedRow, allColumns }: DetailPanelPro
               <div className="relative z-10">
                 <div className="flex items-center gap-3 mb-1">
                     <div className="p-2 bg-emerald-100 rounded-xl">
-                        <Info size={18} className="text-[#007758]" />
+                        <Info size={18} className="text-[#23a282]" />
                     </div>
                     <h3 className="text-slate-900 font-black text-xl tracking-tight leading-none">
                         Inspect Record
@@ -121,7 +121,7 @@ const DetailPanel = ({ selectedRow, setSelectedRow, allColumns }: DetailPanelPro
                  </button>
                  <button 
                     onClick={() => handleCopy("all", JSON.stringify(selectedRow, null, 2))}
-                    className="flex-1 py-3 bg-[#007758] text-white rounded-2xl text-xs font-black hover:opacity-90 transition-all shadow-lg shadow-emerald-200/50 active:scale-95 flex items-center justify-center gap-2"
+                    className="flex-1 py-3 bg-[#23a282] text-white rounded-2xl text-xs font-black hover:opacity-90 transition-all shadow-lg shadow-emerald-200/50 active:scale-95 flex items-center justify-center gap-2"
                 >
                     <Copy size={14} /> Copy Object
                  </button>

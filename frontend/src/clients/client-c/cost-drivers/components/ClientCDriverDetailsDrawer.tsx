@@ -72,7 +72,7 @@ export function ClientCDriverDetailsDrawer({
           <div className="p-6 overflow-y-auto max-h-[calc(90vh-120px)]">
             {loadingDetails ? (
               <div className="flex items-center justify-center py-12">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#007758]"></div>
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#23a282]"></div>
                 <span className="ml-3 text-gray-400">Loading details...</span>
               </div>
             ) : (
@@ -81,7 +81,7 @@ export function ClientCDriverDetailsDrawer({
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div className="bg-[#0f0f11] p-4 rounded-lg border border-white/5">
                     <div className="flex items-center gap-2 mb-2">
-                      <DollarSign size={16} className="text-[#007758]" />
+                      <DollarSign size={16} className="text-[#23a282]" />
                       <span className="text-xs font-bold text-gray-400 uppercase">Absolute Change</span>
                     </div>
                     <div className={`text-xl font-bold ${
@@ -94,7 +94,7 @@ export function ClientCDriverDetailsDrawer({
 
                   <div className="bg-[#0f0f11] p-4 rounded-lg border border-white/5">
                     <div className="flex items-center gap-2 mb-2">
-                      <Percent size={16} className="text-[#007758]" />
+                      <Percent size={16} className="text-[#23a282]" />
                       <span className="text-xs font-bold text-gray-400 uppercase">Percentage Change</span>
                     </div>
                     <div className={`text-xl font-bold ${
@@ -107,7 +107,7 @@ export function ClientCDriverDetailsDrawer({
 
                   <div className="bg-[#0f0f11] p-4 rounded-lg border border-white/5">
                     <div className="flex items-center gap-2 mb-2">
-                      <Calendar size={16} className="text-[#007758]" />
+                      <Calendar size={16} className="text-[#23a282]" />
                       <span className="text-xs font-bold text-gray-400 uppercase">Period</span>
                     </div>
                     <div className="text-xl font-bold text-white">

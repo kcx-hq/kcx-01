@@ -12,7 +12,7 @@ const SplitBar = ({ leftLabel, leftPct, rightLabel, rightPct }: SplitBarProps) =
       </div>
 
       <div className="mt-2 h-2 rounded-full bg-black/30 overflow-hidden border border-white/10">
-        <div className="h-full bg-[#007758]/70" style={{ width: `${l}%` }} />
+        <div className="h-full bg-[#23a282]/70" style={{ width: `${l}%` }} />
       </div>
 
       <div className="mt-3 flex items-center justify-between text-xs text-gray-300">

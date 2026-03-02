@@ -123,7 +123,7 @@ export function DriverDetailsDrawer({
                 />
                 <YAxis stroke="#8a9a94" fontSize={10} tickFormatter={(val: number) => `$${val}`} width={40} />
                 <RechartsTooltip
-                  cursor={{ fill: "rgba(0,119,88,0.08)" }}
+                  cursor={{ fill: "rgba(35,162,130,0.08)" }}
                   contentStyle={{
                     backgroundColor: "#fff",
                     borderColor: "#dde3e0",
@@ -132,7 +132,7 @@ export function DriverDetailsDrawer({
                     color: "#1c2321",
                   }}
                 />
-                <Bar dataKey="val" fill="#007758" radius={[4, 4, 0, 0]} name="Cost" />
+                <Bar dataKey="val" fill="#23a282" radius={[4, 4, 0, 0]} name="Cost" />
               </BarChart>
             </ResponsiveContainer>
           </div>

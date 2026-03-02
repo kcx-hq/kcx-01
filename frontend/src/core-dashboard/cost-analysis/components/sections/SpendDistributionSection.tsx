@@ -11,6 +11,8 @@ interface SpendDistributionSectionProps {
   controls: SpendAnalyticsPayload["controls"];
 }
 
+type DistributionKpiKey = "total" | "service" | "region" | "top3";
+
 const bandClass = (band: string): string => {
   if (band === "critical") return "border-rose-200 bg-rose-50 text-rose-700";
   if (band === "warning") return "border-amber-200 bg-amber-50 text-amber-700";
@@ -37,7 +39,7 @@ const formatDuration = (startDate?: string | null, endDate?: string | null): str
 
 const SpendDistributionSection = ({ spendDistribution, controls }: SpendDistributionSectionProps) => {
   const navigate = useNavigate();
-  const [showTop3Insight, setShowTop3Insight] = useState<boolean>(false);
+  const [activeKpi, setActiveKpi] = useState<DistributionKpiKey | null>(null);
   const strip = spendDistribution?.kpiStrip || {
     totalScopedSpend: 0,
     topServiceSharePct: 0,
@@ -54,6 +56,20 @@ const SpendDistributionSection = ({ spendDistribution, controls }: SpendDistribu
     compareRows.find((row) => String(row.dimension).toLowerCase() === "service")?.name || "N/A";
   const topRegionName =
     compareRows.find((row) => String(row.dimension).toLowerCase() === "region")?.name || "N/A";
+  const topServiceRow = useMemo(
+    () =>
+      compareRows
+        .filter((row) => String(row.dimension).toLowerCase() === "service")
+        .sort((a, b) => Number(b.sharePercent || 0) - Number(a.sharePercent || 0))[0] || null,
+    [compareRows]
+  );
+  const topRegionRow = useMemo(
+    () =>
+      compareRows
+        .filter((row) => String(row.dimension).toLowerCase() === "region")
+        .sort((a, b) => Number(b.sharePercent || 0) - Number(a.sharePercent || 0))[0] || null,
+    [compareRows]
+  );
   const top3Services = useMemo(
     () =>
       compareRows
@@ -100,34 +116,106 @@ const SpendDistributionSection = ({ spendDistribution, controls }: SpendDistribu
   const cards = useMemo(
     () => [
       {
-        key: "total",
+        key: "total" as DistributionKpiKey,
         title: "Total Scoped Spend",
         value: formatCurrency(strip.totalScopedSpend),
         insight: `Duration: ${durationLabel}`,
       },
       {
-        key: "service",
+        key: "service" as DistributionKpiKey,
         title: "Top Service Share",
         value: `${Number(strip.topServiceSharePct || 0).toFixed(2)}%`,
         insight: `Service: ${topServiceName}`,
       },
       {
-        key: "region",
+        key: "region" as DistributionKpiKey,
         title: "Top Region Share",
         value: `${Number(strip.topRegionSharePct || 0).toFixed(2)}%`,
         insight: `Region: ${topRegionName}`,
       },
       {
-        key: "top3",
+        key: "top3" as DistributionKpiKey,
         title: "Top 3 Share",
         value: `${Number(strip.top3SharePct || 0).toFixed(2)}%`,
         insight: `Top 3 cost: ${formatCurrency(top3CurrentCost)}`,
-        isInteractive: true,
-        onClick: () => setShowTop3Insight((prev) => !prev),
       },
     ],
     [durationLabel, strip, top3CurrentCost, topRegionName, topServiceName]
   );
+  const activeKpiDetails = useMemo(() => {
+    if (!activeKpi) return null;
+    if (activeKpi === "total") {
+      return {
+        title: "Total Scoped Spend Insight",
+        value: formatCurrency(strip.totalScopedSpend),
+        summary: "Spend covered by current filter scope and selected period.",
+        points: [
+          `Duration: ${durationLabel}`,
+          `Compare mode: ${compareLabel}`,
+          `Total compare rows: ${compareRows.length}`,
+          `Concentration band: ${String(strip.concentrationBand || "on_track").replace(/_/g, " ")}`,
+        ],
+      };
+    }
+    if (activeKpi === "service") {
+      return {
+        title: "Top Service Share Insight",
+        value: `${Number(strip.topServiceSharePct || 0).toFixed(2)}%`,
+        summary: "Highest service concentration in the current scope.",
+        points: [
+          `Top service: ${topServiceName}`,
+          `Current spend: ${formatCurrency(Number(topServiceRow?.currentSpend || 0))}`,
+          `Previous spend: ${formatCurrency(Number(topServiceRow?.previousSpend || 0))}`,
+          `Delta: ${formatCurrency(Number(topServiceRow?.deltaValue || 0))} (${formatSignedPercent(
+            Number(topServiceRow?.deltaPercent || 0)
+          )})`,
+        ],
+      };
+    }
+    if (activeKpi === "region") {
+      return {
+        title: "Top Region Share Insight",
+        value: `${Number(strip.topRegionSharePct || 0).toFixed(2)}%`,
+        summary: "Highest regional concentration in the current scope.",
+        points: [
+          `Top region: ${topRegionName}`,
+          `Current spend: ${formatCurrency(Number(topRegionRow?.currentSpend || 0))}`,
+          `Previous spend: ${formatCurrency(Number(topRegionRow?.previousSpend || 0))}`,
+          `Delta: ${formatCurrency(Number(topRegionRow?.deltaValue || 0))} (${formatSignedPercent(
+            Number(topRegionRow?.deltaPercent || 0)
+          )})`,
+        ],
+      };
+    }
+    return {
+      title: "Top 3 Share Insight",
+      value: `${Number(strip.top3SharePct || 0).toFixed(2)}% (${formatCurrency(top3CurrentCost)})`,
+      summary: "Top 3 service concentration with cost impact for the selected scope.",
+      points: top3InsightPoints,
+    };
+  }, [
+    activeKpi,
+    compareLabel,
+    compareRows.length,
+    durationLabel,
+    strip.concentrationBand,
+    strip.topRegionSharePct,
+    strip.topServiceSharePct,
+    strip.top3SharePct,
+    strip.totalScopedSpend,
+    top3CurrentCost,
+    top3InsightPoints,
+    topRegionName,
+    topRegionRow?.currentSpend,
+    topRegionRow?.deltaPercent,
+    topRegionRow?.deltaValue,
+    topRegionRow?.previousSpend,
+    topServiceName,
+    topServiceRow?.currentSpend,
+    topServiceRow?.deltaPercent,
+    topServiceRow?.deltaValue,
+    topServiceRow?.previousSpend,
+  ]);
 
   return (
     <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
@@ -153,29 +241,25 @@ const SpendDistributionSection = ({ spendDistribution, controls }: SpendDistribu
       </div>
 
       <div className="mb-4 grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        {cards.map((card) =>
-          card.isInteractive ? (
-            <button
-              key={card.key}
-              type="button"
-              onClick={card.onClick}
-              className="rounded-2xl border border-slate-100 bg-slate-50/60 p-4 text-left transition hover:border-emerald-200 hover:bg-emerald-50/40"
-            >
-              <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{card.title}</p>
-              <p className="mt-1 text-xl font-black text-slate-900">{card.value}</p>
-              <p className="mt-2 text-[11px] font-semibold text-slate-600">{card.insight}</p>
-              <p className="mt-1 text-[10px] font-bold uppercase tracking-wider text-emerald-700">
-                Click for insight
-              </p>
-            </button>
-          ) : (
-            <div key={card.key} className="rounded-2xl border border-slate-100 bg-slate-50/60 p-4 text-left">
-              <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{card.title}</p>
-              <p className="mt-1 text-xl font-black text-slate-900">{card.value}</p>
-              <p className="mt-2 text-[11px] font-semibold text-slate-600">{card.insight}</p>
-            </div>
-          )
-        )}
+        {cards.map((card) => (
+          <button
+            key={card.key}
+            type="button"
+            onClick={() => setActiveKpi((prev) => (prev === card.key ? null : card.key))}
+            className={`rounded-2xl border p-4 text-left transition ${
+              activeKpi === card.key
+                ? "border-emerald-300 bg-emerald-50/40"
+                : "border-slate-100 bg-slate-50/60 hover:border-emerald-200 hover:bg-emerald-50/40"
+            }`}
+          >
+            <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{card.title}</p>
+            <p className="mt-1 text-xl font-black text-slate-900">{card.value}</p>
+            <p className="mt-2 text-[11px] font-semibold text-slate-600">{card.insight}</p>
+            <p className="mt-1 text-[10px] font-bold uppercase tracking-wider text-emerald-700">
+              Click for insight
+            </p>
+          </button>
+        ))}
       </div>
 
       <div className="overflow-hidden rounded-2xl border border-slate-100">
@@ -263,14 +347,14 @@ const SpendDistributionSection = ({ spendDistribution, controls }: SpendDistribu
       </div>
 
       <KpiInsightModal
-        open={showTop3Insight}
-        title="Top 3 Share Insight"
-        value={`${Number(strip.top3SharePct || 0).toFixed(2)}% (${formatCurrency(top3CurrentCost)})`}
-        summary="Top 3 service concentration with cost impact for the selected scope."
+        open={Boolean(activeKpi && activeKpiDetails)}
+        title={activeKpiDetails?.title || "Spend Distribution Insight"}
+        value={activeKpiDetails?.value || null}
+        summary={activeKpiDetails?.summary || null}
         contextLabel={durationLabel}
-        points={top3InsightPoints}
+        points={activeKpiDetails?.points || []}
         badgeText={String(strip.concentrationBand || "on_track").replace(/_/g, " ")}
-        onClose={() => setShowTop3Insight(false)}
+        onClose={() => setActiveKpi(null)}
         maxWidthClass="max-w-lg"
       />
     </section>

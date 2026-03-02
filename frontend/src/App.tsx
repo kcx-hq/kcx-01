@@ -67,8 +67,20 @@ const Home = () => {
     setShowAttentionGrabber(false);
   };
 
+  const landingTheme = {
+    "--bg-main": "#ffffff",
+    "--bg-surface": "#ffffff",
+    "--bg-soft": "#ffffff",
+    "--bg-soft-2": "#ffffff",
+    "--highlight-green": "rgba(35,162,130,0.08)",
+    "--highlight-mint": "rgba(35,162,130,0.08)",
+  } as React.CSSProperties;
+
   return (
-    <div className="min-h-screen bg-[var(--bg-main)] font-sans overflow-x-hidden">
+    <div
+      className="min-h-screen bg-[var(--bg-main)] font-sans overflow-x-hidden"
+      style={landingTheme}
+    >
       <Navbar />
 
       <main>

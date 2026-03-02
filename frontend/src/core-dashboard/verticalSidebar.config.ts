@@ -16,7 +16,7 @@ const VerticalSidebarConfig: CoreDashboardValue = {
   brand: {
     logoSrc: "/KCX.logo.svg",
     name: "KCX",
-    subtitle: "FINOPS OS v2.4",
+    subtitle: "FinOps Platform",
   },
 
   features: {

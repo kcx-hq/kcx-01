@@ -1,9 +1,14 @@
-export const formatCurrency = (value: number) =>
-  new Intl.NumberFormat('en-US', {
+export const formatCurrency = (value: number) => {
+  const amount = Number.isFinite(value) ? value : 0;
+  const abs = Math.abs(amount);
+  const tiny = abs > 0 && abs < 0.01;
+  return new Intl.NumberFormat('en-US', {
     style: 'currency',
     currency: 'USD',
-    maximumFractionDigits: 2,
-  }).format(Number.isFinite(value) ? value : 0);
+    maximumFractionDigits: tiny ? 6 : 2,
+    minimumFractionDigits: tiny ? 4 : 2,
+  }).format(amount);
+};
 
 export const formatNumber = (value: number, digits = 2) =>
   new Intl.NumberFormat('en-US', {

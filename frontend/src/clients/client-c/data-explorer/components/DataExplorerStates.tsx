@@ -6,7 +6,7 @@ const DataExplorerStates = ({ type }: DataExplorerStatesProps) => {
   if (type === "loading") {
     return (
       <div className="h-[60vh] flex flex-col items-center justify-center border border-dashed border-white/10 rounded-xl bg-[#1a1b20]/50">
-        <Loader2 className="text-[#007758] mb-2 animate-spin" size={32} />
+        <Loader2 className="text-[#23a282] mb-2 animate-spin" size={32} />
         <p className="text-gray-400">Loading data...</p>
       </div>
     );

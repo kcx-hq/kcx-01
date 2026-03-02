@@ -186,7 +186,7 @@ const ServiceCard = ({
 
   /**
    * Theme rules:
-   * - primary: var(--brand-primary) (#00c693)
+   * - primary: var(--brand-primary) (#23a282)
    * - dark: var(--bg-dark) (#192630)
    * - keep neutral/emerald highlight usage
    */
@@ -315,7 +315,7 @@ const ServiceCard = ({
                       key={i}
                       className="text-sm text-[var(--text-secondary)] flex items-start gap-2"
                     >
-                      <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-[var(--brand-primary)] flex-shrink-0 shadow-[0_0_8px_rgba(0,198,147,0.25)]" />
+                      <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-[var(--brand-primary)] flex-shrink-0 shadow-[0_0_8px_rgba(35,162,130,0.25)]" />
                       {step}
                     </li>
                   ))}
@@ -333,7 +333,7 @@ const ServiceCard = ({
                       key={i}
                       className="text-sm text-[var(--text-secondary)] flex items-start gap-2"
                     >
-                      <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-[var(--brand-primary)] flex-shrink-0 shadow-[0_0_8px_rgba(0,198,147,0.25)]" />
+                      <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-[var(--brand-primary)] flex-shrink-0 shadow-[0_0_8px_rgba(35,162,130,0.25)]" />
                       {item}
                     </li>
                   ))}

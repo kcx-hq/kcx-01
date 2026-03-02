@@ -10,7 +10,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 
-const BRAND = "var(--brand-secondary, #007758)";
+const BRAND = "var(--brand-secondary, #23a282)";
 
 type FilterField = "provider" | "service" | "region";
 type GroupByValue = "ServiceName" | "RegionName" | "ProviderName";
@@ -66,14 +66,14 @@ const FilterSelect = ({
         onFocus={(e: React.FocusEvent<HTMLSelectElement>) => {
           e.currentTarget.style.borderColor = BRAND;
           e.currentTarget.style.boxShadow =
-            "0 0 0 2px rgba(0, 119, 88, 0.25)";
+            "0 0 0 2px rgba(35,162,130,0.25)";
         }}
         onBlur={(e: React.FocusEvent<HTMLSelectElement>) => {
           e.currentTarget.style.borderColor = "";
           e.currentTarget.style.boxShadow = "";
         }}
         onMouseEnter={(e: React.MouseEvent<HTMLSelectElement>) => {
-          e.currentTarget.style.borderColor = "rgba(0, 119, 88, 0.5)";
+          e.currentTarget.style.borderColor = "rgba(35,162,130,0.5)";
         }}
         onMouseLeave={(e: React.MouseEvent<HTMLSelectElement>) => {
           e.currentTarget.style.borderColor = "";
@@ -177,14 +177,14 @@ const FilterBarCost = ({
             onFocus={(e: React.FocusEvent<HTMLSelectElement>) => {
               e.currentTarget.style.borderColor = BRAND;
               e.currentTarget.style.boxShadow =
-                "0 0 0 2px rgba(0, 119, 88, 0.25)";
+                "0 0 0 2px rgba(35,162,130,0.25)";
             }}
             onBlur={(e: React.FocusEvent<HTMLSelectElement>) => {
               e.currentTarget.style.borderColor = "";
               e.currentTarget.style.boxShadow = "";
             }}
             onMouseEnter={(e: React.MouseEvent<HTMLSelectElement>) => {
-              e.currentTarget.style.borderColor = "rgba(0, 119, 88, 0.5)";
+              e.currentTarget.style.borderColor = "rgba(35,162,130,0.5)";
             }}
             onMouseLeave={(e: React.MouseEvent<HTMLSelectElement>) => {
               e.currentTarget.style.borderColor = "";

@@ -239,8 +239,8 @@ export default function UnitTrendCharts({ trend, targetUnitCost }: UnitTrendChar
                 type="monotone"
                 dataKey="elasticity"
                 name="Elasticity"
-                stroke="#10b981"
-                fill="#10b98133"
+                stroke="#23a282"
+                fill="#23a28233"
                 strokeWidth={1.8}
                 connectNulls
               />
@@ -251,7 +251,7 @@ export default function UnitTrendCharts({ trend, targetUnitCost }: UnitTrendChar
                 <ReferenceLine
                   yAxisId="unit"
                   y={targetUnitCost}
-                  stroke="#22c55e"
+                  stroke="#23a282"
                   strokeDasharray="6 4"
                   label={{ value: 'Target Unit Cost', position: 'insideTopRight', fill: '#15803d', fontSize: 10 }}
                 />
@@ -266,7 +266,7 @@ export default function UnitTrendCharts({ trend, targetUnitCost }: UnitTrendChar
                     x={point.date}
                     y={point.unitPrice}
                     r={4}
-                    fill={point.isOptimizationEvent ? '#10b981' : '#f97316'}
+                    fill={point.isOptimizationEvent ? '#23a282' : '#f97316'}
                     stroke="#ffffff"
                   />
                 ))}

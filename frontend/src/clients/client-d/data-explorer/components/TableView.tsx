@@ -71,7 +71,7 @@ const TableView = ({
                   key={col}
                   className={`px-4 py-3 border-b border-r border-white/10 whitespace-nowrap bg-[#1b1c22] hover:bg-white/5 cursor-pointer group select-none ${
                     idx === 0
-                      ? "sticky left-[50px] z-30 shadow-[4px_0_10px_rgba(0,0,0,0.5)] border-r-[#007758]/50"
+                      ? "sticky left-[50px] z-30 shadow-[4px_0_10px_rgba(0,0,0,0.5)] border-r-[#23a282]/50"
                       : ""
                   }`}
                   style={{
@@ -93,9 +93,9 @@ const TableView = ({
                     <div className="opacity-0 group-hover:opacity-100">
                       {sortConfig.key === col ? (
                         sortConfig.direction === "asc" ? (
-                          <ChevronUp size={12} className="text-[#007758]" />
+                          <ChevronUp size={12} className="text-[#23a282]" />
                         ) : (
-                          <ChevronDown size={12} className="text-[#007758]" />
+                          <ChevronDown size={12} className="text-[#23a282]" />
                         )
                       ) : (
                         <div className="h-3 w-3" />
@@ -137,7 +137,7 @@ const TableView = ({
                         return next;
                       });
                     }}
-                    className="w-full px-2 py-1.5 bg-black/30 border border-white/10 rounded-lg text-[10px] text-white focus:outline-none focus:border-[#007758]"
+                    className="w-full px-2 py-1.5 bg-black/30 border border-white/10 rounded-lg text-[10px] text-white focus:outline-none focus:border-[#23a282]"
                   />
                 </th>
               ))}
@@ -167,7 +167,7 @@ const TableView = ({
           })}
         </tbody>
 
-        <tfoot className="sticky bottom-0 z-30 bg-[#1b1c22] border-t-2 border-[#007758]/30 shadow-[0_-4px_10px_rgba(0,0,0,0.5)]">
+        <tfoot className="sticky bottom-0 z-30 bg-[#1b1c22] border-t-2 border-[#23a282]/30 shadow-[0_-4px_10px_rgba(0,0,0,0.5)]">
           <tr>
             <td className="sticky left-0 z-40 bg-[#1b1c22] border-r border-white/10"></td>
             {visibleColumns.map((col: string, idx: number) => {
@@ -180,9 +180,9 @@ const TableView = ({
                   key={col}
                   className={`px-4 py-3 font-bold text-xs whitespace-nowrap border-r border-white/10 bg-[#1b1c22] ${
                     idx === 0
-                      ? "sticky left-[50px] z-40 border-r-[#007758]/50 text-[#007758]"
+                      ? "sticky left-[50px] z-40 border-r-[#23a282]/50 text-[#23a282]"
                       : "text-white"
-                  } ${showTotal ? "text-right text-[#007758] font-mono" : ""}`}
+                  } ${showTotal ? "text-right text-[#23a282] font-mono" : ""}`}
                 >
                   {idx === 0
                     ? "TOTALS"
@@ -209,7 +209,7 @@ const TableView = ({
           <select
             value={rowsPerPage}
             onChange={(e: ExplorerSelectChange) => setRowsPerPage(Number(e.target.value))}
-            className="bg-[#0f0f11] border border-white/10 rounded-xl px-3 py-2 text-xs text-gray-300 focus:outline-none focus:border-[#007758]"
+            className="bg-[#0f0f11] border border-white/10 rounded-xl px-3 py-2 text-xs text-gray-300 focus:outline-none focus:border-[#23a282]"
             style={{ colorScheme: "dark" }}
           >
             <option value={50}>50 rows</option>

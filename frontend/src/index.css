@@ -7,8 +7,8 @@
     /* =====================
        Brand Variables
     ===================== */
-    --brand-primary: #007758;
-    --brand-primary-hover: #00b889;
+    --brand-primary: #3e8a76;
+    --brand-primary-hover: #23a282;
     --brand-primary-soft: #e2f3ee;
     --brand-secondary: #192630;
 
@@ -87,7 +87,7 @@
   
   /* Custom Selection Color matching your Brand */
   ::selection {
-    background-color: rgba(0, 119, 88, 0.22);
+    background-color: rgba(35,162,130,0.22);
     color: var(--text-primary);
   }
 }

@@ -21,7 +21,7 @@ export default function AllocationUnitEconomics({ filters, api, caps }: Allocati
   const isEnabled = Boolean(api && caps && (modules.unitEconomics?.enabled || modules.governance?.enabled));
 
   const [controls, setControls] = useState<AllocationUnitEconomicsControls>(INITIAL_CONTROLS);
-  const { loading, error, model } = useAllocationUnitEconomicsData({
+  const { loading, refreshing, error, model } = useAllocationUnitEconomicsData({
     api,
     caps,
     filters,
@@ -36,6 +36,7 @@ export default function AllocationUnitEconomics({ filters, api, caps }: Allocati
   return (
     <AllocationUnitEconomicsView
       loading={loading}
+      refreshing={refreshing}
       error={error}
       controls={controls}
       onControlsChange={onControlsChange}

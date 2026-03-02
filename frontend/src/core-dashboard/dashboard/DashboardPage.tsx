@@ -134,7 +134,7 @@ const DashboardPage = () => {
           </p>
           <button
             onClick={() => window.location.reload()}
-            className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#007758] px-6 py-3 font-semibold text-white transition-all hover:bg-[#005c45]"
+            className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#23a282] px-6 py-3 font-semibold text-white transition-all hover:bg-[#23a282]"
           >
             <RefreshCw size={18} /> Reload Page
           </button>

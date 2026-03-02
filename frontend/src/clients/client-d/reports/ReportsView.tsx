@@ -34,7 +34,7 @@ const ReportsView = ({ fetchingData, isLocked, reportData }: ReportsViewProps) =
           <div className="flex items-start justify-between gap-4 flex-wrap">
             <div>
               <h1 className="text-2xl font-extrabold flex items-center gap-2">
-                <FileText className="text-[#007758]" size={22} />
+                <FileText className="text-[#23a282]" size={22} />
                 Reports Summary
               </h1>
               <p className="text-sm text-gray-400 mt-1">

@@ -15,7 +15,7 @@ const PivotView = ({ isLocked, groupByCol, clientSideGroupedData, handleDrillDow
         <table className="min-w-full border-collapse text-xs text-left">
           <thead className="bg-[#1b1c22] text-gray-400 font-bold sticky top-0 z-20 shadow-lg">
             <tr>
-              <th className="px-4 py-3 border-b border-white/10 text-[#007758]">
+              <th className="px-4 py-3 border-b border-white/10 text-[#23a282]">
                 {groupByCol} (Group)
               </th>
               <th className="px-4 py-3 border-b border-white/10 text-right">Count</th>
@@ -28,13 +28,13 @@ const PivotView = ({ isLocked, groupByCol, clientSideGroupedData, handleDrillDow
               <tr
                 key={idx}
                 onClick={() => handleDrillDown(group)}
-                className="border-b border-white/5 hover:bg-[#007758]/10 cursor-pointer transition-colors bg-[#121319]"
+                className="border-b border-white/5 hover:bg-[#23a282]/10 cursor-pointer transition-colors bg-[#121319]"
               >
                 <td className="px-4 py-3 font-medium text-white">{group.name}</td>
                 <td className="px-4 py-3 text-right text-gray-300">
                   {group.count.toLocaleString()}
                 </td>
-                <td className="px-4 py-3 text-right font-mono text-[#007758]">
+                <td className="px-4 py-3 text-right font-mono text-[#23a282]">
                   $
                   {group.totalCost.toLocaleString(undefined, {
                     minimumFractionDigits: 2,
@@ -44,7 +44,7 @@ const PivotView = ({ isLocked, groupByCol, clientSideGroupedData, handleDrillDow
                 <td className="px-4 py-3">
                   <div className="flex items-center gap-2">
                     <div className="flex-1 h-2 bg-black/40 rounded-full overflow-hidden">
-                      <div className="h-full bg-[#007758]" style={{ width: `${group.percent}%` }} />
+                      <div className="h-full bg-[#23a282]" style={{ width: `${group.percent}%` }} />
                     </div>
                     <span className="text-[10px] text-gray-500 w-10 text-right">
                       {group.percent.toFixed(1)}%

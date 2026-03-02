@@ -30,10 +30,9 @@ export function useCaps() {
           setCaps(cached);
           setApi(createApiClient(cached));
           setLoading(false);
-          return;
         }
 
-        // 2. If not in cache, fetch from API
+        // 2. Always revalidate capabilities from API (stale-while-revalidate)
         const fetched = await fetchCapabilities();
         
         // Cache the fetched capabilities
@@ -49,8 +48,10 @@ export function useCaps() {
         }
 
         if (mounted) {
-          setCaps(fetched);
-          setApi(createApiClient(fetched));
+          if (fetched) {
+            setCaps(fetched);
+            setApi(createApiClient(fetched));
+          }
           setLoading(false);
         }
       } catch (err: unknown) {

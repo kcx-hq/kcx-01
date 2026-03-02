@@ -7,7 +7,6 @@ import {
   ChevronDown,
   LogOut,
   Settings,
-  ShieldCheck,
   X,
 } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
@@ -386,7 +385,9 @@ const Header = ({
       <header className="fixed left-[72px] right-0 top-0 z-[100] flex h-[64px] items-center justify-between border-b border-slate-200 bg-white px-3 transition-all duration-300 sm:px-4 md:px-6 lg:left-[240px]">
         <div className="min-w-0">
           <div className="mb-0.5 hidden items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-slate-400 sm:flex">
-            <span className="cursor-pointer transition-colors hover:text-[var(--brand-primary)]">KCX</span>
+            <span className="cursor-pointer transition-colors hover:text-[var(--brand-primary)]">
+              KC<span className="text-[var(--brand-primary)]">X</span>
+            </span>
             <span className="text-slate-300">/</span>
             <span className="text-slate-600">Dashboard</span>
           </div>
@@ -409,13 +410,13 @@ const Header = ({
               >
                 <motion.div
                   aria-hidden
-                  className="pointer-events-none absolute inset-0 bg-gradient-to-r from-transparent via-[#007758]/10 to-transparent"
+                  className="pointer-events-none absolute inset-0 bg-gradient-to-r from-transparent via-[#23a282]/10 to-transparent"
                   animate={{ opacity: [0.1, 0.28, 0.1] }}
                   transition={{ duration: 3.2, repeat: Infinity, ease: "easeInOut" }}
                 />
                 <p className="relative flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider text-gray-500">
                   <motion.span
-                    className="inline-block h-1.5 w-1.5 rounded-full bg-[#007758]"
+                    className="inline-block h-1.5 w-1.5 rounded-full bg-[#23a282]"
                     animate={{ scale: [1, 1.2, 1], opacity: [0.6, 1, 0.6] }}
                     transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
                   />
@@ -445,7 +446,7 @@ const Header = ({
                     );
                   })}
                   {activeSource.remainingCount > 0 ? (
-                    <span className="inline-flex items-center whitespace-nowrap rounded-full border border-[#007758]/30 bg-[#007758]/10 px-2 py-0.5 text-[11px] font-semibold text-emerald-700">
+                    <span className="inline-flex items-center whitespace-nowrap rounded-full border border-[#23a282]/30 bg-[#23a282]/10 px-2 py-0.5 text-[11px] font-semibold text-emerald-700">
                       +{activeSource.remainingCount} more
                     </span>
                   ) : null}
@@ -524,12 +525,6 @@ const Header = ({
                       className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm text-slate-600 transition-colors hover:bg-slate-50 hover:text-[#192630]"
                     >
                       <Bell size={16} /> Alert Preferences
-                    </button>
-                    <button
-                      type="button"
-                      className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm text-slate-600 transition-colors hover:bg-slate-50 hover:text-[#192630]"
-                    >
-                      <ShieldCheck size={16} /> Security & Privacy
                     </button>
                   </div>
 

@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useMemo } from "react";
 import { ShieldAlert } from "lucide-react";
 import {
   Bar,
@@ -15,29 +15,20 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import KpiInsightModal from "../../../common/components/KpiInsightModal";
 import type { SpendAnalyticsPayload } from "../../types";
 import { formatCurrency } from "../../utils/format";
 
 interface ConcentrationSectionProps {
   concentration: SpendAnalyticsPayload["concentration"];
   concentrationPareto: SpendAnalyticsPayload["concentrationPareto"];
-  contextLabel: string;
 }
 
-type ConcentrationKpiKey = "topService" | "topProvider" | "topRegion";
-
-const PIE_COLORS = ["#007758", "#0ea5e9", "#f59e0b", "#22c55e", "#64748b", "#ef4444"];
+const PIE_COLORS = ["#23a282", "#0ea5e9", "#f59e0b", "#23a282", "#64748b", "#ef4444"];
 
 const ConcentrationSection = ({
   concentration,
   concentrationPareto,
-  contextLabel,
 }: ConcentrationSectionProps) => {
-  const [selectedKpi, setSelectedKpi] = useState<ConcentrationKpiKey | null>(null);
-  const topService = concentration.paretoByService[0] || null;
-  const topProvider = concentration.paretoByProvider[0] || null;
-  const topRegion = concentrationPareto.topRegions[0] || null;
   const providerChartRows = useMemo(
     () => concentration.paretoByProvider.slice(0, 6),
     [concentration.paretoByProvider]
@@ -47,93 +38,11 @@ const ConcentrationSection = ({
     [concentration.paretoByService]
   );
 
-  const modalDetails = useMemo(() => {
-    if (!selectedKpi) return null;
-    if (selectedKpi === "topService") {
-      return {
-        title: "Top Service Share",
-        value: `${concentration.topServiceShare.toFixed(2)}%`,
-        points: [
-          `Service: ${topService?.name || "N/A"}`,
-          `Spend: ${formatCurrency(topService?.spend || 0)}`,
-          `Share of total: ${topService?.sharePercent?.toFixed(2) || "0.00"}%`,
-        ],
-      };
-    }
-    if (selectedKpi === "topProvider") {
-      return {
-        title: "Top Provider Share",
-        value: `${concentration.topProviderShare.toFixed(2)}%`,
-        points: [
-          `Provider: ${topProvider?.name || "N/A"}`,
-          `Spend: ${formatCurrency(topProvider?.spend || 0)}`,
-          `Share of total: ${topProvider?.sharePercent?.toFixed(2) || "0.00"}%`,
-        ],
-      };
-    }
-    return {
-      title: "Top Region",
-      value: `${concentrationPareto.singleRegionShare.toFixed(2)}%`,
-      points: [
-        `Region: ${topRegion?.name || "N/A"}`,
-        `Spend: ${formatCurrency(topRegion?.value || 0)}`,
-        `Share of total: ${concentrationPareto.singleRegionShare.toFixed(2)}%`,
-      ],
-    };
-  }, [
-    selectedKpi,
-    concentration.topServiceShare,
-    concentration.topProviderShare,
-    concentrationPareto.singleRegionShare,
-    topService,
-    topProvider,
-    topRegion,
-  ]);
-
   return (
     <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
       <div className="mb-3 flex items-center gap-2">
         <ShieldAlert size={16} className="text-emerald-700" />
         <h2 className="text-sm font-black uppercase tracking-widest text-slate-700">Concentration & Pareto</h2>
-      </div>
-
-      <div className="mb-4 grid grid-cols-1 gap-3 md:grid-cols-3">
-        <button
-          type="button"
-          onClick={() => setSelectedKpi("topService")}
-          className={`rounded-xl border p-3 text-left transition ${
-            selectedKpi === "topService"
-              ? "border-emerald-300 bg-emerald-50/40"
-              : "border-slate-100 bg-slate-50/50 hover:border-emerald-200"
-          }`}
-        >
-          <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Top service share</p>
-          <p className="mt-1 text-lg font-black text-slate-900">{concentration.topServiceShare.toFixed(2)}%</p>
-        </button>
-        <button
-          type="button"
-          onClick={() => setSelectedKpi("topProvider")}
-          className={`rounded-xl border p-3 text-left transition ${
-            selectedKpi === "topProvider"
-              ? "border-emerald-300 bg-emerald-50/40"
-              : "border-slate-100 bg-slate-50/50 hover:border-emerald-200"
-          }`}
-        >
-          <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Top provider share</p>
-          <p className="mt-1 text-lg font-black text-slate-900">{concentration.topProviderShare.toFixed(2)}%</p>
-        </button>
-        <button
-          type="button"
-          onClick={() => setSelectedKpi("topRegion")}
-          className={`rounded-xl border p-3 text-left transition ${
-            selectedKpi === "topRegion"
-              ? "border-emerald-300 bg-emerald-50/40"
-              : "border-slate-100 bg-slate-50/50 hover:border-emerald-200"
-          }`}
-        >
-          <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Top region share</p>
-          <p className="mt-1 text-lg font-black text-slate-900">{concentrationPareto.singleRegionShare.toFixed(2)}%</p>
-        </button>
       </div>
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
@@ -170,7 +79,7 @@ const ConcentrationSection = ({
                   }
                 />
                 <Legend verticalAlign="top" align="right" iconType="circle" wrapperStyle={{ fontSize: "11px" }} />
-                <Bar dataKey="sharePercent" name="Share %" fill="#10b981" radius={[0, 6, 6, 0]} barSize={18}>
+                <Bar dataKey="sharePercent" name="Share %" fill="#23a282" radius={[0, 6, 6, 0]} barSize={18}>
                   <LabelList
                     dataKey="sharePercent"
                     position="right"
@@ -246,17 +155,6 @@ const ConcentrationSection = ({
           </div>
         </div>
       </div>
-
-      <KpiInsightModal
-        open={Boolean(selectedKpi && modalDetails)}
-        title={modalDetails?.title || "Concentration KPI"}
-        value={modalDetails?.value || null}
-        summary="Concentration insight for the selected KPI."
-        contextLabel={contextLabel}
-        points={modalDetails?.points || []}
-        badgeText="Concentration"
-        onClose={() => setSelectedKpi(null)}
-      />
     </section>
   );
 };

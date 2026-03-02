@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import type { ForecastingBudgetsPayload, ScenarioModel } from "../../types";
+import type { ForecastingBudgetsPayload, ForecastingControls, ScenarioModel } from "../../types";
 import { formatCurrency, formatPercent, formatSignedCurrency, toNumber } from "../../utils/format";
 import { SectionPanel } from "../shared/ui";
 
@@ -7,11 +7,31 @@ interface PlanningModelSectionProps {
   data: ForecastingBudgetsPayload;
   currency: string;
   mode: "forecasting" | "budget";
+  api?: {
+    call: (
+      module: string,
+      endpoint: string,
+      options?: { params?: Record<string, unknown>; data?: unknown },
+    ) => Promise<unknown>;
+  } | null;
+  filters?: { provider?: string; service?: string; region?: string };
+  controls?: ForecastingControls;
+  onControlsChange?: (patch: Partial<ForecastingControls>) => void;
+  onBudgetSaved?: () => void;
 }
 
 const SCENARIO_PRIORITY = ["baseline", "growth", "cost_cut"];
 
-export function PlanningModelSection({ data, currency, mode }: PlanningModelSectionProps) {
+export function PlanningModelSection({
+  data,
+  currency,
+  mode,
+  api = null,
+  filters = {},
+  controls,
+  onControlsChange,
+  onBudgetSaved,
+}: PlanningModelSectionProps) {
   const scenarios = useMemo(() => {
     const scenarioRows = data.submodules.scenarioPlanning.scenarios || [];
     const prioritized: ScenarioModel[] = [];
@@ -63,14 +83,59 @@ export function PlanningModelSection({ data, currency, mode }: PlanningModelSect
     "November",
     "December",
   ];
-  const [selectedMonth, setSelectedMonth] = useState(() => monthOptions[new Date().getMonth()] || "January");
+  const [selectedMonth, setSelectedMonth] = useState(
+    () => controls?.budgetMonth || monthOptions[new Date().getMonth()] || "January"
+  );
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
+  const [saveMessage, setSaveMessage] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (controls?.budgetMonth && controls.budgetMonth !== selectedMonth) {
+      setSelectedMonth(controls.budgetMonth);
+    }
+  }, [controls?.budgetMonth, selectedMonth]);
+
+  const handleSaveBudgetTarget = async () => {
+    if (!api || isSaving) return;
+    setIsSaving(true);
+    setSaveError(null);
+    setSaveMessage(null);
+    try {
+      await api.call("forecastingBudgets", "saveBudgetTarget", {
+        data: {
+          provider: filters.provider || "All",
+          service: filters.service || "All",
+          region: filters.region || "All",
+          period: controls?.period || "mtd",
+          compareTo: controls?.compareTo || "previous_period",
+          costBasis: controls?.costBasis || "actual",
+          budgetMonth: selectedMonth,
+          budgetTarget: Number.isFinite(budgetTarget) ? Math.max(0, budgetTarget) : 0,
+        },
+      });
+      setSaveMessage(`Saved ${selectedMonth} budget target.`);
+      onBudgetSaved?.();
+    } catch (error) {
+      console.error("Failed to save budget target:", error);
+      const code = (error as { code?: string })?.code;
+      const message = String((error as { message?: string })?.message || "");
+      if (code === "NOT_SUPPORTED") {
+        setSaveError("Save endpoint not available yet. Refresh dashboard and try again.");
+      } else if (message) {
+        setSaveError(message);
+      } else {
+        setSaveError("Failed to save budget target. Please try again.");
+      }
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
   if (mode === "budget") {
     return (
-      <SectionPanel title="Monthly Budget Setup (UI Prototype)">
-        <p className="text-sm text-slate-700">
-          Configure monthly budget targets. DB save and real alert triggers will be connected in backend phase.
-        </p>
+      <SectionPanel title="Monthly Budget Setup">
+        <p className="text-sm text-slate-700">Set and save monthly budget target for selected scope.</p>
         <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
           <label className="block">
             <span className="mb-1 block text-[11px] font-bold uppercase tracking-[0.1em] text-slate-500">
@@ -78,7 +143,11 @@ export function PlanningModelSection({ data, currency, mode }: PlanningModelSect
             </span>
             <select
               value={selectedMonth}
-              onChange={(event) => setSelectedMonth(event.target.value)}
+              onChange={(event) => {
+                const nextMonth = event.target.value;
+                setSelectedMonth(nextMonth);
+                onControlsChange?.({ budgetMonth: nextMonth });
+              }}
               className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-700 outline-none ring-emerald-300 focus:ring-2"
             >
               {monthOptions.map((month) => (
@@ -134,11 +203,18 @@ export function PlanningModelSection({ data, currency, mode }: PlanningModelSect
         </div>
         <button
           type="button"
-          disabled
-          className="mt-3 inline-flex cursor-not-allowed rounded-xl border border-slate-300 bg-slate-100 px-3 py-1.5 text-xs font-semibold text-slate-500"
+          onClick={handleSaveBudgetTarget}
+          disabled={isSaving || !api}
+          className={`mt-3 inline-flex rounded-xl border px-3 py-1.5 text-xs font-semibold ${
+            isSaving || !api
+              ? "cursor-not-allowed border-slate-300 bg-slate-100 text-slate-500"
+              : "border-emerald-300 bg-emerald-50 text-emerald-700 hover:bg-emerald-100"
+          }`}
         >
-          Save Monthly Budget (Backend Coming Soon)
+          {isSaving ? "Saving..." : "Save Monthly Budget"}
         </button>
+        {saveMessage ? <p className="mt-2 text-xs font-semibold text-emerald-700">{saveMessage}</p> : null}
+        {saveError ? <p className="mt-2 text-xs font-semibold text-rose-700">{saveError}</p> : null}
       </SectionPanel>
     );
   }

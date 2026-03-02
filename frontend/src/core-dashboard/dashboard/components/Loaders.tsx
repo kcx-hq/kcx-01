@@ -9,7 +9,7 @@ import { motion } from "framer-motion";
 export const ComponentLoader = () => (
   <div className="flex min-h-[400px] w-full flex-col items-center justify-center">
     <div className="relative">
-      <Loader2 className="animate-spin text-[#007758]" size={32} strokeWidth={1.5} />
+      <Loader2 className="animate-spin text-[#23a282]" size={32} strokeWidth={1.5} />
       <Sparkles className="absolute -right-1 -top-1 animate-pulse text-emerald-400" size={14} />
     </div>
     <p className="mt-4 text-[10px] font-black uppercase tracking-[0.3em] text-slate-400">Syncing Intel</p>
@@ -59,7 +59,7 @@ export const SkeletonLoader = () => (
 
     <div className="relative z-10 flex flex-col items-center">
       <div className="rounded-[2.5rem] border border-slate-100 bg-white p-6 shadow-[0_20px_50px_rgba(0,0,0,0.04)]">
-        <div className="h-12 w-12 animate-spin rounded-full border-[3px] border-slate-100 border-t-[#007758]" />
+        <div className="h-12 w-12 animate-spin rounded-full border-[3px] border-slate-100 border-t-[#23a282]" />
       </div>
 
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mt-8 flex flex-col items-center gap-3 text-center">
@@ -69,7 +69,7 @@ export const SkeletonLoader = () => (
           <motion.div
             animate={{ x: [-112, 112] }}
             transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-            className="h-full w-full bg-[#007758]"
+            className="h-full w-full bg-[#23a282]"
           />
         </div>
       </motion.div>

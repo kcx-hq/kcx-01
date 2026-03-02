@@ -50,11 +50,11 @@ export function ClientCDriversList({ title, items, type, onSelect, sortBy }: Cli
           <div
             key={index}
             onClick={() => onSelect(item, type)}
-            className="group p-3 bg-[#0f0f11] border border-white/5 rounded-lg hover:border-[#007758]/30 hover:bg-[#007758]/5 transition-all cursor-pointer"
+            className="group p-3 bg-[#0f0f11] border border-white/5 rounded-lg hover:border-[#23a282]/30 hover:bg-[#23a282]/5 transition-all cursor-pointer"
           >
             <div className="flex justify-between items-start">
               <div className="flex-1 min-w-0">
-                <h4 className="text-sm font-medium text-white truncate group-hover:text-[#007758] transition-colors">
+                <h4 className="text-sm font-medium text-white truncate group-hover:text-[#23a282] transition-colors">
                   {item.name}
                 </h4>
                 <p className="text-xs text-gray-400 mt-1 truncate">

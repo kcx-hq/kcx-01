@@ -2,7 +2,7 @@ import React from 'react';
 import { ResponsiveContainer, AreaChart, Area } from 'recharts';
 import type { SparklineProps } from "../types";
 
-const Sparkline = ({ data, color = '#007758' }: SparklineProps) => {
+const Sparkline = ({ data, color = '#23a282' }: SparklineProps) => {
   if (!data || data.length < 2) {
     return <div className="h-8 w-24 rounded bg-[var(--bg-surface)] opacity-70" />;
   }

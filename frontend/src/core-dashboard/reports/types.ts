@@ -48,6 +48,7 @@ export interface UseReportsDataParams {
 
 export interface UseReportsDataResult {
   fetchingData: boolean;
+  refreshing: boolean;
   reportData: ReportsSummaryData | null;
   optimizationData: ReportsOptimizationData | null;
 }
@@ -66,6 +67,7 @@ export interface ReportDefinition {
 
 export interface ReportsViewProps {
   fetchingData: boolean;
+  refreshing: boolean;
   reports: ReportDefinition[];
   onDownloadReport: (reportType: ReportType) => Promise<void>;
   downloading: boolean;

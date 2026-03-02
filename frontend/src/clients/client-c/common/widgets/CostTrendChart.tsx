@@ -45,7 +45,7 @@ const CostTrendChart = ({ data, limit = 30, onLimitChange, billingPeriod = null,
     <div className="bg-[#1a1b20]/60 backdrop-blur-md border border-white/5 rounded-2xl p-5 flex flex-col shadow-xl min-h-[300px]">
       <div className="mb-4 flex justify-between items-center h-8">
         <h3 className="text-sm font-bold text-white flex items-center gap-2">
-          <TrendingUp size={16} className="text-[#007758]" /> Daily Cost Trend
+          <TrendingUp size={16} className="text-[#23a282]" /> Daily Cost Trend
         </h3>
         {onLimitChange && (
           <div className="flex items-center gap-2">
@@ -53,7 +53,7 @@ const CostTrendChart = ({ data, limit = 30, onLimitChange, billingPeriod = null,
             <select
               value={effectiveLimit}
               onChange={(e: ChangeEvent<HTMLSelectElement>) => onLimitChange(Number(e.target.value))}
-              className="text-[10px] bg-[#0f0f11] border border-white/10 hover:border-[#007758]/50 rounded px-2 py-1 text-gray-300 focus:outline-none focus:border-[#007758] focus:ring-2 focus:ring-[#007758]/50 focus:shadow-[0_0_15px_rgba(0,119,88,0.4)] transition-all cursor-pointer"
+              className="text-[10px] bg-[#0f0f11] border border-white/10 hover:border-[#23a282]/50 rounded px-2 py-1 text-gray-300 focus:outline-none focus:border-[#23a282] focus:ring-2 focus:ring-[#23a282]/50 focus:shadow-[0_0_15px_rgba(35,162,130,0.4)] transition-all cursor-pointer"
               style={{
                 colorScheme: 'dark'
               }}
@@ -96,8 +96,8 @@ const CostTrendChart = ({ data, limit = 30, onLimitChange, billingPeriod = null,
           <AreaChart data={displayData}>
             <defs>
               <linearGradient id="colorCost" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="#007758" stopOpacity={0.3}/>
-                <stop offset="95%" stopColor="#007758" stopOpacity={0}/>
+                <stop offset="5%" stopColor="#23a282" stopOpacity={0.3}/>
+                <stop offset="95%" stopColor="#23a282" stopOpacity={0}/>
               </linearGradient>
             </defs>
             <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
@@ -116,7 +116,7 @@ const CostTrendChart = ({ data, limit = 30, onLimitChange, billingPeriod = null,
               strokeWidth={1}
               label={{ value: `Avg daily spend: ${formatCurrency(avgDailySpend)}`, position: 'right', fill: '#9ca3af', fontSize: 9 }}
             />
-            <Area type="monotone" dataKey="cost" stroke="#007758" strokeWidth={2} fillOpacity={1} fill="url(#colorCost)" />
+            <Area type="monotone" dataKey="cost" stroke="#23a282" strokeWidth={2} fillOpacity={1} fill="url(#colorCost)" />
           </AreaChart>
         </ResponsiveContainer>
       </div>

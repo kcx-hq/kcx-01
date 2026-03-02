@@ -70,7 +70,7 @@ function MissingTagsTable({ rows, sortBy, sortOrder, onSortChange }: MissingTags
                 ))}
               </div>
             </td>
-            <td className="px-4 py-3 text-right font-mono text-[#007758]">
+            <td className="px-4 py-3 text-right font-mono text-[#23a282]">
               {formatCurrency(r.cost || 0)}
             </td>
           </tr>
@@ -116,8 +116,8 @@ export function AccountsOwnershipView({
     <div className="p-6 space-y-5 min-h-screen bg-[#0f0f11] text-white font-sans animate-in fade-in duration-500 relative">
       {/* subtle filtering indicator */}
       {isFiltering && hasData && (
-        <div className="absolute top-4 right-4 z-50 flex items-center gap-2 bg-[#1a1b20] border border-[#007758]/30 rounded-lg px-3 py-2 shadow-lg">
-          <Loader2 size={16} className="text-[#007758] animate-spin" />
+        <div className="absolute top-4 right-4 z-50 flex items-center gap-2 bg-[#1a1b20] border border-[#23a282]/30 rounded-lg px-3 py-2 shadow-lg">
+          <Loader2 size={16} className="text-[#23a282] animate-spin" />
           <p className="text-gray-400 text-xs">Updating...</p>
         </div>
       )}
@@ -127,7 +127,7 @@ export function AccountsOwnershipView({
         <div className="p-6 border-b border-white/10 flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
           <div>
             <h1 className="text-2xl font-extrabold flex items-center gap-2">
-              <Tags className="text-[#007758]" size={22} />
+              <Tags className="text-[#23a282]" size={22} />
               Tag Coverage
             </h1>
             <p className="text-gray-400 text-sm mt-1">
@@ -160,7 +160,7 @@ export function AccountsOwnershipView({
 
           <button
             onClick={onExport}
-            className="shrink-0 flex items-center gap-2 px-4 py-2 rounded-xl bg-[#007758]/10 hover:bg-[#007758]/20 border border-[#007758]/30 text-[#007758] text-xs font-extrabold transition"
+            className="shrink-0 flex items-center gap-2 px-4 py-2 rounded-xl bg-[#23a282]/10 hover:bg-[#23a282]/20 border border-[#23a282]/30 text-[#23a282] text-xs font-extrabold transition"
           >
             <Download size={14} /> Export CSV
           </button>
@@ -184,7 +184,7 @@ export function AccountsOwnershipView({
             value={searchTerm}
             onChange={(e: ChangeEvent<HTMLInputElement>) => setSearchTerm(e.target.value)}
             placeholder="Search resource id, name, tag, cost..."
-            className="w-full md:w-[420px] px-4 py-2 rounded-xl bg-[#1a1b20] border border-white/10 text-xs text-white focus:outline-none focus:border-[#007758]"
+            className="w-full md:w-[420px] px-4 py-2 rounded-xl bg-[#1a1b20] border border-white/10 text-xs text-white focus:outline-none focus:border-[#23a282]"
           />
           <select
             value={filterProvider}

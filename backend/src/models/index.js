@@ -23,6 +23,7 @@ import ChatMessage from "./chatbot/ChatMessage.model.js";
 import RawAwsBillingRow from "./rawBillingRaw.model.js";
 import ClientS3Integrations from "./clientS3Intergration.model.js";
 import CloudAccountCredentials from "./cloudAccountCredentials.model.js";
+import DashboardBudgetTarget from "./dashboardBudgetTarget.model.js";
 
 /* =========================
    Define Associations
@@ -68,6 +69,15 @@ Client.hasMany(MappingSuggestion, {
 MappingSuggestion.belongsTo(Client, {
   foreignKey: 'clientid',
   as: 'client'
+});
+
+Client.hasMany(DashboardBudgetTarget, {
+  foreignKey: "clientid",
+  as: "dashboardBudgetTargets",
+});
+DashboardBudgetTarget.belongsTo(Client, {
+  foreignKey: "clientid",
+  as: "client",
 });
 
 
@@ -164,7 +174,8 @@ export {
   ChatMessage,
   RawAwsBillingRow,
   ClientS3Integrations,
-  CloudAccountCredentials
+  CloudAccountCredentials,
+  DashboardBudgetTarget,
 };
 
 

@@ -1,7 +1,7 @@
 import React from "react";
 import { DollarSign, Zap, TrendingDown } from "lucide-react";
 
-const BRAND = "#007758";
+const BRAND = "#23a282";
 const BRAND_SOFT = "#00c592";
 const HIGHLIGHT = "#e5f9f4";
 
@@ -63,18 +63,18 @@ const MetricCards = ({ totalSpend, leakageCost, efficiency }: MetricCardsProps) 
         className="glass-card relative overflow-hidden border"
         style={{
           borderColor: BRAND,
-          boxShadow: "0 0 24px rgba(0,119,88,0.15)",
+          boxShadow: "0 0 24px rgba(35,162,130,0.15)",
         }}
       >
         <div
           className="absolute -right-4 -top-4 w-32 h-32 rounded-full blur-2xl"
-          style={{ background: "rgba(0,119,88,0.25)" }}
+          style={{ background: "rgba(35,162,130,0.25)" }}
         />
 
         <div className="flex items-center gap-3 mb-2">
           <div
             className="w-8 h-8 rounded-lg flex items-center justify-center"
-            style={{ background: "rgba(0,119,88,0.15)", color: BRAND }}
+            style={{ background: "rgba(35,162,130,0.15)", color: BRAND }}
           >
             <Zap size={16} />
           </div>
@@ -97,7 +97,7 @@ const MetricCards = ({ totalSpend, leakageCost, efficiency }: MetricCardsProps) 
         <div className="flex items-center gap-3 mb-2">
           <div
             className="w-8 h-8 rounded-lg flex items-center justify-center"
-            style={{ background: "rgba(0,197,146,0.2)", color: BRAND_SOFT }}
+            style={{ background: "rgba(35,162,130,0.2)", color: BRAND_SOFT }}
           >
             <TrendingDown size={16} />
           </div>
@@ -118,7 +118,7 @@ const MetricCards = ({ totalSpend, leakageCost, efficiency }: MetricCardsProps) 
             style={{
               width: `${efficiency}%`,
               background: BRAND_SOFT,
-              boxShadow: "0 0 10px rgba(0,197,146,0.4)",
+              boxShadow: "0 0 10px rgba(35,162,130,0.4)",
             }}
             className="h-full rounded-full"
           />

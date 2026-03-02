@@ -42,7 +42,7 @@ const FilterSelect = ({ field, displayLabel, icon: Icon, iconColor, options, val
       <select
         value={value || "All"}
         onChange={(e: ChangeEvent<HTMLSelectElement>) => onChange(field, e.target.value)}
-        className="appearance-none bg-[#0f0f11] border border-white/10 hover:border-[#007758]/50 rounded-lg pl-3 pr-8 py-2 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-[#007758]/50 transition-all min-w-[140px] text-gray-300 z-40 relative cursor-pointer"
+        className="appearance-none bg-[#0f0f11] border border-white/10 hover:border-[#23a282]/50 rounded-lg pl-3 pr-8 py-2 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-[#23a282]/50 transition-all min-w-[140px] text-gray-300 z-40 relative cursor-pointer"
       >
         <option value="All">All</option>
         {Array.isArray(options) && options
@@ -87,7 +87,7 @@ const FilterBar = ({
       className="bg-[#1a1b20] border border-white/5 p-4 rounded-xl flex flex-wrap gap-4 items-center shadow-lg relative z-40"
     >
       <div className="flex items-center gap-2 text-sm text-gray-400 font-bold mr-2 uppercase tracking-wider">
-        <Filter size={16} className="text-[#007758]" /> Filters
+        <Filter size={16} className="text-[#23a282]" /> Filters
       </div>
       
       <FilterSelect 
@@ -104,7 +104,7 @@ const FilterBar = ({
         field="service" 
         displayLabel="Service" 
         icon={Settings} 
-        iconColor="text-[#007758]" 
+        iconColor="text-[#23a282]" 
         options={serviceOptions} 
         value={filters.service} 
         onChange={handleFilterChange}

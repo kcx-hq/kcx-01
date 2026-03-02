@@ -29,7 +29,7 @@ const STAGE_COLOR = {
   validated: "#3b82f6",
   planned: "#f59e0b",
   implemented: "#f97316",
-  verified: "#10b981",
+  verified: "#23a282",
   realized: "#047857",
 };
 

@@ -5,16 +5,16 @@ import { MapPin, Settings2 } from "lucide-react";
 // ✅ theme only (your new palette)
 const COLORS = [
   "#00c592", // brand-primary
-  "#007758", // brand-secondary
+  "#23a282", // brand-secondary
   "#c8e635", // accent-lime
   "#ffd24d", // accent-yellow
   "#e5f9f4", // soft mint
   "#1cc8ee", // accent-cyan
   "#60a5fa", // keep blue
-  "#34d399", // keep green
+  "#23a282", // keep green
 ];
 
-const BRAND = "#007758";
+const BRAND = "#23a282";
 const BRAND_SOFT = "#00c592";
 
 interface RegionSpendDatum {
@@ -84,15 +84,15 @@ const RegionPieChart = ({ data, limit = 8, onLimitChange, totalSpend = 0 }: Regi
                 borderColor: "rgba(255,255,255,0.10)",
               }}
               onFocus={(e: React.FocusEvent<HTMLSelectElement>) => {
-                e.currentTarget.style.borderColor = "rgba(0,197,146,0.55)";
-                e.currentTarget.style.boxShadow = "0 0 0 4px rgba(0,197,146,0.12)";
+                e.currentTarget.style.borderColor = "rgba(35,162,130,0.55)";
+                e.currentTarget.style.boxShadow = "0 0 0 4px rgba(35,162,130,0.12)";
               }}
               onBlur={(e: React.FocusEvent<HTMLSelectElement>) => {
                 e.currentTarget.style.borderColor = "rgba(255,255,255,0.10)";
                 e.currentTarget.style.boxShadow = "none";
               }}
               onMouseEnter={(e: React.MouseEvent<HTMLSelectElement>) => {
-                e.currentTarget.style.borderColor = "rgba(0,197,146,0.45)";
+                e.currentTarget.style.borderColor = "rgba(35,162,130,0.45)";
               }}
               onMouseLeave={(e: React.MouseEvent<HTMLSelectElement>) => {
                 e.currentTarget.style.borderColor = "rgba(255,255,255,0.10)";
@@ -149,7 +149,7 @@ const RegionPieChart = ({ data, limit = 8, onLimitChange, totalSpend = 0 }: Regi
                       fontWeight="600"
                       style={{
                         textShadow:
-                          "0 0 8px rgba(255,255,255,0.7), 0 0 12px rgba(0,197,146,0.45), 0 0 16px rgba(0,119,88,0.35)",
+                          "0 0 8px rgba(255,255,255,0.7), 0 0 12px rgba(35,162,130,0.45), 0 0 16px rgba(35,162,130,0.35)",
                         textRendering: "geometricPrecision",
                         WebkitFontSmoothing: "antialiased",
                         MozOsxFontSmoothing: "grayscale",

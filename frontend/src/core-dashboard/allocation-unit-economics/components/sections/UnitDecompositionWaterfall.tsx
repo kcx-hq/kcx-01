@@ -2,7 +2,6 @@ import React from 'react';
 import { Bar, BarChart, CartesianGrid, Cell, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import type { AllocationUnitEconomicsViewModel } from '../../types';
 import { formatNumber } from '../../utils/format';
-import DenominatorGateBadge from './DenominatorGateBadge';
 
 interface UnitDecompositionWaterfallProps {
   model: AllocationUnitEconomicsViewModel;
@@ -15,7 +14,6 @@ export default function UnitDecompositionWaterfall({ model }: UnitDecompositionW
       <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
         <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
           <h3 className="text-sm font-black uppercase tracking-wider text-slate-800">Unit Decomposition Waterfall</h3>
-          <DenominatorGateBadge status={gate.status} reasons={gate.reasons} metric={gate.metric} />
         </div>
         <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-10 text-center text-sm font-semibold text-amber-800">
           Decomposition is hidden due to denominator gate failure.
@@ -34,7 +32,6 @@ export default function UnitDecompositionWaterfall({ model }: UnitDecompositionW
     <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
       <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
         <h3 className="text-sm font-black uppercase tracking-wider text-slate-800">Unit Decomposition Waterfall</h3>
-        <DenominatorGateBadge status={gate.status} reasons={gate.reasons} metric={gate.metric} />
       </div>
 
       <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
@@ -52,7 +49,7 @@ export default function UnitDecompositionWaterfall({ model }: UnitDecompositionW
               <Tooltip formatter={(value) => formatNumber(Number(value || 0), 6)} />
               <Bar dataKey="value">
                 {rows.map((row, index) => (
-                  <Cell key={`${row.name}-${index}`} fill={row.value >= 0 ? '#f59e0b' : '#10b981'} />
+                  <Cell key={`${row.name}-${index}`} fill={row.value >= 0 ? '#f59e0b' : '#23a282'} />
                 ))}
               </Bar>
             </BarChart>

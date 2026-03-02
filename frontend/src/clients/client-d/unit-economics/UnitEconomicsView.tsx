@@ -70,7 +70,7 @@ export default function UnitEconomicsView({
           <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
             <div>
               <div className="text-2xl font-extrabold tracking-tight flex items-center gap-2">
-                <Layers className="text-[#007758]" size={22} />
+                <Layers className="text-[#23a282]" size={22} />
                 Unit Economics
               </div>
               <div className="text-sm text-gray-400 mt-1">
@@ -148,7 +148,7 @@ export default function UnitEconomicsView({
       <div className="rounded-2xl border border-white/10 bg-[#121319] shadow-2xl overflow-hidden">
         <div className="px-4 py-3 border-b border-white/10 bg-black/20">
           <div className="text-xs font-extrabold tracking-wide text-gray-200 flex items-center gap-2">
-            <TrendingUp size={14} className="text-[#007758]" />
+            <TrendingUp size={14} className="text-[#23a282]" />
             Trend
             <span className="text-[10px] text-gray-500 font-bold">(date / unit price / qty / cost)</span>
           </div>
@@ -204,7 +204,7 @@ export default function UnitEconomicsView({
                   value={skuSearch}
                   onChange={(e: ChangeEvent<HTMLInputElement>) => setSkuSearch(e.target.value)}
                   placeholder="Search SKU..."
-                  className="w-full pl-9 pr-3 py-2 rounded-xl bg-[#1a1b20] border border-white/10 focus:border-[#007758]/60 outline-none text-xs text-gray-200"
+                  className="w-full pl-9 pr-3 py-2 rounded-xl bg-[#1a1b20] border border-white/10 focus:border-[#23a282]/60 outline-none text-xs text-gray-200"
                 />
               </div>
             )}

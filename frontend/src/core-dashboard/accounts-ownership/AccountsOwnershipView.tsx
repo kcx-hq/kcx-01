@@ -5,12 +5,13 @@ import InsightsGrid from "./components/InsightsGrid";
 import Toolbar from "./components/Toolbar";
 import AccountsTable from "./components/AccountsTable";
 import PremiumGate from "../common/PremiumGate";
-import { SectionLoading } from "../common/SectionStates";
+import { SectionLoading, SectionRefreshOverlay } from "../common/SectionStates";
 import type { AccountsOwnershipViewProps } from "./types";
 
 export function AccountsOwnershipView({
   isPremiumMasked,
   loading,
+  isFiltering,
   error,
   insights,
   providers,
@@ -51,7 +52,10 @@ export function AccountsOwnershipView({
 
       <InsightsGrid insights={insights} />
 
-      <div className="core-card flex flex-col overflow-hidden">
+      <div className="core-card relative flex flex-col overflow-hidden">
+        {isFiltering ? (
+          <SectionRefreshOverlay rounded="rounded-2xl" label="Refreshing accounts & ownership..." />
+        ) : null}
         <Toolbar
           searchTerm={searchTerm}
           setSearchTerm={setSearchTerm}

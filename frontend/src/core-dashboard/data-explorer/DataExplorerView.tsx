@@ -32,7 +32,7 @@ import PremiumGate from "../common/PremiumGate";
 import DetailPanel from "./components/DetailPanel";
 import TableRow from "./components/TableRow";
 import { downloadCsvFromBackend } from "./utils/downloadCsvFromBackend";
-import { SectionLoading } from "../common/SectionStates";
+import { SectionLoading, SectionRefreshOverlay } from "../common/SectionStates";
 import type {
   DataExplorerGroupedItem,
   DataExplorerRow,
@@ -41,7 +41,7 @@ import type {
   ExplorerSelectChange,
 } from "./types";
 
-const BRAND_EMERALD = "#007758";
+const BRAND_EMERALD = "#23a282";
 
 const DataExplorerView = ({
   api, caps, loading, isFiltering, isPaginating, data, totalCount, allColumns, quickStats,
@@ -77,18 +77,18 @@ const DataExplorerView = ({
         <div className="flex flex-col gap-3 p-3 md:p-4 xl:flex-row xl:items-center xl:justify-between">
           <div className="flex w-full items-center gap-3 overflow-x-auto no-scrollbar md:gap-5 xl:w-auto">
             <div className="p-2.5 bg-emerald-50 rounded-xl border border-emerald-100 shadow-sm">
-              <TableIcon className="text-[#007758]" size={18} />
+              <TableIcon className="text-[#23a282]" size={18} />
             </div>
 
             {/* Column search */}
             <div className="relative group">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-[#007758] transition-colors" size={14} />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-[#23a282] transition-colors" size={14} />
                 <input
                   type="text"
                   placeholder="Search columns..."
                   value={searchTerm}
                   onChange={(e: ExplorerInputChange) => setSearchTerm(e.target.value)}
-                  className="w-44 rounded-xl border border-slate-200 bg-white py-2 pl-9 pr-4 text-xs text-slate-900 shadow-sm transition-all focus:border-[#007758]/30 focus:outline-none focus:ring-4 focus:ring-emerald-50 sm:w-56"
+                  className="w-44 rounded-xl border border-slate-200 bg-white py-2 pl-9 pr-4 text-xs text-slate-900 shadow-sm transition-all focus:border-[#23a282]/30 focus:outline-none focus:ring-4 focus:ring-emerald-50 sm:w-56"
                 />
             </div>
 
@@ -99,7 +99,7 @@ const DataExplorerView = ({
               <button
                 onClick={() => setViewMode("table")}
                 className={`px-4 py-1.5 flex items-center gap-2 rounded-lg text-xs font-black transition-all ${
-                  viewMode === "table" ? "bg-white text-[#007758] shadow-sm" : "text-slate-500 hover:text-slate-700"
+                  viewMode === "table" ? "bg-white text-[#23a282] shadow-sm" : "text-slate-500 hover:text-slate-700"
                 }`}
               >
                 <Layers size={14} /> List View
@@ -107,7 +107,7 @@ const DataExplorerView = ({
               <button
                 onClick={() => setViewMode("pivot")}
                 className={`px-4 py-1.5 flex items-center gap-2 rounded-lg text-xs font-black transition-all ${
-                  viewMode === "pivot" ? "bg-white text-[#007758] shadow-sm" : "text-slate-500 hover:text-slate-700"
+                  viewMode === "pivot" ? "bg-white text-[#23a282] shadow-sm" : "text-slate-500 hover:text-slate-700"
                 }`}
               >
                 <PieChart size={14} /> Pivot Group
@@ -139,7 +139,7 @@ const DataExplorerView = ({
                   <button
                     onClick={() => setShowColumnMenu(!showColumnMenu)}
                     className={`flex items-center gap-2 px-3 md:px-4 py-2 border rounded-xl text-xs font-bold transition-all whitespace-nowrap ${
-                      showColumnMenu ? "bg-[#007758] text-white border-[#007758] shadow-lg shadow-emerald-100" : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50"
+                      showColumnMenu ? "bg-[#23a282] text-white border-[#23a282] shadow-lg shadow-emerald-100" : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50"
                     }`}
                   >
                     <EyeOff size={14} /> Visibility
@@ -154,10 +154,10 @@ const DataExplorerView = ({
                         <button
                           key={col}
                           onClick={() => toggleColumn(col)}
-                          className="flex items-center justify-between w-full px-3 py-2 text-xs font-bold text-slate-600 hover:bg-emerald-50 hover:text-[#007758] rounded-xl transition-colors"
+                          className="flex items-center justify-between w-full px-3 py-2 text-xs font-bold text-slate-600 hover:bg-emerald-50 hover:text-[#23a282] rounded-xl transition-colors"
                         >
                           <span className="truncate pr-4">{col}</span>
-                          {!hiddenColumns.includes(col) && <Check size={14} className="text-[#007758]" />}
+                          {!hiddenColumns.includes(col) && <Check size={14} className="text-[#23a282]" />}
                         </button>
                       ))}
                     </div>
@@ -167,7 +167,7 @@ const DataExplorerView = ({
                 <button
                   onClick={() => setShowDataBars(!showDataBars)}
                   className={`p-2.5 rounded-xl border transition-all ${
-                    showDataBars ? "bg-emerald-50 border-emerald-200 text-[#007758]" : "bg-white border-slate-200 text-slate-400 hover:text-slate-600"
+                    showDataBars ? "bg-emerald-50 border-emerald-200 text-[#23a282]" : "bg-white border-slate-200 text-slate-400 hover:text-slate-600"
                   }`}
                 >
                   <BarChart3 size={16} />
@@ -184,7 +184,7 @@ const DataExplorerView = ({
 
                 <button
                   onClick={downloadCSV}
-                  className="flex items-center gap-2 px-3 md:px-5 py-2 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 rounded-xl text-xs font-black text-[#007758] transition-all whitespace-nowrap"
+                  className="flex items-center gap-2 px-3 md:px-5 py-2 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 rounded-xl text-xs font-black text-[#23a282] transition-all whitespace-nowrap"
                 >
                   <Download size={14} /> {selectedIndices.size > 0 ? "Export Selection" : "Export CSV"}
                 </button>
@@ -198,7 +198,7 @@ const DataExplorerView = ({
           <div className="flex flex-col gap-3 border-t border-slate-100 bg-white px-3 py-2.5 text-xs shadow-[inset_0_2px_4px_rgba(0,0,0,0.02)] md:px-6 lg:flex-row lg:items-center lg:justify-between">
             <div className="flex flex-wrap items-center gap-4 md:gap-10">
               <div className="flex items-center gap-3">
-                <div className="p-1.5 rounded-lg bg-emerald-50 text-[#007758] border border-emerald-100">
+                <div className="p-1.5 rounded-lg bg-emerald-50 text-[#23a282] border border-emerald-100">
                   <DollarSign size={12} />
                 </div>
                 <div className="flex flex-col">
@@ -252,7 +252,7 @@ const DataExplorerView = ({
                     <button
                       key={key}
                       onClick={() => removeFilter(key)}
-                      className="flex items-center gap-1.5 px-2.5 py-1 bg-emerald-50 border border-emerald-100 text-[#007758] rounded-md text-[10px] font-bold hover:bg-emerald-100 transition-colors shadow-sm"
+                      className="flex items-center gap-1.5 px-2.5 py-1 bg-emerald-50 border border-emerald-100 text-[#23a282] rounded-md text-[10px] font-bold hover:bg-emerald-100 transition-colors shadow-sm"
                     >
                       <span className="opacity-60">{key}:</span> {val} <X size={10} strokeWidth={3} />
                     </button>
@@ -266,12 +266,9 @@ const DataExplorerView = ({
 
       {/* CONTENT AREA */}
       <div className="flex-1 w-full overflow-auto bg-white relative scrollbar-thin scrollbar-thumb-slate-200">
-        {isFiltering && !loading && (
-          <div className="absolute right-2 top-2 z-50 flex items-center gap-2 rounded-xl bg-emerald-600 px-3 py-1.5 text-white shadow-xl animate-in slide-in-from-top-4 md:right-6 md:top-4 md:gap-3 md:px-4 md:py-2">
-            <Loader2 className="animate-spin" size={14} />
-            <span className="text-[10px] font-black uppercase tracking-widest text-white">Applying Filters</span>
-          </div>
-        )}
+        {isFiltering && !loading ? (
+          <SectionRefreshOverlay rounded="rounded-none" label="Refreshing data explorer..." />
+        ) : null}
 
         {/* TABLE VIEW */}
         {viewMode === "table" && (
@@ -281,7 +278,7 @@ const DataExplorerView = ({
                 <th className="px-4 py-4 sticky left-0 z-40 bg-slate-50 border-b border-r border-slate-100 w-[60px] text-center">
                   <button
                     onClick={() => selectedIndices.size === tableDataToRender.length ? setSelectedIndices(new Set<number>()) : setSelectedIndices(new Set(tableDataToRender.map((_: DataExplorerRow, i: number) => (currentPage - 1) * rowsPerPage + i)))}
-                    className="text-slate-400 hover:text-[#007758] transition-colors"
+                    className="text-slate-400 hover:text-[#23a282] transition-colors"
                   >
                     <CheckSquare size={16} />
                   </button>
@@ -298,10 +295,10 @@ const DataExplorerView = ({
                       onClick={() => setSortConfig({ key: col, direction: sortConfig.key === col && sortConfig.direction === "asc" ? "desc" : "asc" })}
                     >
                       <div className="flex items-center justify-between gap-2">
-                        <span className={`font-black uppercase tracking-wider text-[10px] ${isMatched ? "text-[#007758]" : "text-slate-500"}`}>{col}</span>
+                        <span className={`font-black uppercase tracking-wider text-[10px] ${isMatched ? "text-[#23a282]" : "text-slate-500"}`}>{col}</span>
                         <div className="flex flex-col gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <ChevronUp size={10} className={sortConfig.key === col && sortConfig.direction === "asc" ? "text-[#007758]" : "text-slate-300"} />
-                          <ChevronDown size={10} className={sortConfig.key === col && sortConfig.direction === "desc" ? "text-[#007758]" : "text-slate-300"} />
+                          <ChevronUp size={10} className={sortConfig.key === col && sortConfig.direction === "asc" ? "text-[#23a282]" : "text-slate-300"} />
+                          <ChevronDown size={10} className={sortConfig.key === col && sortConfig.direction === "desc" ? "text-[#23a282]" : "text-slate-300"} />
                         </div>
                       </div>
                     </th>
@@ -325,7 +322,7 @@ const DataExplorerView = ({
                             return { ...prev, [col]: val };
                           });
                         }}
-                        className="w-full px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-[11px] text-slate-900 font-semibold focus:outline-none focus:ring-4 focus:ring-emerald-50 focus:border-[#007758]/30 transition-all placeholder:text-slate-300"
+                        className="w-full px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-[11px] text-slate-900 font-semibold focus:outline-none focus:ring-4 focus:ring-emerald-50 focus:border-[#23a282]/30 transition-all placeholder:text-slate-300"
                       />
                     </th>
                   ))}
@@ -347,7 +344,7 @@ const DataExplorerView = ({
             </tbody>
 
             {/* SUMMARY FOOTER */}
-            <tfoot className="sticky bottom-0 z-30 bg-slate-50 border-t-2 border-[#007758]/10 shadow-[0_-4px_15px_rgba(0,0,0,0.03)]">
+            <tfoot className="sticky bottom-0 z-30 bg-slate-50 border-t-2 border-[#23a282]/10 shadow-[0_-4px_15px_rgba(0,0,0,0.03)]">
               <tr>
                 <td className="sticky left-0 z-40 bg-slate-50 border-r border-slate-100"></td>
                 {visibleColumns.map((col: string, idx: number) => {
@@ -357,7 +354,7 @@ const DataExplorerView = ({
                     <td
                       key={col}
                       className={`px-5 py-4 font-black text-[11px] whitespace-nowrap border-r border-slate-100 bg-slate-50/80 backdrop-blur-sm ${
-                        idx === 0 ? "sticky left-[60px] z-40 border-r-emerald-500/20 text-[#007758]" : "text-slate-700"
+                        idx === 0 ? "sticky left-[60px] z-40 border-r-emerald-500/20 text-[#23a282]" : "text-slate-700"
                       } ${isNumeric ? "text-right font-mono" : ""}`}
                     >
                       {idx === 0 ? "AGGREGATE TOTALS" : isNumeric ? `$${total.toLocaleString(undefined, { minimumFractionDigits: 2 })}` : ""}
@@ -387,7 +384,7 @@ const DataExplorerView = ({
                 <table className="min-w-full text-xs text-left border-collapse">
                     <thead className="bg-slate-50 border-b border-slate-200">
                     <tr>
-                        <th className="px-6 py-4 font-black uppercase text-[10px] text-[#007758] tracking-[0.15em]">{groupByCol} Dimensional Group</th>
+                        <th className="px-6 py-4 font-black uppercase text-[10px] text-[#23a282] tracking-[0.15em]">{groupByCol} Dimensional Group</th>
                         <th className="px-6 py-4 font-black uppercase text-[10px] text-slate-500 tracking-[0.15em] text-right">Occurrence</th>
                         <th className="px-6 py-4 font-black uppercase text-[10px] text-slate-500 tracking-[0.15em] text-right">Total Impact</th>
                         <th className="px-6 py-4 font-black uppercase text-[10px] text-slate-500 tracking-[0.15em] w-64">Relative Distribution</th>
@@ -396,15 +393,15 @@ const DataExplorerView = ({
                     <tbody className="divide-y divide-slate-100">
                     {clientSideGroupedData.map((group: DataExplorerGroupedItem, idx: number) => (
                         <tr key={idx} onClick={() => handleDrillDown(group)} className="hover:bg-emerald-50/30 cursor-pointer transition-colors group">
-                        <td className="px-6 py-4 font-black text-slate-900 group-hover:text-[#007758]">{group.name}</td>
+                        <td className="px-6 py-4 font-black text-slate-900 group-hover:text-[#23a282]">{group.name}</td>
                         <td className="px-6 py-4 text-right text-slate-500 font-bold">{group.count.toLocaleString()}</td>
-                        <td className="px-6 py-4 text-right font-mono text-[#007758] font-black">${group.totalCost.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+                        <td className="px-6 py-4 text-right font-mono text-[#23a282] font-black">${group.totalCost.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
                         <td className="px-6 py-4">
                             <div className="flex items-center gap-3">
                                 <div className="flex-1 h-2 bg-slate-100 rounded-full overflow-hidden shadow-inner">
-                                    <div className="h-full bg-gradient-to-r from-[#007758] to-[#10b981] rounded-full" style={{ width: `${group.percent}%` }} />
+                                    <div className="h-full bg-gradient-to-r from-[#23a282] to-[#23a282] rounded-full" style={{ width: `${group.percent}%` }} />
                                 </div>
-                                <span className="text-[10px] font-black text-[#007758] w-10 text-right">{group.percent.toFixed(1)}%</span>
+                                <span className="text-[10px] font-black text-[#23a282] w-10 text-right">{group.percent.toFixed(1)}%</span>
                             </div>
                         </td>
                         </tr>
@@ -438,7 +435,7 @@ const DataExplorerView = ({
               Page {currentPage} of {totalPages}
             </span>
             {isPaginating && (
-              <span className="inline-flex items-center gap-1.5 rounded-md border border-emerald-200 bg-emerald-50 px-2 py-1 text-[10px] font-black uppercase tracking-wider text-[#007758]">
+              <span className="inline-flex items-center gap-1.5 rounded-md border border-emerald-200 bg-emerald-50 px-2 py-1 text-[10px] font-black uppercase tracking-wider text-[#23a282]">
                 <Loader2 size={10} className="animate-spin" />
                 Loading page...
               </span>
@@ -448,7 +445,7 @@ const DataExplorerView = ({
                 <select
                 value={rowsPerPage}
                 onChange={(e: ExplorerSelectChange) => setRowsPerPage(Number(e.target.value))}
-                className="bg-white border border-slate-200 rounded-lg px-2 py-1 text-slate-700 outline-none focus:border-[#007758] shadow-sm cursor-pointer transition-all"
+                className="bg-white border border-slate-200 rounded-lg px-2 py-1 text-slate-700 outline-none focus:border-[#23a282] shadow-sm cursor-pointer transition-all"
                 >
                 <option value={50}>50 Rows</option>
                 <option value={100}>100 Rows</option>
@@ -473,7 +470,7 @@ const DataExplorerView = ({
                             key={pgNum} 
                             onClick={() => setCurrentPage(pgNum)}
                             disabled={isPaginating}
-                            className={`w-8 h-8 rounded-xl flex items-center justify-center transition-all ${currentPage === pgNum ? "bg-[#007758] text-white shadow-lg shadow-emerald-100" : "text-slate-500 hover:bg-slate-200/50"}`}
+                            className={`w-8 h-8 rounded-xl flex items-center justify-center transition-all ${currentPage === pgNum ? "bg-[#23a282] text-white shadow-lg shadow-emerald-100" : "text-slate-500 hover:bg-slate-200/50"}`}
                         >
                             {pgNum}
                         </button>

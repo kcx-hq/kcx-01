@@ -17,9 +17,14 @@ const Footer = () => {
                 alt="KCX. Logo"
                 className="h-8 w-auto object-contain shrink-0"
               />
-              <span className="text-[1.75rem] font-bold leading-none tracking-tight text-[var(--text-on-dark)]">
-                KCX<span className="text-[var(--brand-primary-hover)]">.</span>
-              </span>
+              <div className="leading-none">
+                <span className="block text-[1.75rem] font-bold tracking-tight text-[var(--text-on-dark)]">
+                  KC<span className="text-[var(--brand-primary)]">X</span>
+                </span>
+                <span className="mt-0.5 block text-[10px] font-medium tracking-wide text-[var(--text-on-dark-muted)]">
+                  FINOPS PLATFORM
+                </span>
+              </div>
             </a>
 
             <p className="text-[var(--text-on-dark-muted)] text-sm mb-6">

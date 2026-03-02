@@ -261,12 +261,54 @@ const budgetStatusByPercent = (value) => {
   return 'On track';
 };
 
+const statusFromBudgetVariancePercent = (value) => {
+  const pct = moneyToNumber(value);
+  if (pct <= 0) return 'On track';
+  if (pct <= 5) return 'Watch';
+  return 'Over budget';
+};
+
+const statusFromRiskExposurePercent = (value) => {
+  const pct = moneyToNumber(value);
+  if (pct >= 20) return 'High';
+  if (pct >= 8) return 'Medium';
+  return 'Low';
+};
+
+const formatMonthLabel = (monthKey) => {
+  if (!monthKey || !/^\d{4}-\d{2}$/.test(String(monthKey))) return monthKey || 'N/A';
+  const [yearStr, monthStr] = String(monthKey).split('-');
+  const year = Number(yearStr);
+  const month = Number(monthStr);
+  if (!Number.isFinite(year) || !Number.isFinite(month)) return monthKey;
+  const date = new Date(Date.UTC(year, Math.max(0, month - 1), 1));
+  return date.toLocaleDateString('en-US', { month: 'short', year: 'numeric', timeZone: 'UTC' });
+};
+
+const getTrailingMonthKeys = (referenceDate, count = 6) => {
+  const safeRef = toSafeDate(referenceDate) || new Date();
+  const out = [];
+  for (let idx = count - 1; idx >= 0; idx -= 1) {
+    const d = new Date(Date.UTC(safeRef.getUTCFullYear(), safeRef.getUTCMonth() - idx, 1));
+    out.push(`${d.getUTCFullYear()}-${pad2(d.getUTCMonth() + 1)}`);
+  }
+  return out;
+};
+
+const daysBetween = (fromDate, toDate) => {
+  const start = toSafeDate(fromDate);
+  const end = toSafeDate(toDate);
+  if (!start || !end) return 0;
+  return Math.max(0, Math.floor((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)));
+};
+
 const buildEmptyExecutiveOverview = () => ({
   kpiHeader: {
     mtdSpend: 0,
     mtdSpendDeltaPercent: 0,
     eomForecast: 0,
     budget: 0,
+    budgetConsumedPercent: 0,
     budgetVarianceValue: 0,
     budgetVariancePercent: 0,
     trend7dDeltaPercent: 0,
@@ -281,6 +323,7 @@ const buildEmptyExecutiveOverview = () => ({
       mtdSpend: { comparison: 'vs prior 0.0%', comparisonValue: 0, status: 'On track' },
       eomForecast: { comparison: 'vs budget 0.0%', comparisonValue: 0, status: 'On track' },
       budgetVariance: { comparison: 'variance 0.0%', comparisonValue: 0, status: 'On track' },
+      budgetConsumed: { comparison: '0.0% consumed', comparisonValue: 0, status: 'On track' },
       costTrend: { comparison: '30d 0.0%', comparisonValue: 0, status: 'On track' },
       openAlertRisk: { comparison: '0 high', comparisonValue: 0, status: 'On track' },
       trustScore: { comparison: 'Low confidence', comparisonValue: 0, status: 'Watch' },
@@ -290,6 +333,7 @@ const buildEmptyExecutiveOverview = () => ({
     ownerLinks: {
       mtdSpend: '/dashboard/forecasting-budgets',
       eomForecast: '/dashboard/forecasting-budgets',
+      budgetConsumed: '/dashboard/forecasting-budgets',
       costTrend: '/dashboard/cost-drivers',
       openAlertRisk: '/dashboard/alerts-incidents',
       trustScore: '/dashboard/data-quality',
@@ -306,6 +350,37 @@ const buildEmptyExecutiveOverview = () => ({
       budgetSource: 'Auto baseline from prior trend',
       realizedSavingsMethod: 'Sum(max(ListCost - EffectiveCost, 0)) within current month window',
     },
+  },
+  statusIndicators: {
+    financialHealth: 'On track',
+    riskLevel: 'Low',
+    forecastConfidence: 'Low',
+  },
+  financialSnapshot: {
+    mtdSpend: 0,
+    eomForecast: 0,
+    monthlyBudget: 0,
+    budgetVarianceValue: 0,
+    budgetVariancePercent: 0,
+    budgetConsumedPercent: 0,
+  },
+  riskOptimizationSummary: {
+    riskExposure: {
+      totalRiskExposure: 0,
+      riskTrendMoMPercent: 0,
+      topRiskDrivers: [],
+    },
+    optimizationImpact: {
+      realizedSavingsYtd: 0,
+      potentialSavings: 0,
+      realizationRatePercent: 0,
+    },
+  },
+  spendTrend6m: [],
+  keyFinancialDrivers: {
+    topMovers: [],
+    topRisks: [],
+    topActions: [],
   },
   outcomeAndRisk: {
     budgetBurn: {
@@ -608,6 +683,7 @@ export const dashboardService = {
       costSharePercentage(ownedSpendValue, ownershipSpendTotal || 1),
       2
     );
+    const unallocatedSpendValue = roundTo(Math.max(0, totalSpendNum - ownedSpendValue), 2);
 
     const pipelineSavings = roundTo(
       [
@@ -631,11 +707,13 @@ export const dashboardService = {
       ...(costDriversPreview?.increases || []).map((d) => ({
         name: d?.name || 'Unknown',
         deltaValue: roundTo(moneyToNumber(d?.diff), 2),
+        deltaPercent: roundTo(moneyToNumber(d?.pct), 2),
         direction: 'increase',
       })),
       ...(costDriversPreview?.decreases || []).map((d) => ({
         name: d?.name || 'Unknown',
         deltaValue: roundTo(moneyToNumber(d?.diff), 2),
+        deltaPercent: roundTo(moneyToNumber(d?.pct), 2),
         direction: 'decrease',
       })),
     ]
@@ -656,6 +734,8 @@ export const dashboardService = {
           ...d,
           reasonLabel: inferDriverReason(d?.name, d?.direction),
           confidence,
+          impactOnForecastPercent: roundTo(percent(d?.deltaValue, eomForecast, 0), 2),
+          deepLink: '/dashboard/cost-drivers',
         };
       });
 
@@ -711,7 +791,29 @@ export const dashboardService = {
     const topActions = uniqueBy(
       [...idleActions, ...rightSizeActions].sort((a, b) => b.expectedSavings - a.expectedSavings),
       (action) => action?.title || action?.id
-    ).slice(0, 5);
+    )
+      .slice(0, 5)
+      .map((action) => {
+        const etaDays = Number.isFinite(Number(action?.etaDays)) ? Number(action.etaDays) : null;
+        const expectedDate =
+          etaDays != null
+            ? isoDate(
+              new Date(Date.UTC(
+                monthProgress.referenceDate.getUTCFullYear(),
+                monthProgress.referenceDate.getUTCMonth(),
+                monthProgress.referenceDate.getUTCDate() + Math.ceil(Math.max(0, etaDays))
+              ))
+            )
+            : null;
+        return {
+          ...action,
+          expectedCompletionDate: expectedDate,
+        };
+      });
+    const idleResourceExposureValue = roundTo(
+      idleActions.reduce((sum, action) => sum + moneyToNumber(action?.expectedSavings), 0),
+      2
+    );
 
     const latestUploadAt = latestUpload?.uploadedat ? new Date(latestUpload.uploadedat) : null;
     const freshnessHours =
@@ -762,6 +864,25 @@ export const dashboardService = {
         impactValue: 0,
         metricPercent: concentrationShare,
         ctaLink: '/dashboard/cost-drivers',
+      },
+      {
+        key: 'unallocated',
+        label: 'Unallocated spend exposure',
+        active: ownerCoveragePercent < 95,
+        severity: ownerCoveragePercent < 90 ? 'high' : (ownerCoveragePercent < 95 ? 'medium' : 'low'),
+        count: null,
+        impactValue: unallocatedSpendValue,
+        metricPercent: roundTo(Math.max(0, 100 - ownerCoveragePercent), 2),
+        ctaLink: '/dashboard/data-quality',
+      },
+      {
+        key: 'idle_resources',
+        label: 'Idle resources at risk',
+        active: idleResourceExposureValue > 0,
+        severity: idleResourceExposureValue >= 5000 ? 'high' : (idleResourceExposureValue >= 500 ? 'medium' : 'low'),
+        count: idleActions.length,
+        impactValue: idleResourceExposureValue,
+        ctaLink: '/dashboard/optimization',
       },
     ];
 

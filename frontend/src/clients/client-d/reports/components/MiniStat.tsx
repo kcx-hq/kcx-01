@@ -12,7 +12,7 @@ const MiniStat = ({ label, value, icon: Icon }: MiniStatProps) => (
         </div>
       </div>
       <div className="h-10 w-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center shrink-0">
-        <Icon size={18} className="text-[#007758]" />
+        <Icon size={18} className="text-[#23a282]" />
       </div>
     </div>
   </div>

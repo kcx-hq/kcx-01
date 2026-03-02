@@ -23,7 +23,7 @@ const BreakdownModal = ({ isOpen, onClose, data }: BreakdownModalProps) => {
               return (
                 <div
                   key={idx}
-                  className="flex justify-between items-center p-3 bg-[#0f0f11] rounded-xl border border-white/5 hover:border-[#007758]/30 transition-colors"
+                  className="flex justify-between items-center p-3 bg-[#0f0f11] rounded-xl border border-white/5 hover:border-[#23a282]/30 transition-colors"
                 >
                   <span
                     className={`text-sm font-medium truncate max-w-[200px] flex items-center gap-2 ${
@@ -34,7 +34,7 @@ const BreakdownModal = ({ isOpen, onClose, data }: BreakdownModalProps) => {
                     {isUnallocated && <AlertCircle size={12} className="text-yellow-500" />}
                     {item.name}
                   </span>
-                  <span className="text-sm font-mono font-bold text-[#007758]">{formatCurrency(item.value)}</span>
+                  <span className="text-sm font-mono font-bold text-[#23a282]">{formatCurrency(item.value)}</span>
                 </div>
               );
             })}
@@ -44,7 +44,7 @@ const BreakdownModal = ({ isOpen, onClose, data }: BreakdownModalProps) => {
         <div className="p-4 border-t border-white/5 bg-[#0f0f11]/50 flex justify-end">
           <button
             onClick={onClose}
-            className="bg-[#007758] hover:bg-[#006b4f] text-white px-6 py-2 rounded-lg text-sm font-bold shadow-[0_0_15px_rgba(0,119,88,0.3)]"
+            className="bg-[#23a282] hover:bg-[#23a282] text-white px-6 py-2 rounded-lg text-sm font-bold shadow-[0_0_15px_rgba(35,162,130,0.3)]"
           >
             Close
           </button>

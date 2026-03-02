@@ -24,7 +24,7 @@ import type { LucideIcon } from "lucide-react";
 import { motion } from "framer-motion";
 
 // --- THEME ---
-const BRAND_EMERALD = "#007758";
+const BRAND_EMERALD = "#23a282";
 
 interface RiskPoint {
   name: string;
@@ -137,7 +137,7 @@ const CostRisk = ({ riskData = [] }: CostRiskProps) => {
             <div>
               <div className="flex items-center gap-3">
                 <div className="p-2 bg-emerald-50 rounded-lg">
-                    <LayoutGrid size={18} className="text-[#007758]" />
+                    <LayoutGrid size={18} className="text-[#23a282]" />
                 </div>
                 <h3 className="text-xl font-black text-slate-800 tracking-tight leading-none">
                   Risk Exposure Matrix
@@ -231,7 +231,7 @@ const CostRisk = ({ riskData = [] }: CostRiskProps) => {
                       fill={
                         entry.severity === "critical" ? "#f43f5e" : 
                         entry.severity === "high" ? "#f59e0b" : 
-                        entry.severity === "medium" ? "#fbbf24" : "#10b981"
+                        entry.severity === "medium" ? "#fbbf24" : "#23a282"
                       }
                       className="drop-shadow-lg transition-all duration-300 hover:opacity-100 opacity-80"
                       stroke="#fff"

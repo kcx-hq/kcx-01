@@ -183,7 +183,7 @@ const ClientCOptimization = ({ api, caps }: ClientCOptimizationProps) => {
           <div className="flex gap-2 justify-center">
             <button 
               onClick={handleReset}
-              className="px-3 py-1 bg-[#007758]/20 hover:bg-[#007758]/30 text-[#007758] rounded text-xs"
+              className="px-3 py-1 bg-[#23a282]/20 hover:bg-[#23a282]/30 text-[#23a282] rounded text-xs"
             >
               Reset Filters
             </button>
@@ -203,9 +203,9 @@ const ClientCOptimization = ({ api, caps }: ClientCOptimizationProps) => {
     <div className="flex flex-col h-full relative">
       {/* Loading overlay */}
       {(isLoading || (dataLoading && !optimizationData)) && (
-        <div className="absolute inset-0 z-50 flex items-center justify-center bg-[#0f0f11]/90 backdrop-blur-sm rounded-xl border border-[#007758]/30">
+        <div className="absolute inset-0 z-50 flex items-center justify-center bg-[#0f0f11]/90 backdrop-blur-sm rounded-xl border border-[#23a282]/30">
           <div className="text-center bg-[#1a1b20] p-6 rounded-xl border border-white/10">
-            <Loader2 className="animate-spin text-[#007758] mx-auto mb-3" size={32} />
+            <Loader2 className="animate-spin text-[#23a282] mx-auto mb-3" size={32} />
             <p className="text-sm text-gray-300 font-medium">Loading optimization insights...</p>
             <p className="text-xs text-gray-500 mt-1">Fetching data from backend</p>
           </div>

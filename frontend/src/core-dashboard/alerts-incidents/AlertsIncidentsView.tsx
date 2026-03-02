@@ -22,7 +22,7 @@ export default function AlertsIncidentsView({
   onControlsChange,
   filters,
 }: AlertsIncidentsViewProps) {
-  if (loading) return <SectionLoading label="Building Alerts & Incidents..." />;
+  if (loading) return <SectionLoading label="Analyzing Alerts & Incidents..." />;
   if (error) return <SectionError message={error} />;
   if (!data?.controls) return <SectionEmpty message="No alerts data available." />;
 
@@ -50,8 +50,7 @@ export default function AlertsIncidentsView({
         </div>
       </section>
 
-      <section className="relative rounded-2xl border border-[var(--border-light)] bg-white p-4 md:p-5">
-        {refreshing ? <SectionRefreshOverlay rounded="rounded-2xl" label="Refreshing alerts..." /> : null}
+      <section className="rounded-2xl border border-[var(--border-light)] bg-white p-4 md:p-5">
         <h2 className="text-sm font-black uppercase tracking-[0.12em] text-[var(--text-primary)] md:text-base">
           Controls
         </h2>
@@ -124,25 +123,30 @@ export default function AlertsIncidentsView({
         </div>
       </section>
 
-      <section className="rounded-2xl border border-[var(--border-light)] bg-white p-4 md:p-5">
-        <h2 className="text-sm font-black uppercase tracking-[0.12em] text-[var(--text-primary)] md:text-base">
-          Incident KPIs
-        </h2>
-        <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-5">
-          <Metric label="Open Alerts" value={`${data.kpis.totalOpenAlerts}`} detail="Unresolved incidents" />
-          <Metric label="Critical" value={`${data.kpis.criticalAlerts}`} detail="Immediate response required" />
-          <Metric label="High" value={`${data.kpis.highAlerts}`} detail="Same-day action required" />
-          <Metric label="SLA Breaches" value={`${data.kpis.unresolvedSlaBreaches}`} detail="Past due unresolved alerts" />
-          <Metric label="Impacted Spend" value={formatCurrency(data.kpis.totalImpact, currency)} detail="Current open impact" />
-        </div>
-      </section>
+      <div className="relative space-y-4">
+        {refreshing ? (
+          <SectionRefreshOverlay rounded="rounded-2xl" label="Refreshing alerts & incidents..." />
+        ) : null}
+        <section className="rounded-2xl border border-[var(--border-light)] bg-white p-4 md:p-5">
+          <h2 className="text-sm font-black uppercase tracking-[0.12em] text-[var(--text-primary)] md:text-base">
+            Incident KPIs
+          </h2>
+          <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-5">
+            <Metric label="Open Alerts" value={`${data.kpis.totalOpenAlerts}`} detail="Unresolved incidents" />
+            <Metric label="Critical" value={`${data.kpis.criticalAlerts}`} detail="Immediate response required" />
+            <Metric label="High" value={`${data.kpis.highAlerts}`} detail="Same-day action required" />
+            <Metric label="SLA Breaches" value={`${data.kpis.unresolvedSlaBreaches}`} detail="Past due unresolved alerts" />
+            <Metric label="Impacted Spend" value={formatCurrency(data.kpis.totalImpact, currency)} detail="Current open impact" />
+          </div>
+        </section>
 
-      <section className="rounded-2xl border border-[var(--border-light)] bg-white p-4 md:p-5">
-        <h2 className="text-sm font-black uppercase tracking-[0.12em] text-[var(--text-primary)] md:text-base">
-          Alerts Inbox
-        </h2>
-        <AlertsTable rows={alerts} currency={currency} />
-      </section>
+        <section className="rounded-2xl border border-[var(--border-light)] bg-white p-4 md:p-5">
+          <h2 className="text-sm font-black uppercase tracking-[0.12em] text-[var(--text-primary)] md:text-base">
+            Alerts Inbox
+          </h2>
+          <AlertsTable rows={alerts} currency={currency} />
+        </section>
+      </div>
     </div>
   );
 }

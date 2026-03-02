@@ -518,6 +518,76 @@ const pareto = (rows, basis) => {
   };
 };
 
+const buildSpendDistribution = ({
+  totalSpend = 0,
+  compareLabel = "Previous period",
+  byService = [],
+  byRegion = [],
+  byProvider = [],
+  byAccount = [],
+  scopeParams = {},
+}) => {
+  const topServiceSharePct = roundTo(Number(byService.find((row) => !row.isOthers)?.sharePercent || 0), 2);
+  const topRegionSharePct = roundTo(Number(byRegion.find((row) => !row.isOthers)?.sharePercent || 0), 2);
+  const top3SharePct = roundTo(
+    byService
+      .filter((row) => !row.isOthers)
+      .slice(0, 3)
+      .reduce((sum, row) => sum + Number(row.sharePercent || 0), 0),
+    2
+  );
+  const concentrationBand = top3SharePct >= 70 ? "critical" : top3SharePct >= 50 ? "warning" : "on_track";
+
+  const dimensions = [
+    { key: "service", rows: byService },
+    { key: "region", rows: byRegion },
+    { key: "provider", rows: byProvider },
+    { key: "account", rows: byAccount },
+  ];
+
+  const compareRows = dimensions.flatMap(({ key, rows }) =>
+    rows
+      .filter((row) => !row.isOthers)
+      .slice(0, 5)
+      .map((row) => {
+        const currentSpend = roundTo(Number(row.spend || 0), 2);
+        const deltaValue = roundTo(Number(row.deltaValue || 0), 2);
+        const previousSpend = roundTo(currentSpend - deltaValue, 2);
+        const scopedParams = {
+          ...scopeParams,
+          ...(row.pinFilter && typeof row.pinFilter === "object" ? row.pinFilter : {}),
+        };
+
+        return {
+          dimension: key,
+          name: row.name,
+          currentSpend,
+          previousSpend,
+          deltaValue,
+          deltaPercent: roundTo(Number(row.deltaPercent || 0), 2),
+          sharePercent: roundTo(Number(row.sharePercent || 0), 2),
+          drillLinks: {
+            costAnalysis: scopedLink("/dashboard/cost-analysis", scopedParams, { view: "breakdown", dimension: key }),
+            costDrivers: scopedLink("/dashboard/cost-drivers", scopedParams),
+            optimization: scopedLink("/dashboard/optimization", scopedParams),
+          },
+        };
+      })
+  );
+
+  return {
+    kpiStrip: {
+      totalScopedSpend: roundTo(Number(totalSpend || 0), 2),
+      topServiceSharePct,
+      topRegionSharePct,
+      top3SharePct,
+      concentrationBand,
+    },
+    compareLabel,
+    compareRows,
+  };
+};
+
 const classifyHealth = ({ freshnessHours = 0, coveragePercent = 0 }) => {
   if (freshnessHours <= 48 && coveragePercent >= 95) return "High";
   if (freshnessHours <= 120 && coveragePercent >= 85) return "Medium";
@@ -740,6 +810,17 @@ const emptySpendAnalytics = () => ({
     trendPercent: 0,
     topConcentrationShare: 0,
     anomalyImpact: 0,
+  },
+  spendDistribution: {
+    kpiStrip: {
+      totalScopedSpend: 0,
+      topServiceSharePct: 0,
+      topRegionSharePct: 0,
+      top3SharePct: 0,
+      concentrationBand: "on_track",
+    },
+    compareLabel: "Previous period",
+    compareRows: [],
   },
   trend: { granularity: DEF_GRAN, compareLabel: "Previous period", activeKeys: [], series: [] },
   breakdown: {
@@ -1010,6 +1091,15 @@ export const generateCostAnalysis = async (filters = {}, groupByParam) => {
     },
     trust: trustCue,
     kpiDeck,
+    spendDistribution: buildSpendDistribution({
+      totalSpend,
+      compareLabel,
+      byService,
+      byRegion,
+      byProvider,
+      byAccount,
+      scopeParams,
+    }),
     trend: {
       granularity: gran,
       compareLabel,

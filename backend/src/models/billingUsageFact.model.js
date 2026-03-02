@@ -62,19 +62,19 @@ const BillingUsageFact = sequelize.define(
     chargedescription: DataTypes.TEXT,
     chargefrequency: DataTypes.STRING(30),
 
-    consumedquantity: DataTypes.DECIMAL(10 , 2),
+    consumedquantity: DataTypes.DECIMAL(24, 12),
     consumedunit: DataTypes.STRING(128),
 
-    pricingquantity: DataTypes.DECIMAL(10 , 2),
+    pricingquantity: DataTypes.DECIMAL(24, 12),
     pricingunit: DataTypes.STRING(128),
 
-    listunitprice: DataTypes.DECIMAL(10 , 2),
-    contractedunitprice: DataTypes.DECIMAL(10 , 2),
+    listunitprice: DataTypes.DECIMAL(24, 12),
+    contractedunitprice: DataTypes.DECIMAL(24, 12),
 
-    listcost: DataTypes.DECIMAL(10 , 2),
-    contractedcost: DataTypes.DECIMAL(10 , 2),
-    effectivecost: DataTypes.DECIMAL(10 , 2),
-    billedcost: DataTypes.DECIMAL(10 , 2),
+    listcost: DataTypes.DECIMAL(24, 12),
+    contractedcost: DataTypes.DECIMAL(24, 12),
+    effectivecost: DataTypes.DECIMAL(24, 12),
+    billedcost: DataTypes.DECIMAL(24, 12),
 
     billingperiodstart: DataTypes.DATEONLY,
     billingperiodend: DataTypes.DATEONLY,

@@ -37,7 +37,7 @@ const ResourceInventoryContent = ({ filters, api, caps }: ResourceInventoryProps
 
   const { flaggedResources, toggleFlag } = useFlaggedResources();
 
-  const { loading, inventory, stats } = useResourceInventoryData({ filters, api, caps });
+  const { loading, refreshing, inventory, stats } = useResourceInventoryData({ filters, api, caps });
 
   const filteredData = useFilteredResources({
     inventory,
@@ -56,6 +56,7 @@ const ResourceInventoryContent = ({ filters, api, caps }: ResourceInventoryProps
   return (
     <ResourceInventoryView
       loading={loading}
+      refreshing={refreshing}
       isPremiumMasked={isPremiumMasked}
       searchTerm={searchTerm}
       activeTab={activeTab}

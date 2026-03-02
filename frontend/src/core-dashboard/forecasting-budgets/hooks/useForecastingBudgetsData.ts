@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import type { ForecastingBudgetsPayload, ForecastingControls } from "../types";
 
 const EMPTY_DATA: ForecastingBudgetsPayload = {
@@ -17,6 +17,7 @@ const EMPTY_DATA: ForecastingBudgetsPayload = {
     breachEtaDays: null,
     requiredDailySpend: 0,
     forecastDrift: 0,
+    forecastDriftPct: 0,
     unitCostForecast: 0,
     mapePct: null,
     atRiskBudgetCount: 0,
@@ -49,8 +50,30 @@ const EMPTY_DATA: ForecastingBudgetsPayload = {
       overrunAvoidedIfActionsCompleteBy: null,
     },
     scenarioPlanning: { constraints: [], scenarios: [], recommendedScenario: null },
-    forecastActualTracking: { mapePct: null, biasPct: null, accuracyScore: null, byScope: [], topMisses: [] },
+    forecastActualTracking: {
+      mapePct: null,
+      wapePct: null,
+      biasPct: null,
+      accuracyScore: null,
+      byScope: [],
+      topMisses: [],
+    },
     alertsEscalation: { unacknowledgedCount: 0, states: [], alerts: [] },
+  },
+  forecastView: {
+    kpi: {
+      eomForecast: 0,
+      lastForecast: 0,
+      driftValue: 0,
+      driftPct: 0,
+      runRatePerDay: 0,
+      confidenceLevel: "low",
+      confidenceScore: 0,
+    },
+    timeline: { daysElapsed: 0, totalDays: 0, points: [] },
+    composition: { tabs: [] },
+    accuracy: { metricLabel: "MAPE", mapePct: null, wapePct: null, biasPct: null, largestMissDays: [] },
+    confidenceChecklist: [],
   },
   metricDictionary: [],
   forecastMethodology: [],
@@ -70,7 +93,13 @@ export function useForecastingBudgetsData({
   filters,
   controls,
 }: {
-  api: { call: (module: string, endpoint: string, options?: { params?: Record<string, unknown> }) => Promise<unknown> } | null;
+  api: {
+    call: (
+      module: string,
+      endpoint: string,
+      options?: { params?: Record<string, unknown>; data?: unknown },
+    ) => Promise<unknown>;
+  } | null;
   caps: { modules?: Record<string, { enabled?: boolean; endpoints?: Record<string, unknown> }> } | null;
   filters: { provider?: string; service?: string; region?: string };
   controls: ForecastingControls;
@@ -79,6 +108,7 @@ export function useForecastingBudgetsData({
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [data, setData] = useState<ForecastingBudgetsPayload>(EMPTY_DATA);
+  const [reloadToken, setReloadToken] = useState(0);
 
   const params = useMemo(
     () => ({
@@ -88,8 +118,17 @@ export function useForecastingBudgetsData({
       period: controls.period,
       compareTo: controls.compareTo,
       costBasis: controls.costBasis,
+      budgetMonth: controls.budgetMonth || undefined,
     }),
-    [filters?.provider, filters?.service, filters?.region, controls.period, controls.compareTo, controls.costBasis],
+    [
+      filters?.provider,
+      filters?.service,
+      filters?.region,
+      controls.period,
+      controls.compareTo,
+      controls.costBasis,
+      controls.budgetMonth,
+    ],
   );
 
   useEffect(() => {
@@ -130,7 +169,11 @@ export function useForecastingBudgetsData({
     return () => {
       active = false;
     };
-  }, [api, caps, params]);
+  }, [api, caps, params, reloadToken]);
 
-  return { loading, refreshing, error, data };
+  const reload = useCallback(() => {
+    setReloadToken((prev) => prev + 1);
+  }, []);
+
+  return { loading, refreshing, error, data, reload };
 }

@@ -96,7 +96,7 @@ const CostAnalysisContent = ({ api, caps }: CostAnalysisProps) => {
   );
 
   return (
-    <div className="flex flex-col h-full bg-[#0f0f11] text-white overflow-hidden relative font-sans selection:bg-[#007758]/30">
+    <div className="flex flex-col h-full bg-[#0f0f11] text-white overflow-hidden relative font-sans selection:bg-[#23a282]/30">
       
 
       {/* CONTROLS */}
@@ -109,15 +109,15 @@ const CostAnalysisContent = ({ api, caps }: CostAnalysisProps) => {
         {/* Full loader only initial */}
         {loading && !apiData && (
           <div className="absolute inset-0 z-50 flex items-center justify-center bg-[#0f0f11]/60 backdrop-blur-[2px]">
-            <Loader2 className="animate-spin text-[#007758]" size={32} />
+            <Loader2 className="animate-spin text-[#23a282]" size={32} />
           </div>
         )}
 
         {/* Subtle updating */}
         {isRefreshing && apiData && (
-          <div className="absolute top-4 right-4 z-50 flex items-center gap-2 px-3 py-1.5 bg-[#007758]/20 border border-[#007758]/30 rounded-lg backdrop-blur-sm">
-            <Loader2 className="text-[#007758] animate-spin" size={14} />
-            <span className="text-[#007758] text-xs font-medium">Updating...</span>
+          <div className="absolute top-4 right-4 z-50 flex items-center gap-2 px-3 py-1.5 bg-[#23a282]/20 border border-[#23a282]/30 rounded-lg backdrop-blur-sm">
+            <Loader2 className="text-[#23a282] animate-spin" size={14} />
+            <span className="text-[#23a282] text-xs font-medium">Updating...</span>
           </div>
         )}
 

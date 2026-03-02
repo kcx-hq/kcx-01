@@ -380,10 +380,31 @@ const FORECASTING_BUDGETS_QUERY_SCHEMA = z.preprocess(
       period: z.enum(["mtd", "qtd", "30d", "90d"]).optional(),
       compareTo: z.enum(["previous_period", "same_period_last_month", "none"]).optional(),
       costBasis: z.enum(["actual", "amortized", "net"]).optional(),
+      budgetMonth: SAFE_STRING.optional(),
       uploadid: UPLOAD_ID_QUERY_SCHEMA,
       uploadId: UPLOAD_ID_QUERY_SCHEMA,
       uploadids: UPLOAD_ID_QUERY_SCHEMA,
       uploadIds: UPLOAD_ID_QUERY_SCHEMA,
+    })
+    .strict()
+);
+
+const FORECASTING_BUDGET_TARGET_BODY_SCHEMA = z.preprocess(
+  normalizeBodyInput,
+  z
+    .object({
+      provider: SAFE_STRING.optional(),
+      service: SAFE_STRING.optional(),
+      region: SAFE_STRING.optional(),
+      period: z.enum(["mtd", "qtd", "30d", "90d"]).optional(),
+      compareTo: z.enum(["previous_period", "same_period_last_month", "none"]).optional(),
+      costBasis: z.enum(["actual", "amortized", "net"]).optional(),
+      budgetMonth: SAFE_STRING.optional(),
+      budgetTarget: z.coerce.number().min(0).max(1_000_000_000_000),
+      uploadid: z.union([NON_EMPTY_STRING, z.array(NON_EMPTY_STRING)]).optional(),
+      uploadId: z.union([NON_EMPTY_STRING, z.array(NON_EMPTY_STRING)]).optional(),
+      uploadids: z.union([NON_EMPTY_STRING, z.array(NON_EMPTY_STRING)]).optional(),
+      uploadIds: z.union([NON_EMPTY_STRING, z.array(NON_EMPTY_STRING)]).optional(),
     })
     .strict()
 );
@@ -714,6 +735,12 @@ const REQUEST_RULES = [
     method: "GET",
     pattern: /^\/api(?:\/v1)?\/dashboard\/forecasting-budgets\/summary\/?$/i,
     query: FORECASTING_BUDGETS_QUERY_SCHEMA,
+  },
+  {
+    method: "POST",
+    pattern: /^\/api(?:\/v1)?\/dashboard\/forecasting-budgets\/budget-target\/?$/i,
+    query: FORECASTING_BUDGETS_QUERY_SCHEMA,
+    body: FORECASTING_BUDGET_TARGET_BODY_SCHEMA,
   },
   {
     method: "GET",

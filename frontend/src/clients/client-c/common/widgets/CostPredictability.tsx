@@ -207,7 +207,7 @@ const CostPredictability = ({
           </div>
 
           <div className="flex gap-4 text-[10px] font-bold bg-[#0f0f11]/50 p-2 rounded-lg border border-white/5">
-            <div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-[#007758]"></div>Actual</div>
+            <div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-[#23a282]"></div>Actual</div>
             <div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full border border-cyan-400"></div>Forecast</div>
             {activeView === 'variance' && (
               <div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-rose-500"></div>Anomaly</div>
@@ -227,8 +227,8 @@ const CostPredictability = ({
               <ComposedChart data={viewData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
                 <defs>
                   <linearGradient id="emeraldGradient" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#007758" stopOpacity={0.4} />
-                    <stop offset="95%" stopColor="#007758" stopOpacity={0} />
+                    <stop offset="5%" stopColor="#23a282" stopOpacity={0.4} />
+                    <stop offset="95%" stopColor="#23a282" stopOpacity={0} />
                   </linearGradient>
                   <pattern id="hatch" patternUnits="userSpaceOnUse" width="4" height="4" patternTransform="rotate(45)">
                      <path d="M-1,1 l2,-2 M0,4 l4,-4 M3,5 l2,-2" stroke="#22d3ee" strokeWidth="1" opacity={0.3} />
@@ -293,10 +293,10 @@ const CostPredictability = ({
                 <Area
                   type="monotone"
                   dataKey="actual"
-                  stroke="#007758"
+                  stroke="#23a282"
                   strokeWidth={3}
                   fill="url(#emeraldGradient)"
-                  activeDot={{ r: 6, fill: "#fff", stroke: "#007758" }}
+                  activeDot={{ r: 6, fill: "#fff", stroke: "#23a282" }}
                   animationDuration={1000}
                 />
                 <Area
@@ -339,8 +339,8 @@ const CostPredictability = ({
       </div>
 
       {/* --- ROW 3: INSIGHTS STRIP --- */}
-      <div className="shrink-0 flex items-center gap-3 p-3 rounded-xl bg-gradient-to-r from-[#007758]/10 to-transparent border border-[#007758]/20">
-        <div className="p-2 rounded-lg bg-[#007758]/20 text-[#007758]">
+      <div className="shrink-0 flex items-center gap-3 p-3 rounded-xl bg-gradient-to-r from-[#23a282]/10 to-transparent border border-[#23a282]/20">
+        <div className="p-2 rounded-lg bg-[#23a282]/20 text-[#23a282]">
             <Zap size={16} />
         </div>
         <div className="flex-1">

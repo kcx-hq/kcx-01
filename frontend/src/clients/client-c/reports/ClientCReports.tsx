@@ -401,7 +401,7 @@ const ClientCReports = ({ api, caps }: ClientCReportsProps) => {
     <div className="animate-in fade-in zoom-in-95 duration-300 flex flex-col h-full">
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-white flex items-center gap-2">
-          <FileText size={24} className="text-[#007758]" />
+          <FileText size={24} className="text-[#23a282]" />
           Executive Reports
         </h1>
         <p className="text-sm text-gray-400 mt-1">Download PDF reports for leadership and stakeholders</p>
@@ -436,7 +436,7 @@ const ClientCReports = ({ api, caps }: ClientCReportsProps) => {
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: index * 0.1 }}
-                  className="relative bg-[#1a1b20]/60 backdrop-blur-md border border-white/5 rounded-xl p-6 transition-all hover:border-[#007758]/30"
+                  className="relative bg-[#1a1b20]/60 backdrop-blur-md border border-white/5 rounded-xl p-6 transition-all hover:border-[#23a282]/30"
                 >
                   <div className="flex items-start justify-between mb-4">
                     <div className="flex items-start gap-4 flex-1">
@@ -464,7 +464,7 @@ const ClientCReports = ({ api, caps }: ClientCReportsProps) => {
                           <ul className="space-y-1.5">
                             {report.includes.map((item: string, idx: number) => (
                               <li key={idx} className="text-sm text-gray-300 flex items-start gap-2">
-                                <span className="text-[#007758] mt-1">•</span>
+                                <span className="text-[#23a282] mt-1">•</span>
                                 <span>{item}</span>
                               </li>
                             ))}
@@ -478,7 +478,7 @@ const ClientCReports = ({ api, caps }: ClientCReportsProps) => {
                     <button
                       onClick={() => onDownloadReport(report.id)}
                       disabled={downloading}
-                      className="px-6 py-2 bg-[#007758] hover:bg-[#006b4f] disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg text-sm font-medium transition-colors flex items-center gap-2"
+                      className="px-6 py-2 bg-[#23a282] hover:bg-[#23a282] disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg text-sm font-medium transition-colors flex items-center gap-2"
                     >
                       {downloading ? (
                         <>

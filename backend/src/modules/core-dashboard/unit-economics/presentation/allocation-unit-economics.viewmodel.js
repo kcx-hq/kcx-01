@@ -8,6 +8,12 @@ const round = (value, digits = 2) => {
   return Math.round(toNumber(value) * factor) / factor;
 };
 
+const roundCurrency = (value) => {
+  const amount = toNumber(value);
+  const abs = Math.abs(amount);
+  return abs > 0 && abs < 0.01 ? round(amount, 6) : round(amount, 2);
+};
+
 const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
 
 const parseDateLabel = (value) => {
@@ -129,10 +135,10 @@ const withTrendSignals = (currentTrendRaw = [], previousTrendRaw = []) => {
       prevDay && Math.abs(dayVolumeGrowth) >= 0.01 ? dayCostGrowth / dayVolumeGrowth : null;
     return {
       date: point.date,
-      cost: round(point.cost, 2),
+      cost: roundCurrency(point.cost),
       quantity: round(point.quantity, 2),
       unitPrice: round(point.unitPrice, 6),
-      previousCost: round(prevPoint?.cost || 0, 2),
+      previousCost: roundCurrency(prevPoint?.cost || 0),
       previousQuantity: round(prevPoint?.quantity || 0, 2),
       previousUnitPrice: round(prevPoint?.unitPrice || 0, 6),
       elasticity: elasticity !== null && Number.isFinite(elasticity) ? round(elasticity, 4) : null,
@@ -324,11 +330,11 @@ export const buildAllocationUnitEconomicsViewModel = ({
 
   return {
     kpis: {
-      totalCost: round(currentWindow?.totalCost || payload?.kpis?.totalCost, 2),
-      previousTotalCost: round(previousWindow?.totalCost, 2),
-      directCost: round(currentWindow?.directCost, 2),
-      sharedAllocatedCost: round(currentWindow?.sharedCost, 2),
-      commitmentBenefit: round(currentWindow?.commitmentBenefit, 2),
+      totalCost: roundCurrency(currentWindow?.totalCost || payload?.kpis?.totalCost),
+      previousTotalCost: roundCurrency(previousWindow?.totalCost),
+      directCost: roundCurrency(currentWindow?.directCost),
+      sharedAllocatedCost: roundCurrency(currentWindow?.sharedCost),
+      commitmentBenefit: roundCurrency(currentWindow?.commitmentBenefit),
       totalQuantity: round(currentWindow?.totalQuantity || payload?.kpis?.totalQuantity, 2),
       previousTotalQuantity: round(previousWindow?.totalQuantity, 2),
       avgUnitPrice: round(currentWindow?.avgUnitPrice || payload?.kpis?.avgUnitPrice, 6),
@@ -353,7 +359,7 @@ export const buildAllocationUnitEconomicsViewModel = ({
       volumeGrowthPct: round(deltas?.volumeGrowthPct, 2),
       decomposition: normalizedDecomposition,
       forecast: {
-        projectedCost: round(forecast?.projectedCost, 2),
+        projectedCost: roundCurrency(forecast?.projectedCost),
         projectedVolume: round(forecast?.projectedVolume, 2),
         projectedUnitCost: round(forecast?.projectedUnitCost, 6),
         lowerUnitCost: round(forecast?.lowerUnitCost, 6),
@@ -402,10 +408,10 @@ export const buildAllocationUnitEconomicsViewModel = ({
       },
     },
     allocationOverview: {
-      totalCloudCost: round(allocationOverview?.totalCloudCost, 2),
+      totalCloudCost: roundCurrency(allocationOverview?.totalCloudCost),
       allocatedPct: round(allocationOverview?.allocatedPct, 2),
       unallocatedPct: round(allocationOverview?.unallocatedPct, 2),
-      sharedCostPoolAmount: round(allocationOverview?.sharedCostPoolAmount, 2),
+      sharedCostPoolAmount: roundCurrency(allocationOverview?.sharedCostPoolAmount),
       allocationMethod: String(allocationOverview?.allocationMethod || "direct_spend_weighted"),
       allocationConfidence: {
         score: round(allocationOverview?.allocationConfidence?.score, 2),
@@ -449,32 +455,32 @@ export const buildAllocationUnitEconomicsViewModel = ({
         valuePct: round(coverage?.ownerPct, 2),
         state: getCoverageState(coverage?.ownerPct),
       },
-      unallocatedAmount: round(coverage?.unallocatedAmount, 2),
+      unallocatedAmount: roundCurrency(coverage?.unallocatedAmount),
       unallocatedPct: round(coverage?.unallocatedPct, 2),
     },
     sharedPool: {
-      total: round(allocation?.sharedPoolTotal, 2),
+      total: roundCurrency(allocation?.sharedPoolTotal),
       ruleApplied: String(allocation?.ruleApplied || "No shared pool detected"),
-      redistributedAmount: round(allocation?.redistributedAmount, 2),
+      redistributedAmount: roundCurrency(allocation?.redistributedAmount),
       rows: showbackRows,
     },
     sharedPoolTransparency: Array.isArray(sharedTransparency?.rows)
       ? sharedTransparency.rows.map((row) => ({
           sharedCategory: String(row?.sharedCategory || "Shared - Uncategorized"),
-          cost: round(row?.cost, 2),
+          cost: roundCurrency(row?.cost),
           allocationRule: String(row?.allocationRule || "direct_spend_weighted"),
           weightBasis: String(row?.weightBasis || "direct_cost"),
-          distributedAmount: round(row?.distributedAmount, 2),
+          distributedAmount: roundCurrency(row?.distributedAmount),
           rowCount: round(row?.rowCount, 0),
         }))
       : [],
     unallocatedInsight: {
-      unallocatedAmount: round(unallocated?.unallocatedAmount, 2),
+      unallocatedAmount: roundCurrency(unallocated?.unallocatedAmount),
       unallocatedPct: round(unallocated?.unallocatedPct, 2),
       topContributingServices: Array.isArray(unallocated?.topContributingServices)
         ? unallocated.topContributingServices.map((row) => ({
             service: String(row?.service || "Unknown Service"),
-            amount: round(row?.amount, 2),
+            amount: roundCurrency(row?.amount),
           }))
         : [],
       tagCoveragePct: round(unallocated?.tagCoveragePct, 2),
@@ -532,7 +538,7 @@ export const buildAllocationUnitEconomicsViewModel = ({
         ? ownershipDrift.series.map((row) => ({
             period: String(row?.period || ""),
             driftEvents: round(row?.drift_events, 0),
-            impactedCost: round(row?.impacted_cost, 2),
+            impactedCost: roundCurrency(row?.impacted_cost),
             driftRatePct: round(row?.drift_rate_pct, 2),
           }))
         : [],

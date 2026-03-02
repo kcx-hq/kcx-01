@@ -24,13 +24,13 @@ const ServiceSpendChart = ({ data, title = "Spend by Service", limit = 8, onLimi
   const displayData = data?.slice(0, effectiveLimit) || [];
   
   // Colors for the bars
-  const COLORS = ['#007758', '#48bb78', '#f56565', '#ecc94b', '#4fd1c5', '#059669', '#ed8936', '#63b3ed'];
+  const COLORS = ['#23a282', '#23a282', '#f56565', '#ecc94b', '#4fd1c5', '#23a282', '#ed8936', '#63b3ed'];
   
   return (
     <div className="bg-[#1a1b20]/60 backdrop-blur-md border border-white/5 rounded-2xl p-5 flex flex-col shadow-xl min-h-[300px]">
       <div className="mb-4 flex justify-between items-center h-8">
         <h3 className="text-sm font-bold text-white flex items-center gap-2">
-          <Server size={16} className="text-[#007758]" /> {title}
+          <Server size={16} className="text-[#23a282]" /> {title}
         </h3>
         {onLimitChange && (
           <div className="flex items-center gap-2">
@@ -38,7 +38,7 @@ const ServiceSpendChart = ({ data, title = "Spend by Service", limit = 8, onLimi
             <select
               value={effectiveLimit}
               onChange={(e: ChangeEvent<HTMLSelectElement>) => onLimitChange(Number(e.target.value))}
-              className="text-[10px] bg-[#0f0f11] border border-white/10 hover:border-[#007758]/50 rounded px-2 py-1 text-gray-300 focus:outline-none focus:border-[#007758] focus:ring-2 focus:ring-[#007758]/50 focus:shadow-[0_0_15px_rgba(0,119,88,0.4)] transition-all cursor-pointer"
+              className="text-[10px] bg-[#0f0f11] border border-white/10 hover:border-[#23a282]/50 rounded px-2 py-1 text-gray-300 focus:outline-none focus:border-[#23a282] focus:ring-2 focus:ring-[#23a282]/50 focus:shadow-[0_0_15px_rgba(35,162,130,0.4)] transition-all cursor-pointer"
               style={{
                 colorScheme: 'dark'
               }}

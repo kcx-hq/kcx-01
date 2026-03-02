@@ -6,7 +6,7 @@ interface OverviewStatesProps {
 }
 
 const OverviewStates = ({ type }: OverviewStatesProps) => {
-  const accent = "var(--brand-secondary, #007758)";
+  const accent = "var(--brand-secondary, #23a282)";
 
   if (type === "loading") {
     return (

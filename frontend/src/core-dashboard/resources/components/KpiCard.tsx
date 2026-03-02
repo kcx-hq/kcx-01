@@ -39,7 +39,7 @@ const KpiCard = ({
       onClick={onClick}
       className={`group relative w-full overflow-hidden rounded-2xl border p-4 text-left transition-all duration-200 ${
         isActive
-          ? `${style.active} shadow-[0_12px_26px_-18px_rgba(0,119,88,0.4)]`
+          ? `${style.active} shadow-[0_12px_26px_-18px_rgba(35,162,130,0.4)]`
           : "border-[var(--border-light)] bg-white hover:-translate-y-0.5 hover:border-emerald-200 hover:shadow-sm"
       }`}
     >

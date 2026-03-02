@@ -68,7 +68,7 @@ const DepartmentCost = ({ filters, api, caps, uploadId }: LegacyDepartmentCostPr
     }
   }, [filters, api, caps, uploadId]);
 
-  const COLORS = ['#007758', '#48bb78', '#f56565', '#ecc94b', '#4fd1c5', '#059669'];
+  const COLORS = ['#23a282', '#23a282', '#f56565', '#ecc94b', '#4fd1c5', '#23a282'];
 
   return (
     <div className="space-y-6">
@@ -131,7 +131,7 @@ const DepartmentCost = ({ filters, api, caps, uploadId }: LegacyDepartmentCostPr
                   formatter={(value: NumericValue) => [formatCurrency(value), 'Cost']}
                 />
                 <Legend />
-                <Line type="monotone" dataKey="totalCost" stroke="#007758" strokeWidth={2} dot={{ r: 4 }} name="Total Cost" />
+                <Line type="monotone" dataKey="totalCost" stroke="#23a282" strokeWidth={2} dot={{ r: 4 }} name="Total Cost" />
               </LineChart>
             </ResponsiveContainer>
           </CardContent>
@@ -181,7 +181,7 @@ const DepartmentCost = ({ filters, api, caps, uploadId }: LegacyDepartmentCostPr
                 formatter={(value: NumericValue) => [formatCurrency(value), 'Cost']}
               />
               <Legend />
-              <Bar dataKey="cost" fill="#007758" name="Cost" />
+              <Bar dataKey="cost" fill="#23a282" name="Cost" />
             </BarChart>
           </ResponsiveContainer>
         </CardContent>

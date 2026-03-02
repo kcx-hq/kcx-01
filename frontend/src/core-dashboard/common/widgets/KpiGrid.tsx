@@ -4,8 +4,8 @@ import { ChevronDown, Lock, Activity } from "lucide-react";
 import KpiInsightModal from "../components/KpiInsightModal";
 
 // KCX Primary Theme Color
-const BRAND_PRIMARY = "#007758";
-const BRAND_SOFT = "rgba(0, 119, 88, 0.1)";
+const BRAND_PRIMARY = "#23a282";
+const BRAND_SOFT = "rgba(35,162,130,0.1)";
 
 type TrendType = "up" | "down" | "neutral";
 type KpiCardId = string | number;
@@ -66,7 +66,7 @@ export const KpiCard = ({
   title,
   value,
   icon: Icon,
-  style = "text-[#007758] bg-[#007758]/5 border-[#007758]/10",
+  style = "text-[#23a282] bg-[#23a282]/5 border-[#23a282]/10",
   subValue,
   delay = 0,
   onClick,
@@ -81,18 +81,18 @@ export const KpiCard = ({
       initial={{ opacity: 0, y: 15 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: delay * 0.05, duration: 0.4 }}
-      whileHover={{ y: -4, shadow: "0 12px 30px -10px rgba(0,119,88,0.12)" }}
+      whileHover={{ y: -4, shadow: "0 12px 30px -10px rgba(35,162,130,0.12)" }}
       onClick={onClick}
-      className="bg-white border border-slate-200 p-4 rounded-xl shadow-sm relative overflow-hidden group cursor-pointer transition-all duration-300 hover:border-[#007758]/40"
+      className="bg-white border border-slate-200 p-4 rounded-xl shadow-sm relative overflow-hidden group cursor-pointer transition-all duration-300 hover:border-[#23a282]/40"
     >
       {/* Branded Ambient Decor */}
-      <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-[#007758]/5 to-transparent rounded-bl-full -z-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+      <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-[#23a282]/5 to-transparent rounded-bl-full -z-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
 
       <div className="relative z-10 flex flex-col h-full space-y-3">
         {/* Header Row */}
         <div className="flex justify-between items-start">
           {/* Icon Container with Emerald Shadow logic */}
-          <div className={`p-2 rounded-lg border transition-all duration-300 group-hover:shadow-[0_0_15px_rgba(0,119,88,0.15)] ${style}`}>
+          <div className={`p-2 rounded-lg border transition-all duration-300 group-hover:shadow-[0_0_15px_rgba(35,162,130,0.15)] ${style}`}>
             <Icon size={18} />
           </div>
 
@@ -101,7 +101,7 @@ export const KpiCard = ({
               <span
                 className={`text-[10px] font-black px-2 py-1 rounded-lg border transition-all duration-300 flex items-center gap-1 ${
                   trendType === 'up' ? 'bg-red-50 border-red-100 text-red-600' : 
-                  trendType === 'down' ? 'bg-emerald-50 border-emerald-100 text-[#007758]' : 
+                  trendType === 'down' ? 'bg-emerald-50 border-emerald-100 text-[#23a282]' : 
                   'bg-slate-50 border-slate-200 text-slate-500'
                 }`}
                 onMouseEnter={() => showChangeTooltip && setShowTooltip(true)}
@@ -252,7 +252,7 @@ const KpiGrid = ({
           <div className="flex items-center justify-center pt-2">
             <button
               onClick={() => setShowMoreCards((s) => !s)}
-              className="flex items-center gap-3 px-6 py-2 bg-white border border-slate-200 rounded-full text-[11px] font-bold text-slate-600 hover:text-[#007758] hover:border-[#007758]/30 shadow-sm transition-all active:scale-95 group"
+              className="flex items-center gap-3 px-6 py-2 bg-white border border-slate-200 rounded-full text-[11px] font-bold text-slate-600 hover:text-[#23a282] hover:border-[#23a282]/30 shadow-sm transition-all active:scale-95 group"
             >
               <span>{showMoreCards ? "Collapse Metrics" : "Explore Extended Insights"}</span>
               <ChevronDown

@@ -31,7 +31,7 @@ export function DynamicsCard({
           className={[
             "p-1.5 rounded-lg transition-all border",
             showTreeMap
-              ? "bg-[#007758] text-white border-[#007758]"
+              ? "bg-[#23a282] text-white border-[#23a282]"
               : "bg-black/40 hover:bg-black/60 text-gray-400 hover:text-gray-200 border-white/10",
           ].join(" ")}
           title="Toggle View"
@@ -47,7 +47,7 @@ export function DynamicsCard({
               data={[...increases.slice(0, 10), ...decreases.slice(0, 10)].map((item: CostDriverItem) => ({
                 name: item.name,
                 value: Math.abs(item.diff),
-                fill: item.diff > 0 ? "#ef4444" : "#10b981",
+                fill: item.diff > 0 ? "#ef4444" : "#23a282",
               }))}
               dataKey="value"
               stroke="#1a1b20"

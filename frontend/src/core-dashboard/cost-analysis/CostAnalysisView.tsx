@@ -11,7 +11,6 @@ import BreakdownCompositionSection from "./components/sections/BreakdownComposit
 import ConcentrationSection from "./components/sections/ConcentrationSection";
 import TrustCueSection from "./components/sections/TrustCueSection";
 import SpendDistributionSection from "./components/sections/SpendDistributionSection";
-import { formatDate } from "./utils/format";
 import { SectionRefreshOverlay } from "../common/SectionStates";
 
 interface CostAnalysisViewProps {
@@ -89,14 +88,6 @@ const CostAnalysisView = ({
   }
 
   const optionBag = spendAnalytics.controls?.options || FALLBACK_OPTIONS;
-  const periodLabel =
-    spendAnalytics.controls?.startDate && spendAnalytics.controls?.endDate
-      ? `${formatDate(spendAnalytics.controls.startDate)} - ${formatDate(spendAnalytics.controls.endDate)}`
-      : "Selected period";
-  const contextLabel = `${periodLabel} | ${String(spendAnalytics.controls.granularity)} | ${String(
-    spendAnalytics.controls.compareTo
-  )}`;
-
   return (
     <div className="space-y-5">
       <GlobalControlsSection
@@ -152,7 +143,6 @@ const CostAnalysisView = ({
           <ConcentrationSection
             concentration={spendAnalytics.concentration}
             concentrationPareto={spendAnalytics.concentrationPareto}
-            contextLabel={contextLabel}
           />
         </div>
       </div>

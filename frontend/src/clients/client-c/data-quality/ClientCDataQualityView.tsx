@@ -23,7 +23,7 @@ const ClientCDataQualityView = ({
   extractedData,
   dataError
 }: ClientCDataQualityViewProps) => {
-  const COLORS = ['#007758', '#48bb78', '#f56565', '#ecc94b', '#4fd1c5', '#059669'];
+  const COLORS = ['#23a282', '#23a282', '#f56565', '#ecc94b', '#4fd1c5', '#23a282'];
 
   // Early return for loading state
   if (loading) {
@@ -81,8 +81,8 @@ const ClientCDataQualityView = ({
                     {(extractedData.qualityMetrics.overallScore || 0).toFixed(2)}%
                   </p>
                 </div>
-                <div className="p-3 bg-[#007758]/20 rounded-lg">
-                  <ShieldCheck className="text-[#007758]" size={24} />
+                <div className="p-3 bg-[#23a282]/20 rounded-lg">
+                  <ShieldCheck className="text-[#23a282]" size={24} />
                 </div>
               </div>
               <p className="text-[10px] text-gray-500 mt-2">Data quality score</p>
@@ -146,7 +146,7 @@ const ClientCDataQualityView = ({
             {/* Quality Metrics Chart */}
             <div className="bg-[#1a1b20]/60 backdrop-blur-md border border-white/5 rounded-2xl p-5 shadow-xl">
               <div className="flex items-center gap-2 mb-4">
-                <BarChart size={16} className="text-[#007758]" />
+                <BarChart size={16} className="text-[#23a282]" />
                 <h3 className="text-sm font-bold text-white">Quality Metrics</h3>
               </div>
               <div className="h-80">
@@ -179,7 +179,7 @@ const ClientCDataQualityView = ({
                     />
                     <Bar 
                       dataKey="score" 
-                      fill="#007758" 
+                      fill="#23a282" 
                       radius={[4, 4, 0, 0]}
                       barSize={20}
                     />
@@ -191,7 +191,7 @@ const ClientCDataQualityView = ({
             {/* Issue Distribution Chart */}
             <div className="bg-[#1a1b20]/60 backdrop-blur-md border border-white/5 rounded-2xl p-5 shadow-xl">
               <div className="flex items-center gap-2 mb-4">
-                <FileText size={16} className="text-[#007758]" />
+                <FileText size={16} className="text-[#23a282]" />
                 <h3 className="text-sm font-bold text-white">Issue Distribution</h3>
               </div>
               <div className="h-80">
@@ -215,7 +215,7 @@ const ClientCDataQualityView = ({
                     <Tooltip 
                       contentStyle={{ 
                         backgroundColor: 'rgba(26, 27, 32, 0.95)', 
-                        borderColor: '#007758',
+                        borderColor: '#23a282',
                         borderWidth: '2px',
                         borderRadius: '0.5rem',
                         color: 'white',
@@ -315,7 +315,7 @@ Percentage: ${percentage}% of total issues`;
           {/* Quality Issues Table */}
           <div className="bg-[#1a1b20]/60 backdrop-blur-md border border-white/5 rounded-2xl p-5 shadow-xl">
             <div className="flex items-center gap-2 mb-4">
-              <AlertTriangle size={16} className="text-[#007758]" />
+              <AlertTriangle size={16} className="text-[#23a282]" />
               <h3 className="text-sm font-bold text-white">Quality Issues</h3>
             </div>
             <div className="overflow-x-auto">

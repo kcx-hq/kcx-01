@@ -2,11 +2,11 @@ import type { SpendAnalyticsFilters } from "../types";
 import type { BreakdownTabKey, BreakdownTabOption } from "../components/sections/types";
 
 export const PALETTE = [
-  "#007758",
+  "#23a282",
   "#0ea5e9",
   "#84cc16",
   "#f59e0b",
-  "#22c55e",
+  "#23a282",
   "#ef4444",
   "#14b8a6",
   "#64748b",

@@ -156,7 +156,7 @@ export default function WaterfallSection({ waterfall }) {
                   let fill = '#94a3b8';
                   if (entry.kind === 'total') fill = '#0f766e';
                   if (entry.kind === 'residual') fill = '#ef4444';
-                  if (entry.kind === 'delta') fill = entry.signed >= 0 ? '#f59e0b' : '#10b981';
+                  if (entry.kind === 'delta') fill = entry.signed >= 0 ? '#f59e0b' : '#23a282';
                   return <Cell key={`${entry.id}-${index}`} fill={fill} />;
                 })}
               </Bar>

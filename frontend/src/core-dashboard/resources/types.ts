@@ -59,6 +59,7 @@ export interface ResourceInventoryPayload {
 
 export interface UseResourceInventoryDataResult {
   loading: boolean;
+  refreshing: boolean;
   inventory: ResourceItem[];
   stats: ResourceStats;
 }
@@ -87,6 +88,7 @@ export interface ExportResourceInventoryCsvParams {
 
 export interface ResourceInventoryViewProps {
   loading: boolean;
+  refreshing: boolean;
   isPremiumMasked: boolean;
   searchTerm: string;
   activeTab: ResourceTab;

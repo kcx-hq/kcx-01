@@ -81,7 +81,7 @@ const SpendBehaviorCard = ({
                   disabled={isPremiumChart}
                   className={`p-1.5 rounded-md transition-all relative ${
                     isPremiumChart ? "opacity-50 cursor-not-allowed pointer-events-none" : ""
-                  } ${chartType === t ? "bg-[#007758] text-white shadow" : "text-gray-500 hover:text-white"}`}
+                  } ${chartType === t ? "bg-[#23a282] text-white shadow" : "text-gray-500 hover:text-white"}`}
                 >
                   <BarChart3 size={14} className={t === "line" ? "rotate-90" : ""} />
                 </button>

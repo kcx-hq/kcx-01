@@ -50,7 +50,7 @@ const ClientDSidebarConfig: ClientDSidebarConfigShape = {
   brand: {
     logoSrc: "/KCX.logo.svg", // change per client if needed
     name: "Client D",
-    subtitle: "Dashboard",
+    subtitle: "FinOps Platform",
   },
 
   features: {

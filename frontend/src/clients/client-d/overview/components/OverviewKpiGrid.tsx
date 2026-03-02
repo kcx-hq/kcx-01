@@ -25,7 +25,7 @@ const OverviewKpiGrid = ({ extractedData, locked = false }: OverviewKpiGridProps
       title: "Total Spend",
       value: money(totalSpend),
       icon: DollarSign,
-      color: "text-[#007758]",
+      color: "text-[#23a282]",
       contextLabel: billingLabel,
     },
     {

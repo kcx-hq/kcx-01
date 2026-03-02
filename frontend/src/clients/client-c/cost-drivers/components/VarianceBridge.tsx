@@ -84,7 +84,7 @@ const VarianceBridge = ({ data }: LegacyVarianceBridgeProps) => {
               />
               <Bar
                 dataKey="value"
-                fill="#007758"
+                fill="#23a282"
                 radius={[4, 4, 0, 0]}
                 name="Variance"
               />

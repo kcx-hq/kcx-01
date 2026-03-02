@@ -96,7 +96,7 @@ const ResourceInventoryView = ({
         </p>
         <button 
           onClick={onReset}
-          className="mt-6 px-6 py-2 bg-[#007758] hover:bg-[#8b2bd4] text-white rounded-lg transition-colors"
+          className="mt-6 px-6 py-2 bg-[#23a282] hover:bg-[#8b2bd4] text-white rounded-lg transition-colors"
         >
           Reset Filters
         </button>
@@ -230,7 +230,7 @@ const ResourceInventoryView = ({
                         borderRadius: '8px'
                       }}
                     />
-                    <Bar dataKey="value" fill="#007758" />
+                    <Bar dataKey="value" fill="#23a282" />
                   </BarChart>
                 </ResponsiveContainer>
               </div>

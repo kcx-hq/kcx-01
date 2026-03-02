@@ -17,7 +17,7 @@ import ResourceTableView from "./components/ResourceTable";
 import GroupedListView from "./components/GroupedList";
 import ZombieListView from "./components/ZombieList";
 import InspectorDrawerView from "./components/InspectorDrawer";
-import { SectionLoading } from "../common/SectionStates";
+import { SectionLoading, SectionRefreshOverlay } from "../common/SectionStates";
 import type {
   ResourceInputChange,
   ResourceInventoryViewProps,
@@ -25,6 +25,7 @@ import type {
 
 const ResourceInventoryView = ({
   loading,
+  refreshing,
   isPremiumMasked,
   searchTerm,
   activeTab,
@@ -60,7 +61,10 @@ const ResourceInventoryView = ({
   const isZombieGated = isPremiumMasked && activeTab === "zombie";
 
   return (
-    <div className="core-shell animate-in fade-in duration-500">
+    <div className="core-shell relative animate-in fade-in duration-500">
+      {refreshing ? (
+        <SectionRefreshOverlay rounded="rounded-2xl" label="Refreshing resources..." />
+      ) : null}
       <div className="core-panel flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
           <h1 className="flex items-center gap-2 text-xl font-black tracking-tight md:text-2xl">

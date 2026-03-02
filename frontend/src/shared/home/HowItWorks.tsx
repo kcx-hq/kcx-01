@@ -168,7 +168,7 @@ const HowItWorks = ({ activateCTA = () => {} }: HowItWorksProps) => {
               {/* Internal Glow (NO gradient) */}
               <div
                 className="absolute inset-0 opacity-60 group-hover:opacity-100 transition-opacity duration-1000"
-                style={{ backgroundColor: "rgba(0,198,147,0.08)" }}
+                style={{ backgroundColor: "rgba(35,162,130,0.08)" }}
               />
 
               <AnimatePresence mode="wait">
@@ -184,7 +184,7 @@ const HowItWorks = ({ activateCTA = () => {} }: HowItWorksProps) => {
                   >
                     <div className="relative mb-6 animate-float">
                       <div
-                        className="w-20 h-20 rounded-full flex items-center justify-center shadow-[0_0_28px_rgba(0,198,147,0.18)] border border-[var(--border-light)]"
+                        className="w-20 h-20 rounded-full flex items-center justify-center shadow-[0_0_28px_rgba(35,162,130,0.18)] border border-[var(--border-light)]"
                         style={{
                           backgroundColor: "var(--bg-emerald-soft)",
                           color: "var(--bg-dark)",
@@ -235,7 +235,7 @@ const HowItWorks = ({ activateCTA = () => {} }: HowItWorksProps) => {
                       <div className="text-[var(--text-primary)] font-bold text-sm">
                         Drop Billing CSV
                       </div>
-                      <div className="absolute top-0 left-0 w-full h-1 bg-[var(--brand-primary)] shadow-[0_0_18px_rgba(0,198,147,0.35)] animate-scan" />
+                      <div className="absolute top-0 left-0 w-full h-1 bg-[var(--brand-primary)] shadow-[0_0_18px_rgba(35,162,130,0.35)] animate-scan" />
                     </div>
 
                     <div className="mt-5 flex gap-3">
@@ -399,7 +399,7 @@ const HowItWorks = ({ activateCTA = () => {} }: HowItWorksProps) => {
             onClick={handleTryItForFree}
             whileHover={{
               scale: 1.05,
-              boxShadow: "0 0 26px rgba(0,198,147,0.35)",
+              boxShadow: "0 0 26px rgba(35,162,130,0.35)",
             }}
             whileTap={{ scale: 0.95 }}
             className="px-10 py-4 text-white font-bold rounded-[var(--radius-md)] transition-all shadow-[var(--shadow-md)] flex items-center gap-2 mx-auto bg-[var(--brand-primary)]"
@@ -450,7 +450,7 @@ const StepButton = ({ step, title, desc, icon: Icon, isActive, onClick }: StepBu
       w-full text-left p-5 rounded-2xl border transition-all duration-300 group relative overflow-hidden
       ${
         isActive
-          ? "bg-[var(--bg-surface)] border-[var(--brand-primary)] shadow-[0_0_22px_rgba(0,198,147,0.18)] scale-105 z-10"
+          ? "bg-[var(--bg-surface)] border-[var(--brand-primary)] shadow-[0_0_22px_rgba(35,162,130,0.18)] scale-105 z-10"
           : "bg-transparent border-[var(--border-light)] hover:bg-[var(--bg-soft)] hover:border-[var(--border-muted)]"
       }
     `}

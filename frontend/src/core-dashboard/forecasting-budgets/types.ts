@@ -4,6 +4,7 @@ export interface ForecastingControls {
   period: "mtd" | "qtd" | "30d" | "90d";
   compareTo: "previous_period" | "same_period_last_month" | "none";
   costBasis: "actual" | "amortized" | "net";
+  budgetMonth?: string;
 }
 
 export interface KpiStrip {
@@ -14,6 +15,7 @@ export interface KpiStrip {
   breachEtaDays: number | null;
   requiredDailySpend: number;
   forecastDrift: number;
+  forecastDriftPct?: number;
   unitCostForecast: number;
   mapePct: number | null;
   atRiskBudgetCount: number;
@@ -137,6 +139,7 @@ export interface ForecastingBudgetsPayload {
     };
     forecastActualTracking: {
       mapePct: number | null;
+      wapePct?: number | null;
       biasPct: number | null;
       accuracyScore: number | null;
       byScope: Array<{ scope: string; actual: number; forecast: number; errorPct: number; biasPct: number }>;
@@ -157,6 +160,7 @@ export interface ForecastingBudgetsPayload {
       alerts: AlertModel[];
     };
   };
+  forecastView?: ForecastView;
   metricDictionary: Array<{ metric: string; formula: string; scope: string }>;
   forecastMethodology: Array<{ id: string; label: string; useWhen: string }>;
   budgetStrategy: {
@@ -167,4 +171,82 @@ export interface ForecastingBudgetsPayload {
   };
   nonDuplicationRules: string[];
   crossSectionMap: Array<{ source: string; input: string; output: string }>;
+}
+
+export interface ForecastTimelinePoint {
+  dayIndex: number;
+  date: string | null;
+  label: string;
+  phase: "actual" | "forecast";
+  actualToDate: number | null;
+  forecastToDate: number | null;
+  lowerBound: number | null;
+  upperBound: number | null;
+}
+
+export interface ForecastCompositionContributor {
+  rank: number;
+  name: string;
+  currentCost: number;
+  previousCost: number | null;
+  deltaValue: number | null;
+  deltaPct: number | null;
+  forecastDeltaContribution: number | null;
+  forecastContribution: number;
+  sharePct: number;
+}
+
+export interface ForecastCompositionTab {
+  id: "team" | "service" | "account" | string;
+  label: string;
+  contributors: ForecastCompositionContributor[];
+}
+
+export interface ForecastAccuracyMiss {
+  id: string;
+  scope: string;
+  actual: number;
+  forecast: number;
+  missValue: number;
+  missPct: number;
+  biasPct?: number;
+  link: string;
+}
+
+export interface ForecastChecklistItem {
+  id: string;
+  label: string;
+  status: ConfidenceStatus;
+  value: number;
+  valueLabel: string;
+  threshold: string;
+  detail: string;
+}
+
+export interface ForecastView {
+  kpi: {
+    eomForecast: number;
+    lastForecast: number;
+    driftValue: number;
+    driftPct: number;
+    runRatePerDay: number;
+    confidenceLevel: "high" | "medium" | "low";
+    confidenceScore: number;
+  };
+  timeline: {
+    daysElapsed: number;
+    totalDays: number;
+    points: ForecastTimelinePoint[];
+  };
+  composition: {
+    tabs: ForecastCompositionTab[];
+  };
+  accuracy: {
+    metricLabel: string;
+    mapePct: number | null;
+    wapePct: number | null;
+    biasPct: number | null;
+    largestMissDays: ForecastAccuracyMiss[];
+  };
+  confidenceChecklist: ForecastChecklistItem[];
 }

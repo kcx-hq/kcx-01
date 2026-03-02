@@ -1,21 +1,17 @@
-import { SectionRefreshOverlay } from "../../../common/SectionStates";
 import type { ForecastingControls } from "../../types";
 import { SelectField } from "../shared/ui";
 
 interface ControlsSectionProps {
   controls: ForecastingControls;
   onControlsChange: (patch: Partial<ForecastingControls>) => void;
-  refreshing: boolean;
 }
 
 export function ControlsSection({
   controls,
   onControlsChange,
-  refreshing,
 }: ControlsSectionProps) {
   return (
-    <section className="relative rounded-2xl border border-[var(--border-light)] bg-white p-4 md:p-5">
-      {refreshing ? <SectionRefreshOverlay rounded="rounded-2xl" label="Refreshing forecasts..." /> : null}
+    <section className="rounded-2xl border border-[var(--border-light)] bg-white p-4 md:p-5">
       <h2 className="text-sm font-black uppercase tracking-[0.12em] text-[var(--text-primary)] md:text-base">
         Controls
       </h2>

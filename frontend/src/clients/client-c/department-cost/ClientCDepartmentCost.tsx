@@ -183,7 +183,7 @@ const ClientCDepartmentCost = ({ api, caps }: ClientCDepartmentCostProps) => {
     );
   }
 
-  const COLORS = ['#007758', '#48bb78', '#f56565', '#ecc94b', '#4fd1c5', '#059669', '#ed8936', '#68d391', '#4c77b6', '#d53f8c'];
+  const COLORS = ['#23a282', '#23a282', '#f56565', '#ecc94b', '#4fd1c5', '#23a282', '#ed8936', '#68d391', '#4c77b6', '#d53f8c'];
 
   return (
     <div className="animate-in fade-in zoom-in-95 duration-300 flex flex-col h-full">
@@ -199,8 +199,8 @@ const ClientCDepartmentCost = ({ api, caps }: ClientCDepartmentCostProps) => {
                     ${extractedData.overview.totalCost?.toLocaleString() || 0}
                   </p>
                 </div>
-                <div className="p-3 bg-[#007758]/20 rounded-lg">
-                  <DollarSign className="text-[#007758]" size={24} />
+                <div className="p-3 bg-[#23a282]/20 rounded-lg">
+                  <DollarSign className="text-[#23a282]" size={24} />
                 </div>
               </div>
               <p className="text-[10px] text-gray-500 mt-2">Overall department spending</p>
@@ -262,7 +262,7 @@ const ClientCDepartmentCost = ({ api, caps }: ClientCDepartmentCostProps) => {
             {/* Department Cost Distribution */}
             <div className="bg-[#1a1b20]/60 backdrop-blur-md border border-white/5 rounded-2xl p-5 shadow-xl">
               <div className="flex items-center gap-2 mb-4">
-                <PieChartIcon size={16} className="text-[#007758]" />
+                <PieChartIcon size={16} className="text-[#23a282]" />
                 <h3 className="text-sm font-bold text-white">Department Cost Distribution</h3>
               </div>
               <div className="h-80">
@@ -300,7 +300,7 @@ const ClientCDepartmentCost = ({ api, caps }: ClientCDepartmentCostProps) => {
             {/* Cost Trend Over Time */}
             <div className="bg-[#1a1b20]/60 backdrop-blur-md border border-white/5 rounded-2xl p-5 shadow-xl">
               <div className="flex items-center gap-2 mb-4">
-                <TrendingUp size={16} className="text-[#007758]" />
+                <TrendingUp size={16} className="text-[#23a282]" />
                 <h3 className="text-sm font-bold text-white">Cost Trend</h3>
               </div>
               <div className="h-80">
@@ -334,8 +334,8 @@ const ClientCDepartmentCost = ({ api, caps }: ClientCDepartmentCostProps) => {
                     <Area 
                       type="monotone" 
                       dataKey="cost" 
-                      stroke="#007758" 
-                      fill="#007758" 
+                      stroke="#23a282" 
+                      fill="#23a282" 
                       fillOpacity={0.3}
                       strokeWidth={2}
                     />
@@ -350,7 +350,7 @@ const ClientCDepartmentCost = ({ api, caps }: ClientCDepartmentCostProps) => {
             {/* Top Services by Department */}
             <div className="bg-[#1a1b20]/60 backdrop-blur-md border border-white/5 rounded-2xl p-5 shadow-xl">
               <div className="flex items-center gap-2 mb-4">
-                <BarChartIcon size={16} className="text-[#007758]" />
+                <BarChartIcon size={16} className="text-[#23a282]" />
                 <h3 className="text-sm font-bold text-white">Top Services by Cost</h3>
               </div>
               <div className="overflow-x-auto">
@@ -382,7 +382,7 @@ const ClientCDepartmentCost = ({ api, caps }: ClientCDepartmentCostProps) => {
             {/* Top Resources by Department */}
             <div className="bg-[#1a1b20]/60 backdrop-blur-md border border-white/5 rounded-2xl p-5 shadow-xl">
               <div className="flex items-center gap-2 mb-4">
-                <BarChartIcon size={16} className="text-[#007758]" />
+                <BarChartIcon size={16} className="text-[#23a282]" />
                 <h3 className="text-sm font-bold text-white">Top Resources by Cost</h3>
               </div>
               <div className="overflow-x-auto">

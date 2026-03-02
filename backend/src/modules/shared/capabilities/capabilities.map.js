@@ -206,6 +206,10 @@ export const CAPABILITIES_MAP = {
             method: "GET",
             path: "/forecasting-budgets/summary",
           },
+          saveBudgetTarget: {
+            method: "POST",
+            path: "/forecasting-budgets/budget-target",
+          },
         },
       },
 

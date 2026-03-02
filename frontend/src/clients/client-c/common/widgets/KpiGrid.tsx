@@ -87,7 +87,7 @@ const KpiCard = ({
       transition={{ delay: delay * 0.1 }}
       whileHover={{ y: -5 }}
       onClick={onClick}
-      className="bg-[#1a1b20]/60 backdrop-blur-md border border-white/5 p-3 rounded-xl shadow-lg relative overflow-hidden group min-h-[100px] cursor-pointer hover:border-[#007758]/30 transition-all"
+      className="bg-[#1a1b20]/60 backdrop-blur-md border border-white/5 p-3 rounded-xl shadow-lg relative overflow-hidden group min-h-[100px] cursor-pointer hover:border-[#23a282]/30 transition-all"
     >
       <div className={`absolute -top-10 -right-10 p-16 ${color} bg-opacity-5 blur-[40px] rounded-full`} />
 
@@ -264,7 +264,7 @@ const KpiGrid = ({
       title: 'Total Billed Cost',
       value: formatCurrency(spend),
       icon: DollarSign,
-      color: 'text-[#007758]',
+      color: 'text-[#23a282]',
       subValue:
         spendChangePercent !== 0 ? formatPercent(spendChangePercent) : null,
       showChangeTooltip: true,
@@ -283,7 +283,7 @@ const KpiGrid = ({
       title: 'Top Cost Service',
       value: topService?.name || 'N/A',
       icon: Server,
-      color: 'text-[#007758]',
+      color: 'text-[#23a282]',
       delay: 0.2
     },
     {

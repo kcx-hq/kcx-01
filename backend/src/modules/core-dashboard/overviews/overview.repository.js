@@ -137,7 +137,7 @@ export const dashboardRepository = {
         ],
         group: [monthExpr],
         order: [[monthExpr, 'DESC']],
-        limit: 2,
+        limit: 6,
         raw: true,
       }),
       BillingUsageFact.findAll({
@@ -164,7 +164,7 @@ export const dashboardRepository = {
         ],
         group: [monthExpr],
         order: [[monthExpr, 'DESC']],
-        limit: 2,
+        limit: 12,
         raw: true,
       }),
       BillingUpload.findOne({
