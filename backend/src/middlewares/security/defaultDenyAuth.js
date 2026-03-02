@@ -17,6 +17,9 @@ const PUBLIC_ROUTE_RULES = [
   { method: "POST", pattern: /^\/api(?:\/v1)?\/auth\/forgot-password\/?$/i },
   { method: "POST", pattern: /^\/api(?:\/v1)?\/auth\/reset\/[^/]+\/?$/i },
   { method: "POST", pattern: /^\/api(?:\/v1)?\/auth\/reset-password\/[^/]+\/?$/i },
+  { method: "POST", pattern: /^\/api(?:\/v1)?\/chatbot\/session\/?$/i },
+  { method: "GET", pattern: /^\/api(?:\/v1)?\/chatbot\/session\/[^/]+\/?$/i },
+  { method: "POST", pattern: /^\/api(?:\/v1)?\/chatbot\/message\/?$/i },
 ];
 
 const INTERNAL_ROUTE_PATTERN =

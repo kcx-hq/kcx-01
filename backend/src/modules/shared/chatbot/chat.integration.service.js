@@ -3,12 +3,8 @@ import { ChatMessage, ChatSession } from "../../../models/index.js";
 import chatService from "./chat.service.js";
 
 export async function createSessionForClient(clientId) {
-  if (!clientId) {
-    throw new AppError(400, "VALIDATION_ERROR", "Invalid request");
-  }
-
   return ChatSession.create({
-    client_id: clientId,
+    client_id: clientId || null,
     step_index: 0,
     status: "active",
     requirements: {},
@@ -16,13 +12,26 @@ export async function createSessionForClient(clientId) {
 }
 
 export async function getSessionForClient({ sessionId, clientId }) {
-  if (!sessionId || !clientId) {
+  if (!sessionId) {
     throw new AppError(400, "VALIDATION_ERROR", "Invalid request");
   }
 
   const session = await ChatSession.findByPk(sessionId);
   if (!session) {
     throw new AppError(404, "NOT_FOUND", "Not found");
+  }
+
+  // Public chatbot requests do not carry tenant identity.
+  // Only sessions created without a tenant binding are allowed in that mode.
+  if (!clientId) {
+    if (session.client_id) {
+      throw new AppError(
+        403,
+        "UNAUTHORIZED",
+        "You do not have permission to perform this action",
+      );
+    }
+    return session;
   }
 
   if (String(session.client_id || "") !== String(clientId)) {
