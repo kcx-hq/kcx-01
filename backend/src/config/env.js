@@ -74,30 +74,43 @@ const envSchema = z.object({
 
   GROQ_API_KEY: requiredString("GROQ_API_KEY"),
 
-  AWS_REGION: requiredString("AWS_REGION").regex(awsRegionPattern, "AWS_REGION must be a valid AWS region"),
-  AWS_BILLING_REGION: requiredString("AWS_BILLING_REGION").regex(
-    awsRegionPattern,
-    "AWS_BILLING_REGION must be a valid AWS region"
-  ),
-  AWS_ASSUME_ROLE_ARN: requiredString("AWS_ASSUME_ROLE_ARN").regex(
-    awsRoleArnPattern,
-    "AWS_ASSUME_ROLE_ARN must be a valid IAM role ARN"
-  ),
-  AWS_ASSUME_ROLE_SESSION_NAME: requiredString("AWS_ASSUME_ROLE_SESSION_NAME")
+  AWS_REGION: z
+    .string()
+    .trim()
+    .min(1, "AWS_REGION is required")
+    .regex(awsRegionPattern, "AWS_REGION must be a valid AWS region")
+    .optional(),
+  AWS_BILLING_REGION: z
+    .string()
+    .trim()
+    .min(1, "AWS_BILLING_REGION is required")
+    .regex(awsRegionPattern, "AWS_BILLING_REGION must be a valid AWS region")
+    .optional(),
+  AWS_ASSUME_ROLE_ARN: z
+    .string()
+    .trim()
+    .min(1, "AWS_ASSUME_ROLE_ARN is required")
+    .regex(awsRoleArnPattern, "AWS_ASSUME_ROLE_ARN must be a valid IAM role ARN")
+    .optional(),
+  AWS_ASSUME_ROLE_SESSION_NAME: z
+    .string()
+    .trim()
     .min(2, "AWS_ASSUME_ROLE_SESSION_NAME must be at least 2 characters")
-    .max(64, "AWS_ASSUME_ROLE_SESSION_NAME must be at most 64 characters"),
-  AWS_ACCESS_KEY_ID: requiredString("AWS_ACCESS_KEY_ID"),
-  AWS_SECRET_ACCESS_KEY: requiredString("AWS_SECRET_ACCESS_KEY"),
+    .max(64, "AWS_ASSUME_ROLE_SESSION_NAME must be at most 64 characters")
+    .optional(),
+  AWS_ACCESS_KEY_ID: z.string().trim().min(1, "AWS_ACCESS_KEY_ID is required").optional(),
+  AWS_SECRET_ACCESS_KEY: z.string().trim().min(1, "AWS_SECRET_ACCESS_KEY is required").optional(),
 
   CRED_ENC_KEY: requiredString("CRED_ENC_KEY").regex(
     /^[a-f0-9]{64}$/i,
     "CRED_ENC_KEY must be a 64-character hex string"
   ),
 
-  S3_INGEST_HMAC_SECRET: requiredString("S3_INGEST_HMAC_SECRET").min(
-    16,
-    "S3_INGEST_HMAC_SECRET must be at least 16 characters"
-  ),
+  S3_INGEST_HMAC_SECRET: z
+    .string()
+    .trim()
+    .min(16, "S3_INGEST_HMAC_SECRET must be at least 16 characters")
+    .optional(),
   S3_INGEST_HMAC_WINDOW_SECONDS: requiredPort("S3_INGEST_HMAC_WINDOW_SECONDS").default(300),
 });
 
