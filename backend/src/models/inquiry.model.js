@@ -79,6 +79,10 @@ const Inquiry = sequelize.define(
       type: DataTypes.DATE,
       allowNull: true,
     },
+    handled_at: {
+      type: DataTypes.DATE,
+      allowNull: true,
+    },
   },
   {
     tableName: "inquiries",

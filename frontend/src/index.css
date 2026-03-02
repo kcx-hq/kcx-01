@@ -136,6 +136,26 @@
   animation: bridgeFadeIn 0.3s ease-out forwards;
 }
 
+.forgot-attention-once {
+  position: relative;
+  border-radius: 999px;
+  padding: 2px 6px;
+  box-shadow: 0 0 0 0 rgba(0, 119, 88, 0.3);
+  animation: forgot-attention-pulse 3s ease-out 1;
+}
+
+@keyframes forgot-attention-pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(0, 119, 88, 0.35);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(0, 119, 88, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(0, 119, 88, 0);
+  }
+}
+
 @layer components {
   .core-shell {
     @apply relative space-y-4 font-sans text-[var(--text-primary)] md:space-y-6;

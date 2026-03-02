@@ -7,7 +7,13 @@ export const fetchInquiries = async (params: Record<string, string | number | un
 
 export const updateInquiryStatus = async (
   id: string,
-  status: "PENDING" | "ACCEPTED" | "REJECTED" | "STANDBY" | "HANDLED" | "TRASHED",
+  status:
+    | "PENDING"
+    | "ACCEPTED"
+    | "REJECTED"
+    | "STANDBY"
+    | "HANDLED"
+    | "TRASHED",
   meetLink?: string
 ) => {
   return apiPatch<{ id: string; status: string; meet_link?: string | null }>(

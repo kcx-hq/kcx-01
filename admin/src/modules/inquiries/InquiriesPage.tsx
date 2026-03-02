@@ -39,6 +39,8 @@ const Inquiries = () => {
   const [data, setData] = useState<AdminInquiry[]>([]);
   const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [selected, setSelected] = useState<AdminInquiry | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
@@ -98,13 +100,16 @@ const Inquiries = () => {
         setError(err.message || "Failed to load inquiries");
       })
       .finally(() => {
-        if (active) setLoading(false);
+        if (active) {
+          setLoading(false);
+          setRefreshing(false);
+        }
       });
 
     return () => {
       active = false;
     };
-  }, [queryParams]);
+  }, [queryParams, refreshKey]);
 
   const applyFilters = () => {
     setFilters(draftFilters);
@@ -184,7 +189,7 @@ const Inquiries = () => {
   };
 
   const openRelay = () => {
-    if (!selected) return;
+    if (!selected || selected.status !== "PENDING" || selected.relayed_at) return;
     setRelaySeverity("LOW");
     setRelayNote("");
     setRelayOpen(true);
@@ -198,6 +203,13 @@ const Inquiries = () => {
         severity: relaySeverity,
         note: relayNote.trim() || undefined,
       });
+      const relayedAt = new Date().toISOString();
+      setData((prev) =>
+        prev.map((item) =>
+          item.id === selected.id ? { ...item, relayed_at: relayedAt } : item
+        )
+      );
+      setSelected((prev) => (prev ? { ...prev, relayed_at: relayedAt } : prev));
       setRelayToast("Relayed to boss.");
       setTimeout(() => setRelayToast(null), 2500);
       setRelayOpen(false);
@@ -207,6 +219,13 @@ const Inquiries = () => {
     } finally {
       setUpdating(false);
     }
+  };
+
+  const handleRefresh = () => {
+    if (loading || refreshing) return;
+    setError(null);
+    setRefreshing(true);
+    setRefreshKey((prev) => prev + 1);
   };
 
   return (
@@ -281,6 +300,29 @@ const Inquiries = () => {
             </select>
           </div>
           <div className="filter-actions">
+            <button
+              className="ghost-btn icon-btn"
+              onClick={handleRefresh}
+              disabled={loading || refreshing}
+              title="Refresh inquiries"
+              aria-label="Refresh inquiries"
+            >
+              <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                <path
+                  d="M16.4 10a6.4 6.4 0 1 1-1.6-4.2"
+                  stroke="currentColor"
+                  strokeWidth="1.6"
+                  strokeLinecap="round"
+                />
+                <path
+                  d="M16.4 4.2v4.2h-4.2"
+                  stroke="currentColor"
+                  strokeWidth="1.6"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </button>
             <button className="ghost-btn" onClick={clearFilters}>
               Clear
             </button>
@@ -393,7 +435,7 @@ const Inquiries = () => {
             <button
               className="ghost-btn"
               disabled={selectedIds.length === 0 || updating}
-              onClick={() => handleBulkStatus("PENDING")}
+              onClick={() => handleBulkStatus("ACCEPTED")}
             >
               Restore to Active
             </button>
@@ -410,7 +452,7 @@ const Inquiries = () => {
             <button
               className="ghost-btn"
               disabled={selectedIds.length === 0 || updating}
-              onClick={() => handleBulkStatus("PENDING")}
+              onClick={() => handleBulkStatus("HANDLED")}
             >
               Restore
             </button>
@@ -491,14 +533,14 @@ const Inquiries = () => {
               <button
                 className="primary-btn"
                 onClick={openRelay}
-                disabled={updating || selected.status !== "PENDING"}
+                disabled={updating || selected.status !== "PENDING" || Boolean(selected.relayed_at)}
               >
-                Relay to Boss
+                {selected.relayed_at ? "Relayed" : "Relay to Boss"}
               </button>
               {selected.status === "PENDING" ? null : selected.status === "HANDLED" ? (
                 <button
                   className="ghost-btn"
-                  onClick={() => handleSingleStatus(selected.id, "PENDING")}
+                  onClick={() => handleSingleStatus(selected.id, "ACCEPTED")}
                   disabled={updating}
                 >
                   Restore to Active
@@ -514,7 +556,7 @@ const Inquiries = () => {
               ) : (
                 <button
                   className="ghost-btn"
-                  onClick={() => handleSingleStatus(selected.id, "PENDING")}
+                  onClick={() => handleSingleStatus(selected.id, "HANDLED")}
                   disabled={updating}
                 >
                   Restore

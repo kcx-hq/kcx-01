@@ -19,6 +19,17 @@ interface AuthModalProps {
 const AuthModal = ({ isOpen, onClose, initialView = "login" }: AuthModalProps) => {
   const navigate = useNavigate();
   const { isSigningIn, signIn, isSigningUp, signUp, isVerifying, verifyEmail } = useAuthStore();
+  const LOCKOUT_DURATION_MS = 5 * 60 * 1000;
+  const LOCKOUT_STORAGE_KEY = "kcx_lockout_until";
+
+  const readStoredLockout = (): number | null => {
+    if (typeof window === "undefined") return null;
+    const raw = window.localStorage.getItem(LOCKOUT_STORAGE_KEY);
+    if (!raw) return null;
+    const parsed = Number(raw);
+    if (!Number.isFinite(parsed)) return null;
+    return parsed > Date.now() ? parsed : null;
+  };
 
   // --- VIEW STATE ---
   const [view, setView] = useState<AuthView>(initialView);
@@ -45,15 +56,38 @@ const AuthModal = ({ isOpen, onClose, initialView = "login" }: AuthModalProps) =
       setLoginData({ email: "", password: "" });
       setOtp("");
       setShowPassword(false);
-      setLockoutUntilMs(null);
+      setLockoutUntilMs(readStoredLockout());
     }
   }, [isOpen, initialView]);
+
+  useEffect(() => {
+    if (!lockoutUntilMs) return;
+    if (lockoutUntilMs <= Date.now()) {
+      setLockoutUntilMs(null);
+      window.localStorage.removeItem(LOCKOUT_STORAGE_KEY);
+      return;
+    }
+
+    const id = window.setInterval(() => {
+      if (lockoutUntilMs <= Date.now()) {
+        setLockoutUntilMs(null);
+        window.localStorage.removeItem(LOCKOUT_STORAGE_KEY);
+      }
+    }, 1000);
+    return () => window.clearInterval(id);
+  }, [lockoutUntilMs]);
 
   // --- HANDLERS (Unchanged) ---
   const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    if (lockoutUntilMs && lockoutUntilMs > Date.now()) {
+      toast.error("Too many failed attempts. Please try again in a few minutes.");
+      return;
+    }
     const response = await signIn(loginData);
     if (response.success) {
+      window.localStorage.removeItem(LOCKOUT_STORAGE_KEY);
+      setLockoutUntilMs(null);
       onClose();
       navigate("/upload");
     } else {
@@ -68,7 +102,9 @@ const AuthModal = ({ isOpen, onClose, initialView = "login" }: AuthModalProps) =
         const msFromBlockedUntil = response.blockedUntil
           ? new Date(response.blockedUntil).getTime()
           : null;
-        setLockoutUntilMs(msFromRetry || msFromBlockedUntil);
+        const lockoutUntil = msFromRetry || msFromBlockedUntil || Date.now() + LOCKOUT_DURATION_MS;
+        setLockoutUntilMs(lockoutUntil);
+        window.localStorage.setItem(LOCKOUT_STORAGE_KEY, String(lockoutUntil));
         toast.error(response.message || "Too many failed attempts. Try again later.");
       } else {
         toast.error(response.message || "Sign in failed");

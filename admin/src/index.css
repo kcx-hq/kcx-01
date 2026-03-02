@@ -408,6 +408,7 @@ button {
   color: var(--text-secondary);
 }
 
+
 .form-field {
   display: grid;
   gap: 6px;
@@ -442,6 +443,7 @@ button {
 .primary-btn:hover {
   background: var(--brand-primary-hover);
 }
+
 
 .logout-btn {
   margin-left: 12px;
@@ -631,6 +633,20 @@ button {
 .ghost-btn--danger:hover {
   background: #d64545;
   color: #ffffff;
+}
+
+.icon-btn {
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.icon-btn svg {
+  width: 16px;
+  height: 16px;
 }
 
 .pagination {

@@ -523,6 +523,7 @@ const REQUEST_RULES = [
     query: z.object({
       date: DATE_ONLY_SCHEMA,
       userTimezone: NON_EMPTY_STRING.optional(),
+      timezone: NON_EMPTY_STRING.optional(),
       slotMinutes: z.coerce.number().int().min(15).max(1440).optional(),
     }).strict(),
   },
